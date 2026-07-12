@@ -1,4 +1,17 @@
-import { Backpack, Coins, HeartHandshake, ListChecks, Palette, Settings, ShoppingBag, Trophy } from 'lucide-react'
+import {
+  Backpack,
+  Blocks,
+  Coins,
+  HeartHandshake,
+  ListChecks,
+  Medal,
+  Palette,
+  Server,
+  Settings,
+  ShoppingBag,
+  Smile,
+  Trophy,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { getLocation } from '../data/world'
 import { useGameStore } from '../state/gameStore'
@@ -11,7 +24,7 @@ export function HUD() {
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-24 max-md:px-3">
+    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-24 max-md:top-16 max-md:px-3">
       <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-lg bg-white/90 p-2 shadow-xl backdrop-blur">
         <Badge icon={<Coins size={18} />} text={`${coins}`} tone="bg-amber-300" />
         {obby.active ? <Badge icon={<Trophy size={18} />} text="Obby running" tone="bg-red-200" /> : null}
@@ -29,6 +42,21 @@ export function HUD() {
         </button>
         <button type="button" onClick={() => setOpenPanel('friends')} className="hud-button" title="Friends">
           <HeartHandshake size={20} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setOpenPanel('leaderboard')} className="hud-button" title="Leaderboard">
+          <Trophy size={20} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setOpenPanel('badges')} className="hud-button" title="Badges">
+          <Medal size={20} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setOpenPanel('build')} className="hud-button" title="Build">
+          <Blocks size={20} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setOpenPanel('server')} className="hud-button" title="Server">
+          <Server size={20} aria-hidden />
+        </button>
+        <button type="button" onClick={() => setOpenPanel('emotes')} className="hud-button" title="Emotes">
+          <Smile size={20} aria-hidden />
         </button>
         <button type="button" onClick={() => setOpenPanel('settings')} className="hud-button" title="Settings">
           <Settings size={20} aria-hidden />

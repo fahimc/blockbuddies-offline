@@ -3,20 +3,25 @@ import { botProfiles } from '../data/botProfiles'
 import { questDefinitions } from '../data/quests'
 import { shopItems } from '../data/shopItems'
 import { getLocation } from '../data/world'
+import { findBadge } from '../data/badges'
 import { createInitialBot, updateBot } from '../ai/botBrain'
 import { selectDialogue, type DialogueContext } from '../ai/dialogue'
 import { advanceQuest, createQuestProgress } from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
 import { finishObby, startObby, updateCheckpoint } from '../ai/obby'
+import { canPlaceBlock, nextBuildPosition } from '../ai/buildMode'
 import type {
   AvatarSettings,
+  BadgeId,
+  BuildBlock,
   BotMemory,
   BotRuntime,
   ChatMessage,
   GameSettings,
   LocationId,
   ObbyState,
+  PlayerEmote,
   QuestId,
   QuestProgress,
   ShopItemId,
@@ -30,6 +35,8 @@ export type GameSave = {
   questProgress: QuestProgress[]
   botMemory: Record<string, BotMemory>
   settings: GameSettings
+  earnedBadges: BadgeId[]
+  placedBlocks: BuildBlock[]
   obbyBestTime?: number
 }
 
@@ -52,7 +59,10 @@ type GameState = GameSave & {
   touch: TouchInput
   loading: boolean
   saveStatus: 'idle' | 'saving' | 'saved'
-  openPanel?: 'quests' | 'shop' | 'avatar' | 'settings' | 'friends'
+  openPanel?: 'quests' | 'shop' | 'avatar' | 'settings' | 'friends' | 'leaderboard' | 'badges' | 'build' | 'server' | 'emotes'
+  playerEmote: PlayerEmote
+  buildMode: boolean
+  selectedBuildColor: string
   setScreen: (screen: 'menu' | 'game') => void
   setPlayer: (position: Vec3, yaw: number) => void
   setTouch: (input: Partial<TouchInput>) => void
@@ -63,8 +73,14 @@ type GameState = GameSave & {
   startQuest: (id: QuestId) => void
   advanceQuest: (id: QuestId, amount: number) => void
   addCoins: (amount: number) => void
+  awardBadge: (id: BadgeId) => void
   buyItem: (id: ShopItemId) => void
   applyOwnedItem: (id: ShopItemId) => void
+  setPlayerEmote: (emote: PlayerEmote) => void
+  setBuildMode: (enabled: boolean) => void
+  setSelectedBuildColor: (color: string) => void
+  placeBlock: () => void
+  removeLastBlock: () => void
   beginObby: (now: number) => void
   updateObby: (now: number, checkpoints: Vec3[]) => void
   completeObby: (now: number) => void
@@ -121,6 +137,8 @@ const initialObby: ObbyState = {
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'menu',
   coins: 0,
+  earnedBadges: ['welcome'],
+  placedBlocks: [],
   avatar: defaultAvatar,
   unlockedItems: [],
   questProgress: initialQuestProgress(),
@@ -138,6 +156,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   touch: { x: 0, y: 0, jump: false, interact: false },
   loading: false,
   saveStatus: 'idle',
+  playerEmote: 'none',
+  buildMode: false,
+  selectedBuildColor: '#38bdf8',
 
   setScreen: (screen) => set({ screen }),
   setPlayer: (playerPosition, playerYaw) => set({ playerPosition, playerYaw }),
@@ -176,6 +197,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   sendQuickReply: (text, context) => {
     set((state) => ({ chat: [...state.chat.slice(-60), playerMessage(text)] }))
+    get().awardBadge('social-buddy')
     const nearest = get().bots[0]
     if (nearest) get().botReact(nearest.id, context)
   },
@@ -212,8 +234,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   addCoins: (amount) => {
     set((state) => ({ coins: Math.max(0, state.coins + amount) }))
+    if (get().coins >= 10) get().awardBadge('coin-starter')
     if (amount > 0) get().advanceQuest('collect-10-coins', amount)
   },
+
+  awardBadge: (id) =>
+    set((state) => {
+      if (state.earnedBadges.includes(id)) return state
+      const badge = findBadge(id)
+      return {
+        earnedBadges: [...state.earnedBadges, id],
+        chat: badge
+          ? [...state.chat.slice(-60), systemMessage(`Badge earned: ${badge.title}`)]
+          : state.chat,
+      }
+    }),
 
   buyItem: (id) =>
     set((state) => {
@@ -229,6 +264,41 @@ export const useGameStore = create<GameState>((set, get) => ({
           : state.chat,
       }
     }),
+
+  setPlayerEmote: (playerEmote) => {
+    set({ playerEmote })
+    if (playerEmote !== 'none') {
+      set((state) => ({ chat: [...state.chat.slice(-60), systemMessage(`You used ${playerEmote}`)] }))
+      window.setTimeout(() => {
+        if (useGameStore.getState().playerEmote === playerEmote) useGameStore.setState({ playerEmote: 'none' })
+      }, 2600)
+    }
+  },
+
+  setBuildMode: (buildMode) => set({ buildMode }),
+  setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
+  placeBlock: () =>
+    set((state) => {
+      const position = nextBuildPosition(state.playerPosition, state.playerYaw)
+      if (!canPlaceBlock(state.placedBlocks, position)) return state
+      const block: BuildBlock = {
+        id: crypto.randomUUID(),
+        position,
+        color: state.selectedBuildColor,
+      }
+      return {
+        placedBlocks: [...state.placedBlocks, block],
+        chat: [...state.chat.slice(-60), systemMessage('Block placed')],
+        earnedBadges: state.earnedBadges.includes('builder')
+          ? state.earnedBadges
+          : [...state.earnedBadges, 'builder'],
+      }
+    }),
+  removeLastBlock: () =>
+    set((state) => ({
+      placedBlocks: state.placedBlocks.slice(0, -1),
+      chat: [...state.chat.slice(-60), systemMessage('Last block removed')],
+    })),
 
   applyOwnedItem: (id) =>
     set((state) => {
@@ -253,6 +323,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       return {
         obby: result.state,
         coins: state.coins + result.reward,
+        earnedBadges: state.earnedBadges.includes('obby-rookie')
+          ? state.earnedBadges
+          : [...state.earnedBadges, 'obby-rookie'],
         questProgress: state.questProgress.map((quest) =>
           quest.id === 'beginner-obby' ? { ...quest, started: true, completed: true, progress: 1 } : quest,
         ),
@@ -275,6 +348,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       return {
         visitedBots: firstMeet ? [...state.visitedBots, botId] : state.visitedBots,
         botMemory: { ...state.botMemory, [botId]: memory },
+        earnedBadges:
+          firstMeet && state.visitedBots.length + 1 >= 3 && !state.earnedBadges.includes('friend-maker')
+            ? [...state.earnedBadges, 'friend-maker']
+            : state.earnedBadges,
         bots: line
           ? state.bots.map((bot) =>
               bot.id === botId ? { ...bot, speech: line, speechUntil: now + 3000 } : bot,
@@ -291,6 +368,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       coins: 0,
       avatar: defaultAvatar,
       unlockedItems: [],
+      earnedBadges: ['welcome'],
+      placedBlocks: [],
+      buildMode: false,
+      playerEmote: 'none',
+      selectedBuildColor: '#38bdf8',
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,
@@ -302,6 +384,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       coins: save.coins ?? state.coins,
       avatar: save.avatar ?? state.avatar,
       unlockedItems: save.unlockedItems ?? state.unlockedItems,
+      earnedBadges: save.earnedBadges ?? state.earnedBadges,
+      placedBlocks: save.placedBlocks ?? state.placedBlocks,
       questProgress: save.questProgress ?? state.questProgress,
       botMemory: save.botMemory ?? state.botMemory,
       settings: save.settings ?? state.settings,
@@ -318,6 +402,8 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     coins: state.coins,
     avatar: state.avatar,
     unlockedItems: state.unlockedItems,
+    earnedBadges: state.earnedBadges,
+    placedBlocks: state.placedBlocks,
     questProgress: state.questProgress,
     botMemory: state.botMemory,
     settings: state.settings,

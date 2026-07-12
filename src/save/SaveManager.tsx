@@ -24,6 +24,8 @@ export function SaveManager() {
     state.coins,
     state.avatar,
     state.unlockedItems,
+    state.earnedBadges,
+    state.placedBlocks,
     state.questProgress,
     state.botMemory,
     state.settings,

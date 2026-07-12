@@ -12,6 +12,11 @@ import { ShopPanel } from '../ui/ShopPanel'
 import { AvatarPanel } from '../ui/AvatarPanel'
 import { SettingsPanel } from '../ui/SettingsPanel'
 import { FriendshipPanel } from '../ui/FriendshipPanel'
+import { LeaderboardPanel } from '../ui/LeaderboardPanel'
+import { BadgesPanel } from '../ui/BadgesPanel'
+import { BuildPanel } from '../ui/BuildPanel'
+import { ServerPanel } from '../ui/ServerPanel'
+import { EmotePanel } from '../ui/EmotePanel'
 import { SaveManager } from '../save/SaveManager'
 import { useGameStore } from '../state/gameStore'
 
@@ -76,6 +81,11 @@ export function GameScreen() {
         {openPanel === 'avatar' ? <AvatarPanel /> : null}
         {openPanel === 'settings' ? <SettingsPanel /> : null}
         {openPanel === 'friends' ? <FriendshipPanel /> : null}
+        {openPanel === 'leaderboard' ? <LeaderboardPanel /> : null}
+        {openPanel === 'badges' ? <BadgesPanel /> : null}
+        {openPanel === 'build' ? <BuildPanel /> : null}
+        {openPanel === 'server' ? <ServerPanel /> : null}
+        {openPanel === 'emotes' ? <EmotePanel /> : null}
       </section>
     </KeyboardControls>
   )

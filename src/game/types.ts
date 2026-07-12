@@ -37,6 +37,8 @@ export type BotRuntime = {
   speechUntil: number
 }
 
+export type PlayerEmote = 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
+
 export type ChatMessage = {
   id: string
   author: string
@@ -109,4 +111,33 @@ export type ObbyState = {
   startedAt: number
   bestTime?: number
   finished: boolean
+}
+
+export type BadgeId =
+  | 'welcome'
+  | 'social-buddy'
+  | 'coin-starter'
+  | 'obby-rookie'
+  | 'shopper'
+  | 'builder'
+  | 'friend-maker'
+
+export type BadgeDefinition = {
+  id: BadgeId
+  title: string
+  description: string
+  icon: string
+}
+
+export type BuildBlock = {
+  id: string
+  position: Vec3
+  color: string
+}
+
+export type LeaderboardRow = {
+  username: string
+  score: number
+  label: string
+  isPlayer?: boolean
 }

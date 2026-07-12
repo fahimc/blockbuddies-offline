@@ -28,6 +28,7 @@ Screenshots are stored in `docs/screenshots/`.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
+- Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.
@@ -122,6 +123,10 @@ release build.
 
 See [PHASES.md](./PHASES.md).
 
+See [docs/feature-review.md](./docs/feature-review.md) for the current review of
+what works, what was fixed, and what remains out of scope for an offline
+Roblox-inspired prototype.
+
 ## Known Limitations
 
 - This is a complete prototype, not a production-scale multiplayer game.
@@ -129,6 +134,9 @@ See [PHASES.md](./PHASES.md).
 - Ghost racers are represented by buddy reactions rather than full racing AI.
 - The Three.js bundle is large and should be code-split before a store release.
 - Android production signing is not configured; release artifacts use debug APKs.
+- Full Roblox-platform features such as real multiplayer servers, Robux,
+  moderation, voice chat, creator marketplace publishing, and cloud social graph
+  are intentionally out of scope for this offline prototype.
 
 ## Credits
 

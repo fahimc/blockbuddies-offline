@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.2.0-review-parity] - 2026-07-12
+
+### Added
+
+- Added feature review documentation.
+- Added offline leaderboard, badges, emotes, build/place mode, and local server list.
+- Added tests for leaderboard and build placement logic.
+- Added smoke coverage for the new feature panels.
+
+### Changed
+
+- Improved mobile HUD spacing and mobile camera distance.
+- Replaced mojibake touch arrows with icon buttons.
+
+### Fixed
+
+- Prevented build mode from placing blocks every frame while holding interact.
+
+### Known Issues
+
+- Full Roblox platform features remain out of scope for an offline prototype.
+- Android release signing is still not configured.
+
 ## [v1.1.0-phase-10] - 2026-07-12
 
 ### Added

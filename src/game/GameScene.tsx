@@ -24,6 +24,7 @@ export function GameScene() {
       <ObbyCourse />
       <CoinField />
       <ToyPickup />
+      <PlacedBlocks />
     </>
   )
 }
@@ -110,10 +111,14 @@ function PlayerController() {
   const [, getKeys] = useKeyboardControls()
   const velocityY = useRef(0)
   const yaw = useRef(0)
+  const lastBuildAt = useRef(0)
   const position = useRef(new THREE.Vector3(0, 0.9, 4))
   const setPlayer = useGameStore((state) => state.setPlayer)
   const touch = useGameStore((state) => state.touch)
   const avatar = useGameStore((state) => state.avatar)
+  const playerEmote = useGameStore((state) => state.playerEmote)
+  const buildMode = useGameStore((state) => state.buildMode)
+  const placeBlock = useGameStore((state) => state.placeBlock)
   const playerPosition = useGameStore((state) => state.playerPosition)
   const beginObby = useGameStore((state) => state.beginObby)
   const completeObby = useGameStore((state) => state.completeObby)
@@ -155,7 +160,12 @@ function PlayerController() {
 
     group.current?.position.copy(position.current)
     if (group.current) group.current.rotation.y = yaw.current
-    const cameraTarget = position.current.clone().add(new THREE.Vector3(Math.sin(yaw.current) * -8, 5, Math.cos(yaw.current) * -8))
+    const mobile = state.size.width < 640
+    const cameraDistance = mobile ? -13 : -8
+    const cameraHeight = mobile ? 7.4 : 5
+    const cameraTarget = position.current
+      .clone()
+      .add(new THREE.Vector3(Math.sin(yaw.current) * cameraDistance, cameraHeight, Math.cos(yaw.current) * cameraDistance))
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + 1.4, position.current.z)
     setPlayer([position.current.x, position.current.y - 0.9, position.current.z], yaw.current)
@@ -165,6 +175,10 @@ function PlayerController() {
     if (nearby === 'park') advanceQuest('visit-park', 1)
     if (nearby === 'obby' && (keys.interact || touch.interact) && !obby.active) beginObby(performance.now())
     if (nearby === 'shop' && (keys.interact || touch.interact)) useGameStore.getState().setOpenPanel('shop')
+    if (buildMode && (keys.interact || touch.interact) && performance.now() - lastBuildAt.current > 350) {
+      placeBlock()
+      lastBuildAt.current = performance.now()
+    }
 
     updateObby(performance.now(), obbyCheckpoints)
     if (distance2d([position.current.x, 0, position.current.z], [22, 0, 18]) < 1.8 && obby.active) {
@@ -188,7 +202,13 @@ function PlayerController() {
           <meshStandardMaterial color="#f0abfc" emissive="#f0abfc" emissiveIntensity={0.8} />
         </mesh>
       ) : null}
-      <BlockAvatar bodyColor={avatar.bodyColor} shirtColor={avatar.shirtColor} username="You" hat={avatar.hat !== 'none'} />
+      <BlockAvatar
+        bodyColor={avatar.bodyColor}
+        shirtColor={avatar.shirtColor}
+        username="You"
+        hat={avatar.hat !== 'none'}
+        emote={playerEmote}
+      />
     </group>
   )
 }
@@ -216,7 +236,13 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
   const bounce = bot.action === 'jump' ? Math.sin(performance.now() / 110) * 0.25 : 0
   return (
     <group position={[bot.position[0], 0.9 + Math.max(0, bounce), bot.position[2]]}>
-      <BlockAvatar bodyColor={color} shirtColor={shirtColor} username={username} hat={bot.action === 'cheer'} />
+      <BlockAvatar
+        bodyColor={color}
+        shirtColor={shirtColor}
+        username={username}
+        hat={bot.action === 'cheer'}
+        emote={bot.action === 'cheer' ? 'cheer' : bot.action === 'wave' ? 'wave' : 'none'}
+      />
       {bot.speech && bot.speechUntil > Date.now() ? (
         <Html center position={[0, 3.2, 0]}>
           <div className="max-w-40 rounded-lg bg-white px-3 py-2 text-center text-xs font-black text-slate-900 shadow">
@@ -228,9 +254,25 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
   )
 }
 
-function BlockAvatar({ bodyColor, shirtColor, username, hat }: { bodyColor: string; shirtColor: string; username: string; hat?: boolean }) {
+function BlockAvatar({
+  bodyColor,
+  shirtColor,
+  username,
+  hat,
+  emote = 'none',
+}: {
+  bodyColor: string
+  shirtColor: string
+  username: string
+  hat?: boolean
+  emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
+}) {
+  const armLift = emote === 'wave' || emote === 'cheer' ? -0.9 : 0
+  const secondArmLift = emote === 'cheer' ? -0.9 : 0
+  const danceTilt = emote === 'dance' ? Math.sin(performance.now() / 160) * 0.25 : 0
+  const sitDrop = emote === 'sit' ? -0.35 : 0
   return (
-    <group>
+    <group rotation={[0, 0, danceTilt]} position={[0, sitDrop, 0]}>
       <Html center position={[0, 2.7, 0]}>
         <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
           {username}
@@ -250,11 +292,11 @@ function BlockAvatar({ bodyColor, shirtColor, username, hat }: { bodyColor: stri
         <boxGeometry args={[0.9, 0.9, 0.5]} />
         <meshStandardMaterial color={shirtColor} />
       </mesh>
-      <mesh castShadow position={[-0.62, 1.05, 0]}>
+      <mesh castShadow position={[-0.62, 1.05, 0]} rotation={[armLift, 0, 0]}>
         <boxGeometry args={[0.25, 0.8, 0.25]} />
         <meshStandardMaterial color={bodyColor} />
       </mesh>
-      <mesh castShadow position={[0.62, 1.05, 0]}>
+      <mesh castShadow position={[0.62, 1.05, 0]} rotation={[secondArmLift, 0, 0]}>
         <boxGeometry args={[0.25, 0.8, 0.25]} />
         <meshStandardMaterial color={bodyColor} />
       </mesh>
@@ -313,5 +355,19 @@ function ToyPickup() {
       <dodecahedronGeometry args={[0.45, 0]} />
       <meshStandardMaterial color="#f0abfc" emissive="#f0abfc" emissiveIntensity={0.35} />
     </mesh>
+  )
+}
+
+function PlacedBlocks() {
+  const blocks = useGameStore((state) => state.placedBlocks)
+  return (
+    <>
+      {blocks.map((block) => (
+        <mesh key={block.id} castShadow receiveShadow position={block.position}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={block.color} />
+        </mesh>
+      ))}
+    </>
   )
 }
