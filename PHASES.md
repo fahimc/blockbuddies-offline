@@ -184,3 +184,14 @@
 - [x] Rotate moving buddies toward their travel target
 - [x] Bump Android debug APK version metadata to 1.3.5 / 10305
 - [x] Capture updated grounded gameplay and walking review screenshots
+
+## Post-phase portrait splash fix
+
+- [x] Generate original portrait splash background from supplied composition reference
+- [x] Replace two-panel landscape menu with portrait-first poster splash
+- [x] Keep Play button and feature strip inside measured Android WebView viewport
+- [x] Remove forced Android landscape orientation for splash support
+- [x] Harden Android theme against title/action bar viewport loss
+- [x] Add visual viewport height CSS variable for Android UI resizing
+- [x] Add portrait and constrained landscape splash smoke coverage
+- [x] Bump Android debug APK version metadata to 1.3.6 / 10306

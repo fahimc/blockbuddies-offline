@@ -29,6 +29,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies walking animation check](docs/review/immersive-character-fix-phone-walking.png)
 
+![BlockBuddies portrait splash](docs/review/portrait-splash-v136-phone.png)
+
+![BlockBuddies splash in constrained Android landscape viewport](docs/review/portrait-splash-v136-landscape-bars.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -55,6 +59,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Android immersive fullscreen mode that hides system bars for the game-like
   landscape layout.
 - Grounded procedural block avatars with visible walking leg and arm animation.
+- Portrait-first splash poster matching the supplied design direction, with a
+  generated original town background and responsive Play button placement.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.
@@ -139,6 +145,10 @@ The `v1.3.5` APK also enters immersive sticky fullscreen so Android status and
 navigation bars do not shrink the game viewport. If a user swipes the bars back,
 the app hides them again when focus returns.
 
+The `v1.3.6` APK removes the forced landscape orientation so the splash can open
+in portrait. The splash uses the measured Android WebView height, so the Play
+button stays visible when system UI changes the available space.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -184,6 +194,9 @@ No Roblox branding, names, logos, assets, UI, or copied content are used.
 Runtime third-party assets are listed in
 `src/assets/licenses/assets-manifest.json`; the current imported assets are
 Kenney CC0 blocky characters and prototype textures.
+The portrait splash background is a project-generated original raster asset
+created from the supplied composition reference and does not copy Roblox
+branding, logos, UI, or characters.
 
 ## License
 

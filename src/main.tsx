@@ -4,6 +4,11 @@ import { Capacitor } from '@capacitor/core'
 import './index.css'
 import App from './App'
 
+function updateViewportHeight() {
+  const height = window.visualViewport?.height ?? window.innerHeight
+  document.documentElement.style.setProperty('--app-height', `${height}px`)
+}
+
 function renderApp() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -23,5 +28,9 @@ async function clearNativeWebCaches() {
     await Promise.all(keys.map((key) => caches.delete(key)))
   }
 }
+
+updateViewportHeight()
+window.visualViewport?.addEventListener('resize', updateViewportHeight)
+window.addEventListener('resize', updateViewportHeight)
 
 void clearNativeWebCaches().finally(renderApp)

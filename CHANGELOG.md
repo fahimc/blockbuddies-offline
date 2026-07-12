@@ -1,5 +1,30 @@
 # Changelog
 
+## [v1.3.6-portrait-splash-fix] - 2026-07-12
+
+### Added
+
+- Added an original generated portrait splash background based on the supplied design composition.
+- Added a measured visual viewport height CSS variable for Android WebView/system UI resizing.
+- Added portrait splash Playwright smoke coverage and production review screenshots.
+
+### Changed
+
+- Rebuilt the main menu as a single portrait-first splash poster with the BlockBuddies logo, tagline, Play button, quick actions, and offline safety strip.
+- Removed the Android forced landscape orientation so the splash can open in portrait.
+- Updated Android version metadata to `1.3.6` / `10306`.
+
+### Fixed
+
+- Fixed the splash screen not fitting when Android status/navigation/app UI reduced the available viewport.
+- Fixed the old two-panel landscape splash causing the Play button to be pushed off-screen.
+- Fixed Android theme settings that could allow title/action bar space to appear above the web view.
+
+### Known Issues
+
+- Gameplay remains best in landscape, but the splash now supports portrait, landscape, and shortened Android WebView heights.
+- The generated portrait splash is an original raster asset and intentionally avoids Roblox branding or copied UI.
+
 ## [v1.3.5-immersive-character-fix] - 2026-07-12
 
 ### Added

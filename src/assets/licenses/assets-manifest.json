@@ -29,6 +29,15 @@
       ],
       "license": "Creative Commons Zero, CC0",
       "licenseFile": "src/assets/licenses/kenney-prototype-textures-license.txt"
+    },
+    {
+      "name": "BlockBuddies Portrait Splash Background",
+      "source": "Generated for this project with OpenAI image generation from a user-supplied composition reference",
+      "runtimeFiles": [
+        "src/assets/splash/blockbuddies-splash-portrait.png"
+      ],
+      "license": "Project-generated original raster asset",
+      "licenseFile": null
     }
   ]
 }

@@ -30,8 +30,8 @@ test.describe('landscape phone layout', () => {
   test('uses responsive splash and compact in-game controls', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText('OFFLINE SANDBOX TOWN')).toHaveCount(0)
-    await expect(page.locator('.bb-top-banner')).toBeVisible()
-    await expect(page.locator('.bb-menu-screen-card').first()).toBeInViewport()
+    await expect(page.locator('.bb-splash-poster')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Play' })).toBeInViewport()
 
     await page.getByRole('button', { name: 'Play' }).click()
     await expect(page.getByTestId('game-canvas')).toBeVisible()
@@ -40,5 +40,24 @@ test.describe('landscape phone layout', () => {
     await expect(page.locator('.mobile-chat-button')).toBeVisible()
     await expect(page.locator('.virtual-joystick')).toBeVisible()
     await expect(page.locator('.mobile-jump-button')).toBeVisible()
+  })
+})
+
+test.describe('portrait splash layout', () => {
+  test.use({
+    viewport: { width: 720, height: 1280 },
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('keeps the splash art and play button inside a portrait phone viewport', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.bb-splash-poster')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeVisible()
+    await expect(page.getByText('Your world.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Play' })).toBeInViewport()
+    await expect(page.locator('.bb-splash-feature-strip')).toBeInViewport()
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    expect(scrollWidth).toBeLessThanOrEqual(720)
   })
 })
