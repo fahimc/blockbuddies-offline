@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BlockBuddies Offline</string>
+    <string name="title_activity_main">BlockBuddies Offline</string>
+    <string name="package_name">com.blockbuddies.offline</string>
+    <string name="custom_url_scheme">com.blockbuddies.offline</string>
+</resources>

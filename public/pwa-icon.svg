@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="BlockBuddies icon">
+  <rect width="512" height="512" rx="96" fill="#38bdf8"/>
+  <rect x="70" y="278" width="372" height="154" rx="32" fill="#22c55e"/>
+  <rect x="108" y="160" width="120" height="136" rx="16" fill="#f97316"/>
+  <rect x="284" y="128" width="122" height="168" rx="16" fill="#e879f9"/>
+  <rect x="207" y="208" width="98" height="122" rx="20" fill="#2563eb"/>
+  <rect x="219" y="146" width="74" height="74" rx="18" fill="#facc15"/>
+  <circle cx="239" cy="178" r="7" fill="#0f172a"/>
+  <circle cx="273" cy="178" r="7" fill="#0f172a"/>
+  <path d="M235 198c15 14 28 14 43 0" fill="none" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>
+</svg>
