@@ -25,6 +25,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies responsive phone gameplay](docs/review/responsive-cache-fix-phone-game.png)
 
+![BlockBuddies grounded animated phone gameplay](docs/review/immersive-character-fix-phone-game.png)
+
+![BlockBuddies walking animation check](docs/review/immersive-character-fix-phone-walking.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -48,6 +52,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   and buddy profile screens inspired by the supplied screen design sheet.
 - Responsive landscape phone layout with compact menu cards, chat icon, safe-area
   spacing, and reference-style joystick/jump controls.
+- Android immersive fullscreen mode that hides system bars for the game-like
+  landscape layout.
+- Grounded procedural block avatars with visible walking leg and arm animation.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.
@@ -123,10 +130,14 @@ Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
 
-The `v1.3.4` debug APK clears stale Android WebView cache/storage once for this
+The `v1.3.4` and later debug APKs clear stale Android WebView cache/storage once for this
 app version before the Capacitor web bundle loads. This is intentional so older
 installed debug APKs cannot keep showing the pre-refresh menu or always-open
 chat UI from an old service worker.
+
+The `v1.3.5` APK also enters immersive sticky fullscreen so Android status and
+navigation bars do not shrink the game viewport. If a user swipes the bars back,
+the app hides them again when focus returns.
 
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a

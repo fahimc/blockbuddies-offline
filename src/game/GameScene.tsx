@@ -1,9 +1,8 @@
 import { useFrame } from '@react-three/fiber'
-import { useGLTF, useKeyboardControls, Html, useTexture } from '@react-three/drei'
+import { useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { botProfiles } from '../data/botProfiles'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
@@ -14,15 +13,6 @@ const obbyCheckpoints: Vec3[] = [
   [18.5, 1.8, 13.5],
   [20.5, 3.1, 16],
   [22, 4.6, 18],
-]
-
-const characterModels = [
-  '/assets/kenney/blocky-characters/character-a.glb',
-  '/assets/kenney/blocky-characters/character-b.glb',
-  '/assets/kenney/blocky-characters/character-c.glb',
-  '/assets/kenney/blocky-characters/character-d.glb',
-  '/assets/kenney/blocky-characters/character-e.glb',
-  '/assets/kenney/blocky-characters/character-f.glb',
 ]
 
 export function GameScene() {
@@ -285,6 +275,10 @@ function PlayerController() {
   const velocityY = useRef(0)
   const yaw = useRef(0)
   const lastBuildAt = useRef(0)
+  const movingRef = useRef(false)
+  const airborneRef = useRef(false)
+  const [moving, setMoving] = useState(false)
+  const [airborne, setAirborne] = useState(false)
   const position = useRef(new THREE.Vector3(0, 0.9, 4))
   const setPlayer = useGameStore((state) => state.setPlayer)
   const touch = useGameStore((state) => state.touch)
@@ -308,6 +302,11 @@ function PlayerController() {
     const keys = getKeys()
     const forward = Number(keys.forward) - Number(keys.back) + -touch.y
     const strafe = Number(keys.right) - Number(keys.left) + touch.x
+    const isMoving = Math.abs(forward) > 0.05 || Math.abs(strafe) > 0.05
+    if (isMoving !== movingRef.current) {
+      movingRef.current = isMoving
+      setMoving(isMoving)
+    }
     const turning = strafe * 1.8 * delta
     yaw.current -= turning
 
@@ -322,6 +321,11 @@ function PlayerController() {
     if (position.current.y < 0.9) {
       position.current.y = 0.9
       velocityY.current = 0
+    }
+    const isAirborne = position.current.y > 0.94
+    if (isAirborne !== airborneRef.current) {
+      airborneRef.current = isAirborne
+      setAirborne(isAirborne)
     }
     position.current.x = THREE.MathUtils.clamp(position.current.x, -25, 25)
     position.current.z = THREE.MathUtils.clamp(position.current.z, -25, 25)
@@ -381,6 +385,7 @@ function PlayerController() {
         username="You"
         hat={avatar.hat !== 'none'}
         emote={playerEmote}
+        action={airborne ? 'jump' : moving ? 'run' : 'idle'}
       />
     </group>
   )
@@ -406,15 +411,19 @@ function Bots() {
 }
 
 function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; username: string; color: string; shirtColor: string }) {
-  const bounce = bot.action === 'jump' ? Math.sin(performance.now() / 110) * 0.25 : 0
+  const jumpLift = bot.action === 'jump' ? Math.max(0, Math.sin(performance.now() / 170)) * 0.18 : 0
+  const dx = bot.target[0] - bot.position[0]
+  const dz = bot.target[2] - bot.position[2]
+  const yaw = bot.action === 'walk' || bot.action === 'run' ? Math.atan2(dx, dz) : 0
   return (
-    <group position={[bot.position[0], 0.9 + Math.max(0, bounce), bot.position[2]]}>
+    <group position={[bot.position[0], 0.9 + jumpLift, bot.position[2]]} rotation={[0, yaw, 0]}>
       <BlockAvatar
         bodyColor={color}
         shirtColor={shirtColor}
         username={username}
         hat={bot.action === 'cheer'}
         emote={bot.action === 'cheer' ? 'cheer' : bot.action === 'wave' ? 'wave' : 'none'}
+        action={bot.action}
       />
       {bot.speech && bot.speechUntil > Date.now() ? (
         <Html center position={[0, 3.2, 0]}>
@@ -433,72 +442,138 @@ function BlockAvatar({
   username,
   hat,
   emote = 'none',
+  action = 'idle',
 }: {
   bodyColor: string
   shirtColor: string
   username: string
   hat?: boolean
   emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
+  action?: BotRuntime['action']
 }) {
-  const armLift = emote === 'wave' || emote === 'cheer' ? -0.9 : 0
-  const secondArmLift = emote === 'cheer' ? -0.9 : 0
-  const danceTilt = emote === 'dance' ? Math.sin(performance.now() / 160) * 0.25 : 0
+  const body = useRef<THREE.Group>(null)
+  const leftArm = useRef<THREE.Group>(null)
+  const rightArm = useRef<THREE.Group>(null)
+  const leftLeg = useRef<THREE.Group>(null)
+  const rightLeg = useRef<THREE.Group>(null)
+  const actionRef = useRef(action)
+  const emoteRef = useRef(emote)
+  actionRef.current = action
+  emoteRef.current = emote
+
+  useFrame(({ clock }) => {
+    const currentAction = actionRef.current
+    const currentEmote = emoteRef.current
+    const walking = currentAction === 'walk' || currentAction === 'run'
+    const strideSpeed = currentAction === 'run' ? 11 : 7.5
+    const stride = walking ? Math.sin(clock.elapsedTime * strideSpeed) * 0.72 : 0
+    const sideStride = walking ? Math.sin(clock.elapsedTime * strideSpeed) * 0.16 : 0
+    const idle = walking ? 0 : Math.sin(clock.elapsedTime * 2.2) * 0.035
+    const wave = currentEmote === 'wave' || currentEmote === 'cheer' ? -1.05 + Math.sin(clock.elapsedTime * 7) * 0.18 : 0
+    const cheer = currentEmote === 'cheer' ? -1.0 + Math.cos(clock.elapsedTime * 8) * 0.14 : 0
+    const danceTilt = currentEmote === 'dance' ? Math.sin(clock.elapsedTime * 5.2) * 0.22 : 0
+
+    if (body.current) {
+      body.current.rotation.z = danceTilt
+      body.current.position.y = currentAction === 'jump' ? 0.1 : Math.abs(stride) * 0.025 + idle
+    }
+    if (leftLeg.current) {
+      leftLeg.current.rotation.x = stride
+      leftLeg.current.rotation.z = sideStride
+    }
+    if (rightLeg.current) {
+      rightLeg.current.rotation.x = -stride
+      rightLeg.current.rotation.z = -sideStride
+    }
+    if (leftArm.current) {
+      leftArm.current.rotation.x = wave || -stride * 0.72
+      leftArm.current.rotation.z = walking ? -sideStride * 0.7 : 0
+    }
+    if (rightArm.current) {
+      rightArm.current.rotation.x = cheer || stride * 0.72
+      rightArm.current.rotation.z = walking ? sideStride * 0.7 : 0
+    }
+  })
+
   const sitDrop = emote === 'sit' ? -0.35 : 0
-  const modelIndex = Math.abs(username.split('').reduce((total, letter) => total + letter.charCodeAt(0), 0)) % characterModels.length
   return (
-    <group rotation={[0, 0, danceTilt]} position={[0, sitDrop, 0]}>
-      <Html center position={[0, 2.55, 0]}>
+    <group position={[0, sitDrop, 0]}>
+      <Html center position={[0, 2.15, 0]}>
         <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
           {username}
         </span>
       </Html>
-      <KenneyCharacterModel url={characterModels[modelIndex]} bodyColor={bodyColor} shirtColor={shirtColor} />
-      {hat ? (
-        <mesh castShadow position={[0, 2.34, 0]}>
-          <cylinderGeometry args={[0.38, 0.5, 0.18, 5]} />
-          <meshStandardMaterial color="#fde047" />
-        </mesh>
-      ) : null}
-      {emote !== 'none' ? (
-        <group>
-          <mesh castShadow position={[-0.68, 1.25, 0]} rotation={[armLift, 0, 0]}>
-            <boxGeometry args={[0.18, 0.72, 0.18]} />
-            <meshStandardMaterial color={bodyColor} />
+      <group ref={body} position={[0, -0.9, 0]}>
+        <group ref={leftLeg} position={[-0.22, 0.64, 0]}>
+          <mesh castShadow position={[0, -0.32, 0]}>
+            <boxGeometry args={[0.26, 0.64, 0.28]} />
+            <meshStandardMaterial color="#111827" roughness={0.72} />
           </mesh>
-          <mesh castShadow position={[0.68, 1.25, 0]} rotation={[secondArmLift, 0, 0]}>
-            <boxGeometry args={[0.18, 0.72, 0.18]} />
-            <meshStandardMaterial color={bodyColor} />
+          <mesh castShadow position={[0, -0.68, 0.08]}>
+            <boxGeometry args={[0.3, 0.12, 0.42]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.6} />
           </mesh>
         </group>
-      ) : null}
-    </group>
-  )
-}
+        <group ref={rightLeg} position={[0.22, 0.64, 0]}>
+          <mesh castShadow position={[0, -0.32, 0]}>
+            <boxGeometry args={[0.26, 0.64, 0.28]} />
+            <meshStandardMaterial color="#111827" roughness={0.72} />
+          </mesh>
+          <mesh castShadow position={[0, -0.68, 0.08]}>
+            <boxGeometry args={[0.3, 0.12, 0.42]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.6} />
+          </mesh>
+        </group>
 
-function KenneyCharacterModel({ url, bodyColor, shirtColor }: { url: string; bodyColor: string; shirtColor: string }) {
-  const gltf = useGLTF(url)
-  const model = useMemo(() => {
-    const cloned = cloneSkeleton(gltf.scene)
-    cloned.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.castShadow = true
-        object.receiveShadow = true
-      }
-    })
-    return cloned
-  }, [gltf.scene])
+        <mesh castShadow position={[0, 1.05, 0]}>
+          <boxGeometry args={[0.82, 0.94, 0.38]} />
+          <meshStandardMaterial color={shirtColor} roughness={0.7} />
+        </mesh>
+        <mesh castShadow position={[0, 1.55, 0]}>
+          <boxGeometry args={[0.7, 0.16, 0.4]} />
+          <meshStandardMaterial color={bodyColor} roughness={0.7} />
+        </mesh>
 
-  return (
-    <group scale={[0.62, 0.62, 0.62]} position={[0, 0.02, 0]}>
-      <primitive object={model} />
-      <mesh castShadow position={[0, 1.12, -0.02]} scale={[0.84, 0.72, 0.34]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={shirtColor} transparent opacity={0.16} />
-      </mesh>
-      <mesh castShadow position={[0, 1.76, 0]} scale={[0.5, 0.38, 0.45]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={bodyColor} transparent opacity={0.12} />
-      </mesh>
+        <group ref={leftArm} position={[-0.58, 1.45, 0]}>
+          <mesh castShadow position={[0, -0.36, 0]}>
+            <boxGeometry args={[0.24, 0.72, 0.24]} />
+            <meshStandardMaterial color={bodyColor} roughness={0.7} />
+          </mesh>
+        </group>
+        <group ref={rightArm} position={[0.58, 1.45, 0]}>
+          <mesh castShadow position={[0, -0.36, 0]}>
+            <boxGeometry args={[0.24, 0.72, 0.24]} />
+            <meshStandardMaterial color={bodyColor} roughness={0.7} />
+          </mesh>
+        </group>
+
+        <mesh castShadow position={[0, 1.92, 0]}>
+          <boxGeometry args={[0.62, 0.62, 0.58]} />
+          <meshStandardMaterial color={bodyColor} roughness={0.66} />
+        </mesh>
+        <mesh castShadow position={[0, 2.28, -0.02]}>
+          <boxGeometry args={[0.66, 0.18, 0.62]} />
+          <meshStandardMaterial color="#3f2d24" roughness={0.8} />
+        </mesh>
+        <mesh castShadow position={[-0.22, 1.96, 0.31]}>
+          <boxGeometry args={[0.07, 0.07, 0.03]} />
+          <meshStandardMaterial color="#111827" />
+        </mesh>
+        <mesh castShadow position={[0.22, 1.96, 0.31]}>
+          <boxGeometry args={[0.07, 0.07, 0.03]} />
+          <meshStandardMaterial color="#111827" />
+        </mesh>
+        <mesh castShadow position={[0, 1.78, 0.32]}>
+          <boxGeometry args={[0.26, 0.05, 0.03]} />
+          <meshStandardMaterial color="#7c2d12" />
+        </mesh>
+        {hat ? (
+          <mesh castShadow position={[0, 2.45, 0]}>
+            <cylinderGeometry args={[0.38, 0.5, 0.18, 5]} />
+            <meshStandardMaterial color="#fde047" />
+          </mesh>
+        ) : null}
+      </group>
     </group>
   )
 }

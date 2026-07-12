@@ -174,3 +174,13 @@
 - [x] Add safe-area spacing for joystick, jump, interact, side actions, and chat drawer
 - [x] Add Playwright smoke coverage for the 1280x576 landscape phone layout
 - [x] Capture updated production review screenshots
+
+## Post-phase immersive character fixes
+
+- [x] Hide Android status and navigation bars in immersive sticky fullscreen
+- [x] Reapply immersive mode on resume and focus regain
+- [x] Replace static in-game character models with animated grounded block avatars
+- [x] Add visible walking leg and arm movement for player and buddies
+- [x] Rotate moving buddies toward their travel target
+- [x] Bump Android debug APK version metadata to 1.3.5 / 10305
+- [x] Capture updated grounded gameplay and walking review screenshots

@@ -1,5 +1,30 @@
 # Changelog
 
+## [v1.3.5-immersive-character-fix] - 2026-07-12
+
+### Added
+
+- Added Android immersive sticky fullscreen handling for status and navigation bars.
+- Added grounded procedural block avatars with animated walking legs and counter-swinging arms.
+- Added updated production review screenshots for grounded phone gameplay and walking animation.
+
+### Changed
+
+- Updated Android version metadata to `1.3.5` / `10305`.
+- Replaced static in-game GLB character rendering with runtime block avatars so movement, emotes, and ground contact are controllable.
+- Bots now face their movement target while walking or running.
+
+### Fixed
+
+- Fixed the Android APK viewport being reduced by visible system status/navigation bars.
+- Fixed player and buddy characters appearing to glide or float above the town floor.
+- Fixed the player avatar face direction so the character looks forward relative to movement.
+
+### Known Issues
+
+- Android system bars may briefly reappear after an edge swipe; the app re-enters immersive mode when focus returns.
+- The runtime avatars are procedural block characters; imported Kenney CC0 models remain licensed project assets but are not used for moving in-game avatars in this build.
+
 ## [v1.3.4-responsive-cache-fix] - 2026-07-12
 
 ### Added
