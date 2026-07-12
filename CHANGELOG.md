@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.3.1-mobile-character-fixes] - 2026-07-12
+
+### Added
+
+- Added a native Android WebView cache cleanup before app render to avoid launching with a previous APK's cached web bundle.
+- Added a deterministic test for legacy avatar save migration.
+
+### Changed
+
+- Updated the default player palette away from the old yellow/blue prototype colours.
+- Migrated saved legacy default avatars to the newer character palette while preserving deliberate custom avatar choices.
+- Expanded the PWA precache pattern to include GLB character models.
+
+### Fixed
+
+- Fixed Kenney character model orientation so the avatar faces the same forward direction as player movement.
+- Disabled mobile text selection, touch callouts, and drag selection across the game surface.
+- Improved touch control pointer handling so long-presses do not open the Android copy/share/select menu.
+
+### Known Issues
+
+- Existing installed APKs may need this updated APK installed once before the native cache cleanup can remove old WebView service worker caches.
+- The Three.js production bundle is still large and should be code-split before a store release.
+
 ## [v1.3.0-visual-assets] - 2026-07-12
 
 ### Added

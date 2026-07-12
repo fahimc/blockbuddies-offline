@@ -142,6 +142,9 @@ Roblox-inspired prototype.
 - Full Roblox-platform features such as real multiplayer servers, Robux,
   moderation, voice chat, creator marketplace publishing, and cloud social graph
   are intentionally out of scope for this offline prototype.
+- If an older Android debug APK showed old cached visuals after an update,
+  install `v1.3.1-mobile-character-fixes` or later; native startup clears stale
+  WebView service worker caches before rendering.
 
 ## Credits
 

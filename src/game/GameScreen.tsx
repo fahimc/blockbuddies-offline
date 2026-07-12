@@ -46,7 +46,11 @@ export function GameScreen() {
 
   return (
     <KeyboardControls map={keyboardMap}>
-      <section className="relative h-screen w-screen overflow-hidden bg-sky-200">
+      <section
+        className="relative h-screen w-screen select-none overflow-hidden bg-sky-200"
+        onContextMenu={(event) => event.preventDefault()}
+        onDragStart={(event) => event.preventDefault()}
+      >
         <SaveManager />
         <Canvas
           shadows={settings.quality !== 'low'}

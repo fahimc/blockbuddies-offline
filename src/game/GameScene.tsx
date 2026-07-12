@@ -489,7 +489,7 @@ function KenneyCharacterModel({ url, bodyColor, shirtColor }: { url: string; bod
   }, [gltf.scene])
 
   return (
-    <group scale={[0.62, 0.62, 0.62]} position={[0, 0.02, 0]} rotation={[0, Math.PI, 0]}>
+    <group scale={[0.62, 0.62, 0.62]} position={[0, 0.02, 0]}>
       <primitive object={model} />
       <mesh castShadow position={[0, 1.12, -0.02]} scale={[0.84, 0.72, 0.34]}>
         <boxGeometry args={[1, 1, 1]} />

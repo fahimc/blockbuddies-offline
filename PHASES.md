@@ -138,3 +138,11 @@
 - [x] Add spawn studs, roads, storefront signs, benches, lamps, and billboard props
 - [x] Add asset manifest and local license records
 - [x] Capture updated desktop and mobile review screenshots
+
+## Post-phase mobile character fixes
+
+- [x] Fix player character forward orientation
+- [x] Migrate legacy yellow/blue default avatar saves to the newer palette
+- [x] Prevent Android text selection/copy menu during gameplay
+- [x] Clear stale native WebView service worker caches on Android app startup
+- [x] Add unit coverage for avatar migration

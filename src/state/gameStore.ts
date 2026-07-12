@@ -94,10 +94,27 @@ type GameState = GameSave & {
 }
 
 export const defaultAvatar: AvatarSettings = {
+  bodyColor: '#9a5b43',
+  shirtColor: '#5eead4',
+  hat: 'none',
+  trail: 'none',
+}
+
+const legacyDefaultAvatar: AvatarSettings = {
   bodyColor: '#facc15',
   shirtColor: '#2563eb',
   hat: 'none',
   trail: 'none',
+}
+
+export function normalizeSavedAvatar(avatar: AvatarSettings | undefined): AvatarSettings | undefined {
+  if (!avatar) return undefined
+  const isLegacyDefault =
+    avatar.bodyColor === legacyDefaultAvatar.bodyColor &&
+    avatar.shirtColor === legacyDefaultAvatar.shirtColor &&
+    avatar.hat === legacyDefaultAvatar.hat &&
+    avatar.trail === legacyDefaultAvatar.trail
+  return isLegacyDefault ? defaultAvatar : avatar
 }
 
 export const defaultSettings: GameSettings = {
@@ -382,7 +399,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   loadFromSave: (save) =>
     set((state) => ({
       coins: save.coins ?? state.coins,
-      avatar: save.avatar ?? state.avatar,
+      avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
       unlockedItems: save.unlockedItems ?? state.unlockedItems,
       earnedBadges: save.earnedBadges ?? state.earnedBadges,
       placedBlocks: save.placedBlocks ?? state.placedBlocks,
