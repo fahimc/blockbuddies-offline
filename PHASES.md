@@ -154,3 +154,13 @@
 - [x] Add reference-style circular jump and interact controls
 - [x] Add compact landscape mobile HUD and side action pills
 - [x] Force Android APK orientation to landscape
+
+## Post-phase screen design refresh
+
+- [x] Add chunky BlockBuddies Offline logo and mascot icon
+- [x] Redesign splash and main menu from the supplied screen sheet
+- [x] Update shared modal/panel styling across feature screens
+- [x] Refresh quest, shop, avatar, settings, and buddy profile screens
+- [x] Add branded loading fallback for 3D asset loading
+- [x] Update favicon/PWA icon assets
+- [x] Capture refreshed desktop and mobile review screenshots

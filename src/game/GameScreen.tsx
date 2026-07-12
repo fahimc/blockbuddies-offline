@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { KeyboardControls, Sky } from '@react-three/drei'
+import { Html, KeyboardControls, Sky } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import { Suspense, useEffect } from 'react'
 import { ArrowLeft } from 'lucide-react'
@@ -58,7 +58,7 @@ export function GameScreen() {
           className="absolute inset-0"
           data-testid="game-canvas"
         >
-          <Suspense fallback={null}>
+          <Suspense fallback={<CanvasLoading />}>
             <Sky sunPosition={[100, 25, 100]} />
             <ambientLight intensity={0.72} />
             <directionalLight position={[8, 14, 10]} intensity={1.4} castShadow />
@@ -93,5 +93,16 @@ export function GameScreen() {
         {openPanel === 'emotes' ? <EmotePanel /> : null}
       </section>
     </KeyboardControls>
+  )
+}
+
+function CanvasLoading() {
+  return (
+    <Html center>
+      <div className="rounded-2xl bg-slate-950/85 px-5 py-4 text-center font-black text-white shadow-2xl">
+        <div className="text-lg">BlockBuddies</div>
+        <div className="text-xs text-sky-200">Loading town...</div>
+      </div>
+    </Html>
   )
 }

@@ -1,11 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="BlockBuddies icon">
-  <rect width="512" height="512" rx="96" fill="#38bdf8"/>
-  <rect x="70" y="278" width="372" height="154" rx="32" fill="#22c55e"/>
-  <rect x="108" y="160" width="120" height="136" rx="16" fill="#f97316"/>
-  <rect x="284" y="128" width="122" height="168" rx="16" fill="#e879f9"/>
-  <rect x="207" y="208" width="98" height="122" rx="20" fill="#2563eb"/>
-  <rect x="219" y="146" width="74" height="74" rx="18" fill="#facc15"/>
-  <circle cx="239" cy="178" r="7" fill="#0f172a"/>
-  <circle cx="273" cy="178" r="7" fill="#0f172a"/>
-  <path d="M235 198c15 14 28 14 43 0" fill="none" stroke="#0f172a" stroke-width="10" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="BlockBuddies Offline icon">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset=".55" stop-color="#bae6fd"/>
+      <stop offset=".56" stop-color="#7ee36f"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fde047"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#sky)"/>
+  <path d="M54 388c92-64 284-64 404 0v70H54z" fill="#16a34a"/>
+  <g transform="translate(95 85) rotate(-8 160 170)">
+    <rect x="94" y="78" width="168" height="168" rx="26" fill="url(#face)" stroke="#7c2d12" stroke-width="14"/>
+    <path d="M94 126c42-42 118-52 168-14v45H94z" fill="#92400e"/>
+    <rect x="52" y="178" width="54" height="112" rx="16" fill="#f97316"/>
+    <rect x="250" y="154" width="54" height="116" rx="16" fill="#f97316"/>
+    <rect x="122" y="240" width="112" height="134" rx="22" fill="#2563eb"/>
+    <rect x="72" y="344" width="210" height="28" rx="14" fill="#111827"/>
+    <circle cx="146" cy="163" r="13" fill="#111827"/>
+    <circle cx="214" cy="163" r="13" fill="#111827"/>
+    <path d="M151 201c21 22 45 22 66 0" fill="none" stroke="#111827" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <rect x="146" y="382" width="220" height="58" rx="18" fill="#1d4ed8" stroke="#bfdbfe" stroke-width="8"/>
+  <text x="256" y="421" text-anchor="middle" font-family="Arial, sans-serif" font-size="31" font-weight="900" fill="white">Offline</text>
 </svg>

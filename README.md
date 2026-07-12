@@ -17,6 +17,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies mobile visual check](docs/review/kenney-final-mobile.png)
 
+![BlockBuddies redesigned menu](docs/review/screen-design-menu-desktop.png)
+
+![BlockBuddies redesigned mobile game UI](docs/review/screen-design-game-mobile-delayed.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -36,6 +40,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Kenney CC0 blocky character models and prototype grid textures.
 - Landscape mobile game HUD with chat icon, virtual joystick, circular jump,
   interact, and reset/remove controls.
+- Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
+  and buddy profile screens inspired by the supplied screen design sheet.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.

@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.3.3-screen-design-refresh] - 2026-07-12
+
+### Added
+
+- Added a reusable chunky BlockBuddies Offline logo component with mascot and offline badge styling.
+- Added redesigned splash/main menu screens with banner, feature chips, buddy lineup, town backdrop, and robot helper.
+- Added updated favicon and PWA icon artwork using the new block buddy mascot direction.
+- Added a branded canvas loading fallback while 3D assets load.
+- Added updated review screenshots for redesigned menu and game layouts.
+
+### Changed
+
+- Restyled shared panels with blue headers, rounded white/blue bodies, tab strips, progress rows, item grids, profile cards, and custom toggles.
+- Updated Quest Log, Shop, Avatar, Settings, and Buddy Profile screens to follow the supplied screen-design sheet more closely.
+- Updated the browser title to BlockBuddies Offline.
+
+### Fixed
+
+- Preserved a single accessible Play button target for existing smoke tests while keeping the visual uppercase PLAY treatment.
+
+### Known Issues
+
+- The redesigned artwork is implemented with local CSS/SVG primitives and existing licensed assets; it does not use copied Roblox assets or external brand content.
+
 ## [v1.3.2-mobile-gamepad-ui] - 2026-07-12
 
 ### Added
