@@ -34,6 +34,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Kenney CC0 blocky character models and prototype grid textures.
+- Landscape mobile game HUD with chat icon, virtual joystick, circular jump,
+  interact, and reset/remove controls.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.

@@ -146,3 +146,11 @@
 - [x] Prevent Android text selection/copy menu during gameplay
 - [x] Clear stale native WebView service worker caches on Android app startup
 - [x] Add unit coverage for avatar migration
+
+## Post-phase mobile gamepad UI
+
+- [x] Collapse mobile chat behind a chat icon
+- [x] Replace mobile D-pad with an analog-style joystick
+- [x] Add reference-style circular jump and interact controls
+- [x] Add compact landscape mobile HUD and side action pills
+- [x] Force Android APK orientation to landscape

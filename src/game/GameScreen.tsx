@@ -71,10 +71,11 @@ export function GameScreen() {
         <button
           type="button"
           onClick={() => setScreen('menu')}
-          className="absolute left-3 top-3 z-20 inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-950/90 px-4 font-black text-white shadow-lg"
+          className="game-menu-button absolute left-3 top-3 z-30 inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-950/90 px-4 font-black text-white shadow-lg"
+          title="Menu"
         >
           <ArrowLeft size={18} aria-hidden />
-          Menu
+          <span className="game-menu-label">Menu</span>
         </button>
 
         <HUD />

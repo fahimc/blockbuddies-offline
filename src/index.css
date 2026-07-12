@@ -81,3 +81,152 @@ canvas {
   min-width: 3.75rem;
   min-height: 3.75rem;
 }
+
+.mobile-game-hud,
+.touch-control-layer,
+.mobile-chat-button,
+.mobile-chat-drawer {
+  display: none;
+}
+
+.mobile-action-pill {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 900;
+  box-shadow: 0 0.4rem 1rem rgb(15 23 42 / 0.22);
+}
+
+.virtual-joystick {
+  width: 6.25rem;
+  height: 6.25rem;
+  border: 0.16rem solid rgb(255 255 255 / 0.68);
+  background: rgb(15 23 42 / 0.24);
+  box-shadow:
+    inset 0 0 0 0.16rem rgb(15 23 42 / 0.28),
+    0 0.8rem 1.6rem rgb(15 23 42 / 0.22);
+  touch-action: none;
+}
+
+.virtual-joystick::before {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  content: "";
+}
+
+.joystick-thumb {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 0.16rem solid rgb(255 255 255 / 0.78);
+  background: rgb(15 23 42 / 0.62);
+  box-shadow: 0 0.45rem 1rem rgb(15 23 42 / 0.3);
+  touch-action: none;
+}
+
+.mobile-jump-button,
+.mobile-use-button,
+.mobile-remove-button {
+  display: grid;
+  place-items: center;
+  border: 0.16rem solid rgb(255 255 255 / 0.72);
+  color: white;
+  font-weight: 900;
+  box-shadow: 0 0.75rem 1.5rem rgb(15 23 42 / 0.25);
+  touch-action: none;
+}
+
+.mobile-jump-button {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.28);
+}
+
+.mobile-use-button {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.38);
+}
+
+.mobile-remove-button {
+  min-width: 3.9rem;
+  min-height: 3.9rem;
+  align-self: flex-end;
+  margin-bottom: 0.25rem;
+  border-radius: 0.75rem;
+  background: rgb(239 68 68 / 0.96);
+  font-size: 0.64rem;
+  line-height: 1;
+}
+
+@media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
+  .desktop-hud,
+  .chat-panel-desktop {
+    display: none !important;
+  }
+
+  .mobile-game-hud {
+    display: block;
+  }
+
+  .touch-control-layer {
+    display: flex;
+  }
+
+  .mobile-chat-button {
+    display: grid;
+  }
+
+  .mobile-chat-drawer {
+    display: flex;
+  }
+
+  .game-menu-button {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    justify-content: center;
+    padding: 0;
+    border-radius: 0.62rem;
+  }
+
+  .game-menu-label {
+    display: none;
+  }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .touch-control-layer {
+    bottom: 1rem;
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+  }
+
+  .virtual-joystick {
+    width: 5.8rem;
+    height: 5.8rem;
+  }
+
+  .mobile-jump-button {
+    width: 4.8rem;
+    height: 4.8rem;
+  }
+
+  .mobile-use-button {
+    width: 2.9rem;
+    height: 2.9rem;
+  }
+
+  .mobile-remove-button {
+    min-width: 3.55rem;
+    min-height: 3.55rem;
+  }
+}

@@ -10,6 +10,7 @@ import {
   Settings,
   ShoppingBag,
   Smile,
+  Sparkles,
   Trophy,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -23,14 +24,15 @@ export function HUD() {
   const saveStatus = useGameStore((state) => state.saveStatus)
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
 
+  const locationLabel = nearbyLocation ? getLocation(nearbyLocation).label : undefined
+
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-24 max-md:top-16 max-md:px-3">
-      <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-lg bg-white/90 p-2 shadow-xl backdrop-blur">
+    <>
+      <div className="desktop-hud pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-24 max-md:top-16 max-md:px-3">
+        <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-lg bg-white/90 p-2 shadow-xl backdrop-blur">
         <Badge icon={<Coins size={18} />} text={`${coins}`} tone="bg-amber-300" />
         {obby.active ? <Badge icon={<Trophy size={18} />} text="Obby running" tone="bg-red-200" /> : null}
-        {nearbyLocation ? (
-          <Badge icon={<Backpack size={18} />} text={`Near ${getLocation(nearbyLocation).label}`} tone="bg-sky-200" />
-        ) : null}
+        {locationLabel ? <Badge icon={<Backpack size={18} />} text={`Near ${locationLabel}`} tone="bg-sky-200" /> : null}
         <button type="button" onClick={() => setOpenPanel('quests')} className="hud-button" title="Quests">
           <ListChecks size={20} aria-hidden />
         </button>
@@ -62,14 +64,52 @@ export function HUD() {
           <Settings size={20} aria-hidden />
         </button>
         <span className="px-2 text-xs font-bold text-slate-500">{saveStatus}</span>
+        </div>
       </div>
-    </div>
+
+      <div className="mobile-game-hud pointer-events-none absolute inset-x-0 top-3 z-20 hidden">
+        <div className="mobile-scorebar pointer-events-auto mx-auto flex w-max max-w-[58vw] items-center gap-1.5 rounded-full bg-white/40 p-1 shadow-lg backdrop-blur">
+          <MobilePill icon={<Coins size={14} />} text={`${coins}`} tone="bg-amber-400 text-slate-950" />
+          {obby.active ? <MobilePill icon={<Trophy size={14} />} text="Obby" tone="bg-rose-500 text-white" /> : null}
+          <MobilePill icon={<Sparkles size={14} />} text={locationLabel ?? saveStatus} tone="bg-emerald-500 text-white" />
+        </div>
+        <div className="mobile-right-actions pointer-events-auto absolute right-3 top-12 flex flex-col items-end gap-1.5">
+          <button type="button" onClick={() => setOpenPanel('server')} className="mobile-action-pill bg-sky-500">
+            <Server size={13} aria-hidden />
+            Travel
+          </button>
+          <button type="button" onClick={() => setOpenPanel('settings')} className="mobile-action-pill bg-fuchsia-500">
+            <Settings size={13} aria-hidden />
+            Settings
+          </button>
+        </div>
+        <div className="mobile-left-actions pointer-events-auto absolute left-3 top-12 flex flex-col gap-1.5">
+          <button type="button" onClick={() => setOpenPanel('build')} className="mobile-action-pill bg-amber-400 text-slate-950">
+            <Blocks size={13} aria-hidden />
+            Build
+          </button>
+          <button type="button" onClick={() => setOpenPanel('shop')} className="mobile-action-pill bg-rose-500">
+            <ShoppingBag size={13} aria-hidden />
+            Shop
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
 
 function Badge({ icon, text, tone }: { icon: ReactNode; text: string; tone: string }) {
   return (
     <span className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-black text-slate-950 ${tone}`}>
+      {icon}
+      {text}
+    </span>
+  )
+}
+
+function MobilePill({ icon, text, tone }: { icon: ReactNode; text: string; tone: string }) {
+  return (
+    <span className={`inline-flex min-h-7 items-center gap-1 rounded-full px-3 text-[11px] font-black shadow ${tone}`}>
       {icon}
       {text}
     </span>

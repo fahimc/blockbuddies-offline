@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.3.2-mobile-gamepad-ui] - 2026-07-12
+
+### Added
+
+- Added a compact mobile game HUD with small currency/status pills and side action buttons.
+- Added a mobile chat icon with an expandable chat drawer.
+- Added analog-style mobile joystick controls, a circular jump button, an interact button, and a center reset/remove control.
+
+### Changed
+
+- Collapsed the mobile menu into an icon-only button to match a landscape mobile game layout.
+- Set the Android activity orientation to landscape for the game-like control layout.
+
+### Fixed
+
+- Replaced the large mobile D-pad/always-open chat panel that blocked too much of the play view.
+
+### Known Issues
+
+- Desktop keeps the full toolbar/chat layout; the new compact HUD is for phone/coarse-pointer and short landscape screens.
+
 ## [v1.3.1-mobile-character-fixes] - 2026-07-12
 
 ### Added
