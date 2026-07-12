@@ -1070,6 +1070,83 @@ canvas {
   box-shadow: 0 0.2rem 0.65rem rgb(15 23 42 / 0.06);
 }
 
+.bb-party-card {
+  border: 0.08rem solid rgb(56 189 248 / 0.22);
+  border-radius: 1rem;
+  background: linear-gradient(#ffffff, #eff9ff);
+  padding: 0.75rem;
+  box-shadow: 0 0.28rem 0.9rem rgb(15 23 42 / 0.08);
+}
+
+.bb-party-status {
+  flex: none;
+  border-radius: 999px;
+  background: #e2e8f0;
+  padding: 0.38rem 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #334155;
+  text-transform: uppercase;
+}
+
+.bb-party-status.hosting,
+.bb-party-status.joining,
+.bb-party-status.connecting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.bb-party-status.connected {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.bb-party-status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.bb-party-action {
+  min-height: 2.55rem;
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: white;
+  box-shadow: inset 0 0.12rem 0 rgb(255 255 255 / 0.32), 0 0.18rem 0.55rem rgb(15 23 42 / 0.12);
+}
+
+.bb-party-action.host,
+.bb-party-action.accept {
+  background: linear-gradient(#5ce460, #16a34a);
+}
+
+.bb-party-action.join {
+  width: 100%;
+  margin-top: 0.5rem;
+  background: linear-gradient(#38bdf8, #2563eb);
+}
+
+.bb-party-action.disconnect {
+  background: linear-gradient(#fb7185, #e11d48);
+}
+
+.bb-party-code {
+  display: block;
+  width: 100%;
+  min-height: 5rem;
+  resize: vertical;
+  border: 0.12rem solid rgb(186 230 253 / 0.9);
+  border-radius: 0.75rem;
+  background: white;
+  padding: 0.55rem 0.65rem;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: break-all;
+}
+
 .bb-toggle {
   position: relative;
   display: inline-flex;

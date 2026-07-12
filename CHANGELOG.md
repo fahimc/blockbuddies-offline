@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.3.8-local-party-multiplayer] - 2026-07-12
+
+### Added
+
+- Added a Local Party feature for nearby local players using manual WebRTC invite and answer codes.
+- Added live remote-player avatars rendered in the 3D town with synced name, avatar colours, position, yaw, and movement action.
+- Added Local Server panel controls for hosting, joining, accepting answer codes, disconnecting, and viewing connected local players.
+- Added unit coverage for local party code encoding, decoding, player-name sanitizing, snapshot creation, and stale-player checks.
+- Added Playwright smoke coverage for the Local Party UI inside the Local Server panel.
+
+### Changed
+
+- Updated Android version metadata to `1.3.8` / `10308`.
+
+### Fixed
+
+- Kept real nearby players separate from AI buddies so offline bot simulation remains available when no local party is connected.
+
+### Known Issues
+
+- Local Party uses browser/device WebRTC support and manual code exchange. There is no cloud matchmaking, relay, TURN server, or internet game server.
+- Debug APK signing is used; production signing is still not configured.
+
 ## [v1.3.7-splash-overlay-polish] - 2026-07-12
 
 ### Added

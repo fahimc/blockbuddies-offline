@@ -51,6 +51,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
+- Local Party nearby multiplayer with manual WebRTC invite/answer codes and
+  live synced player avatars.
 - Kenney CC0 blocky character models and prototype grid textures.
 - Landscape mobile game HUD with chat icon, virtual joystick, circular jump,
   interact, and reset/remove controls.
@@ -116,6 +118,11 @@ or saves. After the first successful load, the production build is cacheable for
 offline play. Current builds use auto-update, client claiming, and outdated cache
 cleanup so installed web/PWA sessions pick up new UI bundles more reliably.
 
+Local Party multiplayer is peer-to-peer and uses manual invite/answer codes. It
+does not use BlockBuddies cloud servers, matchmaking, accounts, or free-text
+chat. WebRTC support and local network/browser permissions can affect whether
+two nearby devices connect.
+
 ## Android APK Build
 
 Capacitor writes the Android project to `android/`. Debug APKs are built with:
@@ -151,6 +158,10 @@ The `v1.3.6` APK removes the forced landscape orientation so the splash can open
 in portrait. The splash uses the measured Android WebView height, so the Play
 button stays visible when system UI changes the available space.
 
+The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
+devices can exchange host invite and join answer codes to connect through
+WebRTC when the device WebView supports peer connections.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -178,11 +189,14 @@ Roblox-inspired prototype.
 ## Known Limitations
 
 - This is a complete prototype, not a production-scale multiplayer game.
+- Local Party supports nearby manual peer-to-peer sessions only; it has no cloud
+  matchmaking, relay/TURN fallback, persistence for remote players, or account
+  system.
 - Building collision is visual-only; floor/checkpoint safety is implemented.
 - Ghost racers are represented by buddy reactions rather than full racing AI.
 - The Three.js bundle is large and should be code-split before a store release.
 - Android production signing is not configured; release artifacts use debug APKs.
-- Full Roblox-platform features such as real multiplayer servers, Robux,
+- Full Roblox-platform features such as global multiplayer servers, Robux,
   moderation, voice chat, creator marketplace publishing, and cloud social graph
   are intentionally out of scope for this offline prototype.
 - If an older Android debug APK showed old cached visuals after an update,

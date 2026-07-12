@@ -205,3 +205,15 @@
 - [x] Lower 3D HTML label z-index below app panels and chat
 - [x] Bump Android debug APK version metadata to 1.3.7 / 10307
 - [x] Capture updated splash and overlay review screenshots
+
+## Post-phase local party multiplayer
+
+- [x] Add manual WebRTC host invite code flow
+- [x] Add manual WebRTC join answer code flow
+- [x] Add Local Server UI for player name, hosting, joining, accepting answers, and disconnecting
+- [x] Sync local player position, yaw, avatar colours, and movement action to connected peers
+- [x] Render connected local players as live block avatars in the 3D town
+- [x] Keep AI simulated buddies active when no local players are connected
+- [x] Add unit tests for local party signaling and snapshot helpers
+- [x] Add smoke coverage for the Local Party UI
+- [x] Bump Android debug APK version metadata to 1.3.8 / 10308

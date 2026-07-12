@@ -14,10 +14,19 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await page.getByTestId('game-canvas').waitFor()
 
   for (const title of ['Leaderboard', 'Badges', 'Build', 'Server', 'Emotes']) {
-    await page.getByTitle(title).click()
+    const hudButton = page.locator('.desktop-hud').getByRole('button', { name: title })
+    await hudButton.scrollIntoViewIfNeeded()
+    await hudButton.click()
     await expect(page.getByRole('heading', { name: title === 'Server' ? 'Local Server' : title })).toBeVisible()
     await page.getByTitle('Close').click()
   }
+
+  const serverButton = page.locator('.desktop-hud').getByRole('button', { name: 'Server' })
+  await serverButton.scrollIntoViewIfNeeded()
+  await serverButton.click()
+  await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
+  await expect(page.getByLabel('Join with invite code')).toBeVisible()
 })
 
 test.describe('landscape phone layout', () => {

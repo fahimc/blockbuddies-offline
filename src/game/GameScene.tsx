@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
+import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import type { BotRuntime, Vec3 } from './types'
 
 const obbyCheckpoints: Vec3[] = [
@@ -23,6 +24,7 @@ export function GameScene() {
       <Town />
       <PlayerController />
       <Bots />
+      <LocalPartyPlayers />
       <ObbyCourse />
       <CoinField />
       <ToyPickup />
@@ -277,6 +279,7 @@ function PlayerController() {
   const velocityY = useRef(0)
   const yaw = useRef(0)
   const lastBuildAt = useRef(0)
+  const lastPartyBroadcastAt = useRef(0)
   const movingRef = useRef(false)
   const airborneRef = useRef(false)
   const [moving, setMoving] = useState(false)
@@ -299,6 +302,9 @@ function PlayerController() {
   const recordBotMeet = useGameStore((state) => state.recordBotMeet)
   const bots = useGameStore((state) => state.bots)
   const visitedBots = useGameStore((state) => state.visitedBots)
+  const partyPlayerId = useLocalPartyStore((state) => state.playerId)
+  const partyPlayerName = useLocalPartyStore((state) => state.playerName)
+  const broadcastSnapshot = useLocalPartyStore((state) => state.broadcastSnapshot)
 
   useFrame((state, delta) => {
     const keys = getKeys()
@@ -348,6 +354,19 @@ function PlayerController() {
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + 1.4, position.current.z)
     setPlayer([position.current.x, position.current.y - 0.9, position.current.z], yaw.current)
+    if (performance.now() - lastPartyBroadcastAt.current > 120) {
+      broadcastSnapshot(
+        makePartySnapshot({
+          id: partyPlayerId,
+          name: partyPlayerName,
+          position: [position.current.x, position.current.y - 0.9, position.current.z],
+          yaw: yaw.current,
+          avatar,
+          action: isAirborne ? 'jump' : isMoving ? 'run' : 'idle',
+        }),
+      )
+      lastPartyBroadcastAt.current = performance.now()
+    }
 
     const nearby = nearestLocation([position.current.x, 0, position.current.z])
     setNearbyLocation(nearby)
@@ -388,6 +407,43 @@ function PlayerController() {
         hat={avatar.hat !== 'none'}
         emote={playerEmote}
         action={airborne ? 'jump' : moving ? 'run' : 'idle'}
+      />
+    </group>
+  )
+}
+
+function LocalPartyPlayers() {
+  const lastPruneAt = useRef(0)
+  const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
+  const pruneRemotePlayers = useLocalPartyStore((state) => state.pruneRemotePlayers)
+  const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
+
+  useFrame(() => {
+    const now = Date.now()
+    if (now - lastPruneAt.current > 1000) {
+      pruneRemotePlayers(now)
+      lastPruneAt.current = now
+    }
+  })
+
+  return (
+    <>
+      {remotePlayers.map((player) => (
+        <LocalPartyAvatar key={player.id} player={player} />
+      ))}
+    </>
+  )
+}
+
+function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
+  return (
+    <group position={[player.position[0], player.position[1] + 0.9, player.position[2]]} rotation={[0, player.yaw, 0]}>
+      <BlockAvatar
+        bodyColor={player.avatar.bodyColor}
+        shirtColor={player.avatar.shirtColor}
+        username={player.name}
+        hat={player.avatar.hat !== 'none'}
+        action={player.action}
       />
     </group>
   )

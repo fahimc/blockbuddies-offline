@@ -33,34 +33,34 @@ export function HUD() {
         <Badge icon={<Coins size={18} />} text={`${coins}`} tone="bg-amber-300" />
         {obby.active ? <Badge icon={<Trophy size={18} />} text="Obby running" tone="bg-red-200" /> : null}
         {locationLabel ? <Badge icon={<Backpack size={18} />} text={`Near ${locationLabel}`} tone="bg-sky-200" /> : null}
-        <button type="button" onClick={() => setOpenPanel('quests')} className="hud-button" title="Quests">
+        <button type="button" onClick={() => setOpenPanel('quests')} className="hud-button" title="Quests" aria-label="Quests">
           <ListChecks size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('shop')} className="hud-button" title="Shop">
+        <button type="button" onClick={() => setOpenPanel('shop')} className="hud-button" title="Shop" aria-label="Shop">
           <ShoppingBag size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('avatar')} className="hud-button" title="Avatar">
+        <button type="button" onClick={() => setOpenPanel('avatar')} className="hud-button" title="Avatar" aria-label="Avatar">
           <Palette size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('friends')} className="hud-button" title="Friends">
+        <button type="button" onClick={() => setOpenPanel('friends')} className="hud-button" title="Friends" aria-label="Friends">
           <HeartHandshake size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('leaderboard')} className="hud-button" title="Leaderboard">
+        <button type="button" onClick={() => setOpenPanel('leaderboard')} className="hud-button" title="Leaderboard" aria-label="Leaderboard">
           <Trophy size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('badges')} className="hud-button" title="Badges">
+        <button type="button" onClick={() => setOpenPanel('badges')} className="hud-button" title="Badges" aria-label="Badges">
           <Medal size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('build')} className="hud-button" title="Build">
+        <button type="button" onClick={() => setOpenPanel('build')} className="hud-button" title="Build" aria-label="Build">
           <Blocks size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('server')} className="hud-button" title="Server">
+        <button type="button" onClick={() => setOpenPanel('server')} className="hud-button" title="Server" aria-label="Server">
           <Server size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('emotes')} className="hud-button" title="Emotes">
+        <button type="button" onClick={() => setOpenPanel('emotes')} className="hud-button" title="Emotes" aria-label="Emotes">
           <Smile size={20} aria-hidden />
         </button>
-        <button type="button" onClick={() => setOpenPanel('settings')} className="hud-button" title="Settings">
+        <button type="button" onClick={() => setOpenPanel('settings')} className="hud-button" title="Settings" aria-label="Settings">
           <Settings size={20} aria-hidden />
         </button>
         <span className="px-2 text-xs font-bold text-slate-500">{saveStatus}</span>
