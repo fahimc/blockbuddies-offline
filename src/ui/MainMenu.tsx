@@ -32,12 +32,12 @@ export function MainMenu({ onPlay }: MainMenuProps) {
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-3 lg:grid-cols-[0.92fr_1.08fr]">
-        <section className="bb-hero-card relative min-h-[32rem] overflow-hidden rounded-2xl border-4 border-white/80 shadow-2xl">
+        <section className="bb-hero-card bb-menu-screen-card relative overflow-hidden rounded-2xl border-4 border-white/80 shadow-2xl">
           <div className="bb-cloud c1" />
           <div className="bb-cloud c2" />
           <div className="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-emerald-400 via-lime-300 to-transparent" />
           <TownBackdrop />
-          <div className="relative z-10 flex h-full min-h-[32rem] flex-col items-center justify-between p-5">
+          <div className="bb-hero-inner relative z-10 flex h-full flex-col items-center justify-between p-5">
             <BrandLogo compact />
             <div className="bb-character-line" aria-hidden>
               <MenuBuddy hair="brown" shirt="bg-blue-600" />
@@ -57,7 +57,7 @@ export function MainMenu({ onPlay }: MainMenuProps) {
           </div>
         </section>
 
-        <section className="bb-menu-card grid min-h-[32rem] gap-4 rounded-2xl border-4 border-white/70 p-4 shadow-2xl lg:grid-cols-[16rem_1fr]">
+        <section className="bb-menu-card bb-menu-screen-card grid gap-4 rounded-2xl border-4 border-white/70 p-4 shadow-2xl lg:grid-cols-[16rem_1fr]">
           <nav className="flex flex-col gap-3">
             <MenuButton icon={<Play size={24} fill="currentColor" />} label="PLAY" ariaLabel="Open game" tone="from-emerald-400 to-green-600" onClick={onPlay} />
             <MenuButton icon={<UserRound size={23} />} label="AVATAR" tone="from-sky-400 to-blue-600" onClick={() => openGamePanel('avatar')} />
@@ -66,7 +66,7 @@ export function MainMenu({ onPlay }: MainMenuProps) {
             <MenuButton icon={<Settings size={23} />} label="SETTINGS" tone="from-slate-400 to-slate-700" onClick={() => openGamePanel('settings')} />
           </nav>
 
-          <div className="relative min-h-[26rem] overflow-hidden rounded-2xl bg-sky-200">
+          <div className="bb-menu-preview relative overflow-hidden rounded-2xl bg-sky-200">
             <div className="absolute inset-0 bg-[linear-gradient(#7dd3fc_0%,#bae6fd_54%,#86efac_55%,#22c55e_100%)]" />
             <TownBackdrop dense />
             <div className="absolute bottom-7 right-8">

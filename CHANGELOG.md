@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.3.4-responsive-cache-fix] - 2026-07-12
+
+### Added
+
+- Added a landscape phone smoke test that verifies the design-sheet splash UI and compact in-game controls.
+- Added updated production review screenshots for the responsive phone menu, responsive phone gameplay, and desktop gameplay.
+
+### Changed
+
+- Tightened short landscape splash/menu sizing so the reference-style cards fit phone-height viewports instead of clipping.
+- Updated Android version metadata to `1.3.4` / `10304` for the debug APK.
+- Updated PWA service worker settings to claim new builds and clean outdated caches more aggressively.
+
+### Fixed
+
+- Fixed Android APK startup so stale WebView service worker/cache data is cleared before Capacitor loads the web bundle.
+- Fixed the phone layout shown in the latest screenshots where the old menu, always-open chat, and desktop toolbar could remain visible from cached builds.
+- Fixed short landscape safe-area spacing for the top HUD, side actions, joystick, jump button, and chat drawer.
+
+### Known Issues
+
+- The first launch after this APK update clears WebView storage for this app version to remove stale cached UI; local save data may reset on that upgrade.
+- The Three.js production bundle is still large and should be code-split before a store release.
+
 ## [v1.3.3-screen-design-refresh] - 2026-07-12
 
 ### Added

@@ -19,3 +19,26 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     await page.getByTitle('Close').click()
   }
 })
+
+test.describe('landscape phone layout', () => {
+  test.use({
+    viewport: { width: 1280, height: 576 },
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('uses responsive splash and compact in-game controls', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByText('OFFLINE SANDBOX TOWN')).toHaveCount(0)
+    await expect(page.locator('.bb-top-banner')).toBeVisible()
+    await expect(page.locator('.bb-menu-screen-card').first()).toBeInViewport()
+
+    await page.getByRole('button', { name: 'Play' }).click()
+    await expect(page.getByTestId('game-canvas')).toBeVisible()
+    await expect(page.locator('.desktop-hud')).toBeHidden()
+    await expect(page.locator('.chat-panel-desktop')).toBeHidden()
+    await expect(page.locator('.mobile-chat-button')).toBeVisible()
+    await expect(page.locator('.virtual-joystick')).toBeVisible()
+    await expect(page.locator('.mobile-jump-button')).toBeVisible()
+  })
+})

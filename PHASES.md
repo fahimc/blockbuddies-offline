@@ -164,3 +164,13 @@
 - [x] Add branded loading fallback for 3D asset loading
 - [x] Update favicon/PWA icon assets
 - [x] Capture refreshed desktop and mobile review screenshots
+
+## Post-phase responsive APK cleanup
+
+- [x] Add native Android WebView cache/storage cleanup before Capacitor loads
+- [x] Bump Android debug APK version metadata to 1.3.4 / 10304
+- [x] Tighten short landscape splash/menu sizing for phone viewports
+- [x] Keep chat behind the mobile chat icon and hide desktop HUD/chat on landscape phones
+- [x] Add safe-area spacing for joystick, jump, interact, side actions, and chat drawer
+- [x] Add Playwright smoke coverage for the 1280x576 landscape phone layout
+- [x] Capture updated production review screenshots

@@ -21,6 +21,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies redesigned mobile game UI](docs/review/screen-design-game-mobile-delayed.png)
 
+![BlockBuddies responsive phone menu](docs/review/responsive-cache-fix-phone-menu.png)
+
+![BlockBuddies responsive phone gameplay](docs/review/responsive-cache-fix-phone-game.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -42,6 +46,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   interact, and reset/remove controls.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
   and buddy profile screens inspired by the supplied screen design sheet.
+- Responsive landscape phone layout with compact menu cards, chat icon, safe-area
+  spacing, and reference-style joystick/jump controls.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.
@@ -92,7 +98,8 @@ npm run android:debug
 The PWA plugin generates a service worker with an offline app shell. The game
 does not depend on live servers for bots, dialogue, quests, inventory, memory,
 or saves. After the first successful load, the production build is cacheable for
-offline play.
+offline play. Current builds use auto-update, client claiming, and outdated cache
+cleanup so installed web/PWA sessions pick up new UI bundles more reliably.
 
 ## Android APK Build
 
@@ -115,6 +122,11 @@ $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
+
+The `v1.3.4` debug APK clears stale Android WebView cache/storage once for this
+app version before the Capacitor web bundle loads. This is intentional so older
+installed debug APKs cannot keep showing the pre-refresh menu or always-open
+chat UI from an old service worker.
 
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
@@ -151,8 +163,9 @@ Roblox-inspired prototype.
   moderation, voice chat, creator marketplace publishing, and cloud social graph
   are intentionally out of scope for this offline prototype.
 - If an older Android debug APK showed old cached visuals after an update,
-  install `v1.3.1-mobile-character-fixes` or later; native startup clears stale
-  WebView service worker caches before rendering.
+  install `v1.3.4-responsive-cache-fix` or later; native startup clears stale
+  WebView service worker/cache storage before rendering. That cleanup can reset
+  local WebView save data on the upgrade where it runs.
 
 ## Credits
 

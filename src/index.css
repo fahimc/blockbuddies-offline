@@ -22,8 +22,10 @@ html,
 body,
 #root {
   width: 100%;
+  max-width: 100vw;
   min-height: 100%;
   height: 100%;
+  height: 100dvh;
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
@@ -242,6 +244,18 @@ canvas {
   background:
     linear-gradient(90deg, rgb(5 25 67 / 0.98), rgb(13 71 135 / 0.96)),
     radial-gradient(circle at right, rgb(56 189 248 / 0.45), transparent 18rem);
+}
+
+.bb-menu-screen-card {
+  min-height: min(32rem, calc(100dvh - 10.5rem));
+}
+
+.bb-hero-inner {
+  min-height: min(32rem, calc(100dvh - 10.5rem));
+}
+
+.bb-menu-preview {
+  min-height: min(26rem, calc(100dvh - 13rem));
 }
 
 .bb-brand {
@@ -854,6 +868,159 @@ canvas {
 
 .bb-buddy-avatar::after {
   right: 1.15rem;
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  .bb-splash {
+    overflow-y: auto;
+    padding: max(0.45rem, env(safe-area-inset-top)) max(0.55rem, env(safe-area-inset-right))
+      max(0.45rem, env(safe-area-inset-bottom)) max(0.55rem, env(safe-area-inset-left));
+  }
+
+  .bb-top-banner {
+    margin-bottom: 0.45rem;
+    gap: 0.75rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 1rem;
+  }
+
+  .bb-top-banner .bb-brand-mascot {
+    width: 2.35rem;
+    height: 2.45rem;
+  }
+
+  .bb-top-banner .bb-mascot-head {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .bb-top-banner .bb-logo-line {
+    font-size: clamp(1.65rem, 3.8vw, 3rem);
+  }
+
+  .bb-top-banner .bb-offline-badge {
+    min-width: 5.4rem;
+    padding: 0.18rem 0.65rem 0.26rem;
+    font-size: 0.9rem;
+  }
+
+  .bb-menu-screen-card {
+    min-height: calc(100dvh - 7rem);
+  }
+
+  .bb-hero-inner {
+    min-height: calc(100dvh - 7rem);
+    padding: 0.75rem;
+  }
+
+  .bb-brand-compact .bb-logo-line {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+  }
+
+  .bb-brand-compact .bb-offline-badge {
+    min-width: 5.6rem;
+    font-size: 0.9rem;
+  }
+
+  .bb-character-line {
+    transform: scale(0.84);
+    transform-origin: center bottom;
+  }
+
+  .bb-play-button {
+    min-height: 3.1rem;
+    margin-bottom: 0;
+    padding-inline: 1.7rem;
+    border-radius: 0.9rem;
+    font-size: 1.45rem;
+  }
+
+  .bb-menu-card {
+    grid-template-columns: minmax(9rem, 13rem) 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 1rem;
+  }
+
+  .bb-menu-card nav {
+    gap: 0.45rem;
+  }
+
+  .bb-menu-button {
+    min-height: 2.45rem;
+    gap: 0.55rem;
+    padding-inline: 0.8rem;
+    border-radius: 0.7rem;
+    font-size: 0.96rem;
+  }
+
+  .bb-menu-preview {
+    min-height: calc(100dvh - 9rem);
+    border-radius: 0.95rem;
+  }
+
+  .bb-robot-helper {
+    width: 5.9rem;
+    height: 8rem;
+  }
+
+  .bb-robot-head {
+    left: 0.9rem;
+    width: 4rem;
+    height: 3.15rem;
+  }
+
+  .bb-robot-eye {
+    top: 0.9rem;
+  }
+
+  .bb-robot-eye.left {
+    left: 1.2rem;
+  }
+
+  .bb-robot-eye.right {
+    right: 1.2rem;
+  }
+
+  .bb-robot-mouth {
+    left: 1.45rem;
+    top: 1.95rem;
+  }
+
+  .bb-robot-body {
+    left: 1.2rem;
+    top: 3.15rem;
+    width: 3.55rem;
+    height: 4.55rem;
+  }
+
+  .bb-splash footer {
+    display: none;
+  }
+
+  .mobile-game-hud {
+    top: max(0.55rem, env(safe-area-inset-top));
+  }
+
+  .mobile-scorebar {
+    max-width: 42vw;
+  }
+
+  .mobile-left-actions,
+  .mobile-right-actions {
+    top: 2.9rem;
+  }
+
+  .touch-control-layer {
+    bottom: max(0.7rem, env(safe-area-inset-bottom));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .mobile-chat-drawer {
+    max-height: calc(100dvh - 4.4rem);
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
