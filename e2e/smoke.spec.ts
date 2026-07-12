@@ -4,5 +4,6 @@ test('opens menu and navigates to game shell', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeVisible()
   await page.getByRole('button', { name: 'Play' }).click()
-  await expect(page.getByRole('heading', { name: 'Game Scene Placeholder' })).toBeVisible()
+  await expect(page.getByTestId('game-canvas')).toBeVisible()
+  await expect(page.getByText('Local server started')).toBeVisible()
 })

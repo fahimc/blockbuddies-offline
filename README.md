@@ -2,20 +2,35 @@
 
 BlockBuddies Offline is a colourful web-first 3D sandbox town where local AI
 buddies make the world feel like a small multiplayer server without using the
-internet.
+internet. It is inspired by blocky sandbox play, but it uses original procedural
+shapes, UI, names, and dialogue.
 
 ## Screenshots
 
-Phase 0 includes the menu shell and game placeholder. Final screenshots are added
-during the polish phase.
+Screenshots are stored in `docs/screenshots/`.
+
+![BlockBuddies menu](docs/screenshots/menu.png)
+
+![BlockBuddies game](docs/screenshots/game.png)
 
 ## Features
 
-- Offline-first sandbox structure.
-- Main menu and game screen navigation.
-- PWA and Capacitor Android foundation.
-- Planned 3D town, simulated players, chat, quests, obby, coins, shop, avatar
-  customisation, bot memory, and offline saves.
+- Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
+- Third-person blocky player with desktop movement and mobile touch controls.
+- Eight AI-simulated buddies with usernames, profiles, schedules, moods, goals,
+  state transitions, and visible actions.
+- Local fake multiplayer chat, speech bubbles, quick replies, join messages, and
+  kid-safe dialogue templates.
+- Five starter quests, rewards, coin pickups, local progress saving, and bot
+  reactions.
+- Beginner obby with checkpoints, finish reward, restart/start control, and bot
+  cheering.
+- Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
+  trail placeholder.
+- Bot memory, friendship levels, times met, and relationship-aware greetings.
+- PWA manifest, service worker offline cache, settings, graphics quality,
+  reduced motion, audio/music toggles, and save reset.
+- Capacitor Android project with debug APK output.
 
 ## Tech Stack
 
@@ -60,8 +75,10 @@ npm run android:debug
 
 ## PWA and Offline Notes
 
-The PWA plugin is configured with an offline app shell and auto-updating service
-worker. Gameplay systems are designed to run entirely locally.
+The PWA plugin generates a service worker with an offline app shell. The game
+does not depend on live servers for bots, dialogue, quests, inventory, memory,
+or saves. After the first successful load, the production build is cacheable for
+offline play.
 
 ## Android APK Build
 
@@ -85,8 +102,9 @@ Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
 
-Release signing is not configured yet. Use Android Studio or Gradle signing
-properties for a production release APK.
+Release signing is not configured. For a production APK, configure Gradle
+signing properties or use Android Studio's signed bundle/APK flow, then run a
+release build.
 
 ## Project Structure
 
@@ -106,13 +124,16 @@ See [PHASES.md](./PHASES.md).
 
 ## Known Limitations
 
-- Phase 0 is a skeleton. Playable 3D systems begin in Phase 1.
-- Android signing is not configured, so debug APKs are produced.
+- This is a complete prototype, not a production-scale multiplayer game.
+- Building collision is visual-only; floor/checkpoint safety is implemented.
+- Ghost racers are represented by buddy reactions rather than full racing AI.
+- The Three.js bundle is large and should be code-split before a store release.
+- Android production signing is not configured; release artifacts use debug APKs.
 
 ## Credits
 
-No third-party game art or Roblox assets are used. Current visuals are original
-CSS/SVG placeholders.
+No Roblox branding, names, logos, assets, UI, or copied content are used. Current
+visuals are original procedural geometry, CSS, and SVG placeholders.
 
 ## License
 

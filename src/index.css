@@ -30,3 +30,32 @@ input,
 select {
   font: inherit;
 }
+
+.hud-button {
+  display: grid;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.touch-button,
+.touch-action {
+  display: grid;
+  place-items: center;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  border-radius: 0.75rem;
+  background: rgb(15 23 42 / 0.78);
+  color: white;
+  font-weight: 900;
+  box-shadow: 0 12px 24px rgb(15 23 42 / 0.2);
+  touch-action: manipulation;
+}
+
+.touch-action {
+  min-width: 3.75rem;
+  min-height: 3.75rem;
+}

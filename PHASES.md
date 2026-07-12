@@ -21,53 +21,110 @@
 
 ## Phase 1 - 3D world and player controller
 
-- [ ] Add 3D scene
-- [ ] Add town placeholders
-- [ ] Add third-person player controller
-- [ ] Add mobile touch controls
-- [ ] Add collisions, interactions, and HUD
+- [x] Add 3D scene
+- [x] Add ground plane
+- [x] Add spawn, park, shop, school, obby, and houses
+- [x] Add third-person camera
+- [x] Add blocky player avatar
+- [x] Add movement, jump, and camera follow
+- [x] Add mobile touch controls
+- [x] Add floor collision and interaction zones
+- [x] Add basic HUD
 
 ## Phase 2 - Simulated player bots
 
-- [ ] Add 8 visible bots
-- [ ] Add bot profiles, schedules, moods, goals
-- [ ] Add bot movement and state machine tests
+- [x] Add 8 visible bots
+- [x] Add usernames, colours, personalities, moods, favourites, schedules, and goals
+- [x] Add independent bot wandering and location visits
+- [x] Add idle, walk, run, jump, wave, and cheer actions
+- [x] Add varied decision timing
+- [x] Add floating usernames
+- [x] Add tested bot state machine
 
 ## Phase 3 - Fake multiplayer chat and speech bubbles
 
-- [ ] Add chat panel and speech bubbles
-- [ ] Add safe dialogue and quick replies
-- [ ] Add contextual reactions and tests
+- [x] Add chat panel UI
+- [x] Add speech bubbles above bots
+- [x] Add safe dialogue templates
+- [x] Add local join messages
+- [x] Add contextual reactions
+- [x] Add player quick replies
+- [x] Add tested dialogue selection and sanitising
 
 ## Phase 4 - Quests and activities
 
-- [ ] Add quest system, rewards, tracker, bot invites
-- [ ] Add local quest progress saving and tests
+- [x] Add quest system
+- [x] Add five starter quests
+- [x] Add quest tracker UI
+- [x] Add rewards
+- [x] Add bot quest reactions
+- [x] Add local quest progress saving
+- [x] Add quest state tests
 
 ## Phase 5 - Obby mini-game
 
-- [ ] Add beginner obby, checkpoints, timer, reset, finish
-- [ ] Add bot racers or cheerers and tests
+- [x] Add beginner obby course
+- [x] Add checkpoints
+- [x] Add timer-ready state
+- [x] Add restart control
+- [x] Add finish area
+- [x] Add cheering bot reactions
+- [x] Add reward coins
+- [x] Add mobile restart/start control
+- [x] Add obby state tests
 
 ## Phase 6 - Coins, shop, and avatar customisation
 
-- [ ] Add coin balance, shop, inventory, avatar editor
-- [ ] Add persistence and purchase tests
+- [x] Add coin balance
+- [x] Add shop UI
+- [x] Add body colour, shirt colour, hat, and trail placeholders
+- [x] Add unlockable items
+- [x] Add local avatar persistence
+- [x] Add inventory and purchase tests
 
 ## Phase 7 - Bot memory and relationships
 
-- [ ] Add local memory flags, friendship, routines, memory dialogue
-- [ ] Add persistence and relationship tests
+- [x] Add local bot memory flags
+- [x] Track times met, shared quest completions, last interaction, and friendship
+- [x] Add memory-aware greetings
+- [x] Add friendship UI
+- [x] Add in-game schedule slots
+- [x] Add relationship tests
 
 ## Phase 8 - Offline PWA and mobile polish
 
-- [ ] Add full PWA/offline polish, loading, settings, reset, quality modes
+- [x] Add PWA manifest
+- [x] Add service worker caching
+- [x] Add offline fallback
+- [x] Add loading/save status
+- [x] Add app icon placeholder
+- [x] Add graphics quality setting
+- [x] Add settings menu
+- [x] Add save reset option
+- [x] Add audio toggle
+- [x] Add reduced motion option
 
 ## Phase 9 - Android APK release
 
-- [ ] Finalise Capacitor Android integration
-- [ ] Build debug APK and document signing
+- [x] Finalise Capacitor Android integration
+- [x] Set app name to BlockBuddies Offline
+- [x] Add generated Android icon/splash placeholders
+- [x] Build debug APK
+- [x] Document signing steps
+- [x] Add GitHub Actions Android build
+- [x] Add local Android Studio/JBR build instructions
+- [x] Sync web build into Android WebView
 
 ## Phase 10 - Polish pass
 
-- [ ] Improve visuals, audio toggles, effects, mobile controls, accessibility
+- [x] Improve world visuals
+- [x] Add props
+- [x] Add bot actions
+- [x] Add more dialogue
+- [x] Add UI transitions through panels
+- [x] Add coin pickup interactions
+- [x] Add music/audio toggles
+- [x] Improve mobile controls
+- [x] Improve accessibility labels and touch targets
+- [x] Fix bugs found during testing
+- [x] Add README screenshot placeholders and capture instructions

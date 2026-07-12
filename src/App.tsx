@@ -1,18 +1,17 @@
-import { useState } from 'react'
-import { PlaceholderGameScreen } from './ui/PlaceholderGameScreen'
+import { GameScreen } from './game/GameScreen'
 import { MainMenu } from './ui/MainMenu'
-
-export type AppScreen = 'menu' | 'game'
+import { useGameStore } from './state/gameStore'
 
 export default function App() {
-  const [screen, setScreen] = useState<AppScreen>('menu')
+  const screen = useGameStore((state) => state.screen)
+  const setScreen = useGameStore((state) => state.setScreen)
 
   return (
     <main className="min-h-screen bg-sky-100 text-slate-950">
       {screen === 'menu' ? (
         <MainMenu onPlay={() => setScreen('game')} />
       ) : (
-        <PlaceholderGameScreen onExit={() => setScreen('menu')} />
+        <GameScreen />
       )}
     </main>
   )
