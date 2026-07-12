@@ -15,6 +15,8 @@ const obbyCheckpoints: Vec3[] = [
   [22, 4.6, 18],
 ]
 
+const worldHtmlZIndexRange: [number, number] = [4, 0]
+
 export function GameScene() {
   return (
     <>
@@ -67,7 +69,7 @@ function Town() {
 
       {worldLocations.map((location) => (
         <group key={location.id} position={location.position}>
-          <Html center position={[0, 3.2, 0]}>
+          <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
             <span className="whitespace-nowrap rounded-lg bg-white/90 px-3 py-1 text-sm font-black text-slate-900 shadow">
               {location.label}
             </span>
@@ -175,7 +177,7 @@ function Storefront({ position, label, color }: { position: Vec3; label: string;
         <boxGeometry args={[2.8, 0.55, 0.18]} />
         <meshStandardMaterial color={color} />
       </mesh>
-      <Html center position={[0, 0.01, 0.12]}>
+      <Html center position={[0, 0.01, 0.12]} zIndexRange={worldHtmlZIndexRange}>
         <span className="rounded bg-slate-950 px-2 py-1 text-xs font-black text-white shadow">
           {label}
         </span>
@@ -199,7 +201,7 @@ function Billboard({ position }: { position: Vec3 }) {
         <boxGeometry args={[3.4, 1.3, 0.24]} />
         <meshStandardMaterial color="#0f172a" />
       </mesh>
-      <Html center position={[0, 2.12, 0.16]}>
+      <Html center position={[0, 2.12, 0.16]} zIndexRange={worldHtmlZIndexRange}>
         <div className="w-44 rounded bg-white px-2 py-1 text-center text-xs font-black text-slate-950 shadow">
           Welcome to BlockBuddies
         </div>
@@ -426,7 +428,7 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
         action={bot.action}
       />
       {bot.speech && bot.speechUntil > Date.now() ? (
-        <Html center position={[0, 3.2, 0]}>
+        <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
           <div className="max-w-40 rounded-lg bg-white px-3 py-2 text-center text-xs font-black text-slate-900 shadow">
             {bot.speech}
           </div>
@@ -498,7 +500,7 @@ function BlockAvatar({
   const sitDrop = emote === 'sit' ? -0.35 : 0
   return (
     <group position={[0, sitDrop, 0]}>
-      <Html center position={[0, 2.15, 0]}>
+      <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
         <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
           {username}
         </span>

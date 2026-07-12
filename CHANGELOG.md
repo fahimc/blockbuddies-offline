@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.3.7-splash-overlay-polish] - 2026-07-12
+
+### Added
+
+- Added updated splash review screenshots for portrait and constrained Android landscape viewports.
+
+### Changed
+
+- Moved the splash logo lower so it clears Android top UI space.
+- Reduced the splash tagline size to better match the supplied reference poster.
+- Shifted the splash Play button, quick actions, and feature strip upward to leave larger bottom padding.
+- Updated Android version metadata to `1.3.7` / `10307`.
+
+### Fixed
+
+- Fixed in-world usernames and location labels drawing over Settings, chat, and other UI overlays.
+
+### Known Issues
+
+- Android bars can still appear transiently after system gestures; the app continues using measured viewport height so the splash stays usable.
+
 ## [v1.3.6-portrait-splash-fix] - 2026-07-12
 
 ### Added

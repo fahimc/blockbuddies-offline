@@ -195,3 +195,13 @@
 - [x] Add visual viewport height CSS variable for Android UI resizing
 - [x] Add portrait and constrained landscape splash smoke coverage
 - [x] Bump Android debug APK version metadata to 1.3.6 / 10306
+
+## Post-phase splash and overlay polish
+
+- [x] Move splash logo below Android top UI space
+- [x] Reduce splash tagline size toward supplied reference
+- [x] Raise splash bottom controls and feature strip
+- [x] Add larger bottom padding on the splash screen
+- [x] Lower 3D HTML label z-index below app panels and chat
+- [x] Bump Android debug APK version metadata to 1.3.7 / 10307
+- [x] Capture updated splash and overlay review screenshots

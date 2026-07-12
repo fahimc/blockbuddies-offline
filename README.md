@@ -29,9 +29,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies walking animation check](docs/review/immersive-character-fix-phone-walking.png)
 
-![BlockBuddies portrait splash](docs/review/portrait-splash-v136-phone.png)
+![BlockBuddies portrait splash](docs/review/splash-overlay-polish-v137-phone.png)
 
-![BlockBuddies splash in constrained Android landscape viewport](docs/review/portrait-splash-v136-landscape-bars.png)
+![BlockBuddies splash in constrained Android landscape viewport](docs/review/splash-overlay-polish-v137-landscape.png)
+
+![BlockBuddies settings overlay polish](docs/review/splash-overlay-polish-v137-settings.png)
 
 ## Features
 
