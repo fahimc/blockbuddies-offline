@@ -7,11 +7,15 @@ shapes, UI, names, and dialogue.
 
 ## Screenshots
 
-Screenshots are stored in `docs/screenshots/`.
+Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies menu](docs/screenshots/menu.png)
 
 ![BlockBuddies game](docs/screenshots/game.png)
+
+![BlockBuddies updated blocky town](docs/review/kenney-final-desktop.png)
+
+![BlockBuddies mobile visual check](docs/review/kenney-final-mobile.png)
 
 ## Features
 
@@ -29,6 +33,7 @@ Screenshots are stored in `docs/screenshots/`.
   trail placeholder.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
+- Kenney CC0 blocky character models and prototype grid textures.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.
@@ -140,8 +145,10 @@ Roblox-inspired prototype.
 
 ## Credits
 
-No Roblox branding, names, logos, assets, UI, or copied content are used. Current
-visuals are original procedural geometry, CSS, and SVG placeholders.
+No Roblox branding, names, logos, assets, UI, or copied content are used.
+Runtime third-party assets are listed in
+`src/assets/licenses/assets-manifest.json`; the current imported assets are
+Kenney CC0 blocky characters and prototype textures.
 
 ## License
 

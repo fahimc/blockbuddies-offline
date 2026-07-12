@@ -128,3 +128,13 @@
 - [x] Improve accessibility labels and touch targets
 - [x] Fix bugs found during testing
 - [x] Add README screenshot placeholders and capture instructions
+
+## Post-phase visual asset pass
+
+- [x] Review live UI in desktop and mobile viewports
+- [x] Research free/redistributable blocky 3D assets
+- [x] Import Kenney CC0 blocky character GLBs and prototype textures
+- [x] Replace procedural avatars with licensed blocky character models
+- [x] Add spawn studs, roads, storefront signs, benches, lamps, and billboard props
+- [x] Add asset manifest and local license records
+- [x] Capture updated desktop and mobile review screenshots

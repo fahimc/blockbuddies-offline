@@ -1,0 +1,34 @@
+{
+  "assets": [
+    {
+      "name": "Kenney Blocky Characters",
+      "source": "https://kenney.nl/assets/blocky-characters",
+      "runtimeFiles": [
+        "public/assets/kenney/blocky-characters/character-a.glb",
+        "public/assets/kenney/blocky-characters/character-b.glb",
+        "public/assets/kenney/blocky-characters/character-c.glb",
+        "public/assets/kenney/blocky-characters/character-d.glb",
+        "public/assets/kenney/blocky-characters/character-e.glb",
+        "public/assets/kenney/blocky-characters/character-f.glb",
+        "public/assets/kenney/blocky-characters/Textures/texture-a.png",
+        "public/assets/kenney/blocky-characters/Textures/texture-b.png",
+        "public/assets/kenney/blocky-characters/Textures/texture-c.png",
+        "public/assets/kenney/blocky-characters/Textures/texture-d.png",
+        "public/assets/kenney/blocky-characters/Textures/texture-e.png",
+        "public/assets/kenney/blocky-characters/Textures/texture-f.png"
+      ],
+      "license": "Creative Commons Zero, CC0",
+      "licenseFile": "src/assets/licenses/kenney-blocky-characters-license.txt"
+    },
+    {
+      "name": "Kenney Prototype Textures",
+      "source": "https://kenney.nl/assets/prototype-textures",
+      "runtimeFiles": [
+        "public/assets/kenney/prototype-textures/grid-green.png",
+        "public/assets/kenney/prototype-textures/grid-light.png"
+      ],
+      "license": "Creative Commons Zero, CC0",
+      "licenseFile": "src/assets/licenses/kenney-prototype-textures-license.txt"
+    }
+  ]
+}

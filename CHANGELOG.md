@@ -1,5 +1,26 @@
 # Changelog
 
+## [v1.3.0-visual-assets] - 2026-07-12
+
+### Added
+
+- Added Kenney CC0 blocky character GLB models for player and buddies.
+- Added Kenney CC0 prototype grid textures for the baseplate/plaza surfaces.
+- Added more blocky town props: roads, spawn studs, signs, lamps, benches, windows, and a welcome billboard.
+- Added asset manifest and license files for imported third-party assets.
+
+### Changed
+
+- Improved avatar and scene presentation toward a blocky social sandbox look while avoiding Roblox-owned branding/assets.
+
+### Fixed
+
+- Not applicable.
+
+### Known Issues
+
+- The GLB characters are static model poses with lightweight overlay emote motion rather than full animation blending.
+
 ## [v1.2.0-review-parity] - 2026-07-12
 
 ### Added

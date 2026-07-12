@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber'
-import { useKeyboardControls, Html } from '@react-three/drei'
+import { useGLTF, useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { botProfiles } from '../data/botProfiles'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
@@ -13,6 +14,15 @@ const obbyCheckpoints: Vec3[] = [
   [18.5, 1.8, 13.5],
   [20.5, 3.1, 16],
   [22, 4.6, 18],
+]
+
+const characterModels = [
+  '/assets/kenney/blocky-characters/character-a.glb',
+  '/assets/kenney/blocky-characters/character-b.glb',
+  '/assets/kenney/blocky-characters/character-c.glb',
+  '/assets/kenney/blocky-characters/character-d.glb',
+  '/assets/kenney/blocky-characters/character-e.glb',
+  '/assets/kenney/blocky-characters/character-f.glb',
 ]
 
 export function GameScene() {
@@ -30,20 +40,40 @@ export function GameScene() {
 }
 
 function Town() {
+  const groundTexture = useTexture('/assets/kenney/prototype-textures/grid-green.png')
+  const plazaTexture = useTexture('/assets/kenney/prototype-textures/grid-light.png')
+
+  useEffect(() => {
+    for (const texture of [groundTexture, plazaTexture]) {
+      texture.wrapS = THREE.RepeatWrapping
+      texture.wrapT = THREE.RepeatWrapping
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.needsUpdate = true
+    }
+    groundTexture.repeat.set(18, 18)
+    plazaTexture.repeat.set(2, 2)
+  }, [groundTexture, plazaTexture])
+
   return (
     <group>
       <RigidBody type="fixed" colliders={false}>
         <mesh receiveShadow position={[0, -0.08, 0]}>
           <boxGeometry args={[54, 0.16, 54]} />
-          <meshStandardMaterial color="#5ee46f" />
+          <meshStandardMaterial color="#7ee36f" map={groundTexture} roughness={0.9} />
         </mesh>
         <CuboidCollider args={[27, 0.08, 27]} position={[0, -0.08, 0]} />
       </RigidBody>
 
+      <mesh receiveShadow position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[6, 6, 0.08, 48]} />
+        <meshStandardMaterial color="#d9d9d9" map={plazaTexture} roughness={0.82} />
+      </mesh>
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[3, 5, 48]} />
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
+      <SpawnPad />
+      <Roads />
 
       {worldLocations.map((location) => (
         <group key={location.id} position={location.position}>
@@ -65,6 +95,12 @@ function Town() {
       <Building position={[2, 1.3, 18]} color="#facc15" scale={[3.5, 2.2, 2.5]} />
       <Building position={[-4, 1.0, 18]} color="#f9a8d4" scale={[2.5, 1.8, 2.4]} />
       <Building position={[8, 1.0, 18]} color="#93c5fd" scale={[2.5, 1.8, 2.4]} />
+      <Storefront position={[12, 0, -7]} label="SHOP" color="#f97316" />
+      <Storefront position={[-14, 0, 10]} label="SCHOOL" color="#a78bfa" />
+      <Storefront position={[16, 0, 12]} label="OBBY" color="#ef4444" />
+      <Billboard position={[-6, 0, 2]} />
+      <Benches />
+      <StreetLamps />
 
       {[-18, -8, 8, 18].map((x) => (
         <Tree key={x} position={[x, 0, -17]} />
@@ -72,6 +108,45 @@ function Town() {
       {[-16, -5, 6, 17].map((z) => (
         <Tree key={z} position={[-20, 0, z]} />
       ))}
+    </group>
+  )
+}
+
+function SpawnPad() {
+  const studs = useMemo(() => {
+    const items: Vec3[] = []
+    for (let x = -2; x <= 2; x += 1) {
+      for (let z = -2; z <= 2; z += 1) items.push([x * 0.9, 0.2, z * 0.9])
+    }
+    return items
+  }, [])
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 0.09, 0]}>
+        <cylinderGeometry args={[3.4, 3.4, 0.18, 40]} />
+        <meshStandardMaterial color="#e5e7eb" roughness={0.8} />
+      </mesh>
+      {studs.map((position) => (
+        <mesh key={position.join(',')} castShadow position={position}>
+          <cylinderGeometry args={[0.22, 0.22, 0.12, 14]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.7} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function Roads() {
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 0.025, -7.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[4, 22]} />
+        <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[0, 0.03, 9]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
+        <planeGeometry args={[4, 32]} />
+        <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
+      </mesh>
     </group>
   )
 }
@@ -87,6 +162,104 @@ function Building({ position, color, scale }: { position: Vec3; color: string; s
         <coneGeometry args={[0.8, 1, 4]} />
         <meshStandardMaterial color="#ef4444" />
       </mesh>
+      <mesh position={[0, -scale[1] / 2 + 0.05, scale[2] / 2 + 0.02]} scale={[0.5, 0.7, 0.06]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#7c2d12" />
+      </mesh>
+      <mesh position={[-scale[0] * 0.22, 0.18, scale[2] / 2 + 0.03]} scale={[0.42, 0.36, 0.05]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+      </mesh>
+      <mesh position={[scale[0] * 0.22, 0.18, scale[2] / 2 + 0.03]} scale={[0.42, 0.36, 0.05]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+      </mesh>
+    </group>
+  )
+}
+
+function Storefront({ position, label, color }: { position: Vec3; label: string; color: string }) {
+  return (
+    <group position={[position[0], position[1] + 2.9, position[2] + 1.45]}>
+      <mesh castShadow>
+        <boxGeometry args={[2.8, 0.55, 0.18]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+      <Html center position={[0, 0.01, 0.12]}>
+        <span className="rounded bg-slate-950 px-2 py-1 text-xs font-black text-white shadow">
+          {label}
+        </span>
+      </Html>
+    </group>
+  )
+}
+
+function Billboard({ position }: { position: Vec3 }) {
+  return (
+    <group position={position}>
+      <mesh castShadow position={[-0.9, 1, 0]}>
+        <boxGeometry args={[0.16, 2, 0.16]} />
+        <meshStandardMaterial color="#475569" />
+      </mesh>
+      <mesh castShadow position={[0.9, 1, 0]}>
+        <boxGeometry args={[0.16, 2, 0.16]} />
+        <meshStandardMaterial color="#475569" />
+      </mesh>
+      <mesh castShadow position={[0, 2.1, 0]}>
+        <boxGeometry args={[3.4, 1.3, 0.24]} />
+        <meshStandardMaterial color="#0f172a" />
+      </mesh>
+      <Html center position={[0, 2.12, 0.16]}>
+        <div className="w-44 rounded bg-white px-2 py-1 text-center text-xs font-black text-slate-950 shadow">
+          Welcome to BlockBuddies
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+function Benches() {
+  return (
+    <group>
+      {[[-6, -4], [5.5, -4], [-6, 5.2], [5.5, 5.2]].map(([x, z], index) => (
+        <group key={`${x},${z}`} position={[x, 0.35, z]} rotation={[0, index > 1 ? Math.PI : 0, 0]}>
+          <mesh castShadow position={[0, 0.15, 0]}>
+            <boxGeometry args={[2.1, 0.22, 0.42]} />
+            <meshStandardMaterial color="#a16207" />
+          </mesh>
+          <mesh castShadow position={[0, 0.55, -0.22]}>
+            <boxGeometry args={[2.1, 0.55, 0.2]} />
+            <meshStandardMaterial color="#92400e" />
+          </mesh>
+          <mesh castShadow position={[-0.7, -0.18, 0]}>
+            <boxGeometry args={[0.15, 0.55, 0.15]} />
+            <meshStandardMaterial color="#475569" />
+          </mesh>
+          <mesh castShadow position={[0.7, -0.18, 0]}>
+            <boxGeometry args={[0.15, 0.55, 0.15]} />
+            <meshStandardMaterial color="#475569" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function StreetLamps() {
+  return (
+    <group>
+      {[[-4, -7], [4, -7], [-4, 8], [4, 8], [11, -2], [-11, 2]].map(([x, z]) => (
+        <group key={`${x},${z}`} position={[x, 0, z]}>
+          <mesh castShadow position={[0, 1.35, 0]}>
+            <cylinderGeometry args={[0.08, 0.1, 2.7, 10]} />
+            <meshStandardMaterial color="#334155" />
+          </mesh>
+          <mesh castShadow position={[0, 2.8, 0]}>
+            <sphereGeometry args={[0.34, 14, 10]} />
+            <meshStandardMaterial color="#fde68a" emissive="#facc15" emissiveIntensity={0.55} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
@@ -271,42 +444,60 @@ function BlockAvatar({
   const secondArmLift = emote === 'cheer' ? -0.9 : 0
   const danceTilt = emote === 'dance' ? Math.sin(performance.now() / 160) * 0.25 : 0
   const sitDrop = emote === 'sit' ? -0.35 : 0
+  const modelIndex = Math.abs(username.split('').reduce((total, letter) => total + letter.charCodeAt(0), 0)) % characterModels.length
   return (
     <group rotation={[0, 0, danceTilt]} position={[0, sitDrop, 0]}>
-      <Html center position={[0, 2.7, 0]}>
+      <Html center position={[0, 2.55, 0]}>
         <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
           {username}
         </span>
       </Html>
-      <mesh castShadow position={[0, 1.8, 0]}>
-        <boxGeometry args={[0.72, 0.72, 0.72]} />
-        <meshStandardMaterial color={bodyColor} />
-      </mesh>
+      <KenneyCharacterModel url={characterModels[modelIndex]} bodyColor={bodyColor} shirtColor={shirtColor} />
       {hat ? (
-        <mesh castShadow position={[0, 2.28, 0]}>
+        <mesh castShadow position={[0, 2.34, 0]}>
           <cylinderGeometry args={[0.38, 0.5, 0.18, 5]} />
           <meshStandardMaterial color="#fde047" />
         </mesh>
       ) : null}
-      <mesh castShadow position={[0, 1.05, 0]}>
-        <boxGeometry args={[0.9, 0.9, 0.5]} />
-        <meshStandardMaterial color={shirtColor} />
+      {emote !== 'none' ? (
+        <group>
+          <mesh castShadow position={[-0.68, 1.25, 0]} rotation={[armLift, 0, 0]}>
+            <boxGeometry args={[0.18, 0.72, 0.18]} />
+            <meshStandardMaterial color={bodyColor} />
+          </mesh>
+          <mesh castShadow position={[0.68, 1.25, 0]} rotation={[secondArmLift, 0, 0]}>
+            <boxGeometry args={[0.18, 0.72, 0.18]} />
+            <meshStandardMaterial color={bodyColor} />
+          </mesh>
+        </group>
+      ) : null}
+    </group>
+  )
+}
+
+function KenneyCharacterModel({ url, bodyColor, shirtColor }: { url: string; bodyColor: string; shirtColor: string }) {
+  const gltf = useGLTF(url)
+  const model = useMemo(() => {
+    const cloned = cloneSkeleton(gltf.scene)
+    cloned.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true
+        object.receiveShadow = true
+      }
+    })
+    return cloned
+  }, [gltf.scene])
+
+  return (
+    <group scale={[0.62, 0.62, 0.62]} position={[0, 0.02, 0]} rotation={[0, Math.PI, 0]}>
+      <primitive object={model} />
+      <mesh castShadow position={[0, 1.12, -0.02]} scale={[0.84, 0.72, 0.34]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={shirtColor} transparent opacity={0.16} />
       </mesh>
-      <mesh castShadow position={[-0.62, 1.05, 0]} rotation={[armLift, 0, 0]}>
-        <boxGeometry args={[0.25, 0.8, 0.25]} />
-        <meshStandardMaterial color={bodyColor} />
-      </mesh>
-      <mesh castShadow position={[0.62, 1.05, 0]} rotation={[secondArmLift, 0, 0]}>
-        <boxGeometry args={[0.25, 0.8, 0.25]} />
-        <meshStandardMaterial color={bodyColor} />
-      </mesh>
-      <mesh castShadow position={[-0.25, 0.35, 0]}>
-        <boxGeometry args={[0.28, 0.7, 0.28]} />
-        <meshStandardMaterial color="#1d4ed8" />
-      </mesh>
-      <mesh castShadow position={[0.25, 0.35, 0]}>
-        <boxGeometry args={[0.28, 0.7, 0.28]} />
-        <meshStandardMaterial color="#1d4ed8" />
+      <mesh castShadow position={[0, 1.76, 0]} scale={[0.5, 0.38, 0.45]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={bodyColor} transparent opacity={0.12} />
       </mesh>
     </group>
   )
