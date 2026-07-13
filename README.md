@@ -97,6 +97,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   live synced player avatars.
 - Local Party invite and answer codes have Copy and Share buttons, using native
   device sharing when available and clipboard fallback otherwise.
+- Local Party codes use compact compressed `BBP1` signals, Paste buttons, shared
+  text extraction, and same-origin guest-answer handoff while keeping host
+  approval through Accept Join Answer.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
@@ -225,6 +228,11 @@ button stays visible when system UI changes the available space.
 
 The `v1.5.0` APK adds Copy/Share actions for Local Party codes and screen-drag
 camera control for mobile gameplay.
+
+The `v1.5.1` APK compresses Local Party codes, adds Paste buttons, falls back to
+copying when Share fails, and can prefill host answers automatically for sessions
+running in the same app origin. Cross-device offline play still uses share/copy
+codes because there is no cloud signaling server.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

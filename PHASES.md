@@ -354,3 +354,17 @@
 - [x] Add unit tests for party-code actions and camera drag clamping
 - [x] Add smoke coverage for Local Party code buttons and world drag control
 - [x] Bump Android debug APK version metadata to 1.5.0 / 10500
+
+## Post-phase local party code UX fix
+
+- [x] Compress Local Party invite and answer codes into compact `BBP1` codes
+- [x] Keep old base64 party codes decodable for existing shared invites
+- [x] Replace giant generated code boxes with compact preview cards
+- [x] Add Paste buttons for invite and answer code entry
+- [x] Extract real party codes from shared text pasted into fields
+- [x] Add clipboard fallback when Android WebView rejects modern clipboard writes
+- [x] Fall back to copying when native Share fails
+- [x] Add same-origin auto handoff for guest answers while preserving host Accept
+- [x] Add unit tests for compact code decoding, extraction, paste, and share fallback
+- [x] Add smoke coverage for the new Local Party code controls
+- [x] Bump Android debug APK version metadata to 1.5.1 / 10501

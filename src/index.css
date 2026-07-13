@@ -1533,7 +1533,7 @@ canvas {
 .bb-party-code {
   display: block;
   width: 100%;
-  min-height: 5rem;
+  min-height: 3.8rem;
   resize: vertical;
   border: 0.12rem solid rgb(186 230 253 / 0.9);
   border-radius: 0.75rem;
@@ -1544,6 +1544,49 @@ canvas {
   font-weight: 800;
   line-height: 1.25;
   word-break: break-all;
+}
+
+.bb-party-code-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  border: 0.12rem solid rgb(186 230 253 / 0.9);
+  border-radius: 0.75rem;
+  background: linear-gradient(#ffffff, #f0f9ff);
+  padding: 0.65rem 0.7rem;
+  color: #0f172a;
+  font-size: 0.76rem;
+  font-weight: 1000;
+  box-shadow: inset 0 -0.08rem 0 rgb(15 23 42 / 0.06);
+}
+
+.bb-party-code-summary strong {
+  border-radius: 999px;
+  background: #dbeafe;
+  padding: 0.24rem 0.45rem;
+  color: #1d4ed8;
+  font-size: 0.66rem;
+}
+
+.bb-party-code-details {
+  margin-top: 0.45rem;
+}
+
+.bb-party-code-details summary {
+  cursor: pointer;
+  border-radius: 0.6rem;
+  background: rgb(15 23 42 / 0.06);
+  padding: 0.45rem 0.6rem;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  touch-action: manipulation;
+}
+
+.bb-party-code-details .bb-party-code {
+  min-height: 5rem;
 }
 
 .bb-party-code-actions {

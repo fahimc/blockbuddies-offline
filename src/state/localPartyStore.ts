@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate'
 import type { AvatarSettings, BotRuntime, Vec3 } from '../game/types'
 
 export type LocalPartyStatus = 'idle' | 'hosting' | 'joining' | 'connecting' | 'connected' | 'error'
@@ -10,6 +11,7 @@ export type LocalPartySignal = {
   type: LocalPartySignalType
   from: string
   name: string
+  sessionId?: string
   sdp: RTCSessionDescriptionInit
 }
 
@@ -59,6 +61,12 @@ const localPlayerId = `local-${Math.random().toString(36).slice(2, 8)}`
 
 let peer: RTCPeerConnection | undefined
 let channel: RTCDataChannel | undefined
+let signalChannel: BroadcastChannel | undefined
+let stopSignalStorageListener: (() => void) | undefined
+
+const compactPartyCodePrefix = 'BBP1.'
+const signalBusName = 'blockbuddies-local-party-signal'
+const signalStorageKey = 'blockbuddies-local-party-signal'
 
 export function sanitizePartyName(input: string) {
   const cleaned = input.replace(/[^\w -]/g, '').replace(/\s+/g, ' ').trim().slice(0, 18)
@@ -79,6 +87,27 @@ function decodeUtf8Base64(code: string) {
   return new TextDecoder().decode(bytes)
 }
 
+function encodeBase64Url(bytes: Uint8Array) {
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+function decodeBase64Url(code: string) {
+  const padded = code.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(code.length / 4) * 4, '=')
+  const binary = atob(padded)
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  return bytes
+}
+
+export function extractPartyCode(input: string) {
+  const trimmed = input.trim()
+  const compactMatch = trimmed.match(/BBP1\.[A-Za-z0-9_-]+/)
+  if (compactMatch) return compactMatch[0]
+  return trimmed.replace(/\s+/g, '')
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -88,18 +117,28 @@ function assertPartySignal(value: unknown): asserts value is LocalPartySignal {
   if (value.v !== 1) throw new Error('Invite code version is not supported.')
   if (value.type !== 'offer' && value.type !== 'answer') throw new Error('Invite code type is not supported.')
   if (typeof value.from !== 'string' || typeof value.name !== 'string') throw new Error('Invite code is missing a player.')
+  if ('sessionId' in value && typeof value.sessionId !== 'string') throw new Error('Invite code session is invalid.')
   if (!isRecord(value.sdp) || (value.sdp.type !== 'offer' && value.sdp.type !== 'answer') || typeof value.sdp.sdp !== 'string') {
     throw new Error('Invite code does not include a WebRTC session.')
   }
 }
 
 export function encodePartySignal(signal: LocalPartySignal) {
+  const payload = strToU8(JSON.stringify(signal))
+  return `${compactPartyCodePrefix}${encodeBase64Url(zlibSync(payload, { level: 9 }))}`
+}
+
+export function encodeLegacyPartySignal(signal: LocalPartySignal) {
   return encodeUtf8Base64(JSON.stringify(signal))
 }
 
 export function decodePartySignal(code: string) {
+  const cleanCode = extractPartyCode(code)
   try {
-    const parsed: unknown = JSON.parse(decodeUtf8Base64(code))
+    const json = cleanCode.startsWith(compactPartyCodePrefix)
+      ? strFromU8(unzlibSync(decodeBase64Url(cleanCode.slice(compactPartyCodePrefix.length))))
+      : decodeUtf8Base64(cleanCode)
+    const parsed: unknown = JSON.parse(json)
     assertPartySignal(parsed)
     return parsed
   } catch (error) {
@@ -158,6 +197,64 @@ function closePeer() {
   peer?.close()
   channel = undefined
   peer = undefined
+}
+
+function createSessionId() {
+  return `party-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
+}
+
+function publishSignal(signal: LocalPartySignal) {
+  if (!signal.sessionId) return
+  const message = { app: signalBusName, signal }
+  signalChannel?.postMessage(message)
+  try {
+    localStorage.setItem(signalStorageKey, JSON.stringify({ ...message, sentAt: Date.now() }))
+  } catch {
+    // Storage handoff is best effort; manual copy/share remains the fallback.
+  }
+}
+
+function isSignalBusMessage(value: unknown): value is { app: string; signal: LocalPartySignal } {
+  return isRecord(value) && value.app === signalBusName && isRecord(value.signal)
+}
+
+function stopListeningForSignals() {
+  signalChannel?.close()
+  signalChannel = undefined
+  stopSignalStorageListener?.()
+  stopSignalStorageListener = undefined
+}
+
+function listenForJoinAnswer(sessionId: string, set: LocalPartySetter) {
+  stopListeningForSignals()
+  const handleSignal = (signal: LocalPartySignal) => {
+    if (signal.sessionId !== sessionId || signal.type !== 'answer') return
+    set({
+      answerCodeInput: encodePartySignal(signal),
+      lastEvent: `${sanitizePartyName(signal.name)} sent an answer. Tap Accept Join Answer.`,
+    })
+  }
+  if (typeof BroadcastChannel !== 'undefined') {
+    signalChannel = new BroadcastChannel(signalBusName)
+    signalChannel.onmessage = (event) => {
+      if (!isSignalBusMessage(event.data)) return
+      handleSignal(event.data.signal)
+    }
+  }
+  if (typeof window !== 'undefined') {
+    const storageListener = (event: StorageEvent) => {
+      if (event.key !== signalStorageKey || !event.newValue) return
+      try {
+        const parsed: unknown = JSON.parse(event.newValue)
+        if (!isSignalBusMessage(parsed)) return
+        handleSignal(parsed.signal)
+      } catch {
+        // Ignore unrelated storage events.
+      }
+    }
+    window.addEventListener('storage', storageListener)
+    stopSignalStorageListener = () => window.removeEventListener('storage', storageListener)
+  }
 }
 
 function waitForIceGathering(connection: RTCPeerConnection) {
@@ -239,6 +336,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   setAnswerCodeInput: (answerCodeInput) => set({ answerCodeInput }),
   startHost: async () => {
     try {
+      stopListeningForSignals()
       closePeer()
       set({ status: 'hosting', role: 'host', inviteCode: '', answerCode: '', answerCodeInput: '', error: undefined, remotePlayers: {} })
       peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
@@ -247,23 +345,28 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       await peer.setLocalDescription(offer)
       await waitForIceGathering(peer)
       if (!peer.localDescription) throw new Error('Host invite could not be created.')
+      const sessionId = createSessionId()
+      listenForJoinAnswer(sessionId, set)
       set({
         inviteCode: encodePartySignal({
           v: 1,
           type: 'offer',
           from: get().playerId,
           name: get().playerName,
+          sessionId,
           sdp: peer.localDescription.toJSON(),
         }),
         lastEvent: 'Invite code ready.',
       })
     } catch (error) {
       closePeer()
+      stopListeningForSignals()
       set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start local party.' })
     }
   },
   startJoin: async () => {
     try {
+      stopListeningForSignals()
       closePeer()
       const invite = decodePartySignal(get().joinCodeInput)
       if (invite.type !== 'offer') throw new Error('Paste a host invite code first.')
@@ -274,19 +377,25 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       await peer.setLocalDescription(answer)
       await waitForIceGathering(peer)
       if (!peer.localDescription) throw new Error('Join answer could not be created.')
+      const signal = {
+        v: 1 as const,
+        type: 'answer' as const,
+        from: get().playerId,
+        name: get().playerName,
+        sessionId: invite.sessionId,
+        sdp: peer.localDescription.toJSON(),
+      }
+      publishSignal(signal)
       set({
         status: 'connecting',
-        answerCode: encodePartySignal({
-          v: 1,
-          type: 'answer',
-          from: get().playerId,
-          name: get().playerName,
-          sdp: peer.localDescription.toJSON(),
-        }),
-        lastEvent: `Answer code ready for ${sanitizePartyName(invite.name)}.`,
+        answerCode: encodePartySignal(signal),
+        lastEvent: invite.sessionId
+          ? `Answer sent to ${sanitizePartyName(invite.name)} if they are nearby. You can still copy it.`
+          : `Answer code ready for ${sanitizePartyName(invite.name)}.`,
       })
     } catch (error) {
       closePeer()
+      stopListeningForSignals()
       set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join local party.' })
     }
   },
@@ -305,6 +414,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     const state = get()
     sendPartyMessage({ type: 'bye', id: state.playerId, name: state.playerName })
     closePeer()
+    stopListeningForSignals()
     set({
       status: 'idle',
       role: undefined,

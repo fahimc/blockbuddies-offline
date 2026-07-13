@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { decodePartySignal, encodePartySignal, isRemoteFresh, makePartySnapshot, sanitizePartyName } from './localPartyStore'
+import {
+  decodePartySignal,
+  encodeLegacyPartySignal,
+  encodePartySignal,
+  extractPartyCode,
+  isRemoteFresh,
+  makePartySnapshot,
+  sanitizePartyName,
+} from './localPartyStore'
 import type { AvatarSettings } from '../game/types'
 
 const avatar: AvatarSettings = {
@@ -30,6 +38,32 @@ describe('local party helpers', () => {
 
     const code = encodePartySignal(signal)
     expect(decodePartySignal(code)).toEqual(signal)
+  })
+
+  it('keeps compact party codes shorter than legacy base64 for SDP payloads', () => {
+    const signal = {
+      v: 1 as const,
+      type: 'offer' as const,
+      from: 'local-abc123',
+      name: 'SunnyBuddy',
+      sessionId: 'party-short',
+      sdp: {
+        type: 'offer' as const,
+        sdp: `v=0\r\n${'a=candidate:foundation 1 udp 2122260223 192.168.1.20 50000 typ host generation 0\r\n'.repeat(18)}`,
+      },
+    }
+
+    const compactCode = encodePartySignal(signal)
+    const legacyCode = encodeLegacyPartySignal(signal)
+
+    expect(compactCode.startsWith('BBP1.')).toBe(true)
+    expect(compactCode.length).toBeLessThan(legacyCode.length)
+    expect(decodePartySignal(compactCode)).toEqual(signal)
+    expect(decodePartySignal(legacyCode)).toEqual(signal)
+  })
+
+  it('extracts compact codes from shared text', () => {
+    expect(extractPartyCode('Host invite code\nBBP1.ABC_def-123\nOpen BlockBuddies')).toBe('BBP1.ABC_def-123')
   })
 
   it('rejects invalid party codes', () => {

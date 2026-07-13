@@ -1,12 +1,12 @@
-import { Copy, Share2 } from 'lucide-react'
+import { ClipboardPaste, Copy, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { botProfiles } from '../data/botProfiles'
 import type { BotState } from '../game/types'
 import { useGameStore } from '../state/gameStore'
-import { useLocalPartyStore } from '../state/localPartyStore'
+import { extractPartyCode, useLocalPartyStore } from '../state/localPartyStore'
 import { Panel } from './Panel'
-import { copyPartyCode, sharePartyCode, type PartyCodeActionResult } from './partyCodeActions'
+import { copyPartyCode, pastePartyCode, sharePartyCode, type PartyCodeActionResult } from './partyCodeActions'
 
 const stateLabels: Record<BotState, string> = {
   idle: 'hanging out',
@@ -39,6 +39,23 @@ export function ServerPanel() {
   const disconnect = useLocalPartyStore((state) => state.disconnect)
   const [codeActionMessage, setCodeActionMessage] = useState('')
   const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const hash = window.location.hash.replace(/^#/, '')
+    if (!hash) return
+    const params = new URLSearchParams(hash)
+    const invite = params.get('partyInvite')
+    const answer = params.get('partyAnswer')
+    if (invite) {
+      setJoinCodeInput(extractPartyCode(invite))
+      setCodeActionMessage('Shared invite loaded. Tap Create Join Answer.')
+    }
+    if (answer) {
+      setAnswerCodeInput(extractPartyCode(answer))
+      setCodeActionMessage('Shared answer loaded. Host can tap Accept Join Answer.')
+    }
+  }, [setAnswerCodeInput, setJoinCodeInput])
 
   return (
     <Panel title="Local Server">
@@ -78,6 +95,8 @@ export function ServerPanel() {
             value={inviteCode}
             placeholder="Host invite code"
             readOnly
+            generated
+            hint="Send this to a nearby player. If they answer in another tab of this app, it appears below automatically."
             actions={<CodeActions label="Host invite code" value={inviteCode} onMessage={setCodeActionMessage} />}
           />
         ) : null}
@@ -87,7 +106,8 @@ export function ServerPanel() {
           label="Join with invite code"
           value={joinCodeInput}
           placeholder="Paste host invite code"
-          onChange={setJoinCodeInput}
+          onChange={(value) => setJoinCodeInput(extractPartyCode(value))}
+          actions={<PasteAction label="Paste Invite Code" onPaste={setJoinCodeInput} onMessage={setCodeActionMessage} />}
         />
         <button type="button" onClick={() => void startJoin()} className="bb-party-action join">
           Create Join Answer
@@ -100,6 +120,8 @@ export function ServerPanel() {
             value={answerCode}
             placeholder="Join answer code"
             readOnly
+            generated
+            hint="Send this back to the host. Their Accept button completes the connection."
             actions={<CodeActions label="Join answer code" value={answerCode} onMessage={setCodeActionMessage} />}
           />
         ) : null}
@@ -111,7 +133,8 @@ export function ServerPanel() {
               label="Accept join answer"
               value={answerCodeInput}
               placeholder="Paste join answer code"
-              onChange={setAnswerCodeInput}
+              onChange={(value) => setAnswerCodeInput(extractPartyCode(value))}
+              actions={<PasteAction label="Paste Answer Code" onPaste={setAnswerCodeInput} onMessage={setCodeActionMessage} />}
             />
             <button type="button" onClick={() => void acceptAnswer()} className="bb-party-action accept">
               Accept Join Answer
@@ -166,6 +189,8 @@ function CodeBox({
   readOnly,
   onChange,
   actions,
+  generated,
+  hint,
 }: {
   id: string
   label: string
@@ -174,23 +199,52 @@ function CodeBox({
   readOnly?: boolean
   onChange?: (value: string) => void
   actions?: ReactNode
+  generated?: boolean
+  hint?: string
 }) {
+  const preview = value ? `${value.slice(0, 20)}...${value.slice(-10)}` : ''
+
   return (
     <div className="mt-3">
       <label className="block text-xs font-black uppercase tracking-wide text-slate-500" htmlFor={id}>
         {label}
       </label>
-      <textarea
-        id={id}
-        value={value}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        onFocus={(event) => event.currentTarget.select()}
-        onChange={(event) => onChange?.(event.target.value)}
-        className="bb-party-code mt-1"
-        rows={3}
-      />
-      {actions ? <div className="bb-party-code-actions">{actions}</div> : null}
+      {generated ? (
+        <>
+          <div className="bb-party-code-summary" aria-label={`${label} preview`}>
+            <span className="truncate">{preview}</span>
+            <strong>{value.length} chars</strong>
+          </div>
+          {hint ? <p className="mt-1 text-[0.68rem] font-black leading-snug text-slate-500">{hint}</p> : null}
+          {actions ? <div className="bb-party-code-actions">{actions}</div> : null}
+          <details className="bb-party-code-details">
+            <summary>Show full code</summary>
+            <textarea
+              id={id}
+              value={value}
+              placeholder={placeholder}
+              readOnly={readOnly}
+              onFocus={(event) => event.currentTarget.select()}
+              className="bb-party-code mt-1"
+              rows={3}
+            />
+          </details>
+        </>
+      ) : (
+        <>
+          <textarea
+            id={id}
+            value={value}
+            placeholder={placeholder}
+            readOnly={readOnly}
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => onChange?.(event.target.value)}
+            className="bb-party-code mt-1"
+            rows={2}
+          />
+          {actions ? <div className="bb-party-code-actions">{actions}</div> : null}
+        </>
+      )}
     </div>
   )
 }
@@ -199,8 +253,9 @@ function CodeActions({ label, value, onMessage }: { label: string; value: string
   const setMessage = (result: PartyCodeActionResult) => {
     if (result === 'copied') onMessage(`${label} copied.`)
     else if (result === 'shared') onMessage(`${label} shared.`)
+    else if (result === 'pasted') onMessage(`${label} pasted.`)
     else if (result === 'dismissed') onMessage('Share cancelled.')
-    else onMessage('Copy and share are unavailable on this device. Select the code manually.')
+    else onMessage('Clipboard is unavailable. Open Show full code and select it manually.')
   }
 
   return (
@@ -224,5 +279,30 @@ function CodeActions({ label, value, onMessage }: { label: string; value: string
         Share
       </button>
     </>
+  )
+}
+
+function PasteAction({ label, onPaste, onMessage }: { label: string; onPaste: (value: string) => void; onMessage: (message: string) => void }) {
+  return (
+    <button
+      type="button"
+      className="bb-party-code-button"
+      onClick={() =>
+        void pastePartyCode()
+          .then((value) => {
+            if (!value) {
+              onMessage('Clipboard is empty or unavailable.')
+              return
+            }
+            onPaste(extractPartyCode(value))
+            onMessage(`${label.replace('Paste ', '')} pasted.`)
+          })
+          .catch(() => onMessage('Clipboard permission was blocked. Paste manually.'))
+      }
+      aria-label={label}
+    >
+      <ClipboardPaste size={16} aria-hidden />
+      {label.replace(' Code', '')}
+    </button>
   )
 }

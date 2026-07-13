@@ -75,10 +75,12 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Paste Invite Code' })).toBeVisible()
       await page.getByRole('button', { name: 'Host Local Party' }).click()
-      await expect(page.getByRole('textbox', { name: 'Host invite code' })).toBeVisible()
+      await expect(page.getByLabel('Host invite code preview')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Copy Host invite code' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Share Host invite code' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Paste Answer Code' })).toBeVisible()
     }
     if (item.button === 'Settings') {
       await expect(page.getByRole('textbox', { name: 'World Seed' })).toBeVisible()
