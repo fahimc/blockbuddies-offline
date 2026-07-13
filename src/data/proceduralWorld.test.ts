@@ -76,4 +76,30 @@ describe('procedural borough world', () => {
     expect(doors.every((piece) => piece.scale[1] === realScale.doorHeight)).toBe(true)
     expect(doors.every((piece) => piece.scale[1] / realScale.avatarHeight > 1.1)).toBe(true)
   })
+
+  it('keeps tree trunks and phone boxes off roads and pavements', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 2,
+      night: false,
+    })
+
+    const roadsAndPavements = world.pieces.filter((piece) => piece.kind === 'road' || piece.kind === 'pavement')
+    const blockers = world.pieces.filter((piece) => piece.kind === 'tree-trunk' || piece.kind === 'phone-box')
+
+    expect(blockers.length).toBeGreaterThan(0)
+    expect(roadsAndPavements.length).toBeGreaterThan(0)
+    expect(blockers.every((blocker) => roadsAndPavements.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
+  })
 })
+
+function overlapsTopDown(
+  a: { position: [number, number, number]; scale: [number, number, number] },
+  b: { position: [number, number, number]; scale: [number, number, number] },
+  padding = 0,
+) {
+  const xOverlap = Math.abs(a.position[0] - b.position[0]) < (a.scale[0] + b.scale[0]) / 2 + padding
+  const zOverlap = Math.abs(a.position[2] - b.position[2]) < (a.scale[2] + b.scale[2]) / 2 + padding
+  return xOverlap && zOverlap
+}

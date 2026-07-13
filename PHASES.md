@@ -322,3 +322,14 @@
 - [x] Add procedural-world tests for generated building and door scale
 - [x] Capture updated customizer and gameplay scale screenshots
 - [x] Bump Android debug APK version metadata to 1.4.7 / 10407
+
+## Post-phase road-safe scenery, traffic, and minimap
+
+- [x] Keep procedural park trees and street trees off roads and pavements
+- [x] Keep procedural phone boxes off roads and pavements to avoid hidden blockers
+- [x] Add deterministic traffic lane/path logic with unit tests
+- [x] Render moving low-poly traffic cars along borough road-grid lanes
+- [x] Add responsive minimap showing roads, locations, buddies, traffic, and player direction
+- [x] Add smoke coverage for minimap visibility in gameplay
+- [x] Capture updated phone traffic/minimap review screenshot
+- [x] Bump Android debug APK version metadata to 1.4.8 / 10408

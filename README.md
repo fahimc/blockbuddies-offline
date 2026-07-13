@@ -57,6 +57,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies real-world scale gameplay](docs/review/v147-real-world-scale-gameplay.png)
 
+![BlockBuddies traffic and minimap gameplay](docs/review/v148-traffic-minimap-phone.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -102,6 +104,12 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Shared real-world scale rules keep the block avatar, doors, floor heights,
   buildings, cars, roads, trees, and lamps in proportion to a nominal 1.78 m
   person.
+- Road-aware procedural placement keeps trees and phone boxes off roads and
+  pavements so scenery no longer blocks driving lanes.
+- Moving traffic cars follow deterministic procedural road-grid lanes with
+  tested wrapping/path logic.
+- Responsive minimap shows nearby roads, buddies, landmarks, traffic, and the
+  player facing direction.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
@@ -234,6 +242,10 @@ The `v1.4.7` APK replaces the remaining arbitrary object-height math with a
 shared real-world ratio. Doors, floors, buildings, cars, buses, roads, lamps,
 trees, landmarks, and build-mode prefabs are derived from the avatar-as-person
 scale and covered by unit tests.
+
+The `v1.4.8` APK keeps procedural trees and phone boxes off roads/pavements,
+adds moving traffic cars on tested borough road lanes, and adds the responsive
+in-game minimap.
 
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a

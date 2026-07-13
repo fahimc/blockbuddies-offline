@@ -19,6 +19,7 @@ test('opens menu and navigates to game shell', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeVisible()
   await completeStartFlow(page, 'FlowTester')
   await expect(page.getByTestId('game-canvas')).toBeVisible()
+  await expect(page.getByTestId('mini-map')).toBeVisible()
   await expect(page.getByText('FlowTester')).toBeVisible()
   await expect(page.getByText('Local server started')).toBeVisible()
 })
@@ -104,6 +105,7 @@ test.describe('landscape phone layout', () => {
     await expect(page.locator('.mobile-chat-button')).toBeVisible()
     await expect(page.locator('.virtual-joystick')).toBeVisible()
     await expect(page.locator('.mobile-jump-button')).toBeVisible()
+    await expect(page.getByTestId('mini-map')).toBeVisible()
   })
 })
 

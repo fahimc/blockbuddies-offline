@@ -17,6 +17,7 @@ import { BadgesPanel } from '../ui/BadgesPanel'
 import { BuildPanel } from '../ui/BuildPanel'
 import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
+import { MiniMap } from '../ui/MiniMap'
 import { useGameStore } from '../state/gameStore'
 
 const keyboardMap = [
@@ -69,6 +70,7 @@ export function GameScreen() {
 
         <GameMenu />
         <HUD />
+        <MiniMap />
         <ChatPanel />
         <TouchControls />
         {openPanel === 'quests' ? <QuestPanel /> : null}

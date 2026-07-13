@@ -91,6 +91,111 @@ canvas {
   display: none;
 }
 
+.bb-mini-map {
+  position: absolute;
+  top: max(4.6rem, calc(env(safe-area-inset-top) + 4.15rem));
+  right: max(0.85rem, env(safe-area-inset-right));
+  z-index: 18;
+  width: clamp(8rem, 12vw, 10rem);
+  pointer-events: none;
+  user-select: none;
+}
+
+.bb-mini-map-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-bottom: 0.28rem;
+  border: 0.08rem solid rgb(255 255 255 / 0.82);
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.82);
+  padding: 0.22rem 0.52rem;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 900;
+  box-shadow: 0 0.5rem 1rem rgb(15 23 42 / 0.18);
+}
+
+.bb-mini-map-surface {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 0.12rem solid rgb(255 255 255 / 0.82);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(236 253 245 / 0.35), transparent 55%),
+    linear-gradient(135deg, rgb(74 222 128 / 0.76), rgb(34 197 94 / 0.64));
+  box-shadow:
+    inset 0 0 0 0.08rem rgb(15 23 42 / 0.1),
+    0 0.85rem 1.5rem rgb(15 23 42 / 0.24);
+  backdrop-filter: blur(0.35rem);
+}
+
+.bb-mini-map-road {
+  position: absolute;
+  border: 0.04rem solid rgb(255 255 255 / 0.25);
+  background: rgb(100 116 139 / 0.72);
+  box-shadow: inset 0 0 0 0.04rem rgb(15 23 42 / 0.12);
+}
+
+.bb-mini-map-road.vertical {
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.bb-mini-map-road.horizontal {
+  right: 0;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.bb-mini-map-location,
+.bb-mini-map-traffic,
+.bb-mini-map-bot,
+.bb-mini-map-player {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.bb-mini-map-location {
+  width: 0.58rem;
+  height: 0.58rem;
+  border: 0.08rem solid white;
+  border-radius: 999px;
+  box-shadow: 0 0.18rem 0.35rem rgb(15 23 42 / 0.25);
+}
+
+.bb-mini-map-traffic {
+  width: 0.54rem;
+  height: 0.34rem;
+  border: 0.05rem solid rgb(255 255 255 / 0.82);
+  border-radius: 0.16rem;
+}
+
+.bb-mini-map-bot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border: 0.05rem solid rgb(255 255 255 / 0.85);
+  border-radius: 999px;
+  background: #0ea5e9;
+}
+
+.bb-mini-map-player {
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: 0.08rem solid white;
+  border-radius: 999px;
+  background: #facc15;
+  color: #0f172a;
+  box-shadow: 0 0.25rem 0.55rem rgb(15 23 42 / 0.34);
+}
+
 .mobile-action-pill {
   display: inline-flex;
   min-height: 1.75rem;
@@ -277,6 +382,18 @@ canvas {
     display: flex;
   }
 
+  .bb-mini-map {
+    top: max(3.65rem, calc(env(safe-area-inset-top) + 3.35rem));
+    right: max(0.7rem, env(safe-area-inset-right));
+    width: clamp(6.75rem, 25vw, 8.75rem);
+  }
+
+  .bb-mini-map-title {
+    margin-bottom: 0.2rem;
+    padding: 0.18rem 0.45rem;
+    font-size: 0.62rem;
+  }
+
   .game-hamburger-button {
     width: 2.75rem;
     height: 2.75rem;
@@ -322,6 +439,11 @@ canvas {
   .mobile-remove-button {
     min-width: 3.55rem;
     min-height: 3.55rem;
+  }
+
+  .bb-mini-map {
+    top: max(3.2rem, calc(env(safe-area-inset-top) + 3rem));
+    width: clamp(5.9rem, 18vw, 7.4rem);
   }
 }
 

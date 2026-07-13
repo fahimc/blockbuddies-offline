@@ -46,8 +46,19 @@ export type ProceduralWorld = {
 
 const chunkSize = 36
 const riverWidth = 9
+const treeRoadClearance = realScale.roadTile * 0.72 + 0.72
 const buildingPalette = ['#f97316', '#facc15', '#93c5fd', '#a78bfa', '#fb7185', '#22c55e', '#f9a8d4']
 const roofPalette = ['#ef4444', '#1d4ed8', '#7c3aed', '#0f172a', '#92400e']
+type RandomSource = () => number
+
+type ChunkRoadLayout = {
+  x0: number
+  z0: number
+  centerX: number
+  centerZ: number
+  hasHorizontalRoad: boolean
+  hasVerticalRoad: boolean
+}
 
 export function generateProceduralWorld({ seed, center, viewDistance, night }: ProceduralWorldInput): ProceduralWorld {
   const chunks = chunkRange(center, viewDistance)
@@ -84,6 +95,7 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   const z0 = cz * chunkSize
   const centerX = x0 + chunkSize / 2
   const centerZ = z0 + chunkSize / 2
+  const roadLayout = chunkRoadLayout(cx, cz)
   const pieces: ProceduralPiece[] = [
     piece(`ground:${cx}:${cz}`, 'ground', [centerX, -0.12, centerZ], [chunkSize, 0.12, chunkSize], '#6fde6a'),
   ]
@@ -112,7 +124,7 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   if (parkChance > 0.72 || (Math.abs(cx) === 1 && Math.abs(cz) === 1)) {
     pieces.push(piece(`park:${cx}:${cz}`, 'park', [centerX + 7, 0.02, centerZ - 7], [12, 0.07, 10], '#34d399'))
     for (let i = 0; i < 5; i += 1) {
-      addTree(pieces, `park-tree:${cx}:${cz}:${i}`, [x0 + 7 + random() * 22, 0, z0 + 7 + random() * 22])
+      addTree(pieces, `park-tree:${cx}:${cz}:${i}`, findClearSceneryPoint(random, roadLayout, x0 + 7, x0 + 29, z0 + 7, z0 + 29))
     }
   } else {
     const plots = [
@@ -135,16 +147,15 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   }
 
   for (let i = 0; i < 4; i += 1) {
-    const edgeX = x0 + 3 + random() * (chunkSize - 6)
-    const edgeZ = z0 + (i % 2 === 0 ? 3 : chunkSize - 3)
-    addTree(pieces, `street-tree:${cx}:${cz}:${i}`, [edgeX, 0, edgeZ])
+    addTree(pieces, `street-tree:${cx}:${cz}:${i}`, findStreetTreePoint(random, roadLayout, i))
   }
 
   if (hasHorizontalRoad && random() > 0.64) {
     addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
   }
   if (random() > 0.76) {
-    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [x0 + 4 + random() * 28, realScale.phoneBoxHeight / 2, z0 + 4 + random() * 28], [realScale.phoneBoxWidth, realScale.phoneBoxHeight, realScale.phoneBoxWidth], '#dc2626'))
+    const phonePosition = findClearSceneryPoint(random, roadLayout, x0 + 4, x0 + 32, z0 + 4, z0 + 32)
+    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [phonePosition[0], realScale.phoneBoxHeight / 2, phonePosition[2]], [realScale.phoneBoxWidth, realScale.phoneBoxHeight, realScale.phoneBoxWidth], '#dc2626'))
   }
   if (night || random() > 0.58) {
     addLamp(pieces, `lamp:${cx}:${cz}:a`, [x0 + 5, 0, z0 + 5], night)
@@ -152,6 +163,89 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   }
 
   return { pieces, buildingCount }
+}
+
+function chunkRoadLayout(cx: number, cz: number): ChunkRoadLayout {
+  const x0 = cx * chunkSize
+  const z0 = cz * chunkSize
+  return {
+    x0,
+    z0,
+    centerX: x0 + chunkSize / 2,
+    centerZ: z0 + chunkSize / 2,
+    hasHorizontalRoad: Math.abs(cz) % 2 === 0,
+    hasVerticalRoad: Math.abs(cx) % 2 === 0,
+  }
+}
+
+function findStreetTreePoint(random: RandomSource, layout: ChunkRoadLayout, index: number): Vec3 {
+  const roadEdgeOffset = treeRoadClearance + 0.78
+  if (layout.hasHorizontalRoad) {
+    const z = layout.centerZ + (index % 2 === 0 ? -roadEdgeOffset : roadEdgeOffset)
+    const point = sampleClearBand(random, layout, layout.x0 + 4, layout.x0 + chunkSize - 4, z - 0.35, z + 0.35)
+    if (point) return point
+  }
+
+  if (layout.hasVerticalRoad) {
+    const x = layout.centerX + (index % 2 === 0 ? -roadEdgeOffset : roadEdgeOffset)
+    const point = sampleClearBand(random, layout, x - 0.35, x + 0.35, layout.z0 + 4, layout.z0 + chunkSize - 4)
+    if (point) return point
+  }
+
+  const edgeBands = [
+    [layout.x0 + 3, layout.x0 + chunkSize - 3, layout.z0 + 2.8, layout.z0 + 4.2],
+    [layout.x0 + 3, layout.x0 + chunkSize - 3, layout.z0 + chunkSize - 4.2, layout.z0 + chunkSize - 2.8],
+    [layout.x0 + 2.8, layout.x0 + 4.2, layout.z0 + 3, layout.z0 + chunkSize - 3],
+    [layout.x0 + chunkSize - 4.2, layout.x0 + chunkSize - 2.8, layout.z0 + 3, layout.z0 + chunkSize - 3],
+  ] as const
+  const band = edgeBands[index % edgeBands.length]
+  return findClearSceneryPoint(random, layout, band[0], band[1], band[2], band[3])
+}
+
+function findClearSceneryPoint(
+  random: RandomSource,
+  layout: ChunkRoadLayout,
+  minX: number,
+  maxX: number,
+  minZ: number,
+  maxZ: number,
+): Vec3 {
+  const sampled = sampleClearBand(random, layout, minX, maxX, minZ, maxZ)
+  if (sampled) return sampled
+
+  const candidates: Vec3[] = [
+    [minX, 0, minZ],
+    [maxX, 0, minZ],
+    [minX, 0, maxZ],
+    [maxX, 0, maxZ],
+    [layout.x0 + 5, 0, layout.z0 + 5],
+    [layout.x0 + chunkSize - 5, 0, layout.z0 + 5],
+    [layout.x0 + 5, 0, layout.z0 + chunkSize - 5],
+    [layout.x0 + chunkSize - 5, 0, layout.z0 + chunkSize - 5],
+  ]
+  return candidates.find((candidate) => !isRoadOrPavementPosition(candidate[0], candidate[2], layout)) ?? candidates[0]
+}
+
+function sampleClearBand(
+  random: RandomSource,
+  layout: ChunkRoadLayout,
+  minX: number,
+  maxX: number,
+  minZ: number,
+  maxZ: number,
+) {
+  for (let attempt = 0; attempt < 28; attempt += 1) {
+    const x = minX + random() * Math.max(0, maxX - minX)
+    const z = minZ + random() * Math.max(0, maxZ - minZ)
+    if (!isRoadOrPavementPosition(x, z, layout)) return [x, 0, z] as Vec3
+  }
+  return undefined
+}
+
+function isRoadOrPavementPosition(x: number, z: number, layout: ChunkRoadLayout) {
+  if (layout.hasHorizontalRoad && Math.abs(z - layout.centerZ) < treeRoadClearance) return true
+  if (layout.hasVerticalRoad && Math.abs(x - layout.centerX) < treeRoadClearance) return true
+  return false
 }
 
 function addBuilding(pieces: ProceduralPiece[], id: string, position: Vec3, scale: Vec3, color: string, roofColor: string) {

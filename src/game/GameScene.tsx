@@ -10,6 +10,7 @@ import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import { playerCollisionRadius, resolveHorizontalCollision, type CollisionBox } from './collision'
 import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import { advanceTraffic, createTrafficVehicles, makeTrafficLanes, trafficPositionAt, type TrafficLane, type TrafficVehicle } from './traffic'
 import type {
   AvatarBottomStyle,
   AvatarFaceStyle,
@@ -105,6 +106,7 @@ export function GameScene() {
     <>
       <ProceduralBoroughWorld />
       <Town />
+      <TrafficVehicles />
       <PlayerController />
       <Bots />
       <LocalPartyPlayers />
@@ -113,6 +115,46 @@ export function GameScene() {
       <ToyPickup />
       <PlacedBlocks />
     </>
+  )
+}
+
+function TrafficVehicles() {
+  const settings = useGameStore((state) => state.settings)
+  const lanes = useMemo(() => makeTrafficLanes(), [])
+  const vehicleCount = settings.quality === 'low' ? 6 : 10
+  const vehicles = useMemo(() => createTrafficVehicles(lanes, vehicleCount), [lanes, vehicleCount])
+  const laneById = useMemo(() => new Map(lanes.map((lane) => [lane.id, lane])), [lanes])
+
+  return (
+    <group>
+      {vehicles.map((vehicle) => {
+        const lane = laneById.get(vehicle.laneId)
+        return lane ? <TrafficVehicleMesh key={vehicle.id} vehicle={vehicle} lane={lane} /> : null
+      })}
+    </group>
+  )
+}
+
+function TrafficVehicleMesh({ vehicle, lane }: { vehicle: TrafficVehicle; lane: TrafficLane }) {
+  const group = useRef<THREE.Group>(null)
+  const vehicleRef = useRef(vehicle)
+  const initialPose = trafficPositionAt(lane, vehicle.offset)
+
+  useEffect(() => {
+    vehicleRef.current = vehicle
+  }, [vehicle])
+
+  useFrame((_, delta) => {
+    vehicleRef.current = advanceTraffic(vehicleRef.current, lane, delta)
+    const pose = trafficPositionAt(lane, vehicleRef.current.offset)
+    group.current?.position.set(pose.position[0], pose.position[1], pose.position[2])
+    if (group.current) group.current.rotation.y = pose.yaw
+  })
+
+  return (
+    <group ref={group} position={initialPose.position} rotation={[0, initialPose.yaw, 0]}>
+      <CarPiece color={vehicle.color} />
+    </group>
   )
 }
 
