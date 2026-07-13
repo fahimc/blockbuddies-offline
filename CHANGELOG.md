@@ -1,5 +1,27 @@
 # Changelog
 
+## [v1.4.2-customizer-body-layout] - 2026-07-13
+
+### Added
+
+- Added working Body & Style sub-section state for Body & Style, Hair, Face, and Colours.
+- Added Playwright smoke coverage for switching from Colours back to Hair while keeping the avatar visible.
+
+### Changed
+
+- Redesigned the Body & Style customizer layout so portrait phones keep the avatar preview visible while editing colours.
+- Reduced compact top-bar pressure so Body & Style titles fit better beside coin and level badges.
+- Updated Android version metadata to `1.4.2` / `10402`.
+
+### Fixed
+
+- Fixed colour controls covering the avatar preview on mobile portrait screens.
+- Fixed Body & Style section buttons being static, which made the user feel stuck after opening Colours.
+
+### Known Issues
+
+- The customizer still uses procedural CSS/React item art rather than dedicated image sprites for every cosmetic item.
+
 ## [v1.4.1-start-flow-menu] - 2026-07-13
 
 ### Added

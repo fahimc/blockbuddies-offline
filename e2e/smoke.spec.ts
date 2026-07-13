@@ -24,6 +24,7 @@ test('opens menu and navigates to game shell', async ({ page }) => {
 })
 
 test('opens Roblox-inspired offline feature panels', async ({ page }) => {
+  test.setTimeout(45_000)
   await page.goto('/')
   await completeStartFlow(page)
   await page.getByTestId('game-canvas').waitFor()
@@ -36,6 +37,15 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Hats' })).toBeVisible()
   await page.getByRole('button', { name: 'Customize' }).click()
   await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+  const bodyCustomizer = page.locator('.bb-customizer-body')
+  await expect(bodyCustomizer.locator('.bb-body-stage .bb-mini-avatar')).toBeVisible()
+  await bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }).click()
+  await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
+  await expect(bodyCustomizer.locator('.bb-body-stage .bb-mini-avatar')).toBeVisible()
+  await bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }).click()
+  await expect(bodyCustomizer.getByText('Hair Colour')).toBeVisible()
+  await expect(bodyCustomizer.getByText('Hair Style')).toBeVisible()
+  await expect(bodyCustomizer.getByText('Skin Tone')).toHaveCount(0)
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Back' }).click()
 

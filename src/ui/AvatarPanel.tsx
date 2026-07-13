@@ -42,6 +42,14 @@ const stepOrder: CustomizationStepId[] = ['hub', 'body', 'clothing', 'accessorie
 const clothingTabs = ['Tops', 'Hoodies', 'Shirts', 'Pants', 'Overalls', 'Shoes']
 const accessoryTabs = ['All', 'Hats', 'Glasses', 'Headphones', 'Backpacks', 'Pets', 'Effects']
 const emoteTabs = ['All', 'Dances', 'Gestures', 'Sits', 'Actions']
+type BodySectionId = 'body' | 'hair' | 'face' | 'colours'
+
+const bodySections: { id: BodySectionId; label: string; icon: ReactNode }[] = [
+  { id: 'body', label: 'Body & Style', icon: <UserRound size={28} aria-hidden /> },
+  { id: 'hair', label: 'Hair', icon: <Sparkles size={28} aria-hidden /> },
+  { id: 'face', label: 'Face', icon: <Laugh size={28} aria-hidden /> },
+  { id: 'colours', label: 'Colours', icon: <Palette size={28} aria-hidden /> },
+]
 
 type AvatarPanelProps = {
   onBack?: () => void
@@ -50,6 +58,7 @@ type AvatarPanelProps = {
 
 export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
   const [step, setStep] = useState<CustomizationStepId>('hub')
+  const [bodySection, setBodySection] = useState<BodySectionId>('body')
   const avatar = useGameStore((state) => state.avatar)
   const coins = useGameStore((state) => state.coins)
   const unlocked = useGameStore((state) => state.unlockedItems)
@@ -133,8 +142,15 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
       </div>
 
       <main className={`bb-customizer-main bb-customizer-${step}`}>
-        {step === 'hub' ? <HubStep avatar={avatar} onStep={setStep} /> : null}
-        {step === 'body' ? <BodyStep avatar={avatar} updateAvatar={updateAvatar} /> : null}
+        {step === 'hub' ? <HubStep avatar={avatar} onStep={setStep} onBodySection={setBodySection} /> : null}
+        {step === 'body' ? (
+          <BodyStep
+            avatar={avatar}
+            activeSection={bodySection}
+            onSection={setBodySection}
+            updateAvatar={updateAvatar}
+          />
+        ) : null}
         {step === 'clothing' ? <ClothingStep avatar={avatar} onRandomize={randomize} onSelect={selectItem} /> : null}
         {step === 'accessories' ? (
           <AccessoriesStep avatar={avatar} ownedCount={ownedCount} onSelect={selectItem} unlocked={unlocked} />
@@ -158,13 +174,26 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
   )
 }
 
-function HubStep({ avatar, onStep }: { avatar: AvatarSettings; onStep: (step: CustomizationStepId) => void }) {
+function HubStep({
+  avatar,
+  onStep,
+  onBodySection,
+}: {
+  avatar: AvatarSettings
+  onStep: (step: CustomizationStepId) => void
+  onBodySection: (section: BodySectionId) => void
+}) {
+  const openBody = (section: BodySectionId) => {
+    onBodySection(section)
+    onStep('body')
+  }
+
   return (
     <>
       <div className="bb-hub-rail left">
-        <HubButton label="Skin" icon={<UserRound size={31} />} onClick={() => onStep('body')} />
-        <HubButton label="Hair" icon={<Sparkles size={31} />} onClick={() => onStep('body')} />
-        <HubButton label="Face" icon={<Laugh size={31} />} onClick={() => onStep('body')} />
+        <HubButton label="Skin" icon={<UserRound size={31} />} onClick={() => openBody('body')} />
+        <HubButton label="Hair" icon={<Sparkles size={31} />} onClick={() => openBody('hair')} />
+        <HubButton label="Face" icon={<Laugh size={31} />} onClick={() => openBody('face')} />
         <HubButton label="Tops" icon={<Shirt size={31} />} onClick={() => onStep('clothing')} />
         <HubButton label="Bottoms" icon={<Footprints size={31} />} onClick={() => onStep('clothing')} />
       </div>
@@ -183,63 +212,125 @@ function HubStep({ avatar, onStep }: { avatar: AvatarSettings; onStep: (step: Cu
 
 function BodyStep({
   avatar,
+  activeSection,
+  onSection,
   updateAvatar,
 }: {
   avatar: AvatarSettings
+  activeSection: BodySectionId
+  onSection: (section: BodySectionId) => void
   updateAvatar: (avatar: Partial<AvatarSettings>) => void
 }) {
   return (
     <>
-      <SideRail
-        items={[
-          ['Body & Style', <UserRound size={28} key="body" />],
-          ['Hair', <Sparkles size={28} key="hair" />],
-          ['Face', <Laugh size={28} key="face" />],
-          ['Colors', <Palette size={28} key="colors" />],
-        ]}
-      />
+      <BodySectionRail activeSection={activeSection} onSection={onSection} />
       <div className="bb-body-stage">
         <AvatarStage avatar={avatar} size="large" />
       </div>
-      <div className="bb-body-controls">
-        <PalettePanel
-          title="Skin Tone"
-          colors={skinTones}
-          active={avatar.bodyColor}
-          onPick={(bodyColor) => updateAvatar({ bodyColor })}
-        />
-        <PalettePanel
-          title="Hair Color"
-          colors={hairColors}
-          active={avatar.hairColor ?? hairColors[0]}
-          onPick={(hairColor) => updateAvatar({ hairColor })}
-        />
-        <PalettePanel
-          title="Eye Color"
-          colors={eyeColors}
-          active={avatar.eyeColor ?? eyeColors[0]}
-          onPick={(eyeColor) => updateAvatar({ eyeColor })}
-        />
-        <PalettePanel
-          title="Accent Color"
-          colors={accentColors}
-          active={avatar.accentColor ?? accentColors[0]}
-          onPick={(accentColor) => updateAvatar({ accentColor })}
-        />
-        <MiniStrip
-          title="Hair Style"
-          items={hairStyles}
-          active={avatar.hairStyle ?? 'spiky'}
-          onPick={(patch) => updateAvatar(patch)}
-        />
-        <MiniStrip
-          title="Face Expression"
-          items={faceStyles}
-          active={avatar.face ?? 'smile'}
-          onPick={(patch) => updateAvatar(patch)}
-        />
+      <div className={`bb-body-controls bb-body-controls-${activeSection}`}>
+        {activeSection === 'body' ? (
+          <>
+            <PalettePanel
+              title="Skin Tone"
+              colors={skinTones}
+              active={avatar.bodyColor}
+              onPick={(bodyColor) => updateAvatar({ bodyColor })}
+            />
+            <PalettePanel
+              title="Accent Colour"
+              colors={accentColors}
+              active={avatar.accentColor ?? accentColors[0]}
+              onPick={(accentColor) => updateAvatar({ accentColor })}
+            />
+          </>
+        ) : null}
+        {activeSection === 'hair' ? (
+          <>
+            <PalettePanel
+              title="Hair Colour"
+              colors={hairColors}
+              active={avatar.hairColor ?? hairColors[0]}
+              onPick={(hairColor) => updateAvatar({ hairColor })}
+            />
+            <MiniStrip
+              title="Hair Style"
+              items={hairStyles}
+              active={avatar.hairStyle ?? 'spiky'}
+              onPick={(patch) => updateAvatar(patch)}
+            />
+          </>
+        ) : null}
+        {activeSection === 'face' ? (
+          <>
+            <PalettePanel
+              title="Eye Colour"
+              colors={eyeColors}
+              active={avatar.eyeColor ?? eyeColors[0]}
+              onPick={(eyeColor) => updateAvatar({ eyeColor })}
+            />
+            <MiniStrip
+              title="Face Expression"
+              items={faceStyles}
+              active={avatar.face ?? 'smile'}
+              onPick={(patch) => updateAvatar(patch)}
+            />
+          </>
+        ) : null}
+        {activeSection === 'colours' ? (
+          <>
+            <PalettePanel
+              title="Skin Tone"
+              colors={skinTones}
+              active={avatar.bodyColor}
+              onPick={(bodyColor) => updateAvatar({ bodyColor })}
+            />
+            <PalettePanel
+              title="Hair Colour"
+              colors={hairColors}
+              active={avatar.hairColor ?? hairColors[0]}
+              onPick={(hairColor) => updateAvatar({ hairColor })}
+            />
+            <PalettePanel
+              title="Eye Colour"
+              colors={eyeColors}
+              active={avatar.eyeColor ?? eyeColors[0]}
+              onPick={(eyeColor) => updateAvatar({ eyeColor })}
+            />
+            <PalettePanel
+              title="Accent Colour"
+              colors={accentColors}
+              active={avatar.accentColor ?? accentColors[0]}
+              onPick={(accentColor) => updateAvatar({ accentColor })}
+            />
+          </>
+        ) : null}
       </div>
     </>
+  )
+}
+
+function BodySectionRail({
+  activeSection,
+  onSection,
+}: {
+  activeSection: BodySectionId
+  onSection: (section: BodySectionId) => void
+}) {
+  return (
+    <nav className="bb-custom-side-rail bb-body-section-rail" aria-label="Body customisation sections">
+      {bodySections.map((section) => (
+        <button
+          type="button"
+          key={section.id}
+          className={section.id === activeSection ? 'active' : ''}
+          onClick={() => onSection(section.id)}
+          aria-pressed={section.id === activeSection}
+        >
+          {section.icon}
+          <span>{section.label}</span>
+        </button>
+      ))}
+    </nav>
   )
 }
 

@@ -1541,7 +1541,7 @@ canvas {
 .bb-customizer-topbar {
   position: relative;
   display: grid;
-  grid-template-columns: 4.8rem 1fr auto;
+  grid-template-columns: 4.8rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
   min-height: 6.1rem;
@@ -1572,6 +1572,7 @@ canvas {
 
 .bb-customizer-wallet {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.5rem;
 }
@@ -2019,7 +2020,7 @@ canvas {
 }
 
 .bb-customizer-body {
-  grid-template-columns: minmax(5rem, 7rem) 1fr minmax(17rem, 41vw);
+  grid-template-columns: minmax(5rem, 7rem) minmax(12rem, 1fr) minmax(17rem, 31rem);
   align-items: center;
   gap: 1rem;
 }
@@ -2053,8 +2054,13 @@ canvas {
   display: grid;
   max-height: 100%;
   gap: 0.7rem;
+  align-content: center;
   overflow-y: auto;
   padding-right: 0.25rem;
+}
+
+.bb-body-controls-colours {
+  align-content: start;
 }
 
 .bb-palette-panel,
@@ -2478,21 +2484,42 @@ canvas {
 
 @media (max-width: 760px) and (orientation: portrait) {
   .bb-customizer-topbar {
-    grid-template-columns: 4.2rem 1fr minmax(7rem, auto);
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
     min-height: 5.9rem;
+    gap: 0.45rem;
+  }
+
+  .bb-customizer-topbar h2 {
+    font-size: clamp(1.05rem, 4.6vw, 1.55rem);
+  }
+
+  .bb-customizer-wallet {
+    gap: 0.3rem;
   }
 
   .bb-level-badge {
-    width: 3.8rem;
-    height: 4.2rem;
+    width: 3.35rem;
+    height: 3.8rem;
+    font-size: 0.86rem;
   }
 
   .bb-coin-pill {
-    font-size: 0.82rem;
+    min-height: 2.05rem;
+    padding-inline: 0.4rem;
+    font-size: 0.78rem;
+  }
+
+  .bb-coin-pill svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .bb-customizer-main {
-    inset: 8.55rem 0 8.2rem;
+    inset: 8.35rem 0 8.2rem;
+  }
+
+  .bb-customizer-main.bb-customizer-body {
+    inset: 8.35rem 0 12.2rem;
   }
 
   .bb-customizer-hub {
@@ -2504,28 +2531,71 @@ canvas {
   }
 
   .bb-avatar-stage.large {
-    width: min(25rem, 60vw, 43vh);
+    width: min(20rem, 58vw, 33vh);
   }
 
   .bb-customizer-body {
-    grid-template-columns: 5.4rem 1fr;
+    grid-template-columns: minmax(4.75rem, 5.25rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding-top: 0.25rem;
+  }
+
+  .bb-body-section-rail {
+    grid-column: 1;
+    grid-row: 1;
+    align-content: center;
+    gap: 0.5rem;
+  }
+
+  .bb-custom-side-rail button,
+  .bb-floating-tool {
+    min-height: 4.25rem;
+    border-radius: 0.78rem;
+    font-size: 0.72rem;
+  }
+
+  .bb-body-stage {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+    min-height: 0;
   }
 
   .bb-body-controls {
-    position: absolute;
-    right: max(0.8rem, env(safe-area-inset-right));
-    top: 16%;
-    width: min(17.5rem, 42vw);
-    max-height: 70%;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    max-height: clamp(8rem, 24vh, 13rem);
+    overflow-y: auto;
+    padding: 0.1rem 0.1rem 0.25rem;
   }
 
   .bb-palette-panel {
-    padding: 0.55rem;
+    padding: 0.52rem;
+  }
+
+  .bb-palette-panel h3,
+  .bb-mini-strip h3 {
+    margin-bottom: 0.35rem;
+    font-size: 0.86rem;
   }
 
   .bb-palette-panel button {
-    width: 2.2rem;
-    height: 2.2rem;
+    width: clamp(1.85rem, 8.2vw, 2.25rem);
+    height: clamp(1.85rem, 8.2vw, 2.25rem);
+  }
+
+  .bb-mini-strip button {
+    width: clamp(2.15rem, 9vw, 2.55rem);
+    height: clamp(2.15rem, 9vw, 2.55rem);
+  }
+
+  .bb-body-controls-colours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .bb-custom-grid {

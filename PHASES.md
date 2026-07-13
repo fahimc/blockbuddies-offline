@@ -256,3 +256,13 @@
 - [x] Add unit tests for setup name persistence
 - [x] Add Playwright smoke coverage for startup flow and hamburger panels
 - [x] Bump Android debug APK version metadata to 1.4.1 / 10401
+
+## Post-phase customizer body layout fix
+
+- [x] Keep the Body & Style avatar preview visible on portrait phones
+- [x] Replace static Body/Hair/Face/Colours buttons with working sub-section navigation
+- [x] Show only the active control group instead of all colour/style panels at once
+- [x] Dock mobile colour controls below the avatar instead of over it
+- [x] Tighten compact customizer header sizing
+- [x] Add smoke coverage for Colours to Hair switching
+- [x] Bump Android debug APK version metadata to 1.4.2 / 10402
