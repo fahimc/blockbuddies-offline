@@ -7,6 +7,10 @@ vi.mock('./game/GameScreen', () => ({
   GameScreen: () => <div data-testid="game-canvas">Mock game</div>,
 }))
 
+vi.mock('./ui/GameAvatarPreview', () => ({
+  GameAvatarPreview: () => <div data-testid="avatar-preview">Mock avatar preview</div>,
+}))
+
 describe('App shell', () => {
   it('starts with avatar setup before the game placeholder', async () => {
     render(<App />)

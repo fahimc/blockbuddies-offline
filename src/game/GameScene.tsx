@@ -8,6 +8,7 @@ import { generateProceduralWorld, type ProceduralPiece } from '../data/procedura
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
+import { playerCollisionRadius, resolveHorizontalCollision, type CollisionBox } from './collision'
 import type {
   AvatarBottomStyle,
   AvatarFaceStyle,
@@ -28,6 +29,66 @@ const obbyCheckpoints: Vec3[] = [
 ]
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
+
+const staticTownBuildings: { position: Vec3; color: string; scale: Vec3 }[] = [
+  { position: [-12, 2.4, -8], color: '#22c55e', scale: [4.2, 4.8, 3.2] },
+  { position: [12, 2.8, -7], color: '#fb923c', scale: [4.2, 5.6, 3.3] },
+  { position: [-14, 3.5, 10], color: '#a78bfa', scale: [5, 7, 3.6] },
+  { position: [2, 2.2, 18], color: '#facc15', scale: [4.1, 4.4, 3.2] },
+  { position: [-4, 1.75, 18], color: '#f9a8d4', scale: [3.1, 3.5, 2.9] },
+  { position: [8, 1.75, 18], color: '#93c5fd', scale: [3.1, 3.5, 2.9] },
+]
+
+const staticTreePositions: Vec3[] = [
+  [-18, 0, -17],
+  [-8, 0, -17],
+  [8, 0, -17],
+  [18, 0, -17],
+  [-20, 0, -16],
+  [-20, 0, -5],
+  [-20, 0, 6],
+  [-20, 0, 17],
+]
+
+const staticBenchPositions: { position: Vec3; rotation: number }[] = [
+  { position: [-6, 0.35, -4], rotation: 0 },
+  { position: [5.5, 0.35, -4], rotation: 0 },
+  { position: [-6, 0.35, 5.2], rotation: Math.PI },
+  { position: [5.5, 0.35, 5.2], rotation: Math.PI },
+]
+
+const staticLampPositions: Vec3[] = [
+  [-4, 0, -7],
+  [4, 0, -7],
+  [-4, 0, 8],
+  [4, 0, 8],
+  [11, 0, -2],
+  [-11, 0, 2],
+]
+
+const staticCollisionObstacles: CollisionBox[] = [
+  ...staticTownBuildings.map(({ position, scale }, index) => ({
+    id: `static-building:${index}`,
+    center: position,
+    half: [scale[0] / 2 + 0.18, scale[1] / 2, scale[2] / 2 + 0.18] as Vec3,
+  })),
+  ...staticTreePositions.map((position, index) => ({
+    id: `static-tree:${index}`,
+    center: [position[0], 1, position[2]] as Vec3,
+    half: [0.6, 1.6, 0.6] as Vec3,
+  })),
+  ...staticBenchPositions.map(({ position }, index) => ({
+    id: `static-bench:${index}`,
+    center: position,
+    half: [1.2, 0.55, 0.45] as Vec3,
+  })),
+  ...staticLampPositions.map((position, index) => ({
+    id: `static-lamp:${index}`,
+    center: [position[0], 1.25, position[2]] as Vec3,
+    half: [0.32, 1.5, 0.32] as Vec3,
+  })),
+  { id: 'static-billboard', center: [-6, 1.1, 2], half: [2, 1.3, 0.35] },
+]
 
 export function GameScene() {
   return (
@@ -139,6 +200,58 @@ function ProceduralPieceMesh({ piece }: { piece: ProceduralPiece }) {
   )
 }
 
+function proceduralPiecesToCollisionBoxes(pieces: ProceduralPiece[]) {
+  return pieces.flatMap((piece): CollisionBox[] => {
+    if (piece.kind === 'building' || piece.kind === 'phone-box' || piece.kind === 'tree-trunk' || piece.kind === 'lamp-post') {
+      return [visibleBox(piece, piece.kind === 'building' ? 0.18 : 0.08)]
+    }
+    if (piece.kind === 'bus' && !piece.id.endsWith(':top')) return [visibleBox(piece, 0.12)]
+    if (piece.kind === 'landmark' && piece.id !== 'landmark:london-eye-ring') return [visibleBox(piece, 0.22)]
+    return []
+  })
+}
+
+function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
+  return blocks.flatMap((block): CollisionBox[] => {
+    if (block.kind === 'road') return []
+    const half = buildCollisionHalf(block.kind ?? 'block')
+    return [
+      {
+        id: `build:${block.id}`,
+        center: [block.position[0], block.position[1] + half[1], block.position[2]],
+        half,
+      },
+    ]
+  })
+}
+
+function buildCollisionHalf(kind: BuildBlock['kind']): Vec3 {
+  switch (kind) {
+    case 'house':
+      return [1.45, 1.4, 1.25]
+    case 'building':
+      return [1.35, 2.35, 1.35]
+    case 'shop':
+      return [1.6, 1.45, 1.22]
+    case 'car':
+      return [1.28, 0.7, 0.68]
+    case 'tree':
+      return [0.55, 1.5, 0.55]
+    case 'lamp':
+      return [0.3, 1.45, 0.3]
+    default:
+      return [0.58, 0.58, 0.58]
+  }
+}
+
+function visibleBox(piece: ProceduralPiece, padding: number): CollisionBox {
+  return {
+    id: `procedural:${piece.id}`,
+    center: piece.position,
+    half: [piece.scale[0] / 2 + padding, piece.scale[1] / 2, piece.scale[2] / 2 + padding],
+  }
+}
+
 function Town() {
   const groundTexture = useTexture('/assets/kenney/prototype-textures/grid-green.png')
   const plazaTexture = useTexture('/assets/kenney/prototype-textures/grid-light.png')
@@ -189,12 +302,9 @@ function Town() {
         </group>
       ))}
 
-      <Building position={[-12, 1.2, -8]} color="#22c55e" scale={[3.5, 1.8, 2.5]} />
-      <Building position={[12, 1.4, -7]} color="#fb923c" scale={[3, 2.4, 2.6]} />
-      <Building position={[-14, 1.8, 10]} color="#a78bfa" scale={[4, 3.2, 2.5]} />
-      <Building position={[2, 1.3, 18]} color="#facc15" scale={[3.5, 2.2, 2.5]} />
-      <Building position={[-4, 1.0, 18]} color="#f9a8d4" scale={[2.5, 1.8, 2.4]} />
-      <Building position={[8, 1.0, 18]} color="#93c5fd" scale={[2.5, 1.8, 2.4]} />
+      {staticTownBuildings.map((building) => (
+        <Building key={building.position.join(',')} position={building.position} color={building.color} scale={building.scale} />
+      ))}
       <Storefront position={[12, 0, -7]} label="SHOP" color="#f97316" />
       <Storefront position={[-14, 0, 10]} label="SCHOOL" color="#a78bfa" />
       <Storefront position={[16, 0, 12]} label="OBBY" color="#ef4444" />
@@ -202,11 +312,8 @@ function Town() {
       <Benches />
       <StreetLamps />
 
-      {[-18, -8, 8, 18].map((x) => (
-        <Tree key={x} position={[x, 0, -17]} />
-      ))}
-      {[-16, -5, 6, 17].map((z) => (
-        <Tree key={z} position={[-20, 0, z]} />
+      {staticTreePositions.map((position) => (
+        <Tree key={position.join(',')} position={position} />
       ))}
     </group>
   )
@@ -262,18 +369,26 @@ function Building({ position, color, scale }: { position: Vec3; color: string; s
         <coneGeometry args={[0.8, 1, 4]} />
         <meshStandardMaterial color="#ef4444" />
       </mesh>
-      <mesh position={[0, -scale[1] / 2 + 0.05, scale[2] / 2 + 0.02]} scale={[0.5, 0.7, 0.06]}>
+      <mesh position={[0, -scale[1] / 2 + 0.45, scale[2] / 2 + 0.02]} scale={[0.52, 0.9, 0.06]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#7c2d12" />
       </mesh>
-      <mesh position={[-scale[0] * 0.22, 0.18, scale[2] / 2 + 0.03]} scale={[0.42, 0.36, 0.05]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
-      </mesh>
-      <mesh position={[scale[0] * 0.22, 0.18, scale[2] / 2 + 0.03]} scale={[0.42, 0.36, 0.05]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
-      </mesh>
+      {Array.from({ length: Math.max(1, Math.min(6, Math.floor(scale[1] / 1.15))) }, (_, row) => {
+        const y = -scale[1] / 2 + 1.25 + row * 0.82
+        if (y > scale[1] / 2 - 0.45) return null
+        return (
+          <group key={row}>
+            <mesh position={[-scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[0.46, 0.38, 0.05]}>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+            </mesh>
+            <mesh position={[scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[0.46, 0.38, 0.05]}>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+            </mesh>
+          </group>
+        )
+      })}
     </group>
   )
 }
@@ -321,8 +436,8 @@ function Billboard({ position }: { position: Vec3 }) {
 function Benches() {
   return (
     <group>
-      {[[-6, -4], [5.5, -4], [-6, 5.2], [5.5, 5.2]].map(([x, z], index) => (
-        <group key={`${x},${z}`} position={[x, 0.35, z]} rotation={[0, index > 1 ? Math.PI : 0, 0]}>
+      {staticBenchPositions.map(({ position, rotation }) => (
+        <group key={position.join(',')} position={position} rotation={[0, rotation, 0]}>
           <mesh castShadow position={[0, 0.15, 0]}>
             <boxGeometry args={[2.1, 0.22, 0.42]} />
             <meshStandardMaterial color="#a16207" />
@@ -348,8 +463,8 @@ function Benches() {
 function StreetLamps() {
   return (
     <group>
-      {[[-4, -7], [4, -7], [-4, 8], [4, 8], [11, -2], [-11, 2]].map(([x, z]) => (
-        <group key={`${x},${z}`} position={[x, 0, z]}>
+      {staticLampPositions.map((position) => (
+        <group key={position.join(',')} position={position}>
           <mesh castShadow position={[0, 1.35, 0]}>
             <cylinderGeometry args={[0.08, 0.1, 2.7, 10]} />
             <meshStandardMaterial color="#334155" />
@@ -396,6 +511,8 @@ function PlayerController() {
   const avatar = useGameStore((state) => state.avatar)
   const playerName = useGameStore((state) => state.playerName)
   const playerEmote = useGameStore((state) => state.playerEmote)
+  const settings = useGameStore((state) => state.settings)
+  const placedBlocks = useGameStore((state) => state.placedBlocks)
   const buildMode = useGameStore((state) => state.buildMode)
   const placeBlock = useGameStore((state) => state.placeBlock)
   const playerPosition = useGameStore((state) => state.playerPosition)
@@ -412,8 +529,32 @@ function PlayerController() {
   const partyPlayerId = useLocalPartyStore((state) => state.playerId)
   const partyPlayerName = useLocalPartyStore((state) => state.playerName)
   const broadcastSnapshot = useLocalPartyStore((state) => state.broadcastSnapshot)
+  const [collisionChunk, setCollisionChunk] = useState(() => ({
+    x: Math.floor(position.current.x / 36),
+    z: Math.floor(position.current.z / 36),
+  }))
+  const collisionObstacles = useMemo(() => {
+    const proceduralObstacles = settings.proceduralWorld
+      ? proceduralPiecesToCollisionBoxes(
+          generateProceduralWorld({
+            seed: settings.worldSeed || 'LONDON-2026',
+            center: [collisionChunk.x * 36 + 18, 0, collisionChunk.z * 36 + 18],
+            viewDistance: settings.worldViewDistance,
+            night: settings.nightMode,
+          }).pieces,
+        )
+      : []
+
+    return [...staticCollisionObstacles, ...proceduralObstacles, ...buildBlocksToCollisionBoxes(placedBlocks)]
+  }, [collisionChunk.x, collisionChunk.z, placedBlocks, settings.nightMode, settings.proceduralWorld, settings.worldSeed, settings.worldViewDistance])
 
   useFrame((state, delta) => {
+    const nextCollisionChunk = {
+      x: Math.floor(position.current.x / 36),
+      z: Math.floor(position.current.z / 36),
+    }
+    if (nextCollisionChunk.x !== collisionChunk.x || nextCollisionChunk.z !== collisionChunk.z) setCollisionChunk(nextCollisionChunk)
+
     const keys = getKeys()
     const forward = Number(keys.forward) - Number(keys.back) + -touch.y
     const strafe = Number(keys.right) - Number(keys.left) + touch.x
@@ -428,8 +569,17 @@ function PlayerController() {
     const direction = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
     const side = new THREE.Vector3(direction.z, 0, -direction.x)
     const speed = keys.forward || keys.back || Math.abs(touch.y) > 0.1 ? 8 : 5
-    position.current.addScaledVector(direction, forward * speed * delta)
-    position.current.addScaledVector(side, strafe * speed * 0.7 * delta)
+    const desiredPosition = position.current.clone()
+    desiredPosition.addScaledVector(direction, forward * speed * delta)
+    desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
+    const resolvedPosition = resolveHorizontalCollision(
+      [position.current.x, position.current.y, position.current.z],
+      [desiredPosition.x, desiredPosition.y, desiredPosition.z],
+      collisionObstacles,
+      playerCollisionRadius,
+    )
+    position.current.x = resolvedPosition[0]
+    position.current.z = resolvedPosition[2]
     velocityY.current -= 25 * delta
     if ((keys.jump || touch.jump) && position.current.y <= 0.91) velocityY.current = 9
     position.current.y += velocityY.current * delta
@@ -442,9 +592,6 @@ function PlayerController() {
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
     }
-    position.current.x = THREE.MathUtils.clamp(position.current.x, -118, 118)
-    position.current.z = THREE.MathUtils.clamp(position.current.z, -118, 118)
-
     if (position.current.y < -2 && obby.active) {
       position.current.set(obby.checkpoint[0], obby.checkpoint[1] + 0.8, obby.checkpoint[2])
       velocityY.current = 0
@@ -647,12 +794,13 @@ type BlockAvatarProps = {
   accessory?: ShopItemId | 'none' | string
   face?: AvatarFaceStyle | string
   username: string
+  showName?: boolean
   hat?: boolean
   emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
   action?: BotRuntime['action']
 }
 
-function BlockAvatar({
+export function BlockAvatar({
   bodyColor,
   shirtColor,
   hairColor = '#5a2f16',
@@ -668,6 +816,7 @@ function BlockAvatar({
   accessory = 'none',
   face = 'smile',
   username,
+  showName = true,
   hat,
   emote = 'none',
   action = 'idle',
@@ -720,11 +869,13 @@ function BlockAvatar({
   const faceStyle = face === 'wow' ? 'surprised' : face
   return (
     <group position={[0, sitDrop, 0]}>
-      <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
-        <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
-          {username}
-        </span>
-      </Html>
+      {showName ? (
+        <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
+            {username}
+          </span>
+        </Html>
+      ) : null}
       <group ref={body} position={[0, -0.9, 0]}>
         <group ref={leftLeg} position={[-0.22, 0.64, 0]}>
           <AvatarLeg
@@ -1243,24 +1394,24 @@ function RoadPiece({ color }: { color: string }) {
 function HousePiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 0.75, 0]}>
-        <boxGeometry args={[1.65, 1.45, 1.45]} />
+      <mesh castShadow receiveShadow position={[0, 1.1, 0]}>
+        <boxGeometry args={[2.55, 2.2, 2.1]} />
         <meshStandardMaterial color={color} roughness={0.76} />
       </mesh>
-      <mesh castShadow position={[0, 1.65, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <coneGeometry args={[1.25, 0.8, 4]} />
+      <mesh castShadow position={[0, 2.45, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[1.8, 0.95, 4]} />
         <meshStandardMaterial color="#ef4444" roughness={0.78} />
       </mesh>
-      <mesh position={[0, 0.62, 0.74]}>
-        <boxGeometry args={[0.36, 0.68, 0.04]} />
+      <mesh position={[0, 0.72, 1.08]}>
+        <boxGeometry args={[0.48, 0.88, 0.05]} />
         <meshStandardMaterial color="#7c2d12" roughness={0.82} />
       </mesh>
-      <mesh position={[-0.48, 1.02, 0.75]}>
-        <boxGeometry args={[0.32, 0.28, 0.04]} />
+      <mesh position={[-0.72, 1.35, 1.09]}>
+        <boxGeometry args={[0.42, 0.38, 0.05]} />
         <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
       </mesh>
-      <mesh position={[0.48, 1.02, 0.75]}>
-        <boxGeometry args={[0.32, 0.28, 0.04]} />
+      <mesh position={[0.72, 1.35, 1.09]}>
+        <boxGeometry args={[0.42, 0.38, 0.05]} />
         <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
       </mesh>
     </group>
@@ -1270,24 +1421,24 @@ function HousePiece({ color }: { color: string }) {
 function BuildingPiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 1.15, 0]}>
-        <boxGeometry args={[1.55, 2.3, 1.55]} />
+      <mesh castShadow receiveShadow position={[0, 2.1, 0]}>
+        <boxGeometry args={[2.35, 4.2, 2.35]} />
         <meshStandardMaterial color={color} roughness={0.78} />
       </mesh>
-      {[0.55, 1.15, 1.75].map((height) => (
+      {[0.8, 1.55, 2.3, 3.05, 3.8].map((height) => (
         <group key={height}>
-          <mesh position={[-0.43, height, 0.79]}>
-            <boxGeometry args={[0.28, 0.28, 0.04]} />
+          <mesh position={[-0.65, height, 1.2]}>
+            <boxGeometry args={[0.38, 0.34, 0.05]} />
             <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
           </mesh>
-          <mesh position={[0.43, height, 0.79]}>
-            <boxGeometry args={[0.28, 0.28, 0.04]} />
+          <mesh position={[0.65, height, 1.2]}>
+            <boxGeometry args={[0.38, 0.34, 0.05]} />
             <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
           </mesh>
         </group>
       ))}
-      <mesh castShadow position={[0, 2.45, 0]}>
-        <boxGeometry args={[1.85, 0.26, 1.85]} />
+      <mesh castShadow position={[0, 4.35, 0]}>
+        <boxGeometry args={[2.65, 0.32, 2.65]} />
         <meshStandardMaterial color="#1e293b" roughness={0.76} />
       </mesh>
     </group>
@@ -1297,20 +1448,20 @@ function BuildingPiece({ color }: { color: string }) {
 function ShopPiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 0.85, 0]}>
-        <boxGeometry args={[2, 1.55, 1.5]} />
+      <mesh castShadow receiveShadow position={[0, 1.1, 0]}>
+        <boxGeometry args={[2.8, 2.2, 2]} />
         <meshStandardMaterial color={color} roughness={0.74} />
       </mesh>
-      <mesh castShadow position={[0, 1.72, 0.18]}>
-        <boxGeometry args={[2.25, 0.22, 1.8]} />
+      <mesh castShadow position={[0, 2.32, 0.18]}>
+        <boxGeometry args={[3.15, 0.26, 2.25]} />
         <meshStandardMaterial color="#0f172a" roughness={0.78} />
       </mesh>
-      <mesh castShadow position={[0, 1.48, 0.86]}>
-        <boxGeometry args={[2.2, 0.24, 0.3]} />
+      <mesh castShadow position={[0, 1.95, 1.13]}>
+        <boxGeometry args={[3.05, 0.32, 0.34]} />
         <meshStandardMaterial color="#ffffff" roughness={0.72} />
       </mesh>
-      <mesh position={[0, 0.74, 0.77]}>
-        <boxGeometry args={[0.55, 0.85, 0.05]} />
+      <mesh position={[0, 0.82, 1.03]}>
+        <boxGeometry args={[0.68, 1.1, 0.06]} />
         <meshStandardMaterial color="#7c2d12" roughness={0.82} />
       </mesh>
     </group>
@@ -1320,18 +1471,18 @@ function ShopPiece({ color }: { color: string }) {
 function CarPiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow position={[0, 0.38, 0]}>
-        <boxGeometry args={[1.5, 0.42, 0.82]} />
+      <mesh castShadow position={[0, 0.46, 0]}>
+        <boxGeometry args={[2.25, 0.58, 1.08]} />
         <meshStandardMaterial color={color} roughness={0.68} />
       </mesh>
-      <mesh castShadow position={[0.08, 0.7, -0.02]}>
-        <boxGeometry args={[0.72, 0.38, 0.68]} />
+      <mesh castShadow position={[0.08, 0.86, -0.02]}>
+        <boxGeometry args={[1.05, 0.52, 0.82]} />
         <meshStandardMaterial color="#bfdbfe" roughness={0.58} />
       </mesh>
-      {[-0.55, 0.55].map((x) =>
-        [-0.46, 0.46].map((z) => (
-          <mesh key={`${x}-${z}`} castShadow position={[x, 0.18, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.17, 0.17, 0.14, 12]} />
+      {[-0.78, 0.78].map((x) =>
+        [-0.58, 0.58].map((z) => (
+          <mesh key={`${x}-${z}`} castShadow position={[x, 0.2, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.22, 0.22, 0.16, 12]} />
             <meshStandardMaterial color="#111827" roughness={0.8} />
           </mesh>
         )),

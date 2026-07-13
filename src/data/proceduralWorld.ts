@@ -121,9 +121,9 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
     ] as const
     plots.forEach(([x, z], index) => {
       if ((hasHorizontalRoad && Math.abs(z - centerZ) < 6) || (hasVerticalRoad && Math.abs(x - centerX) < 6)) return
-      const height = 2.2 + Math.floor(random() * 4) * 0.85
-      const width = 4.4 + random() * 2.5
-      const depth = 4.4 + random() * 2.4
+      const height = 4.2 + Math.floor(random() * 5) * 1.15
+      const width = 5.2 + random() * 3.2
+      const depth = 5 + random() * 3
       const color = buildingPalette[Math.floor(random() * buildingPalette.length)]
       const roof = roofPalette[Math.floor(random() * roofPalette.length)]
       addBuilding(pieces, `building:${cx}:${cz}:${index}`, [x, height / 2, z], [width, height, depth], color, roof)
@@ -138,10 +138,10 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   }
 
   if (hasHorizontalRoad && random() > 0.64) {
-    addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0.42, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
+    addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0.55, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
   }
   if (random() > 0.76) {
-    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [x0 + 4 + random() * 28, 0.75, z0 + 4 + random() * 28], [0.85, 1.5, 0.85], '#dc2626'))
+    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [x0 + 4 + random() * 28, 1, z0 + 4 + random() * 28], [0.95, 2, 0.95], '#dc2626'))
   }
   if (night || random() > 0.58) {
     addLamp(pieces, `lamp:${cx}:${cz}:a`, [x0 + 5, 0, z0 + 5], night)
@@ -163,8 +163,8 @@ function addBuilding(pieces: ProceduralPiece[], id: string, position: Vec3, scal
 }
 
 function addTree(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3) {
-  pieces.push(piece(`${id}:trunk`, 'tree-trunk', [x, 0.72, z], [0.28, 1.35, 0.28], '#92400e'))
-  pieces.push(piece(`${id}:top`, 'tree-top', [x, 1.72, z], [1.45, 1.45, 1.45], '#16a34a'))
+  pieces.push(piece(`${id}:trunk`, 'tree-trunk', [x, 0.9, z], [0.32, 1.8, 0.32], '#92400e'))
+  pieces.push(piece(`${id}:top`, 'tree-top', [x, 2.18, z], [1.65, 1.65, 1.65], '#16a34a'))
 }
 
 function addLamp(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3, night: boolean) {
@@ -173,9 +173,9 @@ function addLamp(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3, night: b
 }
 
 function addBus(pieces: ProceduralPiece[], id: string, position: Vec3) {
-  pieces.push(piece(id, 'bus', position, [4.4, 0.8, 1.3], '#ef4444'))
-  pieces.push(piece(`${id}:top`, 'bus', [position[0], position[1] + 0.58, position[2]], [3.8, 0.55, 1.1], '#dc2626'))
-  pieces.push(piece(`${id}:window`, 'window', [position[0] - 0.2, position[1] + 0.88, position[2] + 0.58], [2.5, 0.35, 0.05], '#bae6fd', undefined, '#60a5fa', 0.1))
+  pieces.push(piece(id, 'bus', position, [5.6, 1.05, 1.45], '#ef4444'))
+  pieces.push(piece(`${id}:top`, 'bus', [position[0], position[1] + 0.72, position[2]], [4.8, 0.72, 1.22], '#dc2626'))
+  pieces.push(piece(`${id}:window`, 'window', [position[0] - 0.2, position[1] + 1.12, position[2] + 0.66], [3.2, 0.42, 0.05], '#bae6fd', undefined, '#60a5fa', 0.1))
 }
 
 function buildLandmarks(night: boolean): ProceduralPiece[] {

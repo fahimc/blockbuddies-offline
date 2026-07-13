@@ -302,3 +302,13 @@
 - [x] Add Playwright smoke coverage for Wardrobe controls and world settings
 - [x] Capture updated review screenshots
 - [x] Bump Android debug APK version metadata to 1.4.5 / 10405
+
+## Post-phase scale, collision, and real avatar preview cleanup
+
+- [x] Increase static town, procedural borough, and build-mode object proportions
+- [x] Add visible-object movement collision for buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build pieces
+- [x] Remove the old tight player-position clamp that created invisible exploration barriers
+- [x] Replace selector/name setup CSS avatar with the real in-game `BlockAvatar` renderer
+- [x] Add unit tests for movement collision and update smoke coverage for the real avatar preview
+- [x] Capture updated customizer and gameplay review screenshots
+- [x] Bump Android debug APK version metadata to 1.4.6 / 10406

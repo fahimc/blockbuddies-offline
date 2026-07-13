@@ -48,6 +48,7 @@ import {
 } from '../data/brickAvatar'
 import type { AvatarSettings, SavedAvatarStyle } from '../game/types'
 import { useGameStore } from '../state/gameStore'
+import { GameAvatarPreview } from './GameAvatarPreview'
 
 const stepOrder: CustomizationStepId[] = ['hub', 'body', 'clothing', 'accessories', 'emotes', 'trails']
 const clothingTabs = ['Tops', 'Hoodies', 'Shirts', 'Pants', 'Overalls', 'Shoes']
@@ -881,7 +882,7 @@ function AvatarStage({
       <div className="bb-stage-glow" />
       <div className="bb-avatar-turntable">
         {showTrail ? <span className="bb-avatar-trail" /> : null}
-        <MiniAvatar avatar={avatar} pose={pose} />
+        <GameAvatarPreview avatar={avatar} pose={pose === 'idle' ? 'none' : pose} />
       </div>
       <button type="button" className="bb-avatar-rotate" aria-label="Rotate avatar">
         <RotateCw size={30} aria-hidden />

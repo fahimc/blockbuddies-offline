@@ -59,6 +59,7 @@ describe('build mode', () => {
     })
     const accepted = mergeBuildPieces([stamp[0]], stamp)
 
-    expect(accepted).toHaveLength(stamp.length - 1)
+    expect(accepted).toHaveLength(stamp.length - 3)
+    expect(accepted.map((piece) => piece.id)).not.toEqual(expect.arrayContaining(['piece-0', 'piece-8', 'piece-15']))
   })
 })

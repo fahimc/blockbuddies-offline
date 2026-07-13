@@ -1,7 +1,8 @@
 import { ArrowLeft, ChevronRight, CircleDollarSign, Sparkles } from 'lucide-react'
-import type { CSSProperties, FormEvent } from 'react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useGameStore } from '../state/gameStore'
+import { GameAvatarPreview } from './GameAvatarPreview'
 
 type NameSetupScreenProps = {
   onBack: () => void
@@ -42,35 +43,7 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
 
       <form className="bb-name-card" onSubmit={submit}>
         <div className="bb-name-avatar-card" aria-hidden>
-          <span
-            className={`bb-mini-avatar pose-wave hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'} outfit-${avatar.outfitStyle ?? 'hoodie'} bottom-${avatar.bottomStyle ?? 'jeans'} shoes-${avatar.shoeStyle ?? 'sneakers'}`}
-            style={
-              {
-                '--skin': avatar.bodyColor,
-                '--shirt': avatar.shirtColor,
-                '--hair': avatar.hairColor ?? '#5a2f16',
-                '--pants': avatar.pantsColor ?? '#111827',
-                '--accent': avatar.accentColor ?? '#0b74ff',
-                '--secondary': avatar.secondaryColor ?? '#ffffff',
-                '--eyes': avatar.eyeColor ?? '#111827',
-                '--shoe': avatar.shoeColor ?? '#f8fafc',
-              } as CSSProperties
-            }
-          >
-            <span className="hair" />
-            <span className="head">
-              <span className="eye left" />
-              <span className="eye right" />
-              <span className="mouth" />
-            </span>
-            <span className="body" />
-            <span className="arm left" />
-            <span className="arm right" />
-            <span className="leg left" />
-            <span className="leg right" />
-            {avatar.hat !== 'none' ? <span className="hat" /> : null}
-            {avatar.accessory && avatar.accessory !== 'none' ? <span className="glasses" /> : null}
-          </span>
+          <GameAvatarPreview avatar={avatar} pose="wave" />
         </div>
 
         <label className="bb-name-field">

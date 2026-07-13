@@ -1,5 +1,31 @@
 # Changelog
 
+## [v1.4.6-scale-collision-avatar-preview] - 2026-07-13
+
+### Added
+
+- Added a deterministic 2D collision resolver for direct player movement so visible buildings, cars, trees, lamps, buses, phone boxes, landmarks, and custom build pieces can block the player.
+- Added unit tests for collision detection and sliding around visible obstacles.
+- Added review screenshots for the real-avatar customizer preview and rescaled gameplay scene.
+
+### Changed
+
+- Increased town and procedural borough building sizes so buildings read as several avatar-heights tall instead of toy-sized props.
+- Increased build-mode houses, towers, shops, and cars, and updated their placement footprints to match the larger visible meshes.
+- Replaced the character selector/name setup CSS avatar preview with the same 3D `BlockAvatar` renderer used by the actual game character.
+- Updated Android version metadata to `1.4.6` / `10406`.
+
+### Fixed
+
+- Fixed the player walking through visible world objects by resolving horizontal movement against visible-object collision boxes.
+- Removed the old tight player-position clamp that could feel like an invisible wall in the streamed procedural borough.
+- Fixed the real-avatar customizer preview camera so the full character fits in the portrait phone column.
+
+### Known Issues
+
+- Collision boxes are coarse axis-aligned gameplay blockers; bot pathfinding still does not navigate around every custom or procedural obstacle.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.4.5-brick-borough-port] - 2026-07-13
 
 ### Added

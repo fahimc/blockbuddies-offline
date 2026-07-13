@@ -49,6 +49,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies procedural borough world](docs/review/brick-borough-procedural-world-v145-desktop.png)
 
+![BlockBuddies real in-game avatar customizer](docs/review/v146-customizer-body-real-avatar-fixed.png)
+
+![BlockBuddies rescaled gameplay world](docs/review/v146-gameplay-scale-collision.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -68,6 +72,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Body & Style customizer uses phone-width columns for categories, character
   preview, and controls while switching between Body, Hair, Face, Colours, and
   Wardrobe.
+- Character customisation and name setup use the same 3D block avatar renderer
+  as the in-game player, so selected colours and parts match gameplay.
 - Brick Borough-inspired wardrobe controls with local presets, saved avatar
   styles, project JSON import, texture colour sampling, outfits, bottoms, and
   shoe styles.
@@ -86,6 +92,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
   buildings, street props, buses, phone boxes, landmarks, world seeds, view
   distance, and night mode settings.
+- Coarse visible-object collision prevents the player from walking through
+  buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
+  pieces while still sliding along blocked axes.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
@@ -209,6 +218,11 @@ The `v1.4.5` APK adds the Brick Borough procedural/customizer port: seeded
 borough tiles, world settings, richer 3D avatar parts, saved wardrobe styles,
 and local JSON/texture import helpers.
 
+The `v1.4.6` APK fixes world scale and movement blocking. Buildings, cars, and
+build-mode prefabs are larger, visible scenery blocks the player with coarse
+collision, the old tight exploration clamp is removed, and the customizer/name
+screens render the real in-game avatar.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -239,9 +253,11 @@ Roblox-inspired prototype.
 - Local Party supports nearby manual peer-to-peer sessions only; it has no cloud
   matchmaking, relay/TURN fallback, persistence for remote players, or account
   system.
-- Custom world pieces are visual-only prefabs; floor/checkpoint safety is implemented.
-- Procedural borough buildings and roads are visual scenery; they do not yet
-  provide full per-building physics collision or bot navigation.
+- Custom world pieces use coarse player collision but do not yet provide full
+  rigid-body physics or bot navigation.
+- Procedural borough buildings and props use coarse player collision; roads and
+  pavements remain traversable scenery and bots do not yet path around every
+  obstacle.
 - Build mode limits custom world pieces to keep mobile scenes responsive.
 - Some cosmetic customizer items are visual-only and do not yet have distinct
   3D gameplay geometry.
