@@ -24,7 +24,7 @@ test('opens menu and navigates to game shell', async ({ page }) => {
 })
 
 test('opens Roblox-inspired offline feature panels', async ({ page }) => {
-  test.setTimeout(45_000)
+  test.setTimeout(75_000)
   await page.goto('/')
   await completeStartFlow(page)
   await page.getByTestId('game-canvas').waitFor()
@@ -46,6 +46,10 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await expect(bodyCustomizer.getByText('Hair Colour')).toBeVisible()
   await expect(bodyCustomizer.getByText('Hair Style')).toBeVisible()
   await expect(bodyCustomizer.getByText('Skin Tone')).toHaveCount(0)
+  await bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true }).click()
+  await expect(bodyCustomizer.getByText('Brick Borough Presets')).toBeVisible()
+  await expect(bodyCustomizer.getByRole('button', { name: 'Import project' })).toBeVisible()
+  await expect(bodyCustomizer.getByRole('heading', { name: 'Saved Styles' })).toBeVisible()
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Back' }).click()
 
@@ -70,6 +74,11 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
+    }
+    if (item.button === 'Settings') {
+      await expect(page.getByRole('textbox', { name: 'World Seed' })).toBeVisible()
+      await expect(page.getByText('Procedural Borough')).toBeVisible()
+      await expect(page.getByText('Night Mode')).toBeVisible()
     }
     await page.keyboard.press('Escape')
   }
@@ -159,6 +168,10 @@ test.describe('portrait splash layout', () => {
     await expect(bodyCustomizer.getByText('Skin Tone')).toHaveCount(0)
     await bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }).click()
     await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
+    await expect(stage.locator('.bb-mini-avatar')).toBeInViewport()
+    await bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true }).click()
+    await expect(bodyCustomizer.getByText('Brick Borough Presets')).toBeVisible()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Sample texture' })).toBeVisible()
     await expect(stage.locator('.bb-mini-avatar')).toBeInViewport()
   })
 

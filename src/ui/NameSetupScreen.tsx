@@ -43,7 +43,7 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
       <form className="bb-name-card" onSubmit={submit}>
         <div className="bb-name-avatar-card" aria-hidden>
           <span
-            className={`bb-mini-avatar pose-wave hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'}`}
+            className={`bb-mini-avatar pose-wave hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'} outfit-${avatar.outfitStyle ?? 'hoodie'} bottom-${avatar.bottomStyle ?? 'jeans'} shoes-${avatar.shoeStyle ?? 'sneakers'}`}
             style={
               {
                 '--skin': avatar.bodyColor,
@@ -51,7 +51,9 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
                 '--hair': avatar.hairColor ?? '#5a2f16',
                 '--pants': avatar.pantsColor ?? '#111827',
                 '--accent': avatar.accentColor ?? '#0b74ff',
+                '--secondary': avatar.secondaryColor ?? '#ffffff',
                 '--eyes': avatar.eyeColor ?? '#111827',
+                '--shoe': avatar.shoeColor ?? '#f8fafc',
               } as CSSProperties
             }
           >

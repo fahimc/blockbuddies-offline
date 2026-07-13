@@ -22,7 +22,8 @@ describe('avatar save migration', () => {
       trail: 'trail-spark' as const,
     }
 
-    expect(normalizeSavedAvatar(customAvatar)).toBe(customAvatar)
+    expect(normalizeSavedAvatar(customAvatar)).toMatchObject(customAvatar)
+    expect(normalizeSavedAvatar(customAvatar)?.outfitStyle).toBe(defaultAvatar.outfitStyle)
   })
 })
 
@@ -61,5 +62,21 @@ describe('player setup flow', () => {
     useGameStore.setState({ playerName: 'SaveTester' })
 
     expect(makeSaveSnapshot(useGameStore.getState()).playerName).toBe('SaveTester')
+  })
+
+  it('saves and reapplies local avatar styles', () => {
+    useGameStore.setState({
+      avatar: { ...defaultAvatar, shirtColor: '#14b8a6', avatarSource: 'Test Fit' },
+      savedAvatars: [],
+      chat: [],
+    })
+
+    useGameStore.getState().saveCurrentAvatarStyle()
+    const saved = useGameStore.getState().savedAvatars[0]
+    useGameStore.getState().updateAvatar({ shirtColor: '#dc2626' })
+    useGameStore.getState().applySavedAvatarStyle(saved.id)
+
+    expect(useGameStore.getState().savedAvatars).toHaveLength(1)
+    expect(useGameStore.getState().avatar.shirtColor).toBe('#14b8a6')
   })
 })

@@ -1,4 +1,4 @@
-import { Gamepad2, Monitor, Music, RotateCcw, Shield } from 'lucide-react'
+import { Gamepad2, Map, Monitor, Moon, Music, RotateCcw, Shield, Shuffle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { clearGameSave } from '../save/storage'
 import { useGameStore } from '../state/gameStore'
@@ -34,6 +34,51 @@ export function SettingsPanel() {
           <Toggle label="Sound Effects" checked={settings.audio} onChange={(audio) => updateSettings({ audio })} />
           <Toggle label="Music Volume" checked={settings.music} onChange={(music) => updateSettings({ music })} />
           <Toggle label="Reduced Motion" checked={settings.reducedMotion} onChange={(reducedMotion) => updateSettings({ reducedMotion })} />
+          <label className="bb-setting-row">
+            <span className="inline-flex items-center gap-2">
+              <Map size={18} aria-hidden />
+              World Seed
+            </span>
+            <span className="flex min-w-0 items-center gap-2">
+              <input
+                value={settings.worldSeed}
+                onChange={(event) => updateSettings({ worldSeed: event.target.value || 'LONDON-2026' })}
+                className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-black"
+                aria-label="World Seed"
+              />
+              <button
+                type="button"
+                onClick={() => updateSettings({ worldSeed: `BLOCK-${Date.now().toString(36).slice(-5).toUpperCase()}` })}
+                className="grid min-h-10 min-w-10 place-items-center rounded-lg bg-sky-600 text-white"
+                aria-label="Random world seed"
+              >
+                <Shuffle size={18} aria-hidden />
+              </button>
+            </span>
+          </label>
+          <label className="bb-setting-row">
+            <span>World View Distance</span>
+            <select
+              value={settings.worldViewDistance}
+              onChange={(event) => updateSettings({ worldViewDistance: Number(event.target.value) as typeof settings.worldViewDistance })}
+              className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 font-black"
+            >
+              <option value={1}>Low</option>
+              <option value={2}>Medium</option>
+              <option value={3}>High</option>
+            </select>
+          </label>
+          <Toggle label="Procedural Borough" checked={settings.proceduralWorld} onChange={(proceduralWorld) => updateSettings({ proceduralWorld })} />
+          <Toggle
+            label={
+              <span className="inline-flex items-center gap-2">
+                <Moon size={18} aria-hidden />
+                Night Mode
+              </span>
+            }
+            checked={settings.nightMode}
+            onChange={(nightMode) => updateSettings({ nightMode })}
+          />
           <div className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">
             Offline Mode ON - you are playing offline. No internet required.
           </div>
@@ -63,7 +108,7 @@ function SettingsTab({ icon, label, active = false }: { icon: ReactNode; label: 
   )
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function Toggle({ label, checked, onChange }: { label: ReactNode; checked: boolean; onChange: (checked: boolean) => void }) {
   return (
     <label className="bb-setting-row">
       <span>{label}</span>

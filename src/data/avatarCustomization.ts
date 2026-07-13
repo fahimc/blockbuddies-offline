@@ -25,17 +25,38 @@ export const customizationSteps: { id: CustomizationStepId; title: string; cta: 
   { id: 'trails', title: 'Trails & Effects', cta: 'Finish', note: 'Leave a little sparkle wherever you go.' },
 ]
 
-export const skinTones = ['#f7c48a', '#e9a76f', '#d38b50', '#b8733b', '#7c3f1d']
+export const skinTones = [
+  '#f8d6c2',
+  '#efc09e',
+  '#d99b70',
+  '#bf7a50',
+  '#9a5e3a',
+  '#77452d',
+  '#523021',
+  '#2f1b16',
+  '#f1c7a5',
+  '#c98664',
+  '#8e5c45',
+  '#5d3d31',
+  '#d8a07c',
+  '#a46d51',
+]
 export const hairColors = ['#5a2f16', '#6b3a1d', '#222222', '#f3c34f', '#a8411f']
 export const eyeColors = ['#111827', '#6b2f12', '#1455b8', '#36a936', '#8b2bd8']
 export const accentColors = ['#0b74ff', '#e11d1d', '#2eb82e', '#f59e0b', '#8b2bd8']
 
 export const hairStyles = [
+  { id: 'short', name: 'Short', patch: { hairStyle: 'short' as const } },
   { id: 'spiky', name: 'Spiky', patch: { hairStyle: 'spiky' as const } },
+  { id: 'bob', name: 'Bob', patch: { hairStyle: 'bob' as const } },
+  { id: 'long', name: 'Long', patch: { hairStyle: 'long' as const } },
+  { id: 'curls', name: 'Curls', patch: { hairStyle: 'curls' as const } },
+  { id: 'mohawk', name: 'Mohawk', patch: { hairStyle: 'mohawk' as const } },
+  { id: 'beanie', name: 'Beanie', patch: { hairStyle: 'beanie' as const } },
   { id: 'side', name: 'Side', patch: { hairStyle: 'side' as const } },
   { id: 'curly', name: 'Curly', patch: { hairStyle: 'curly' as const } },
-  { id: 'long', name: 'Long', patch: { hairStyle: 'long' as const } },
   { id: 'flat', name: 'Flat', patch: { hairStyle: 'flat' as const } },
+  { id: 'none', name: 'None', patch: { hairStyle: 'none' as const } },
 ]
 
 export const faceStyles = [
@@ -44,25 +65,29 @@ export const faceStyles = [
   { id: 'wink', name: 'Wink', patch: { face: 'wink' as const } },
   { id: 'wow', name: 'Wow', patch: { face: 'wow' as const } },
   { id: 'cool', name: 'Cool', patch: { face: 'cool' as const, accessory: 'visor-neon' as const } },
+  { id: 'sleepy', name: 'Sleepy', patch: { face: 'sleepy' as const } },
+  { id: 'surprised', name: 'Surprise', patch: { face: 'surprised' as const } },
+  { id: 'robot', name: 'Robot', patch: { face: 'robot' as const, eyeColor: '#22d3ee' } },
+  { id: 'plain', name: 'Plain', patch: { face: 'plain' as const } },
 ]
 
 export const clothingItems: CustomizationItem[] = [
-  { id: 'top-blue-hoodie', name: 'Blue Hoodie', kind: 'top', rarity: 'Common', cost: 100, color: '#0b74ff', shopItemId: 'top-blue-hoodie', patch: { shirtColor: '#0b74ff', topStyle: 'top-blue-hoodie' } },
-  { id: 'top-green-hoodie', name: 'Green Hoodie', kind: 'top', rarity: 'Common', cost: 100, color: '#168a2d', shopItemId: 'top-green-hoodie', patch: { shirtColor: '#168a2d', topStyle: 'top-green-hoodie' } },
-  { id: 'top-red-hoodie', name: 'Red Hoodie', kind: 'top', rarity: 'Rare', cost: 150, color: '#dc2626', shopItemId: 'top-red-hoodie', patch: { shirtColor: '#dc2626', topStyle: 'top-red-hoodie' } },
-  { id: 'top-fire-hoodie', name: 'Fire Hoodie', kind: 'top', rarity: 'Epic', cost: 200, color: '#111827', accent: '#f97316', shopItemId: 'top-fire-hoodie', patch: { shirtColor: '#111827', accentColor: '#f97316', topStyle: 'top-fire-hoodie' } },
-  { id: 'top-yellow-hoodie', name: 'Sunny Hoodie', kind: 'top', rarity: 'Rare', cost: 150, color: '#facc15', shopItemId: 'top-yellow-hoodie', patch: { shirtColor: '#facc15', topStyle: 'top-yellow-hoodie' } },
-  { id: 'top-raglan', name: 'Raglan Tee', kind: 'top', rarity: 'Common', cost: 100, color: '#f8fafc', accent: '#111827', shopItemId: 'top-raglan', patch: { shirtColor: '#f8fafc', accentColor: '#111827', topStyle: 'top-raglan' } },
-  { id: 'top-star-tee', name: 'Star Tee', kind: 'top', rarity: 'Rare', cost: 150, color: '#14b8a6', accent: '#ffffff', shopItemId: 'top-star-tee', patch: { shirtColor: '#14b8a6', accentColor: '#ffffff', topStyle: 'top-star-tee' } },
-  { id: 'top-purple-hoodie', name: 'Galaxy Hoodie', kind: 'top', rarity: 'Epic', cost: 200, color: '#7c3aed', shopItemId: 'top-purple-hoodie', patch: { shirtColor: '#7c3aed', topStyle: 'top-purple-hoodie' } },
-  { id: 'top-stripe-shirt', name: 'Stripe Shirt', kind: 'top', rarity: 'Rare', cost: 150, color: '#e0f2fe', accent: '#2563eb', shopItemId: 'top-stripe-shirt', patch: { shirtColor: '#e0f2fe', accentColor: '#2563eb', topStyle: 'top-stripe-shirt' } },
-  { id: 'top-orange-hoodie', name: 'Orange Hoodie', kind: 'top', rarity: 'Epic', cost: 250, color: '#f97316', shopItemId: 'top-orange-hoodie', patch: { shirtColor: '#f97316', topStyle: 'top-orange-hoodie' } },
+  { id: 'top-blue-hoodie', name: 'Blue Hoodie', kind: 'top', rarity: 'Common', cost: 100, color: '#0b74ff', shopItemId: 'top-blue-hoodie', patch: { shirtColor: '#0b74ff', topStyle: 'top-blue-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-green-hoodie', name: 'Green Hoodie', kind: 'top', rarity: 'Common', cost: 100, color: '#168a2d', shopItemId: 'top-green-hoodie', patch: { shirtColor: '#168a2d', topStyle: 'top-green-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-red-hoodie', name: 'Red Hoodie', kind: 'top', rarity: 'Rare', cost: 150, color: '#dc2626', shopItemId: 'top-red-hoodie', patch: { shirtColor: '#dc2626', topStyle: 'top-red-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-fire-hoodie', name: 'Fire Hoodie', kind: 'top', rarity: 'Epic', cost: 200, color: '#111827', accent: '#f97316', shopItemId: 'top-fire-hoodie', patch: { shirtColor: '#111827', accentColor: '#f97316', secondaryColor: '#f97316', topStyle: 'top-fire-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-yellow-hoodie', name: 'Sunny Hoodie', kind: 'top', rarity: 'Rare', cost: 150, color: '#facc15', shopItemId: 'top-yellow-hoodie', patch: { shirtColor: '#facc15', topStyle: 'top-yellow-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-raglan', name: 'Raglan Tee', kind: 'top', rarity: 'Common', cost: 100, color: '#f8fafc', accent: '#111827', shopItemId: 'top-raglan', patch: { shirtColor: '#f8fafc', accentColor: '#111827', secondaryColor: '#111827', topStyle: 'top-raglan', outfitStyle: 'tee' } },
+  { id: 'top-star-tee', name: 'Star Tee', kind: 'top', rarity: 'Rare', cost: 150, color: '#14b8a6', accent: '#ffffff', shopItemId: 'top-star-tee', patch: { shirtColor: '#14b8a6', accentColor: '#ffffff', secondaryColor: '#ffffff', topStyle: 'top-star-tee', outfitStyle: 'tee' } },
+  { id: 'top-purple-hoodie', name: 'Galaxy Hoodie', kind: 'top', rarity: 'Epic', cost: 200, color: '#7c3aed', shopItemId: 'top-purple-hoodie', patch: { shirtColor: '#7c3aed', topStyle: 'top-purple-hoodie', outfitStyle: 'hoodie' } },
+  { id: 'top-stripe-shirt', name: 'Stripe Shirt', kind: 'top', rarity: 'Rare', cost: 150, color: '#e0f2fe', accent: '#2563eb', shopItemId: 'top-stripe-shirt', patch: { shirtColor: '#e0f2fe', accentColor: '#2563eb', secondaryColor: '#2563eb', topStyle: 'top-stripe-shirt', outfitStyle: 'tee' } },
+  { id: 'top-orange-hoodie', name: 'Orange Hoodie', kind: 'top', rarity: 'Epic', cost: 250, color: '#f97316', shopItemId: 'top-orange-hoodie', patch: { shirtColor: '#f97316', topStyle: 'top-orange-hoodie', outfitStyle: 'hoodie' } },
 ]
 
 export const pantsItems: CustomizationItem[] = [
-  { id: 'pants-black', name: 'Black Pants', kind: 'pants', rarity: 'Common', cost: 80, color: '#111827', shopItemId: 'pants-black', patch: { pantsColor: '#111827' } },
-  { id: 'pants-blue', name: 'Blue Jeans', kind: 'pants', rarity: 'Common', cost: 80, color: '#1d4ed8', shopItemId: 'pants-blue', patch: { pantsColor: '#1d4ed8' } },
-  { id: 'shoes-white', name: 'Fresh Shoes', kind: 'pants', rarity: 'Rare', cost: 120, color: '#f8fafc', shopItemId: 'shoes-white', patch: { pantsColor: '#111827' } },
+  { id: 'pants-black', name: 'Black Pants', kind: 'pants', rarity: 'Common', cost: 80, color: '#111827', shopItemId: 'pants-black', patch: { pantsColor: '#111827', bottomStyle: 'jeans' } },
+  { id: 'pants-blue', name: 'Blue Jeans', kind: 'pants', rarity: 'Common', cost: 80, color: '#1d4ed8', shopItemId: 'pants-blue', patch: { pantsColor: '#1d4ed8', bottomStyle: 'jeans' } },
+  { id: 'shoes-white', name: 'Fresh Shoes', kind: 'pants', rarity: 'Rare', cost: 120, color: '#f8fafc', shopItemId: 'shoes-white', patch: { pantsColor: '#111827', shoeStyle: 'sneakers', shoeColor: '#f8fafc' } },
 ]
 
 export const accessoryItems: CustomizationItem[] = [

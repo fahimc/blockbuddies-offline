@@ -4,10 +4,21 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
+import { generateProceduralWorld, type ProceduralPiece } from '../data/proceduralWorld'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
-import type { BotRuntime, BuildBlock, Vec3 } from './types'
+import type {
+  AvatarBottomStyle,
+  AvatarFaceStyle,
+  AvatarHairStyle,
+  AvatarOutfitStyle,
+  AvatarShoeStyle,
+  BotRuntime,
+  BuildBlock,
+  ShopItemId,
+  Vec3,
+} from './types'
 
 const obbyCheckpoints: Vec3[] = [
   [16, 0.8, 12],
@@ -21,6 +32,7 @@ const worldHtmlZIndexRange: [number, number] = [4, 0]
 export function GameScene() {
   return (
     <>
+      <ProceduralBoroughWorld />
       <Town />
       <PlayerController />
       <Bots />
@@ -30,6 +42,100 @@ export function GameScene() {
       <ToyPickup />
       <PlacedBlocks />
     </>
+  )
+}
+
+function ProceduralBoroughWorld() {
+  const settings = useGameStore((state) => state.settings)
+  const [chunk, setChunk] = useState(() => {
+    const playerPosition = useGameStore.getState().playerPosition
+    return {
+      x: Math.floor(playerPosition[0] / 36),
+      z: Math.floor(playerPosition[2] / 36),
+    }
+  })
+  useFrame(() => {
+    const playerPosition = useGameStore.getState().playerPosition
+    const nextChunk = {
+      x: Math.floor(playerPosition[0] / 36),
+      z: Math.floor(playerPosition[2] / 36),
+    }
+    if (nextChunk.x !== chunk.x || nextChunk.z !== chunk.z) setChunk(nextChunk)
+  })
+  const world = useMemo(
+    () =>
+      generateProceduralWorld({
+        seed: settings.worldSeed || 'LONDON-2026',
+        center: [chunk.x * 36 + 18, 0, chunk.z * 36 + 18],
+        viewDistance: settings.worldViewDistance,
+        night: settings.nightMode,
+      }),
+    [chunk.x, chunk.z, settings.nightMode, settings.worldSeed, settings.worldViewDistance],
+  )
+
+  if (!settings.proceduralWorld) return null
+
+  return (
+    <group>
+      {world.pieces.map((piece) => (
+        <ProceduralPieceMesh key={piece.id} piece={piece} />
+      ))}
+      <Html position={[0, 3.6, -31]} center zIndexRange={worldHtmlZIndexRange}>
+        <span className="whitespace-nowrap rounded-lg bg-slate-950/80 px-3 py-1 text-xs font-black text-white shadow">
+          {world.district} • {world.buildingCount} buildings
+        </span>
+      </Html>
+    </group>
+  )
+}
+
+function ProceduralPieceMesh({ piece }: { piece: ProceduralPiece }) {
+  const castsShadow = piece.kind === 'building' || piece.kind === 'roof' || piece.kind === 'tree-top' || piece.kind === 'landmark'
+  const receivesShadow = piece.kind !== 'line' && piece.kind !== 'lamp-light'
+  const materialProps = {
+    color: piece.color,
+    emissive: piece.emissive,
+    emissiveIntensity: piece.emissiveIntensity ?? 0,
+    roughness: piece.kind === 'water' ? 0.38 : 0.78,
+    metalness: piece.kind === 'water' ? 0.05 : 0,
+    transparent: piece.kind === 'water',
+    opacity: piece.kind === 'water' ? 0.84 : 1,
+  }
+  const rotation: Vec3 = piece.rotation ?? [0, 0, 0]
+
+  return (
+    <group position={piece.position} rotation={rotation}>
+      {piece.kind === 'tree-top' ? (
+        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
+          <dodecahedronGeometry args={[0.5, 0]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      ) : null}
+      {piece.kind === 'lamp-light' ? (
+        <mesh castShadow={false} scale={piece.scale}>
+          <sphereGeometry args={[0.5, 14, 10]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      ) : null}
+      {piece.id === 'landmark:london-eye-ring' ? (
+        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
+          <torusGeometry args={[0.5, 0.035, 8, 36]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      ) : null}
+      {piece.id === 'landmark:shard' ? (
+        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
+          <coneGeometry args={[0.5, 1, 4]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      ) : null}
+      {piece.kind !== 'tree-top' && piece.kind !== 'lamp-light' && piece.id !== 'landmark:london-eye-ring' && piece.id !== 'landmark:shard' ? (
+        <mesh castShadow={castsShadow} receiveShadow={receivesShadow} scale={piece.scale}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      ) : null}
+    </group>
   )
 }
 
@@ -336,8 +442,8 @@ function PlayerController() {
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
     }
-    position.current.x = THREE.MathUtils.clamp(position.current.x, -25, 25)
-    position.current.z = THREE.MathUtils.clamp(position.current.z, -25, 25)
+    position.current.x = THREE.MathUtils.clamp(position.current.x, -118, 118)
+    position.current.z = THREE.MathUtils.clamp(position.current.z, -118, 118)
 
     if (position.current.y < -2 && obby.active) {
       position.current.set(obby.checkpoint[0], obby.checkpoint[1] + 0.8, obby.checkpoint[2])
@@ -405,7 +511,15 @@ function PlayerController() {
         bodyColor={avatar.bodyColor}
         shirtColor={avatar.shirtColor}
         hairColor={avatar.hairColor}
+        hairStyle={avatar.hairStyle}
         pantsColor={avatar.pantsColor}
+        eyeColor={avatar.eyeColor}
+        accentColor={avatar.accentColor}
+        secondaryColor={avatar.secondaryColor}
+        outfitStyle={avatar.outfitStyle}
+        bottomStyle={avatar.bottomStyle}
+        shoeStyle={avatar.shoeStyle}
+        shoeColor={avatar.shoeColor}
         accessory={avatar.accessory}
         face={avatar.face}
         username={playerName}
@@ -447,7 +561,15 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}
         hairColor={player.avatar.hairColor}
+        hairStyle={player.avatar.hairStyle}
         pantsColor={player.avatar.pantsColor}
+        eyeColor={player.avatar.eyeColor}
+        accentColor={player.avatar.accentColor}
+        secondaryColor={player.avatar.secondaryColor}
+        outfitStyle={player.avatar.outfitStyle}
+        bottomStyle={player.avatar.bottomStyle}
+        shoeStyle={player.avatar.shoeStyle}
+        shoeColor={player.avatar.shoeColor}
         accessory={player.avatar.accessory}
         face={player.avatar.face}
         username={player.name}
@@ -487,6 +609,12 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
       <BlockAvatar
         bodyColor={color}
         shirtColor={shirtColor}
+        hairStyle={username.length % 3 === 0 ? 'bob' : username.length % 2 === 0 ? 'short' : 'spiky'}
+        hairColor={username.length % 2 === 0 ? '#3b1f12' : '#111827'}
+        pantsColor="#1f2937"
+        outfitStyle={username.length % 2 === 0 ? 'tee' : 'hoodie'}
+        bottomStyle="jeans"
+        shoeStyle="sneakers"
         username={username}
         hat={bot.action === 'cheer'}
         emote={bot.action === 'cheer' ? 'cheer' : bot.action === 'wave' ? 'wave' : 'none'}
@@ -503,29 +631,47 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
   )
 }
 
+type BlockAvatarProps = {
+  bodyColor: string
+  shirtColor: string
+  hairColor?: string
+  hairStyle?: AvatarHairStyle
+  pantsColor?: string
+  eyeColor?: string
+  accentColor?: string
+  secondaryColor?: string
+  outfitStyle?: AvatarOutfitStyle
+  bottomStyle?: AvatarBottomStyle
+  shoeStyle?: AvatarShoeStyle
+  shoeColor?: string
+  accessory?: ShopItemId | 'none' | string
+  face?: AvatarFaceStyle | string
+  username: string
+  hat?: boolean
+  emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
+  action?: BotRuntime['action']
+}
+
 function BlockAvatar({
   bodyColor,
   shirtColor,
   hairColor = '#5a2f16',
+  hairStyle = 'spiky',
   pantsColor = '#111827',
+  eyeColor = '#111827',
+  accentColor = '#0b74ff',
+  secondaryColor = '#ffffff',
+  outfitStyle = 'hoodie',
+  bottomStyle = 'jeans',
+  shoeStyle = 'sneakers',
+  shoeColor = '#f8fafc',
   accessory = 'none',
   face = 'smile',
   username,
   hat,
   emote = 'none',
   action = 'idle',
-}: {
-  bodyColor: string
-  shirtColor: string
-  hairColor?: string
-  pantsColor?: string
-  accessory?: string
-  face?: string
-  username: string
-  hat?: boolean
-  emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
-  action?: BotRuntime['action']
-}) {
+}: BlockAvatarProps) {
   const body = useRef<THREE.Group>(null)
   const leftArm = useRef<THREE.Group>(null)
   const rightArm = useRef<THREE.Group>(null)
@@ -571,6 +717,7 @@ function BlockAvatar({
   })
 
   const sitDrop = emote === 'sit' ? -0.35 : 0
+  const faceStyle = face === 'wow' ? 'surprised' : face
   return (
     <group position={[0, sitDrop, 0]}>
       <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
@@ -580,82 +727,419 @@ function BlockAvatar({
       </Html>
       <group ref={body} position={[0, -0.9, 0]}>
         <group ref={leftLeg} position={[-0.22, 0.64, 0]}>
-          <mesh castShadow position={[0, -0.32, 0]}>
-            <boxGeometry args={[0.26, 0.64, 0.28]} />
-            <meshStandardMaterial color={pantsColor} roughness={0.72} />
-          </mesh>
-          <mesh castShadow position={[0, -0.68, 0.08]}>
-            <boxGeometry args={[0.3, 0.12, 0.42]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.6} />
-          </mesh>
+          <AvatarLeg
+            bodyColor={bodyColor}
+            pantsColor={pantsColor}
+            bottomStyle={bottomStyle}
+            shoeStyle={shoeStyle}
+            shoeColor={shoeColor}
+          />
         </group>
         <group ref={rightLeg} position={[0.22, 0.64, 0]}>
-          <mesh castShadow position={[0, -0.32, 0]}>
-            <boxGeometry args={[0.26, 0.64, 0.28]} />
-            <meshStandardMaterial color={pantsColor} roughness={0.72} />
-          </mesh>
-          <mesh castShadow position={[0, -0.68, 0.08]}>
-            <boxGeometry args={[0.3, 0.12, 0.42]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.6} />
-          </mesh>
+          <AvatarLeg
+            bodyColor={bodyColor}
+            pantsColor={pantsColor}
+            bottomStyle={bottomStyle}
+            shoeStyle={shoeStyle}
+            shoeColor={shoeColor}
+          />
         </group>
 
-        <mesh castShadow position={[0, 1.05, 0]}>
-          <boxGeometry args={[0.82, 0.94, 0.38]} />
-          <meshStandardMaterial color={shirtColor} roughness={0.7} />
-        </mesh>
+        <AvatarTorso
+          bodyColor={bodyColor}
+          shirtColor={shirtColor}
+          accentColor={accentColor}
+          secondaryColor={secondaryColor}
+          outfitStyle={outfitStyle}
+          bottomStyle={bottomStyle}
+        />
         <mesh castShadow position={[0, 1.55, 0]}>
           <boxGeometry args={[0.7, 0.16, 0.4]} />
           <meshStandardMaterial color={bodyColor} roughness={0.7} />
         </mesh>
 
         <group ref={leftArm} position={[-0.58, 1.45, 0]}>
-          <mesh castShadow position={[0, -0.36, 0]}>
-            <boxGeometry args={[0.24, 0.72, 0.24]} />
-            <meshStandardMaterial color={bodyColor} roughness={0.7} />
-          </mesh>
+          <AvatarArm bodyColor={bodyColor} shirtColor={shirtColor} outfitStyle={outfitStyle} />
         </group>
         <group ref={rightArm} position={[0.58, 1.45, 0]}>
-          <mesh castShadow position={[0, -0.36, 0]}>
-            <boxGeometry args={[0.24, 0.72, 0.24]} />
-            <meshStandardMaterial color={bodyColor} roughness={0.7} />
-          </mesh>
+          <AvatarArm bodyColor={bodyColor} shirtColor={shirtColor} outfitStyle={outfitStyle} />
         </group>
 
         <mesh castShadow position={[0, 1.92, 0]}>
           <boxGeometry args={[0.62, 0.62, 0.58]} />
           <meshStandardMaterial color={bodyColor} roughness={0.66} />
         </mesh>
-        <mesh castShadow position={[0, 2.28, -0.02]}>
-          <boxGeometry args={[0.66, 0.18, 0.62]} />
-          <meshStandardMaterial color={hairColor} roughness={0.8} />
-        </mesh>
-        <mesh castShadow position={[-0.22, 1.96, 0.31]}>
-          <boxGeometry args={[0.07, 0.07, 0.03]} />
-          <meshStandardMaterial color="#111827" />
-        </mesh>
-        <mesh castShadow position={[0.22, 1.96, 0.31]}>
-          <boxGeometry args={[0.07, 0.07, 0.03]} />
-          <meshStandardMaterial color="#111827" />
-        </mesh>
-        <mesh castShadow position={[0, 1.78, 0.32]}>
-          <boxGeometry args={[face === 'wow' ? 0.12 : face === 'cool' ? 0.3 : 0.26, face === 'wow' ? 0.12 : 0.05, 0.03]} />
-          <meshStandardMaterial color="#7c2d12" />
-        </mesh>
+        <AvatarHair hairStyle={hairStyle} hairColor={hairColor} accentColor={accentColor} />
+        <AvatarFace face={faceStyle} eyeColor={eyeColor} accentColor={accentColor} />
         {hat ? (
           <mesh castShadow position={[0, 2.45, 0]}>
             <cylinderGeometry args={[0.38, 0.5, 0.18, 5]} />
             <meshStandardMaterial color="#ef4444" />
           </mesh>
         ) : null}
-        {accessory && accessory !== 'none' ? (
-          <mesh castShadow position={[0, 1.97, 0.36]}>
-            <boxGeometry args={[0.62, 0.12, 0.04]} />
-            <meshStandardMaterial color="#111827" roughness={0.5} />
-          </mesh>
-        ) : null}
+        <AvatarAccessory accessory={accessory} accentColor={accentColor} secondaryColor={secondaryColor} />
       </group>
     </group>
+  )
+}
+
+function AvatarLeg({
+  bodyColor,
+  pantsColor,
+  bottomStyle,
+  shoeStyle,
+  shoeColor,
+}: {
+  bodyColor: string
+  pantsColor: string
+  bottomStyle: AvatarBottomStyle
+  shoeStyle: AvatarShoeStyle
+  shoeColor: string
+}) {
+  const bareLeg = bottomStyle === 'shorts' || bottomStyle === 'skirt' || bottomStyle === 'none'
+  const legColor = bottomStyle === 'none' ? bodyColor : pantsColor
+  const shoeHeight = shoeStyle === 'boots' || shoeStyle === 'highTops' ? 0.2 : 0.12
+
+  return (
+    <>
+      <mesh castShadow position={[0, -0.32, 0]}>
+        <boxGeometry args={[0.26, 0.64, 0.28]} />
+        <meshStandardMaterial color={legColor} roughness={0.72} />
+      </mesh>
+      {bareLeg && bottomStyle !== 'none' ? (
+        <mesh castShadow position={[0, -0.5, 0.01]}>
+          <boxGeometry args={[0.27, 0.3, 0.29]} />
+          <meshStandardMaterial color={bodyColor} roughness={0.7} />
+        </mesh>
+      ) : null}
+      {shoeStyle !== 'none' ? (
+        <mesh castShadow position={[0, -0.68, 0.08]}>
+          <boxGeometry args={[0.32, shoeHeight, shoeStyle === 'sandals' ? 0.34 : 0.44]} />
+          <meshStandardMaterial color={shoeColor} roughness={0.6} />
+        </mesh>
+      ) : null}
+    </>
+  )
+}
+
+function AvatarTorso({
+  bodyColor,
+  shirtColor,
+  accentColor,
+  secondaryColor,
+  outfitStyle,
+  bottomStyle,
+}: {
+  bodyColor: string
+  shirtColor: string
+  accentColor: string
+  secondaryColor: string
+  outfitStyle: AvatarOutfitStyle
+  bottomStyle: AvatarBottomStyle
+}) {
+  const torsoColor = outfitStyle === 'none' ? bodyColor : shirtColor
+
+  return (
+    <group>
+      <mesh castShadow position={[0, 1.05, 0]}>
+        <boxGeometry args={[0.82, 0.94, 0.38]} />
+        <meshStandardMaterial color={torsoColor} roughness={0.7} />
+      </mesh>
+      {outfitStyle === 'hoodie' ? (
+        <>
+          <mesh castShadow position={[-0.09, 1.2, 0.205]}>
+            <boxGeometry args={[0.035, 0.44, 0.03]} />
+            <meshStandardMaterial color={secondaryColor} />
+          </mesh>
+          <mesh castShadow position={[0.09, 1.2, 0.205]}>
+            <boxGeometry args={[0.035, 0.44, 0.03]} />
+            <meshStandardMaterial color={secondaryColor} />
+          </mesh>
+          <mesh castShadow position={[0, 0.82, 0.215]}>
+            <boxGeometry args={[0.42, 0.22, 0.04]} />
+            <meshStandardMaterial color={accentColor} roughness={0.66} />
+          </mesh>
+        </>
+      ) : null}
+      {outfitStyle === 'jacket' ? (
+        <>
+          <mesh castShadow position={[-0.21, 1.08, 0.215]}>
+            <boxGeometry args={[0.26, 0.82, 0.045]} />
+            <meshStandardMaterial color={accentColor} />
+          </mesh>
+          <mesh castShadow position={[0.21, 1.08, 0.215]}>
+            <boxGeometry args={[0.26, 0.82, 0.045]} />
+            <meshStandardMaterial color={accentColor} />
+          </mesh>
+        </>
+      ) : null}
+      {outfitStyle === 'suit' ? (
+        <>
+          <mesh castShadow position={[0, 1.18, 0.216]}>
+            <boxGeometry args={[0.28, 0.74, 0.045]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+          <mesh castShadow position={[0, 1.05, 0.25]}>
+            <boxGeometry args={[0.08, 0.48, 0.05]} />
+            <meshStandardMaterial color={accentColor} />
+          </mesh>
+        </>
+      ) : null}
+      {outfitStyle === 'sport' ? (
+        <mesh castShadow position={[0, 1.08, 0.215]}>
+          <boxGeometry args={[0.72, 0.16, 0.045]} />
+          <meshStandardMaterial color={secondaryColor} />
+        </mesh>
+      ) : null}
+      {outfitStyle === 'armour' ? (
+        <mesh castShadow position={[0, 1.06, 0.235]}>
+          <boxGeometry args={[0.6, 0.52, 0.06]} />
+          <meshStandardMaterial color={accentColor} metalness={0.15} roughness={0.55} />
+        </mesh>
+      ) : null}
+      {outfitStyle === 'pajamas'
+        ? [0, 1, 2].map((index) => (
+            <mesh key={index} castShadow position={[-0.22 + index * 0.22, 1.06, 0.22]}>
+              <sphereGeometry args={[0.04, 8, 8]} />
+              <meshStandardMaterial color={secondaryColor} />
+            </mesh>
+          ))
+        : null}
+      {outfitStyle === 'tank' ? (
+        <mesh castShadow position={[0, 1.15, 0.22]}>
+          <boxGeometry args={[0.52, 0.56, 0.045]} />
+          <meshStandardMaterial color={shirtColor} roughness={0.7} />
+        </mesh>
+      ) : null}
+      {bottomStyle === 'skirt' ? (
+        <mesh castShadow position={[0, 0.52, 0]}>
+          <boxGeometry args={[0.94, 0.22, 0.44]} />
+          <meshStandardMaterial color={accentColor} roughness={0.72} />
+        </mesh>
+      ) : null}
+    </group>
+  )
+}
+
+function AvatarArm({
+  bodyColor,
+  shirtColor,
+  outfitStyle,
+}: {
+  bodyColor: string
+  shirtColor: string
+  outfitStyle: AvatarOutfitStyle
+}) {
+  const sleeveColor = outfitStyle === 'tank' || outfitStyle === 'none' ? bodyColor : shirtColor
+  const sleeveHeight = outfitStyle === 'tee' || outfitStyle === 'sport' ? 0.36 : 0.48
+
+  return (
+    <>
+      <mesh castShadow position={[0, -0.19, 0]}>
+        <boxGeometry args={[0.24, sleeveHeight, 0.24]} />
+        <meshStandardMaterial color={sleeveColor} roughness={0.7} />
+      </mesh>
+      <mesh castShadow position={[0, -0.57, 0]}>
+        <boxGeometry args={[0.24, 0.3, 0.24]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.7} />
+      </mesh>
+    </>
+  )
+}
+
+function AvatarHair({
+  hairStyle,
+  hairColor,
+  accentColor,
+}: {
+  hairStyle: AvatarHairStyle
+  hairColor: string
+  accentColor: string
+}) {
+  const normalized = hairStyle === 'curly' ? 'curls' : hairStyle === 'side' || hairStyle === 'flat' ? 'short' : hairStyle
+  if (normalized === 'none') return null
+  if (normalized === 'beanie') {
+    return (
+      <mesh castShadow position={[0, 2.31, 0]}>
+        <cylinderGeometry args={[0.38, 0.34, 0.24, 12]} />
+        <meshStandardMaterial color={accentColor} roughness={0.78} />
+      </mesh>
+    )
+  }
+
+  return (
+    <group>
+      <mesh castShadow position={[0, 2.27, -0.02]}>
+        <boxGeometry args={[0.66, 0.16, 0.62]} />
+        <meshStandardMaterial color={hairColor} roughness={0.82} />
+      </mesh>
+      {normalized === 'spiky'
+        ? [-0.24, -0.08, 0.1, 0.26].map((x, index) => (
+            <mesh key={index} castShadow position={[x, 2.42, 0.04]} rotation={[0, 0, (index - 1.5) * 0.3]}>
+              <boxGeometry args={[0.14, 0.28, 0.18]} />
+              <meshStandardMaterial color={hairColor} roughness={0.8} />
+            </mesh>
+          ))
+        : null}
+      {normalized === 'bob' || normalized === 'long' ? (
+        <>
+          <mesh castShadow position={[-0.36, 2.08, 0]}>
+            <boxGeometry args={[0.13, normalized === 'long' ? 0.56 : 0.36, 0.56]} />
+            <meshStandardMaterial color={hairColor} roughness={0.8} />
+          </mesh>
+          <mesh castShadow position={[0.36, 2.08, 0]}>
+            <boxGeometry args={[0.13, normalized === 'long' ? 0.56 : 0.36, 0.56]} />
+            <meshStandardMaterial color={hairColor} roughness={0.8} />
+          </mesh>
+        </>
+      ) : null}
+      {normalized === 'curls'
+        ? [-0.28, -0.14, 0, 0.14, 0.28].map((x) => (
+            <mesh key={x} castShadow position={[x, 2.34, 0.12]}>
+              <dodecahedronGeometry args={[0.13, 0]} />
+              <meshStandardMaterial color={hairColor} roughness={0.82} />
+            </mesh>
+          ))
+        : null}
+      {normalized === 'mohawk'
+        ? [-0.18, 0, 0.18].map((z) => (
+            <mesh key={z} castShadow position={[0, 2.45, z]}>
+              <boxGeometry args={[0.16, 0.34, 0.12]} />
+              <meshStandardMaterial color={hairColor} roughness={0.82} />
+            </mesh>
+          ))
+        : null}
+    </group>
+  )
+}
+
+function AvatarFace({
+  face,
+  eyeColor,
+  accentColor,
+}: {
+  face: string
+  eyeColor: string
+  accentColor: string
+}) {
+  const cool = face === 'cool'
+  const sleepy = face === 'sleepy'
+  const robot = face === 'robot'
+  const surprised = face === 'surprised' || face === 'wow'
+
+  return (
+    <>
+      {cool ? (
+        <mesh castShadow position={[0, 1.97, 0.36]}>
+          <boxGeometry args={[0.52, 0.12, 0.04]} />
+          <meshStandardMaterial color="#111827" roughness={0.5} />
+        </mesh>
+      ) : (
+        <>
+          <mesh castShadow position={[-0.22, 1.96, 0.31]}>
+            <boxGeometry args={[sleepy ? 0.12 : 0.07, sleepy ? 0.025 : robot ? 0.11 : 0.07, 0.03]} />
+            <meshStandardMaterial color={robot ? accentColor : eyeColor} emissive={robot ? accentColor : undefined} emissiveIntensity={robot ? 0.32 : 0} />
+          </mesh>
+          <mesh castShadow position={[0.22, 1.96, 0.31]}>
+            <boxGeometry args={[sleepy ? 0.12 : 0.07, sleepy ? 0.025 : robot ? 0.11 : 0.07, 0.03]} />
+            <meshStandardMaterial color={robot ? accentColor : eyeColor} emissive={robot ? accentColor : undefined} emissiveIntensity={robot ? 0.32 : 0} />
+          </mesh>
+        </>
+      )}
+      {face !== 'plain' ? (
+        <mesh castShadow position={[0, 1.78, 0.32]}>
+          <boxGeometry args={[surprised ? 0.12 : face === 'happy' ? 0.32 : 0.24, surprised ? 0.14 : 0.05, 0.03]} />
+          <meshStandardMaterial color={robot ? accentColor : '#7c2d12'} emissive={robot ? accentColor : undefined} emissiveIntensity={robot ? 0.2 : 0} />
+        </mesh>
+      ) : null}
+    </>
+  )
+}
+
+function AvatarAccessory({
+  accessory,
+  accentColor,
+  secondaryColor,
+}: {
+  accessory?: ShopItemId | 'none' | string
+  accentColor: string
+  secondaryColor: string
+}) {
+  if (!accessory || accessory === 'none') return null
+  const value = String(accessory)
+
+  if (value.includes('headphones')) {
+    return (
+      <group>
+        <mesh castShadow position={[-0.42, 1.98, 0]}>
+          <boxGeometry args={[0.1, 0.34, 0.24]} />
+          <meshStandardMaterial color="#111827" />
+        </mesh>
+        <mesh castShadow position={[0.42, 1.98, 0]}>
+          <boxGeometry args={[0.1, 0.34, 0.24]} />
+          <meshStandardMaterial color="#111827" />
+        </mesh>
+        <mesh castShadow position={[0, 2.26, 0]}>
+          <boxGeometry args={[0.68, 0.06, 0.08]} />
+          <meshStandardMaterial color={accentColor} />
+        </mesh>
+      </group>
+    )
+  }
+
+  if (value.includes('backpack') || value.includes('wing-pack')) {
+    return (
+      <mesh castShadow position={[0, 1.08, -0.27]}>
+        <boxGeometry args={[0.72, 0.78, 0.18]} />
+        <meshStandardMaterial color={accentColor} roughness={0.7} />
+      </mesh>
+    )
+  }
+
+  if (value.includes('halo')) {
+    return (
+      <mesh castShadow position={[0, 2.58, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.36, 0.025, 8, 24]} />
+        <meshStandardMaterial color="#facc15" emissive="#facc15" emissiveIntensity={0.35} />
+      </mesh>
+    )
+  }
+
+  if (value.includes('wings')) {
+    return (
+      <group>
+        <mesh castShadow position={[-0.52, 1.18, -0.28]} rotation={[0, 0, -0.45]}>
+          <boxGeometry args={[0.32, 0.72, 0.12]} />
+          <meshStandardMaterial color={accentColor} roughness={0.7} />
+        </mesh>
+        <mesh castShadow position={[0.52, 1.18, -0.28]} rotation={[0, 0, 0.45]}>
+          <boxGeometry args={[0.32, 0.72, 0.12]} />
+          <meshStandardMaterial color={accentColor} roughness={0.7} />
+        </mesh>
+      </group>
+    )
+  }
+
+  if (value.includes('pet')) {
+    return (
+      <group position={[0.72, 0.34, 0.25]}>
+        <mesh castShadow position={[0, 0.34, 0]}>
+          <boxGeometry args={[0.28, 0.32, 0.22]} />
+          <meshStandardMaterial color={secondaryColor} roughness={0.7} />
+        </mesh>
+        <mesh castShadow position={[0, 0.63, 0.03]}>
+          <boxGeometry args={[0.22, 0.2, 0.18]} />
+          <meshStandardMaterial color="#f8fafc" roughness={0.7} />
+        </mesh>
+      </group>
+    )
+  }
+
+  return (
+    <mesh castShadow position={[0, 1.97, 0.36]}>
+      <boxGeometry args={[0.62, 0.12, 0.04]} />
+      <meshStandardMaterial color="#111827" roughness={0.5} />
+    </mesh>
   )
 }
 

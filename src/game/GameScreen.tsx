@@ -45,7 +45,7 @@ export function GameScreen() {
   return (
     <KeyboardControls map={keyboardMap}>
       <section
-        className="relative h-screen w-screen select-none overflow-hidden bg-sky-200"
+        className={`relative h-screen w-screen select-none overflow-hidden ${settings.nightMode ? 'bg-slate-950' : 'bg-sky-200'}`}
         onContextMenu={(event) => event.preventDefault()}
         onDragStart={(event) => event.preventDefault()}
       >
@@ -56,9 +56,11 @@ export function GameScreen() {
           data-testid="game-canvas"
         >
           <Suspense fallback={<CanvasLoading />}>
-            <Sky sunPosition={[100, 25, 100]} />
-            <ambientLight intensity={0.72} />
-            <directionalLight position={[8, 14, 10]} intensity={1.4} castShadow />
+            <color attach="background" args={[settings.nightMode ? '#101827' : '#bae6fd']} />
+            {settings.nightMode ? null : <Sky sunPosition={[100, 25, 100]} />}
+            <ambientLight intensity={settings.nightMode ? 0.42 : 0.72} />
+            <directionalLight position={[8, 14, 10]} intensity={settings.nightMode ? 0.68 : 1.4} castShadow />
+            {settings.nightMode ? <pointLight position={[0, 7, -8]} intensity={1.25} color="#93c5fd" /> : null}
             <Physics gravity={[0, -18, 0]}>
               <GameScene />
             </Physics>

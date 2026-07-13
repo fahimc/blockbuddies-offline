@@ -45,6 +45,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies phone emote options row](docs/review/avatar-emotes-options-v144-phone.png)
 
+![BlockBuddies Brick Borough wardrobe customizer](docs/review/brick-borough-customizer-v145-phone.png)
+
+![BlockBuddies procedural borough world](docs/review/brick-borough-procedural-world-v145-desktop.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -62,7 +66,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses phone-width columns for categories, character
-  preview, and controls while switching between Body, Hair, Face, and Colours.
+  preview, and controls while switching between Body, Hair, Face, Colours, and
+  Wardrobe.
+- Brick Borough-inspired wardrobe controls with local presets, saved avatar
+  styles, project JSON import, texture colour sampling, outfits, bottoms, and
+  shoe styles.
 - Emotes & Animations uses a portrait phone layout with category options below
   the preview and a full-width emote catalog.
 - Startup flow now routes Start through character customisation, character name
@@ -75,6 +83,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   live synced player avatars.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
+- Deterministic procedural borough streaming with tiled roads, pavements, parks,
+  buildings, street props, buses, phone boxes, landmarks, world seeds, view
+  distance, and night mode settings.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
@@ -194,6 +205,10 @@ The `v1.4.0` APK replaces the old avatar modal with a portrait-first
 Customization Hub. It uses original procedural/CSS avatar and item art for the
 supplied screen direction rather than copied Roblox assets.
 
+The `v1.4.5` APK adds the Brick Borough procedural/customizer port: seeded
+borough tiles, world settings, richer 3D avatar parts, saved wardrobe styles,
+and local JSON/texture import helpers.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -225,6 +240,8 @@ Roblox-inspired prototype.
   matchmaking, relay/TURN fallback, persistence for remote players, or account
   system.
 - Custom world pieces are visual-only prefabs; floor/checkpoint safety is implemented.
+- Procedural borough buildings and roads are visual scenery; they do not yet
+  provide full per-building physics collision or bot navigation.
 - Build mode limits custom world pieces to keep mobile scenes responsive.
 - Some cosmetic customizer items are visual-only and do not yet have distinct
   3D gameplay geometry.
@@ -248,6 +265,9 @@ Kenney CC0 blocky characters and prototype textures.
 The portrait splash background is a project-generated original raster asset
 created from the supplied composition reference and does not copy Roblox
 branding, logos, UI, or characters.
+The procedural world and customizer data structures were adapted from the user's
+Brick Borough reference implementation in `fahimc/development` and rewritten as
+typed React/Three modules for this app.
 
 ## License
 

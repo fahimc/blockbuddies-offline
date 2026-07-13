@@ -112,19 +112,78 @@ export type ShopItem = {
   color?: string
 }
 
+export type AvatarHairStyle =
+  | 'short'
+  | 'spiky'
+  | 'side'
+  | 'curly'
+  | 'curls'
+  | 'bob'
+  | 'long'
+  | 'flat'
+  | 'mohawk'
+  | 'beanie'
+  | 'none'
+
+export type AvatarFaceStyle =
+  | 'smile'
+  | 'happy'
+  | 'wink'
+  | 'wow'
+  | 'cool'
+  | 'sleepy'
+  | 'surprised'
+  | 'robot'
+  | 'plain'
+
+export type AvatarOutfitStyle =
+  | 'tee'
+  | 'hoodie'
+  | 'jacket'
+  | 'suit'
+  | 'sport'
+  | 'armour'
+  | 'pajamas'
+  | 'tank'
+  | 'none'
+
+export type AvatarBottomStyle =
+  | 'jeans'
+  | 'shorts'
+  | 'joggers'
+  | 'cargo'
+  | 'skirt'
+  | 'leggings'
+  | 'none'
+
+export type AvatarShoeStyle = 'sneakers' | 'boots' | 'highTops' | 'sandals' | 'none'
+
 export type AvatarSettings = {
   bodyColor: string
   shirtColor: string
   hairColor?: string
-  hairStyle?: 'spiky' | 'side' | 'curly' | 'long' | 'flat'
-  face?: 'smile' | 'happy' | 'wink' | 'wow' | 'cool'
+  hairStyle?: AvatarHairStyle
+  face?: AvatarFaceStyle
   eyeColor?: string
   accentColor?: string
+  secondaryColor?: string
   pantsColor?: string
   topStyle?: ShopItemId | 'none'
+  outfitStyle?: AvatarOutfitStyle
+  bottomStyle?: AvatarBottomStyle
+  shoeStyle?: AvatarShoeStyle
+  shoeColor?: string
+  avatarSource?: string
   hat: ShopItemId | 'none'
   accessory?: ShopItemId | 'none'
   trail: ShopItemId | 'none'
+}
+
+export type SavedAvatarStyle = {
+  id: string
+  name: string
+  avatar: AvatarSettings
+  createdAt: number
 }
 
 export type BotMemory = {
@@ -140,6 +199,10 @@ export type GameSettings = {
   audio: boolean
   music: boolean
   reducedMotion: boolean
+  proceduralWorld: boolean
+  worldSeed: string
+  worldViewDistance: 1 | 2 | 3
+  nightMode: boolean
 }
 
 export type ObbyState = {

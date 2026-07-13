@@ -34,6 +34,7 @@ import type {
   PlayerEmote,
   QuestId,
   QuestProgress,
+  SavedAvatarStyle,
   ShopItemId,
   Vec3,
 } from '../game/types'
@@ -42,6 +43,7 @@ export type GameSave = {
   playerName: string
   coins: number
   avatar: AvatarSettings
+  savedAvatars: SavedAvatarStyle[]
   unlockedItems: ShopItemId[]
   questProgress: QuestProgress[]
   botMemory: Record<string, BotMemory>
@@ -101,6 +103,9 @@ type GameState = GameSave & {
   buyItem: (id: ShopItemId) => void
   applyOwnedItem: (id: ShopItemId) => void
   updateAvatar: (avatar: Partial<AvatarSettings>) => void
+  saveCurrentAvatarStyle: (name?: string) => void
+  applySavedAvatarStyle: (id: string) => void
+  deleteSavedAvatarStyle: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
   setBuildMode: (enabled: boolean) => void
@@ -130,8 +135,14 @@ export const defaultAvatar: AvatarSettings = {
   face: 'smile',
   eyeColor: '#111827',
   accentColor: '#0b74ff',
+  secondaryColor: '#ffffff',
   pantsColor: '#111827',
   topStyle: 'top-blue-hoodie',
+  outfitStyle: 'hoodie',
+  bottomStyle: 'jeans',
+  shoeStyle: 'sneakers',
+  shoeColor: '#f8fafc',
+  avatarSource: 'London Explorer',
   hat: 'none',
   accessory: 'none',
   trail: 'none',
@@ -151,7 +162,7 @@ export function normalizeSavedAvatar(avatar: AvatarSettings | undefined): Avatar
     avatar.shirtColor === legacyDefaultAvatar.shirtColor &&
     avatar.hat === legacyDefaultAvatar.hat &&
     avatar.trail === legacyDefaultAvatar.trail
-  return isLegacyDefault ? defaultAvatar : avatar
+  return isLegacyDefault ? defaultAvatar : { ...defaultAvatar, ...avatar }
 }
 
 export const defaultSettings: GameSettings = {
@@ -159,6 +170,10 @@ export const defaultSettings: GameSettings = {
   audio: true,
   music: true,
   reducedMotion: false,
+  proceduralWorld: true,
+  worldSeed: 'LONDON-2026',
+  worldViewDistance: 1,
+  nightMode: false,
 }
 
 export const defaultPlayerName = 'BlockBuddy'
@@ -183,6 +198,14 @@ function initialQuestProgress() {
   return createQuestProgress(questDefinitions)
 }
 
+function makeId(prefix: string) {
+  const randomId =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  return `${prefix}-${randomId}`
+}
+
 const initialObby: ObbyState = {
   active: false,
   checkpoint: [16, 0.8, 12],
@@ -197,6 +220,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   earnedBadges: ['welcome'],
   placedBlocks: [],
   avatar: defaultAvatar,
+  savedAvatars: [],
   unlockedItems: [],
   questProgress: initialQuestProgress(),
   botMemory: {},
@@ -409,6 +433,34 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { avatar: applyItem(state.avatar, item) }
     }),
   updateAvatar: (avatar) => set((state) => ({ avatar: { ...state.avatar, ...avatar } })),
+  saveCurrentAvatarStyle: (name) =>
+    set((state) => {
+      const fallbackName = state.avatar.avatarSource ?? `${state.playerName}'s Style`
+      const styleName = sanitizePartyName(name ?? fallbackName) || fallbackName
+      const saved: SavedAvatarStyle = {
+        id: makeId('avatar-style'),
+        name: styleName,
+        avatar: { ...state.avatar, avatarSource: styleName },
+        createdAt: Date.now(),
+      }
+      return {
+        savedAvatars: [saved, ...state.savedAvatars.filter((style) => style.name !== styleName)].slice(0, 18),
+        chat: [...state.chat.slice(-60), systemMessage(`Saved avatar style: ${styleName}`)],
+      }
+    }),
+  applySavedAvatarStyle: (id) =>
+    set((state) => {
+      const style = state.savedAvatars.find((entry) => entry.id === id)
+      if (!style) return state
+      return {
+        avatar: normalizeSavedAvatar(style.avatar) ?? state.avatar,
+        chat: [...state.chat.slice(-60), systemMessage(`Equipped saved style: ${style.name}`)],
+      }
+    }),
+  deleteSavedAvatarStyle: (id) =>
+    set((state) => ({
+      savedAvatars: state.savedAvatars.filter((style) => style.id !== id),
+    })),
   selectCustomizationItem: (item) => {
     set((state) => {
       const itemId = item.shopItemId
@@ -502,9 +554,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       playerName: defaultPlayerName,
       coins: 0,
       avatar: defaultAvatar,
+      savedAvatars: [],
       unlockedItems: [],
       earnedBadges: ['welcome'],
       placedBlocks: [],
+      settings: defaultSettings,
       buildMode: false,
       playerEmote: 'none',
       selectedBuildPiece: 'block',
@@ -525,12 +579,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         playerName,
         coins: save.coins ?? state.coins,
         avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
+        savedAvatars: save.savedAvatars ?? state.savedAvatars,
         unlockedItems: save.unlockedItems ?? state.unlockedItems,
         earnedBadges: save.earnedBadges ?? state.earnedBadges,
         placedBlocks: save.placedBlocks ?? state.placedBlocks,
         questProgress: save.questProgress ?? state.questProgress,
         botMemory: save.botMemory ?? state.botMemory,
-        settings: save.settings ?? state.settings,
+        settings: { ...state.settings, ...save.settings },
         obby: { ...state.obby, bestTime: save.obbyBestTime },
         loading: false,
       }
@@ -545,6 +600,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     playerName: state.playerName,
     coins: state.coins,
     avatar: state.avatar,
+    savedAvatars: state.savedAvatars,
     unlockedItems: state.unlockedItems,
     earnedBadges: state.earnedBadges,
     placedBlocks: state.placedBlocks,

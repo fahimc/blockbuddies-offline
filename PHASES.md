@@ -286,3 +286,19 @@
 - [x] Add measured Playwright regression coverage for the portrait Emotes layout
 - [x] Capture production portrait review screenshot
 - [x] Bump Android debug APK version metadata to 1.4.4 / 10404
+
+## Post-phase Brick Borough procedural port
+
+- [x] Review the Brick Borough procedural world and character customisation reference implementation
+- [x] Add typed Brick Borough avatar presets and import mapping
+- [x] Add local saved avatar styles
+- [x] Add JSON project import and texture colour sampling for avatar customisation
+- [x] Add outfit, bottom, shoe, face, and hair fields to avatar saves
+- [x] Render richer avatar parts in the 3D game scene
+- [x] Add deterministic procedural borough generation with tiled roads, parks, buildings, props, landmarks, districts, and night mode
+- [x] Add procedural world settings for seed, view distance, enablement, and night mode
+- [x] Optimise procedural world updates to run by chunk changes instead of every animation frame
+- [x] Add unit tests for avatar import mapping and procedural world determinism
+- [x] Add Playwright smoke coverage for Wardrobe controls and world settings
+- [x] Capture updated review screenshots
+- [x] Bump Android debug APK version metadata to 1.4.5 / 10405

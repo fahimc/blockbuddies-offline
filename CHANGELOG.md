@@ -1,5 +1,35 @@
 # Changelog
 
+## [v1.4.5-brick-borough-port] - 2026-07-13
+
+### Added
+
+- Added a deterministic procedural borough world generator adapted from the Brick Borough reference, with seeded chunks, roads, pavements, parks, buildings, street props, buses, phone boxes, landmarks, district labels, and night lighting.
+- Added world settings for procedural borough enablement, seed editing/randomization, view distance, and night mode.
+- Added Brick Borough-style avatar presets, saved avatar styles, JSON project import, texture colour sampling, outfit styles, bottom styles, and shoe styles.
+- Added richer in-world block avatar rendering for hair variants, face variants, outfits, bottoms, shoes, and accessory placeholders.
+- Added unit tests for Brick Borough avatar import mapping and procedural world determinism.
+- Added Playwright smoke coverage for Wardrobe controls and procedural world settings.
+- Added review screenshots for the Brick Borough wardrobe customizer and procedural world.
+
+### Changed
+
+- Expanded avatar save data and migration defaults so older local saves receive the new wardrobe fields safely.
+- Reworked the Body & Style customizer to include a Wardrobe section while keeping the portrait phone column layout.
+- Expanded player movement bounds so the streamed borough can be explored beyond the original town square.
+- Reduced procedural scenery shadow casters for better mobile performance.
+- Updated Android version metadata to `1.4.5` / `10405`.
+
+### Fixed
+
+- Fixed duplicate React keys in repeated customizer colour palettes.
+- Fixed procedural world rendering so it updates by tile crossing rather than subscribing to every player-position frame.
+
+### Known Issues
+
+- Procedural borough scenery is visual-only in this prototype and does not yet add full per-building physics or bot navigation.
+- The imported Brick Borough texture sampler maps average colours from known texture regions; it is not a full skin UV editor.
+
 ## [v1.4.4-emote-options-row] - 2026-07-13
 
 ### Added
