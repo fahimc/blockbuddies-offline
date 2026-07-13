@@ -403,6 +403,10 @@ function PlayerController() {
       <BlockAvatar
         bodyColor={avatar.bodyColor}
         shirtColor={avatar.shirtColor}
+        hairColor={avatar.hairColor}
+        pantsColor={avatar.pantsColor}
+        accessory={avatar.accessory}
+        face={avatar.face}
         username="You"
         hat={avatar.hat !== 'none'}
         emote={playerEmote}
@@ -441,6 +445,10 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
       <BlockAvatar
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}
+        hairColor={player.avatar.hairColor}
+        pantsColor={player.avatar.pantsColor}
+        accessory={player.avatar.accessory}
+        face={player.avatar.face}
         username={player.name}
         hat={player.avatar.hat !== 'none'}
         action={player.action}
@@ -497,6 +505,10 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
 function BlockAvatar({
   bodyColor,
   shirtColor,
+  hairColor = '#5a2f16',
+  pantsColor = '#111827',
+  accessory = 'none',
+  face = 'smile',
   username,
   hat,
   emote = 'none',
@@ -504,6 +516,10 @@ function BlockAvatar({
 }: {
   bodyColor: string
   shirtColor: string
+  hairColor?: string
+  pantsColor?: string
+  accessory?: string
+  face?: string
   username: string
   hat?: boolean
   emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
@@ -565,7 +581,7 @@ function BlockAvatar({
         <group ref={leftLeg} position={[-0.22, 0.64, 0]}>
           <mesh castShadow position={[0, -0.32, 0]}>
             <boxGeometry args={[0.26, 0.64, 0.28]} />
-            <meshStandardMaterial color="#111827" roughness={0.72} />
+            <meshStandardMaterial color={pantsColor} roughness={0.72} />
           </mesh>
           <mesh castShadow position={[0, -0.68, 0.08]}>
             <boxGeometry args={[0.3, 0.12, 0.42]} />
@@ -575,7 +591,7 @@ function BlockAvatar({
         <group ref={rightLeg} position={[0.22, 0.64, 0]}>
           <mesh castShadow position={[0, -0.32, 0]}>
             <boxGeometry args={[0.26, 0.64, 0.28]} />
-            <meshStandardMaterial color="#111827" roughness={0.72} />
+            <meshStandardMaterial color={pantsColor} roughness={0.72} />
           </mesh>
           <mesh castShadow position={[0, -0.68, 0.08]}>
             <boxGeometry args={[0.3, 0.12, 0.42]} />
@@ -611,7 +627,7 @@ function BlockAvatar({
         </mesh>
         <mesh castShadow position={[0, 2.28, -0.02]}>
           <boxGeometry args={[0.66, 0.18, 0.62]} />
-          <meshStandardMaterial color="#3f2d24" roughness={0.8} />
+          <meshStandardMaterial color={hairColor} roughness={0.8} />
         </mesh>
         <mesh castShadow position={[-0.22, 1.96, 0.31]}>
           <boxGeometry args={[0.07, 0.07, 0.03]} />
@@ -622,13 +638,19 @@ function BlockAvatar({
           <meshStandardMaterial color="#111827" />
         </mesh>
         <mesh castShadow position={[0, 1.78, 0.32]}>
-          <boxGeometry args={[0.26, 0.05, 0.03]} />
+          <boxGeometry args={[face === 'wow' ? 0.12 : face === 'cool' ? 0.3 : 0.26, face === 'wow' ? 0.12 : 0.05, 0.03]} />
           <meshStandardMaterial color="#7c2d12" />
         </mesh>
         {hat ? (
           <mesh castShadow position={[0, 2.45, 0]}>
             <cylinderGeometry args={[0.38, 0.5, 0.18, 5]} />
-            <meshStandardMaterial color="#fde047" />
+            <meshStandardMaterial color="#ef4444" />
+          </mesh>
+        ) : null}
+        {accessory && accessory !== 'none' ? (
+          <mesh castShadow position={[0, 1.97, 0.36]}>
+            <boxGeometry args={[0.62, 0.12, 0.04]} />
+            <meshStandardMaterial color="#111827" roughness={0.5} />
           </mesh>
         ) : null}
       </group>

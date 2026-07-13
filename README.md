@@ -35,6 +35,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies settings overlay polish](docs/review/splash-overlay-polish-v137-settings.png)
 
+![BlockBuddies avatar customizer hub](docs/review/avatar-customizer-v140-hub.png)
+
+![BlockBuddies avatar body and style screen](docs/review/avatar-customizer-v140-body.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -49,6 +53,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   cheering.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
+- Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
+  Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
@@ -168,6 +174,10 @@ The `v1.3.9` APK adds a mobile-friendly custom world builder. The Build panel
 can place individual prefabs or stamp a tiled street map generated from a small
 procedural layout. Build pieces are saved locally with the rest of the game.
 
+The `v1.4.0` APK replaces the old avatar modal with a portrait-first
+Customization Hub. It uses original procedural/CSS avatar and item art for the
+supplied screen direction rather than copied Roblox assets.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -200,6 +210,8 @@ Roblox-inspired prototype.
   system.
 - Custom world pieces are visual-only prefabs; floor/checkpoint safety is implemented.
 - Build mode limits custom world pieces to keep mobile scenes responsive.
+- Some cosmetic customizer items are visual-only and do not yet have distinct
+  3D gameplay geometry.
 - Ghost racers are represented by buddy reactions rather than full racing AI.
 - The Three.js bundle is large and should be code-split before a store release.
 - Android production signing is not configured; release artifacts use debug APKs.

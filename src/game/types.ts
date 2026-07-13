@@ -74,11 +74,40 @@ export type ShopItemId =
   | 'body-mint'
   | 'hat-star'
   | 'trail-spark'
+  | 'top-blue-hoodie'
+  | 'top-green-hoodie'
+  | 'top-red-hoodie'
+  | 'top-fire-hoodie'
+  | 'top-yellow-hoodie'
+  | 'top-raglan'
+  | 'top-star-tee'
+  | 'top-purple-hoodie'
+  | 'top-stripe-shirt'
+  | 'top-orange-hoodie'
+  | 'pants-black'
+  | 'pants-blue'
+  | 'shoes-white'
+  | 'hat-red-cap'
+  | 'hat-blue-beanie'
+  | 'glasses-star'
+  | 'headphones-blue'
+  | 'backpack-blue'
+  | 'pet-bot'
+  | 'wings-night'
+  | 'halo-gold'
+  | 'pet-puppy'
+  | 'visor-neon'
+  | 'rocket-trail'
+  | 'wing-pack'
+  | 'trail-rainbow'
+  | 'trail-neon'
+  | 'trail-galaxy'
+  | 'trail-stars'
 
 export type ShopItem = {
   id: ShopItemId
   name: string
-  category: 'body' | 'shirt' | 'hat' | 'trail'
+  category: 'body' | 'shirt' | 'hat' | 'trail' | 'pants' | 'accessory'
   cost: number
   color?: string
 }
@@ -86,7 +115,15 @@ export type ShopItem = {
 export type AvatarSettings = {
   bodyColor: string
   shirtColor: string
+  hairColor?: string
+  hairStyle?: 'spiky' | 'side' | 'curly' | 'long' | 'flat'
+  face?: 'smile' | 'happy' | 'wink' | 'wow' | 'cool'
+  eyeColor?: string
+  accentColor?: string
+  pantsColor?: string
+  topStyle?: ShopItemId | 'none'
   hat: ShopItemId | 'none'
+  accessory?: ShopItemId | 'none'
   trail: ShopItemId | 'none'
 }
 

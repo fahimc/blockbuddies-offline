@@ -13,6 +13,17 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await page.getByRole('button', { name: 'Play' }).click()
   await page.getByTestId('game-canvas').waitFor()
 
+  const avatarButton = page.locator('.desktop-hud').getByRole('button', { name: 'Avatar' })
+  await avatarButton.scrollIntoViewIfNeeded()
+  await avatarButton.click()
+  await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Skin' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Hats' })).toBeVisible()
+  await page.getByRole('button', { name: 'Customize' }).click()
+  await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByRole('button', { name: 'Back' }).click()
+
   for (const title of ['Leaderboard', 'Badges', 'Build', 'Server', 'Emotes']) {
     const hudButton = page.locator('.desktop-hud').getByRole('button', { name: title })
     await hudButton.scrollIntoViewIfNeeded()
@@ -23,7 +34,7 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
       await expect(page.getByRole('button', { name: 'Auto Street' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Rotate' })).toBeVisible()
     }
-    await page.getByTitle('Close').click()
+    await page.keyboard.press('Escape')
   }
 
   const serverButton = page.locator('.desktop-hud').getByRole('button', { name: 'Server' })

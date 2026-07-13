@@ -1,5 +1,32 @@
 # Changelog
 
+## [v1.4.0-avatar-customizer] - 2026-07-13
+
+### Added
+
+- Added a full-screen six-step Customization Hub matching the supplied mobile screen direction.
+- Added Body & Style, Clothing, Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
+- Added original procedural UI assets for avatar previews, clothing cards, hats, accessories, emotes, trails, coins, and collection cards.
+- Added richer avatar save fields for hair colour, hair style, face, eye colour, accent colour, pants, top style, accessory, hats, and trails.
+- Added catalog data for tops, pants, hats, glasses, headphones, backpacks, pets, effects, emotes, and trails.
+- Added purchase/equip logic for customisation catalog items and unit tests for paid unlock behavior.
+- Added Playwright smoke coverage for opening the new Customization Hub and stepping into Body & Style.
+
+### Changed
+
+- Replaced the old small Avatar modal with a portrait-first glossy mobile customisation flow.
+- Updated the in-game block avatar renderer so hair, pants, hats, face, and accessories reflect selected avatar settings.
+- Updated Android version metadata to `1.4.0` / `10400`.
+
+### Fixed
+
+- Kept existing avatar saves compatible while allowing new optional customisation fields.
+
+### Known Issues
+
+- The customiser uses original procedural/CSS item art rather than downloaded third-party accessory sprites.
+- Some cosmetic items are visual-only in the customiser and do not yet have distinct 3D geometry in gameplay.
+
 ## [v1.3.9-world-builder] - 2026-07-13
 
 ### Added

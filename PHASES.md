@@ -230,3 +230,16 @@
 - [x] Add unit tests for prefab placement, rotation, procedural maps, and collision filtering
 - [x] Add Playwright smoke coverage for the Build panel world-builder controls
 - [x] Bump Android debug APK version metadata to 1.3.9 / 10309
+
+## Post-phase avatar customisation redesign
+
+- [x] Research free/CC0 UI and avatar asset options
+- [x] Replace old Avatar modal with a full-screen six-step Customization Hub
+- [x] Add Body & Style, Clothing, Hats & Accessories, Emotes & Animations, and Trails & Effects screens
+- [x] Create original procedural avatar preview and item-card assets in CSS/React
+- [x] Add catalog data for clothing, hats, accessories, emotes, and trails
+- [x] Extend avatar saves with optional hair, face, eye, accent, pants, top, accessory, and trail fields
+- [x] Reflect richer avatar settings in the in-game block avatar renderer
+- [x] Add purchase/equip logic for customisation catalog items
+- [x] Add unit tests for customisation purchases and Playwright smoke coverage for the hub
+- [x] Bump Android debug APK version metadata to 1.4.0 / 10400

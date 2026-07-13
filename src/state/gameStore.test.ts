@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { defaultAvatar, normalizeSavedAvatar } from './gameStore'
+import { clothingItems } from '../data/avatarCustomization'
+import { defaultAvatar, normalizeSavedAvatar, useGameStore } from './gameStore'
 
 describe('avatar save migration', () => {
   it('upgrades the legacy yellow and blue default avatar', () => {
@@ -22,5 +23,29 @@ describe('avatar save migration', () => {
     }
 
     expect(normalizeSavedAvatar(customAvatar)).toBe(customAvatar)
+  })
+})
+
+describe('avatar customization selection', () => {
+  it('unlocks and applies paid customization items', () => {
+    const item = clothingItems[2]
+    useGameStore.setState({ coins: item.cost, unlockedItems: [], avatar: defaultAvatar, chat: [] })
+
+    useGameStore.getState().selectCustomizationItem(item)
+
+    expect(useGameStore.getState().coins).toBe(0)
+    expect(useGameStore.getState().unlockedItems).toContain(item.shopItemId)
+    expect(useGameStore.getState().avatar.shirtColor).toBe(item.patch.shirtColor)
+  })
+
+  it('does not unlock paid customization items without enough coins', () => {
+    const item = clothingItems[3]
+    useGameStore.setState({ coins: 1, unlockedItems: [], avatar: defaultAvatar, chat: [] })
+
+    useGameStore.getState().selectCustomizationItem(item)
+
+    expect(useGameStore.getState().coins).toBe(1)
+    expect(useGameStore.getState().unlockedItems).not.toContain(item.shopItemId)
+    expect(useGameStore.getState().avatar.shirtColor).toBe(defaultAvatar.shirtColor)
   })
 })

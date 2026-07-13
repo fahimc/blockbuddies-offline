@@ -1266,6 +1266,1156 @@ canvas {
   right: 1.15rem;
 }
 
+.bb-customizer {
+  height: var(--app-height, 100dvh);
+  background: linear-gradient(180deg, #0756d8 0%, #0c63e8 9.5rem, #0b4dbc 100%);
+  color: white;
+  isolation: isolate;
+}
+
+.bb-customizer-bg {
+  position: absolute;
+  inset: 5.9rem 0 0;
+  overflow: hidden;
+  border-top-left-radius: 50% 4.5rem;
+  border-top-right-radius: 50% 4.5rem;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.14), transparent 33%),
+    linear-gradient(180deg, #4cc3ff 0%, #a8e9ff 38%, #d9edf7 100%);
+  box-shadow: inset 0 1rem 0 rgb(3 49 136 / 0.32);
+  z-index: -2;
+}
+
+.bb-customizer-bg::before,
+.bb-customizer-bg::after {
+  position: absolute;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.72);
+  content: "";
+}
+
+.bb-customizer-bg::before {
+  left: 12%;
+  top: 12%;
+  width: 7rem;
+  height: 1.5rem;
+  box-shadow: 21rem -1rem 0 0.1rem rgb(255 255 255 / 0.65), 32rem 5rem 0 -0.1rem rgb(255 255 255 / 0.62);
+}
+
+.bb-customizer-bg::after {
+  right: 8%;
+  top: 8%;
+  width: 6rem;
+  height: 1.7rem;
+  box-shadow: -30rem 3rem 0 -0.2rem rgb(255 255 255 / 0.55);
+}
+
+.bb-town-skyline {
+  position: absolute;
+  inset: 17% -6% 0;
+  opacity: 0.86;
+  filter: blur(2.2px) saturate(1.1);
+  background:
+    linear-gradient(#2563eb, #1d4ed8) 8% 18% / 5rem 9rem no-repeat,
+    linear-gradient(135deg, transparent 50%, #ef4444 51%) 8% 10% / 5rem 2.2rem no-repeat,
+    linear-gradient(#d97706, #b45309) 21% 23% / 7rem 8rem no-repeat,
+    linear-gradient(#2563eb, #1e40af) 21% 9% / 5rem 4rem no-repeat,
+    radial-gradient(circle, #f8fafc 0 34%, transparent 35%) 21% 20% / 2.8rem 2.8rem no-repeat,
+    linear-gradient(#eab308, #ca8a04) 88% 24% / 5.8rem 9rem no-repeat,
+    linear-gradient(#16a34a, #15803d) 72% 18% / 7rem 7rem no-repeat,
+    linear-gradient(#f97316, #ea580c) 78% 33% / 7rem 5rem no-repeat,
+    linear-gradient(#dc2626, #b91c1c) 77% 28% / 7.2rem 1rem no-repeat,
+    linear-gradient(#8b5cf6, #6d28d9) 58% 28% / 4.5rem 8rem no-repeat,
+    radial-gradient(circle at 50% 35%, #dbeafe 0 8%, transparent 9% 100%) 50% 42% / 14rem 13rem no-repeat,
+    linear-gradient(#bfe7ff, #82cfff) 50% 52% / 1.4rem 12rem no-repeat,
+    linear-gradient(90deg, #d6a06a 0 18%, #d97706 18% 20%, #e7b06e 20% 38%, #d97706 38% 40%, #e7b06e 40% 58%, #d97706 58% 60%, #e7b06e 60% 78%, #d97706 78% 80%, #e7b06e 80%) 0 75% / 100% 25% no-repeat;
+}
+
+.bb-customizer-topbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.8rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 6.1rem;
+  padding: max(0.85rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) 0.8rem max(0.9rem, env(safe-area-inset-left));
+  text-shadow: 0 0.18rem 0 #06235d, 0 0.32rem 0.6rem rgb(0 0 0 / 0.28);
+}
+
+.bb-customizer-topbar h2 {
+  overflow: hidden;
+  text-align: center;
+  font-size: clamp(1.35rem, 5vw, 2.3rem);
+  font-weight: 1000;
+  line-height: 1.04;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-customizer-back {
+  display: grid;
+  width: 4.2rem;
+  height: 4.2rem;
+  place-items: center;
+  border: 0.16rem solid rgb(255 255 255 / 0.28);
+  border-radius: 1.15rem;
+  background: linear-gradient(#3aa1ff, #125ed6);
+  box-shadow: inset 0 0.24rem 0 rgb(255 255 255 / 0.25), 0 0.35rem 0 #06327e, 0 0.7rem 1rem rgb(0 0 0 / 0.2);
+}
+
+.bb-customizer-wallet {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bb-coin-pill {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 0.8rem;
+  background: #122d68;
+  padding: 0.35rem 0.5rem;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 1000;
+  box-shadow: inset 0 0.14rem 0 rgb(255 255 255 / 0.18);
+}
+
+.bb-coin-pill svg:first-child {
+  color: #facc15;
+}
+
+.bb-coin-pill svg:last-child {
+  color: #5ee65a;
+}
+
+.bb-level-badge {
+  display: grid;
+  width: 4.2rem;
+  height: 4.7rem;
+  place-items: center;
+  clip-path: polygon(50% 0, 95% 18%, 86% 78%, 50% 100%, 14% 78%, 5% 18%);
+  background: linear-gradient(180deg, #d946ef, #7e22ce);
+  color: white;
+  font-size: 1rem;
+  font-weight: 1000;
+  box-shadow: inset 0 0 0 0.14rem rgb(255 255 255 / 0.35);
+}
+
+.bb-step-meta {
+  position: absolute;
+  inset-inline: 0;
+  top: 6.9rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.bb-step-meta > span {
+  border-radius: 999px;
+  background: linear-gradient(#1a7dff, #0755d0);
+  padding: 0.45rem 1.35rem;
+  font-size: 1rem;
+  font-weight: 1000;
+  box-shadow: 0 0.2rem 0.55rem rgb(0 0 0 / 0.22), inset 0 0.14rem 0 rgb(255 255 255 / 0.22);
+}
+
+.bb-step-dots {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.bb-step-dots button {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: rgb(30 99 188 / 0.35);
+}
+
+.bb-step-dots .active {
+  width: 1.3rem;
+  height: 1.3rem;
+  background: #075de8;
+  box-shadow: 0 0 0 0.12rem rgb(255 255 255 / 0.2);
+}
+
+.bb-customizer-main {
+  position: absolute;
+  inset: 8.8rem 0 8.5rem;
+  display: grid;
+  overflow: hidden;
+  padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+}
+
+.bb-customizer-footer {
+  position: absolute;
+  inset-inline: 0;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding-inline: 1.4rem;
+  z-index: 4;
+}
+
+.bb-customizer-cta {
+  display: inline-flex;
+  width: min(33rem, 78vw);
+  min-height: 5.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  border: 0.22rem solid rgb(255 255 255 / 0.88);
+  border-radius: 2.3rem;
+  background: linear-gradient(#7bf04d, #16a516 54%, #0b8f12);
+  color: white;
+  font-size: clamp(2rem, 7.5vw, 3rem);
+  font-weight: 1000;
+  text-shadow: 0 0.18rem 0 #0b5b13, 0 0.28rem 0.45rem rgb(0 0 0 / 0.22);
+  box-shadow: inset 0 0.22rem 0 rgb(255 255 255 / 0.4), 0 0.35rem 0 #07540d, 0 0.9rem 1.2rem rgb(0 0 0 / 0.2);
+}
+
+.bb-customizer-note {
+  display: grid;
+  width: min(31rem, 78vw);
+  min-height: 3.15rem;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  border: 0.1rem solid rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+  background: rgb(23 72 145 / 0.68);
+  padding: 0.45rem 1.25rem;
+  color: white;
+  font-size: clamp(0.82rem, 2.9vw, 1rem);
+  font-weight: 800;
+  text-align: left;
+}
+
+.bb-customizer-hub {
+  grid-template-columns: minmax(5rem, 8rem) 1fr minmax(5rem, 8rem);
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.4rem);
+  padding-top: 1rem;
+}
+
+.bb-hub-rail {
+  display: grid;
+  gap: 0.85rem;
+  align-content: center;
+}
+
+.bb-hub-button {
+  display: grid;
+  min-height: clamp(4.6rem, 12vw, 6.8rem);
+  place-items: center;
+  border: 0.16rem solid rgb(255 255 255 / 0.9);
+  border-radius: 1.1rem;
+  background: linear-gradient(#ffffff, #edf3ff);
+  color: #174174;
+  font-size: clamp(0.78rem, 2.8vw, 1.05rem);
+  font-weight: 1000;
+  box-shadow: 0 0.28rem 0 #aeb8ca, 0 0.65rem 1rem rgb(0 0 0 / 0.16);
+}
+
+.bb-hub-button svg {
+  color: #0f67df;
+}
+
+.bb-hub-stage,
+.bb-body-stage,
+.bb-clothing-stage,
+.bb-accessory-stage,
+.bb-trail-stage {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.bb-avatar-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1.18;
+}
+
+.bb-avatar-stage.large {
+  width: min(28rem, 52vw, 48vh);
+}
+
+.bb-avatar-stage.medium {
+  width: min(22rem, 43vw, 40vh);
+}
+
+.bb-avatar-stage.small {
+  width: min(16rem, 34vw, 30vh);
+}
+
+.bb-stage-glow {
+  position: absolute;
+  bottom: 1.8%;
+  width: 82%;
+  height: 17%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(56 189 248 / 0.95), rgb(30 64 175 / 0.95) 42%, rgb(15 23 42 / 0.75) 43% 100%);
+  box-shadow: 0 0 1.1rem #38bdf8;
+}
+
+.bb-avatar-turntable {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.bb-avatar-rotate {
+  position: absolute;
+  bottom: -0.2rem;
+  display: grid;
+  width: 4rem;
+  height: 3rem;
+  place-items: center;
+  color: white;
+  filter: drop-shadow(0 0.2rem 0 rgb(0 0 0 / 0.35));
+}
+
+.bb-mini-avatar {
+  position: relative;
+  display: block;
+  width: 48%;
+  height: 72%;
+  min-width: 5.2rem;
+  filter: drop-shadow(0 1rem 0.7rem rgb(0 0 0 / 0.22));
+}
+
+.bb-avatar-stage.small .bb-mini-avatar {
+  width: 58%;
+  height: 74%;
+}
+
+.bb-mini-avatar > span {
+  position: absolute;
+  display: block;
+}
+
+.bb-mini-avatar .head > span {
+  position: absolute;
+  display: block;
+}
+
+.bb-mini-avatar .head {
+  left: 25%;
+  top: 5%;
+  width: 50%;
+  height: 22%;
+  border-radius: 0.45rem;
+  background: var(--skin);
+  box-shadow: inset 0 0.18rem 0 rgb(255 255 255 / 0.22), 0 0.18rem 0 rgb(0 0 0 / 0.16);
+}
+
+.bb-mini-avatar .hair {
+  left: 21%;
+  top: 0%;
+  width: 59%;
+  height: 15%;
+  border-radius: 55% 55% 28% 28%;
+  background:
+    linear-gradient(135deg, transparent 0 22%, var(--hair) 23% 45%, transparent 46% 100%),
+    linear-gradient(45deg, transparent 0 20%, var(--hair) 21% 42%, transparent 43% 100%),
+    var(--hair);
+  transform: rotate(-6deg);
+  z-index: 2;
+}
+
+.bb-mini-avatar.hair-side .hair {
+  border-radius: 65% 40% 30% 28%;
+  transform: rotate(4deg);
+}
+
+.bb-mini-avatar.hair-curly .hair {
+  border-radius: 999px 999px 35% 35%;
+}
+
+.bb-mini-avatar.hair-long .hair {
+  top: 0;
+  height: 25%;
+  border-radius: 60% 60% 30% 30%;
+}
+
+.bb-mini-avatar.hair-flat .hair {
+  height: 11%;
+  border-radius: 0.35rem 0.35rem 0.2rem 0.2rem;
+  transform: rotate(0);
+}
+
+.bb-mini-avatar .eye {
+  top: 42%;
+  width: 0.42rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: var(--eyes);
+}
+
+.bb-mini-avatar .eye.left {
+  left: 29%;
+}
+
+.bb-mini-avatar .eye.right {
+  right: 29%;
+}
+
+.bb-mini-avatar.face-wink .eye.right {
+  height: 0.18rem;
+  top: 52%;
+}
+
+.bb-mini-avatar.face-cool .eye {
+  width: 1rem;
+  height: 0.42rem;
+  border-radius: 0.18rem;
+}
+
+.bb-mini-avatar .mouth {
+  left: 35%;
+  top: 68%;
+  width: 31%;
+  height: 0.34rem;
+  border-radius: 0 0 999px 999px;
+  background: #7c2d12;
+}
+
+.bb-mini-avatar.face-happy .mouth {
+  height: 0.52rem;
+}
+
+.bb-mini-avatar.face-wow .mouth {
+  left: 43%;
+  width: 15%;
+  height: 0.65rem;
+  border-radius: 999px;
+}
+
+.bb-mini-avatar .body {
+  left: 17%;
+  top: 29%;
+  width: 66%;
+  height: 34%;
+  border-radius: 0.28rem;
+  background:
+    linear-gradient(90deg, transparent 0 42%, rgb(255 255 255 / 0.75) 43% 46%, transparent 47% 53%, rgb(255 255 255 / 0.75) 54% 57%, transparent 58% 100%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 32%),
+    var(--shirt);
+  box-shadow: inset 0 -1.2rem 0 rgb(0 0 0 / 0.08);
+}
+
+.bb-mini-avatar .arm {
+  top: 31%;
+  width: 16%;
+  height: 35%;
+  border-radius: 0.22rem;
+  background: linear-gradient(var(--shirt) 0 72%, var(--skin) 73% 100%);
+  transform-origin: 50% 8%;
+}
+
+.bb-mini-avatar .arm.left {
+  left: 0;
+  transform: rotate(6deg);
+}
+
+.bb-mini-avatar .arm.right {
+  right: 0;
+  transform: rotate(-6deg);
+}
+
+.bb-mini-avatar.pose-wave .arm.left,
+.bb-mini-avatar.pose-cheer .arm.left {
+  transform: rotate(-138deg);
+}
+
+.bb-mini-avatar.pose-cheer .arm.right {
+  transform: rotate(138deg);
+}
+
+.bb-mini-avatar.pose-dance .arm.left {
+  transform: rotate(-90deg);
+}
+
+.bb-mini-avatar.pose-dance .arm.right {
+  transform: rotate(40deg);
+}
+
+.bb-mini-avatar .leg {
+  top: 64%;
+  width: 24%;
+  height: 29%;
+  border-radius: 0.18rem;
+  background: var(--pants);
+}
+
+.bb-mini-avatar .leg.left {
+  left: 22%;
+}
+
+.bb-mini-avatar .leg.right {
+  right: 22%;
+}
+
+.bb-mini-avatar.pose-sit .leg {
+  top: 76%;
+  height: 15%;
+  transform: rotate(78deg);
+}
+
+.bb-mini-avatar .leg::after {
+  position: absolute;
+  left: -8%;
+  bottom: -10%;
+  width: 116%;
+  height: 22%;
+  border-radius: 0.18rem;
+  background: #f8fafc;
+  content: "";
+}
+
+.bb-mini-avatar .hat {
+  left: 20%;
+  top: -3%;
+  width: 60%;
+  height: 9%;
+  border-radius: 999px 999px 0.16rem 0.16rem;
+  background: #ef4444;
+  z-index: 4;
+}
+
+.bb-mini-avatar .glasses {
+  left: 24%;
+  top: 14%;
+  width: 52%;
+  height: 7%;
+  border-radius: 0.25rem;
+  background: #111827;
+  z-index: 5;
+}
+
+.bb-avatar-trail {
+  position: absolute;
+  inset: 34% 12% 21%;
+  border-radius: 50%;
+  background: conic-gradient(#38bdf8, #f0abfc, #facc15, #22c55e, #38bdf8);
+  opacity: 0.82;
+  filter: blur(0.35rem);
+}
+
+.bb-customizer-body {
+  grid-template-columns: minmax(5rem, 7rem) 1fr minmax(17rem, 41vw);
+  align-items: center;
+  gap: 1rem;
+}
+
+.bb-custom-side-rail {
+  display: grid;
+  gap: 0.65rem;
+  align-content: center;
+}
+
+.bb-custom-side-rail button,
+.bb-floating-tool {
+  display: grid;
+  min-height: 5rem;
+  place-items: center;
+  border: 0.14rem solid rgb(255 255 255 / 0.9);
+  border-radius: 0.9rem;
+  background: linear-gradient(#ffffff, #edf3ff);
+  color: #143869;
+  font-size: 0.78rem;
+  font-weight: 1000;
+  box-shadow: 0 0.22rem 0 #aab6ca, 0 0.5rem 0.8rem rgb(0 0 0 / 0.14);
+}
+
+.bb-custom-side-rail .active {
+  background: linear-gradient(#2c9bff, #0b5bd7);
+  color: white;
+}
+
+.bb-body-controls {
+  display: grid;
+  max-height: 100%;
+  gap: 0.7rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.bb-palette-panel,
+.bb-mini-strip,
+.bb-style-card,
+.bb-quick-preview {
+  border: 0.12rem solid rgb(255 255 255 / 0.86);
+  border-radius: 1rem;
+  background: rgb(248 250 252 / 0.94);
+  color: #153866;
+  padding: 0.72rem;
+  box-shadow: 0 0.22rem 0 #aab6ca, 0 0.65rem 1rem rgb(0 0 0 / 0.14);
+}
+
+.bb-palette-panel h3,
+.bb-mini-strip h3 {
+  margin-bottom: 0.45rem;
+  font-size: 1rem;
+  font-weight: 1000;
+}
+
+.bb-palette-panel div,
+.bb-mini-strip div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bb-palette-panel button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 0.12rem solid rgb(15 23 42 / 0.12);
+  border-radius: 0.55rem;
+}
+
+.bb-palette-panel .active,
+.bb-mini-strip .active {
+  outline: 0.22rem solid #0b74ff;
+  outline-offset: 0.08rem;
+}
+
+.bb-mini-strip button {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: #f1f5f9;
+  color: #153866;
+  font-size: 0.72rem;
+  font-weight: 1000;
+}
+
+.bb-customizer-clothing,
+.bb-customizer-accessories,
+.bb-customizer-emotes,
+.bb-customizer-trails {
+  grid-template-rows: minmax(8rem, 38%) 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.bb-clothing-stage,
+.bb-accessory-stage,
+.bb-trail-stage {
+  grid-row: 1;
+}
+
+.bb-floating-tool {
+  position: absolute;
+  z-index: 3;
+  width: 5.6rem;
+}
+
+.bb-floating-tool.left {
+  left: max(1rem, env(safe-area-inset-left));
+}
+
+.bb-floating-tool.right {
+  right: max(1rem, env(safe-area-inset-right));
+}
+
+.bb-floating-tool.one {
+  top: 22%;
+}
+
+.bb-floating-tool.two {
+  top: calc(22% + 6rem);
+}
+
+.bb-custom-catalog {
+  grid-row: 2;
+  align-self: end;
+  width: min(43rem, 96vw);
+  max-height: 100%;
+  justify-self: center;
+  border: 0.16rem solid rgb(255 255 255 / 0.5);
+  border-radius: 1.1rem;
+  background: linear-gradient(#176fe9, #0d5bce);
+  padding: 0.55rem;
+  box-shadow: 0 0.55rem 1rem rgb(0 0 0 / 0.22);
+  overflow: hidden;
+}
+
+.bb-custom-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+}
+
+.bb-custom-tabs button {
+  min-width: max-content;
+  min-height: 2.45rem;
+  border-radius: 0.75rem 0.75rem 0.25rem 0.25rem;
+  background: #eff6ff;
+  padding: 0 0.95rem;
+  color: #153866;
+  font-size: 0.8rem;
+  font-weight: 1000;
+}
+
+.bb-custom-tabs .active {
+  background: linear-gradient(#3aa1ff, #075ad9);
+  color: white;
+}
+
+.bb-custom-grid {
+  display: grid;
+  max-height: min(38vh, 27rem);
+  grid-template-columns: repeat(5, minmax(5rem, 1fr));
+  gap: 0.7rem;
+  overflow-y: auto;
+  border-radius: 0.9rem;
+  background: rgb(240 248 255 / 0.96);
+  padding: 0.75rem;
+}
+
+.bb-custom-catalog.dense .bb-custom-grid {
+  grid-template-columns: repeat(4, minmax(5.5rem, 1fr));
+}
+
+.bb-custom-item {
+  position: relative;
+  display: grid;
+  min-height: 8.6rem;
+  grid-template-rows: 4.2rem auto auto auto;
+  align-items: center;
+  justify-items: center;
+  border: 0.13rem solid rgb(148 163 184 / 0.4);
+  border-radius: 0.9rem;
+  background: linear-gradient(#ffffff, #f1f5f9);
+  padding: 0.4rem;
+  color: #153866;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  box-shadow: 0 0.24rem 0 #aeb8ca, 0 0.45rem 0.75rem rgb(0 0 0 / 0.1);
+}
+
+.bb-custom-item.equipped {
+  border-color: #22c55e;
+}
+
+.bb-custom-item strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-equipped-check {
+  position: absolute;
+  right: 0.35rem;
+  top: 0.35rem;
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #22c55e;
+  color: white;
+  z-index: 3;
+}
+
+.bb-custom-item .rarity {
+  color: #64748b;
+  font-size: 0.64rem;
+}
+
+.bb-custom-item .rarity.rare {
+  color: #2563eb;
+}
+
+.bb-custom-item .rarity.epic {
+  color: #8b5cf6;
+}
+
+.bb-custom-item .rarity.legendary {
+  color: #d97706;
+}
+
+.bb-custom-item .price {
+  display: inline-flex;
+  min-width: 4.5rem;
+  min-height: 1.45rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #115bd6;
+  color: white;
+  font-size: 0.82rem;
+}
+
+.bb-custom-item .price::before {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  border-radius: 999px;
+  background: #facc15;
+  content: "";
+}
+
+.bb-custom-item .price.owned {
+  background: #22c55e;
+}
+
+.bb-custom-item .price.owned::before {
+  display: none;
+}
+
+.bb-item-top,
+.bb-item-pants,
+.bb-item-trail,
+.bb-item-accessory {
+  position: relative;
+  display: block;
+  width: 3.8rem;
+  height: 3.8rem;
+}
+
+.bb-item-top::before {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.4rem;
+  width: 2.1rem;
+  height: 2.8rem;
+  border-radius: 0.35rem;
+  background: var(--item-color);
+  box-shadow: inset 0 -0.8rem 0 rgb(0 0 0 / 0.1);
+  content: "";
+}
+
+.bb-item-top::after {
+  position: absolute;
+  left: 1.35rem;
+  top: 1.2rem;
+  width: 1rem;
+  height: 0.85rem;
+  border-radius: 0.15rem;
+  background: var(--item-accent);
+  content: "";
+}
+
+.bb-item-pants::before,
+.bb-item-pants::after {
+  position: absolute;
+  top: 0.6rem;
+  width: 1.1rem;
+  height: 3rem;
+  border-radius: 0.22rem;
+  background: var(--item-color);
+  content: "";
+}
+
+.bb-item-pants::before {
+  left: 0.8rem;
+}
+
+.bb-item-pants::after {
+  right: 0.8rem;
+}
+
+.bb-item-trail {
+  border-radius: 999px;
+  background: conic-gradient(var(--item-color), var(--item-accent), #38bdf8, var(--item-color));
+  filter: drop-shadow(0 0.2rem 0.35rem rgb(0 0 0 / 0.18));
+}
+
+.bb-item-accessory {
+  border-radius: 0.8rem;
+}
+
+.bb-item-accessory::before {
+  position: absolute;
+  inset: 0.6rem;
+  border-radius: inherit;
+  background: var(--item-color);
+  box-shadow: inset 0 0.45rem 0 rgb(255 255 255 / 0.26);
+  content: "";
+}
+
+.bb-item-accessory.hat::before {
+  inset: 1.2rem 0.55rem 1rem;
+  border-radius: 999px 999px 0.3rem 0.3rem;
+}
+
+.bb-item-accessory.accessory::after {
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  top: 1.65rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--item-accent);
+  content: "";
+}
+
+.bb-style-card {
+  position: absolute;
+  right: max(1.4rem, env(safe-area-inset-right));
+  top: 20%;
+  display: grid;
+  min-width: 13rem;
+  gap: 0.85rem;
+}
+
+.bb-style-card div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.65rem;
+  align-items: center;
+}
+
+.bb-style-card svg {
+  grid-row: span 2;
+  color: #facc15;
+}
+
+.bb-style-card span {
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.bb-style-card strong {
+  font-size: 1.35rem;
+  font-weight: 1000;
+}
+
+.bb-customizer-emotes {
+  grid-template-columns: minmax(5rem, 8rem) minmax(8rem, 14rem) 1fr;
+  grid-template-rows: 1fr 5.4rem;
+  gap: 0.8rem;
+}
+
+.bb-customizer-emotes .bb-custom-side-rail,
+.bb-emote-preview {
+  grid-row: 1 / span 2;
+}
+
+.bb-customizer-emotes .bb-custom-catalog {
+  grid-column: 3;
+  grid-row: 1;
+  width: 100%;
+}
+
+.bb-customizer-emotes .bb-custom-grid {
+  grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
+  max-height: 100%;
+}
+
+.bb-emote-preview {
+  align-self: end;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+.bb-preview-label {
+  width: 100%;
+  border-radius: 0.8rem;
+  background: rgb(23 72 145 / 0.8);
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 1000;
+}
+
+.bb-quick-preview {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: end;
+  padding: 0.45rem;
+}
+
+.bb-quick-preview strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+
+.bb-quick-preview div {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.bb-quick-preview button {
+  display: grid;
+  width: 3.9rem;
+  height: 3.9rem;
+  place-items: center;
+  border: 0.12rem solid #0b74ff;
+  border-radius: 0.65rem;
+  background: white;
+}
+
+.bb-quick-preview .bb-mini-avatar {
+  width: 3rem;
+  height: 3.2rem;
+  min-width: 0;
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .bb-customizer-topbar {
+    grid-template-columns: 4.2rem 1fr minmax(7rem, auto);
+    min-height: 5.9rem;
+  }
+
+  .bb-level-badge {
+    width: 3.8rem;
+    height: 4.2rem;
+  }
+
+  .bb-coin-pill {
+    font-size: 0.82rem;
+  }
+
+  .bb-customizer-main {
+    inset: 8.55rem 0 8.2rem;
+  }
+
+  .bb-customizer-hub {
+    grid-template-columns: 5.2rem 1fr 5.2rem;
+  }
+
+  .bb-hub-button {
+    min-height: 4.6rem;
+  }
+
+  .bb-avatar-stage.large {
+    width: min(25rem, 60vw, 43vh);
+  }
+
+  .bb-customizer-body {
+    grid-template-columns: 5.4rem 1fr;
+  }
+
+  .bb-body-controls {
+    position: absolute;
+    right: max(0.8rem, env(safe-area-inset-right));
+    top: 16%;
+    width: min(17.5rem, 42vw);
+    max-height: 70%;
+  }
+
+  .bb-palette-panel {
+    padding: 0.55rem;
+  }
+
+  .bb-palette-panel button {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .bb-custom-grid {
+    grid-template-columns: repeat(3, minmax(5.4rem, 1fr));
+    max-height: 35vh;
+  }
+
+  .bb-custom-catalog.dense .bb-custom-grid {
+    grid-template-columns: repeat(3, minmax(5.4rem, 1fr));
+  }
+
+  .bb-style-card {
+    right: 1rem;
+    top: 16%;
+    min-width: 11.5rem;
+  }
+
+  .bb-customizer-emotes {
+    grid-template-columns: 5.2rem 9rem 1fr;
+  }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  .bb-customizer-topbar {
+    min-height: 4.6rem;
+    grid-template-columns: 3.4rem 1fr auto;
+    padding-top: max(0.35rem, env(safe-area-inset-top));
+    padding-bottom: 0.35rem;
+  }
+
+  .bb-customizer-back {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+
+  .bb-level-badge {
+    width: 3.1rem;
+    height: 3.4rem;
+    font-size: 0.78rem;
+  }
+
+  .bb-step-meta {
+    top: 4.75rem;
+  }
+
+  .bb-step-meta > span {
+    padding: 0.25rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  .bb-step-dots button {
+    width: 0.58rem;
+    height: 0.58rem;
+  }
+
+  .bb-step-dots .active {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .bb-customizer-main {
+    inset: 6.2rem 0 4.4rem;
+  }
+
+  .bb-customizer-footer {
+    bottom: max(0.4rem, env(safe-area-inset-bottom));
+    grid-template-columns: auto auto;
+    justify-content: center;
+  }
+
+  .bb-customizer-cta {
+    width: 18rem;
+    min-height: 3.4rem;
+    border-radius: 1.45rem;
+    font-size: 1.65rem;
+  }
+
+  .bb-customizer-note {
+    width: 18rem;
+    min-height: 2.55rem;
+  }
+
+  .bb-custom-grid {
+    grid-template-columns: repeat(5, minmax(4.6rem, 1fr));
+    max-height: 42vh;
+  }
+
+  .bb-custom-item {
+    min-height: 7.4rem;
+    grid-template-rows: 3.4rem auto auto auto;
+  }
+
+  .bb-customizer-emotes .bb-custom-grid {
+    grid-template-columns: repeat(3, minmax(4.4rem, 1fr));
+  }
+}
+
 @media (max-height: 620px) and (orientation: landscape) {
   .bb-splash:not(.bb-splash-poster) {
     overflow-y: auto;

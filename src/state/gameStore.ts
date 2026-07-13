@@ -56,6 +56,14 @@ type TouchInput = {
   interact: boolean
 }
 
+type CustomizationSelection = {
+  name: string
+  cost: number
+  shopItemId?: ShopItemId
+  patch: Partial<AvatarSettings>
+  emote?: PlayerEmote
+}
+
 type GameState = GameSave & {
   playerPosition: Vec3
   playerYaw: number
@@ -87,6 +95,8 @@ type GameState = GameSave & {
   awardBadge: (id: BadgeId) => void
   buyItem: (id: ShopItemId) => void
   applyOwnedItem: (id: ShopItemId) => void
+  updateAvatar: (avatar: Partial<AvatarSettings>) => void
+  selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
@@ -110,7 +120,15 @@ type GameState = GameSave & {
 export const defaultAvatar: AvatarSettings = {
   bodyColor: '#9a5b43',
   shirtColor: '#5eead4',
+  hairColor: '#5a2f16',
+  hairStyle: 'spiky',
+  face: 'smile',
+  eyeColor: '#111827',
+  accentColor: '#0b74ff',
+  pantsColor: '#111827',
+  topStyle: 'top-blue-hoodie',
   hat: 'none',
+  accessory: 'none',
   trail: 'none',
 }
 
@@ -377,6 +395,37 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (!item || !state.unlockedItems.includes(id)) return state
       return { avatar: applyItem(state.avatar, item) }
     }),
+  updateAvatar: (avatar) => set((state) => ({ avatar: { ...state.avatar, ...avatar } })),
+  selectCustomizationItem: (item) => {
+    set((state) => {
+      const itemId = item.shopItemId
+      const requiresUnlock = itemId !== undefined && item.cost > 0 && !state.unlockedItems.includes(itemId)
+      if (requiresUnlock && state.coins < item.cost) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage(`Need ${item.cost} coins for ${item.name}`)],
+        }
+      }
+
+      const unlockedItems =
+        requiresUnlock && itemId ? [...state.unlockedItems, itemId] : state.unlockedItems
+      const coins = requiresUnlock ? state.coins - item.cost : state.coins
+      return {
+        coins,
+        unlockedItems,
+        avatar: { ...state.avatar, ...item.patch },
+        playerEmote: item.emote ?? state.playerEmote,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${requiresUnlock ? 'Unlocked' : 'Equipped'} ${item.name}`),
+        ],
+      }
+    })
+    if (item.emote && item.emote !== 'none') {
+      window.setTimeout(() => {
+        if (useGameStore.getState().playerEmote === item.emote) useGameStore.setState({ playerEmote: 'none' })
+      }, 2600)
+    }
+  },
 
   beginObby: (now) =>
     set((state) => ({
