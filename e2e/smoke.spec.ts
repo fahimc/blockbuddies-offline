@@ -161,4 +161,43 @@ test.describe('portrait splash layout', () => {
     await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
     await expect(stage.locator('.bb-mini-avatar')).toBeInViewport()
   })
+
+  test('keeps emote options below the preview on portrait phones', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Start' }).click()
+    await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+    await page.getByRole('button', { name: 'Customize' }).click()
+    await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+    await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Emotes & Animations' })).toBeVisible()
+
+    const emotes = page.locator('.bb-customizer-emotes')
+    const preview = emotes.locator('.bb-emote-preview')
+    const categoryStrip = emotes.getByRole('navigation', { name: 'Customization categories' })
+    const catalog = emotes.locator('.bb-custom-catalog')
+    await expect(categoryStrip.getByRole('button', { name: 'All' })).toBeVisible()
+    await expect(categoryStrip.getByRole('button', { name: 'Actions' })).toBeVisible()
+    await expect(catalog.getByText('Wave')).toBeVisible()
+
+    const [mainBox, previewBox, stripBox, catalogBox] = await Promise.all([
+      emotes.boundingBox(),
+      preview.boundingBox(),
+      categoryStrip.boundingBox(),
+      catalog.boundingBox(),
+    ])
+    expect(mainBox).not.toBeNull()
+    expect(previewBox).not.toBeNull()
+    expect(stripBox).not.toBeNull()
+    expect(catalogBox).not.toBeNull()
+    if (!mainBox || !previewBox || !stripBox || !catalogBox) return
+
+    expect(stripBox.y).toBeGreaterThan(previewBox.y)
+    expect(stripBox.width).toBeGreaterThan(stripBox.height)
+    expect(stripBox.width / mainBox.width).toBeGreaterThan(0.86)
+    expect(catalogBox.x).toBeGreaterThanOrEqual(0)
+    expect(catalogBox.x + catalogBox.width).toBeLessThanOrEqual(720)
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    expect(scrollWidth).toBeLessThanOrEqual(720)
+  })
 })

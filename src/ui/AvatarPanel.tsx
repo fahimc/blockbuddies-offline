@@ -484,7 +484,7 @@ function HubButton({ label, icon, onClick }: { label: string; icon: ReactNode; o
 
 function SideRail({ items }: { items: [string, ReactNode][] }) {
   return (
-    <nav className="bb-custom-side-rail">
+    <nav className="bb-custom-side-rail" aria-label="Customization categories">
       {items.map(([label, icon], index) => (
         <button type="button" key={label} className={index === 0 ? 'active' : ''}>
           {icon}

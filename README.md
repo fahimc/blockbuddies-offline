@@ -43,6 +43,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies phone-width customizer columns](docs/review/avatar-body-columns-v143-phone.png)
 
+![BlockBuddies phone emote options row](docs/review/avatar-emotes-options-v144-phone.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -61,6 +63,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses phone-width columns for categories, character
   preview, and controls while switching between Body, Hair, Face, and Colours.
+- Emotes & Animations uses a portrait phone layout with category options below
+  the preview and a full-width emote catalog.
 - Startup flow now routes Start through character customisation, character name
   entry, and then the 3D town.
 - Chosen character names appear above the player, in quick-reply chat, in Local

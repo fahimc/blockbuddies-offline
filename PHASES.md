@@ -277,3 +277,12 @@
 - [x] Add measured Playwright regression coverage for the portrait column layout
 - [x] Capture production portrait review screenshot
 - [x] Bump Android debug APK version metadata to 1.4.3 / 10403
+
+## Post-phase emote options row
+
+- [x] Move portrait Emotes category options below the preview instead of a left column
+- [x] Give the portrait emote catalog the full phone width
+- [x] Keep quick preview below the catalog and above the CTA
+- [x] Add measured Playwright regression coverage for the portrait Emotes layout
+- [x] Capture production portrait review screenshot
+- [x] Bump Android debug APK version metadata to 1.4.4 / 10404

@@ -1,5 +1,27 @@
 # Changelog
 
+## [v1.4.4-emote-options-row] - 2026-07-13
+
+### Added
+
+- Added production review screenshot for the portrait Emotes & Animations layout.
+- Added Playwright smoke coverage that verifies Emotes category options sit below the preview as a horizontal strip and the catalog stays within phone width.
+
+### Changed
+
+- Reworked the portrait Emotes & Animations layout so category options are below the preview instead of a left-side column.
+- Gave the emote catalog full phone width on portrait screens and moved quick preview below the catalog.
+- Updated Android version metadata to `1.4.4` / `10404`.
+
+### Fixed
+
+- Fixed the portrait Emotes screen pushing the catalog off the right edge because the category rail consumed a full column.
+- Fixed the Emotes preview/catalog area crowding the bottom CTA on narrow mobile screens.
+
+### Known Issues
+
+- Emote category buttons are visual filters in this prototype and do not yet filter the catalog items.
+
 ## [v1.4.3-customizer-phone-columns] - 2026-07-13
 
 ### Added

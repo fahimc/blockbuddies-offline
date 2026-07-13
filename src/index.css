@@ -2649,8 +2649,126 @@ canvas {
     min-width: 11.5rem;
   }
 
+  .bb-customizer-main.bb-customizer-emotes {
+    inset: 8.35rem 0 10.95rem;
+    padding-inline: max(0.45rem, env(safe-area-inset-left)) max(0.45rem, env(safe-area-inset-right));
+  }
+
   .bb-customizer-emotes {
-    grid-template-columns: 5.2rem 9rem 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(10.5rem, 29vh) auto minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    min-width: 0;
+    align-content: initial;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding: 0 0.1rem 0.22rem;
+    scrollbar-width: none;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail::-webkit-scrollbar {
+    height: 0;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail button {
+    flex: 0 0 clamp(4.45rem, 18vw, 6rem);
+    min-height: clamp(3.45rem, 8.8vh, 4.4rem);
+    padding: 0.28rem 0.25rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail svg {
+    width: clamp(1.3rem, 5vw, 1.8rem);
+    height: clamp(1.3rem, 5vw, 1.8rem);
+  }
+
+  .bb-customizer-emotes .bb-emote-preview {
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: minmax(7rem, 13rem) minmax(6.8rem, 10rem);
+    align-items: end;
+    align-self: end;
+    justify-self: center;
+    max-width: min(24rem, 92vw);
+    gap: 0.55rem;
+  }
+
+  .bb-customizer-emotes .bb-avatar-stage.small {
+    width: min(12.4rem, 40vw, 24vh);
+  }
+
+  .bb-customizer-emotes .bb-preview-label {
+    align-self: end;
+    min-height: 3.2rem;
+    padding: 0.55rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-catalog {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+    align-self: stretch;
+    min-height: 0;
+    padding: 0.45rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-tabs {
+    display: none;
+  }
+
+  .bb-customizer-emotes .bb-custom-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: 100%;
+    gap: 0.48rem;
+    padding: 0.55rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-item {
+    min-height: 7.6rem;
+    grid-template-rows: 3.15rem auto auto auto;
+    padding: 0.32rem;
+  }
+
+  .bb-customizer-emotes .bb-custom-item .bb-mini-avatar {
+    width: 2.7rem;
+    height: 3rem;
+  }
+
+  .bb-customizer-emotes .bb-quick-preview {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: end;
+    width: min(24rem, 92vw);
+    justify-self: center;
+    padding: 0.36rem;
+  }
+
+  .bb-quick-preview div {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .bb-quick-preview div::-webkit-scrollbar {
+    height: 0;
+  }
+
+  .bb-quick-preview button {
+    flex: 0 0 3.15rem;
+    width: 3.15rem;
+    height: 3.15rem;
+  }
+
+  .bb-quick-preview .bb-mini-avatar {
+    width: 2.3rem;
+    height: 2.55rem;
   }
 }
 
