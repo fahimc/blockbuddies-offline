@@ -55,6 +55,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
+- Startup flow now routes Start through character customisation, character name
+  entry, and then the 3D town.
+- Chosen character names appear above the player, in quick-reply chat, in Local
+  Party identity, and in the leaderboard.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
@@ -62,8 +66,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Kenney CC0 blocky character models and prototype grid textures.
-- Landscape mobile game HUD with chat icon, virtual joystick, circular jump,
-  interact, and reset/remove controls.
+- In-game hamburger menu keeps customisation, shop, quests, build mode, Local
+  Party, badges, leaderboard, emotes, and settings out of the main HUD.
+- Landscape mobile game HUD with chat icon, status pills, virtual joystick,
+  circular jump, interact, and reset/remove controls.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
   and buddy profile screens inspired by the supplied screen design sheet.
 - Responsive landscape phone layout with compact menu cards, chat icon, safe-area

@@ -8,12 +8,12 @@ vi.mock('./game/GameScreen', () => ({
 }))
 
 describe('App shell', () => {
-  it('navigates from menu to the game placeholder', async () => {
+  it('starts with avatar setup before the game placeholder', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Play' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }))
 
-    expect(screen.getByTestId('game-canvas')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Customization Hub' })).toBeInTheDocument()
   })
 })

@@ -1,5 +1,8 @@
 import { GameScreen } from './game/GameScreen'
+import { SaveManager } from './save/SaveManager'
 import { MainMenu } from './ui/MainMenu'
+import { AvatarPanel } from './ui/AvatarPanel'
+import { NameSetupScreen } from './ui/NameSetupScreen'
 import { useGameStore } from './state/gameStore'
 
 export default function App() {
@@ -8,11 +11,20 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-sky-100 text-slate-950">
+      <SaveManager />
       {screen === 'menu' ? (
-        <MainMenu onPlay={() => setScreen('game')} />
-      ) : (
+        <MainMenu onStart={() => setScreen('setup-avatar')} />
+      ) : null}
+      {screen === 'setup-avatar' ? (
+        <AvatarPanel
+          onBack={() => setScreen('menu')}
+          onComplete={() => setScreen('setup-name')}
+        />
+      ) : null}
+      {screen === 'setup-name' ? <NameSetupScreen onBack={() => setScreen('setup-avatar')} onStart={() => setScreen('game')} /> : null}
+      {screen === 'game' ? (
         <GameScreen />
-      )}
+      ) : null}
     </main>
   )
 }

@@ -7,7 +7,8 @@ export function LeaderboardPanel() {
   const coins = useGameStore((state) => state.coins)
   const bestTime = useGameStore((state) => state.obby.bestTime)
   const memories = useGameStore((state) => state.botMemory)
-  const rows = createLocalLeaderboard(coins, bestTime, memories)
+  const playerName = useGameStore((state) => state.playerName)
+  const rows = createLocalLeaderboard(coins, bestTime, memories, playerName)
 
   return (
     <Panel title="Leaderboard">

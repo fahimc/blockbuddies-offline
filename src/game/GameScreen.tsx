@@ -2,9 +2,9 @@ import { Canvas } from '@react-three/fiber'
 import { Html, KeyboardControls, Sky } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
 import { Suspense, useEffect } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { GameScene } from './GameScene'
 import { HUD } from '../ui/HUD'
+import { GameMenu } from '../ui/GameMenu'
 import { ChatPanel } from '../ui/ChatPanel'
 import { TouchControls } from '../ui/TouchControls'
 import { QuestPanel } from '../ui/QuestPanel'
@@ -17,7 +17,6 @@ import { BadgesPanel } from '../ui/BadgesPanel'
 import { BuildPanel } from '../ui/BuildPanel'
 import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
-import { SaveManager } from '../save/SaveManager'
 import { useGameStore } from '../state/gameStore'
 
 const keyboardMap = [
@@ -31,7 +30,6 @@ const keyboardMap = [
 ]
 
 export function GameScreen() {
-  const setScreen = useGameStore((state) => state.setScreen)
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const openPanel = useGameStore((state) => state.openPanel)
   const settings = useGameStore((state) => state.settings)
@@ -51,7 +49,6 @@ export function GameScreen() {
         onContextMenu={(event) => event.preventDefault()}
         onDragStart={(event) => event.preventDefault()}
       >
-        <SaveManager />
         <Canvas
           shadows={settings.quality !== 'low'}
           camera={{ position: [0, 7, 12], fov: 48 }}
@@ -68,16 +65,7 @@ export function GameScreen() {
           </Suspense>
         </Canvas>
 
-        <button
-          type="button"
-          onClick={() => setScreen('menu')}
-          className="game-menu-button absolute left-3 top-3 z-30 inline-flex min-h-11 items-center gap-2 rounded-lg bg-slate-950/90 px-4 font-black text-white shadow-lg"
-          title="Menu"
-        >
-          <ArrowLeft size={18} aria-hidden />
-          <span className="game-menu-label">Menu</span>
-        </button>
-
+        <GameMenu />
         <HUD />
         <ChatPanel />
         <TouchControls />

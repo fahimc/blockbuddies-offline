@@ -9,18 +9,23 @@ export function SaveManager() {
   const markSaved = useGameStore((store) => store.markSaved)
 
   useEffect(() => {
-    void loadGameSave().then((save) => {
-      if (save) loadFromSave(save)
-    })
+    void loadGameSave()
+      .then((save) => {
+        if (save) loadFromSave(save)
+      })
+      .catch(() => {
+        // Storage can be unavailable in restricted browsers/tests; gameplay should still run.
+      })
   }, [loadFromSave])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       markSaving()
-      void saveGame(makeSaveSnapshot(useGameStore.getState())).then(markSaved)
+      void saveGame(makeSaveSnapshot(useGameStore.getState())).then(markSaved).catch(markSaved)
     }, 700)
     return () => window.clearTimeout(timeout)
   }, [
+    state.playerName,
     state.coins,
     state.avatar,
     state.unlockedItems,

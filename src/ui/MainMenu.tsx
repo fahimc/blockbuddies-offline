@@ -1,21 +1,13 @@
-import { Play, Settings, ShieldCheck, ShoppingBag, UserRound, WifiOff } from 'lucide-react'
+import { Play, ShieldCheck, WifiOff } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import splashPortrait from '../assets/splash/blockbuddies-splash-portrait.png'
-import { useGameStore } from '../state/gameStore'
 import { BrandLogo } from './BrandLogo'
 
 type MainMenuProps = {
-  onPlay: () => void
+  onStart: () => void
 }
 
-export function MainMenu({ onPlay }: MainMenuProps) {
-  const setScreen = useGameStore((state) => state.setScreen)
-  const setOpenPanel = useGameStore((state) => state.setOpenPanel)
-  const openGamePanel = (panel: Parameters<typeof setOpenPanel>[0]) => {
-    setScreen('game')
-    setOpenPanel(panel)
-  }
-
+export function MainMenu({ onStart }: MainMenuProps) {
   return (
     <section
       className="bb-splash bb-splash-poster"
@@ -40,16 +32,10 @@ export function MainMenu({ onPlay }: MainMenuProps) {
       </div>
 
       <div className="bb-splash-controls">
-        <button type="button" onClick={onPlay} aria-label="Play" className="bb-splash-play">
+        <button type="button" onClick={onStart} aria-label="Start" className="bb-splash-play">
           <Play aria-hidden size={34} fill="currentColor" />
-          PLAY
+          START
         </button>
-
-        <div className="bb-splash-quick-actions" aria-label="Quick actions">
-          <IconButton icon={<UserRound size={20} />} label="Avatar" onClick={() => openGamePanel('avatar')} />
-          <IconButton icon={<ShoppingBag size={20} />} label="Shop" onClick={() => openGamePanel('shop')} />
-          <IconButton icon={<Settings size={20} />} label="Settings" onClick={() => openGamePanel('settings')} />
-        </div>
 
         <div className="bb-splash-feature-strip" aria-label="Game features">
           <Feature icon={<WifiOff size={18} />} label="Offline play" />
@@ -58,14 +44,6 @@ export function MainMenu({ onPlay }: MainMenuProps) {
         </div>
       </div>
     </section>
-  )
-}
-
-function IconButton({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="bb-splash-icon-button" aria-label={label} title={label}>
-      {icon}
-    </button>
   )
 }
 

@@ -10,6 +10,7 @@ import { advanceQuest, createQuestProgress } from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
 import { finishObby, startObby, updateCheckpoint } from '../ai/obby'
+import { sanitizePartyName, useLocalPartyStore } from './localPartyStore'
 import {
   canPlacePiece,
   createBuildMapStamp,
@@ -38,6 +39,7 @@ import type {
 } from '../game/types'
 
 export type GameSave = {
+  playerName: string
   coins: number
   avatar: AvatarSettings
   unlockedItems: ShopItemId[]
@@ -64,10 +66,12 @@ type CustomizationSelection = {
   emote?: PlayerEmote
 }
 
+export type GamePanel = 'quests' | 'shop' | 'avatar' | 'settings' | 'friends' | 'leaderboard' | 'badges' | 'build' | 'server' | 'emotes'
+
 type GameState = GameSave & {
   playerPosition: Vec3
   playerYaw: number
-  screen: 'menu' | 'game'
+  screen: 'menu' | 'setup-avatar' | 'setup-name' | 'game'
   bots: BotRuntime[]
   chat: ChatMessage[]
   nearbyLocation?: LocationId
@@ -76,13 +80,14 @@ type GameState = GameSave & {
   touch: TouchInput
   loading: boolean
   saveStatus: 'idle' | 'saving' | 'saved'
-  openPanel?: 'quests' | 'shop' | 'avatar' | 'settings' | 'friends' | 'leaderboard' | 'badges' | 'build' | 'server' | 'emotes'
+  openPanel?: GamePanel
   playerEmote: PlayerEmote
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
   selectedBuildColor: string
   buildRotation: number
-  setScreen: (screen: 'menu' | 'game') => void
+  setScreen: (screen: GameState['screen']) => void
+  setPlayerName: (name: string) => void
   setPlayer: (position: Vec3, yaw: number) => void
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
@@ -114,7 +119,7 @@ type GameState = GameSave & {
   loadFromSave: (save: Partial<GameSave>) => void
   markSaving: () => void
   markSaved: () => void
-  setOpenPanel: (panel?: GameState['openPanel']) => void
+  setOpenPanel: (panel?: GamePanel) => void
 }
 
 export const defaultAvatar: AvatarSettings = {
@@ -156,6 +161,8 @@ export const defaultSettings: GameSettings = {
   reducedMotion: false,
 }
 
+export const defaultPlayerName = 'BlockBuddy'
+
 function systemMessage(text: string): ChatMessage {
   return { id: crypto.randomUUID(), author: 'System', text, kind: 'system', createdAt: Date.now() }
 }
@@ -164,8 +171,8 @@ function botMessage(author: string, text: string): ChatMessage {
   return { id: crypto.randomUUID(), author, text, kind: 'bot', createdAt: Date.now() }
 }
 
-function playerMessage(text: string): ChatMessage {
-  return { id: crypto.randomUUID(), author: 'You', text, kind: 'player', createdAt: Date.now() }
+function playerMessage(author: string, text: string): ChatMessage {
+  return { id: crypto.randomUUID(), author, text, kind: 'player', createdAt: Date.now() }
 }
 
 function initialBots() {
@@ -185,6 +192,7 @@ const initialObby: ObbyState = {
 
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'menu',
+  playerName: defaultPlayerName,
   coins: 0,
   earnedBadges: ['welcome'],
   placedBlocks: [],
@@ -212,6 +220,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   buildRotation: 0,
 
   setScreen: (screen) => set({ screen }),
+  setPlayerName: (name) => {
+    const playerName = sanitizePartyName(name)
+    useLocalPartyStore.getState().setPlayerName(playerName)
+    set({ playerName })
+  },
   setPlayer: (playerPosition, playerYaw) => set({ playerPosition, playerYaw }),
   setTouch: (input) => set((state) => ({ touch: { ...state.touch, ...input } })),
   setNearbyLocation: (nearbyLocation) => set({ nearbyLocation }),
@@ -247,7 +260,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
 
   sendQuickReply: (text, context) => {
-    set((state) => ({ chat: [...state.chat.slice(-60), playerMessage(text)] }))
+    set((state) => ({ chat: [...state.chat.slice(-60), playerMessage(state.playerName, text)] }))
     get().awardBadge('social-buddy')
     const nearest = get().bots[0]
     if (nearest) get().botReact(nearest.id, context)
@@ -483,8 +496,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   updateSettings: (settings) => set((state) => ({ settings: { ...state.settings, ...settings } })),
 
-  resetSave: () =>
+  resetSave: () => {
+    useLocalPartyStore.getState().setPlayerName(defaultPlayerName)
     set({
+      playerName: defaultPlayerName,
       coins: 0,
       avatar: defaultAvatar,
       unlockedItems: [],
@@ -499,21 +514,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       botMemory: {},
       obby: initialObby,
       chat: [systemMessage('Save reset')],
-    }),
+    })
+  },
 
   loadFromSave: (save) =>
-    set((state) => ({
-      coins: save.coins ?? state.coins,
-      avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
-      unlockedItems: save.unlockedItems ?? state.unlockedItems,
-      earnedBadges: save.earnedBadges ?? state.earnedBadges,
-      placedBlocks: save.placedBlocks ?? state.placedBlocks,
-      questProgress: save.questProgress ?? state.questProgress,
-      botMemory: save.botMemory ?? state.botMemory,
-      settings: save.settings ?? state.settings,
-      obby: { ...state.obby, bestTime: save.obbyBestTime },
-      loading: false,
-    })),
+    set((state) => {
+      const playerName = save.playerName ? sanitizePartyName(save.playerName) : state.playerName
+      useLocalPartyStore.getState().setPlayerName(playerName)
+      return {
+        playerName,
+        coins: save.coins ?? state.coins,
+        avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
+        unlockedItems: save.unlockedItems ?? state.unlockedItems,
+        earnedBadges: save.earnedBadges ?? state.earnedBadges,
+        placedBlocks: save.placedBlocks ?? state.placedBlocks,
+        questProgress: save.questProgress ?? state.questProgress,
+        botMemory: save.botMemory ?? state.botMemory,
+        settings: save.settings ?? state.settings,
+        obby: { ...state.obby, bestTime: save.obbyBestTime },
+        loading: false,
+      }
+    }),
 
   markSaving: () => set({ saveStatus: 'saving' }),
   markSaved: () => set({ saveStatus: 'saved' }),
@@ -521,6 +542,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 export function makeSaveSnapshot(state: GameState): GameSave {
   return {
+    playerName: state.playerName,
     coins: state.coins,
     avatar: state.avatar,
     unlockedItems: state.unlockedItems,

@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.4.1-start-flow-menu] - 2026-07-13
+
+### Added
+
+- Added a required Start -> Customization Hub -> character name -> game flow.
+- Added a name setup screen that saves the player's character name and uses it for the in-world label, local chat, Local Party identity, and leaderboard.
+- Added a single in-game hamburger menu with Customise Character, quests, build mode, shop, buddies, Local Party, leaderboard, badges, emotes, settings, and main menu actions.
+
+### Changed
+
+- Removed splash quick-action shortcuts so new sessions cannot bypass avatar setup.
+- Simplified desktop and mobile HUDs to game status only, keeping non-game panels inside the hamburger menu.
+- Moved save loading/saving to the app shell so setup changes persist before the 3D world starts.
+- Updated Android version metadata to `1.4.1` / `10401`.
+
+### Fixed
+
+- Prevented settings/shop/avatar controls from floating over gameplay and character name labels.
+- Ensured quick-reply chat uses the chosen character name instead of the generic `You` label.
+
+### Known Issues
+
+- The startup setup flow is local only; there are no online accounts or cloud profiles.
+
 ## [v1.4.0-avatar-customizer] - 2026-07-13
 
 ### Added

@@ -288,6 +288,7 @@ function PlayerController() {
   const setPlayer = useGameStore((state) => state.setPlayer)
   const touch = useGameStore((state) => state.touch)
   const avatar = useGameStore((state) => state.avatar)
+  const playerName = useGameStore((state) => state.playerName)
   const playerEmote = useGameStore((state) => state.playerEmote)
   const buildMode = useGameStore((state) => state.buildMode)
   const placeBlock = useGameStore((state) => state.placeBlock)
@@ -407,7 +408,7 @@ function PlayerController() {
         pantsColor={avatar.pantsColor}
         accessory={avatar.accessory}
         face={avatar.face}
-        username="You"
+        username={playerName}
         hat={avatar.hat !== 'none'}
         emote={playerEmote}
         action={airborne ? 'jump' : moving ? 'run' : 'idle'}

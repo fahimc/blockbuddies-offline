@@ -243,3 +243,16 @@
 - [x] Add purchase/equip logic for customisation catalog items
 - [x] Add unit tests for customisation purchases and Playwright smoke coverage for the hub
 - [x] Bump Android debug APK version metadata to 1.4.0 / 10400
+
+## Post-phase start flow and hamburger menu
+
+- [x] Route Start through character customisation before gameplay
+- [x] Add character name setup before entering the 3D town
+- [x] Persist the character name with the local save
+- [x] Use the character name in the world label, chat, Local Party, and leaderboard
+- [x] Replace scattered in-game panel buttons with a hamburger menu drawer
+- [x] Add Customise Character to the hamburger menu
+- [x] Simplify the desktop and mobile HUD to game status only
+- [x] Add unit tests for setup name persistence
+- [x] Add Playwright smoke coverage for startup flow and hamburger panels
+- [x] Bump Android debug APK version metadata to 1.4.1 / 10401

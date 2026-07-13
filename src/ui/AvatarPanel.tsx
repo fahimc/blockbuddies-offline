@@ -43,7 +43,12 @@ const clothingTabs = ['Tops', 'Hoodies', 'Shirts', 'Pants', 'Overalls', 'Shoes']
 const accessoryTabs = ['All', 'Hats', 'Glasses', 'Headphones', 'Backpacks', 'Pets', 'Effects']
 const emoteTabs = ['All', 'Dances', 'Gestures', 'Sits', 'Actions']
 
-export function AvatarPanel() {
+type AvatarPanelProps = {
+  onBack?: () => void
+  onComplete?: () => void
+}
+
+export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
   const [step, setStep] = useState<CustomizationStepId>('hub')
   const avatar = useGameStore((state) => state.avatar)
   const coins = useGameStore((state) => state.coins)
@@ -56,8 +61,28 @@ export function AvatarPanel() {
   const ownedCount = allCustomizationItems.filter((item) => !item.shopItemId || unlocked.includes(item.shopItemId)).length
 
   const selectItem = (item: CustomizationItem) => selectCustomizationItem(item)
-  const next = () => setStep(stepOrder[Math.min(stepOrder.length - 1, stepIndex + 1)])
-  const previous = () => (step === 'hub' ? setOpenPanel(undefined) : setStep(stepOrder[Math.max(0, stepIndex - 1)]))
+  const next = () => {
+    if (stepIndex >= stepOrder.length - 1) {
+      if (onComplete) {
+        onComplete()
+      } else {
+        setOpenPanel(undefined)
+      }
+      return
+    }
+    setStep(stepOrder[stepIndex + 1])
+  }
+  const previous = () => {
+    if (step === 'hub') {
+      if (onBack) {
+        onBack()
+      } else {
+        setOpenPanel(undefined)
+      }
+      return
+    }
+    setStep(stepOrder[Math.max(0, stepIndex - 1)])
+  }
   const randomize = () => {
     const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)]
     updateAvatar({

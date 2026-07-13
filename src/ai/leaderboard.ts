@@ -5,6 +5,7 @@ export function createLocalLeaderboard(
   playerCoins: number,
   bestObbyTime: number | undefined,
   memories: Record<string, BotMemory>,
+  playerName = 'You',
 ): LeaderboardRow[] {
   const botRows = botProfiles.map((bot, index) => {
     const memory = memories[bot.id]
@@ -18,7 +19,7 @@ export function createLocalLeaderboard(
   })
   const playerScore = playerCoins + (bestObbyTime ? Math.max(0, 200 - bestObbyTime) : 0)
   return [
-    { username: 'You', score: playerScore, label: bestObbyTime ? `${bestObbyTime}s obby` : 'exploring', isPlayer: true },
+    { username: playerName, score: playerScore, label: bestObbyTime ? `${bestObbyTime}s obby` : 'exploring', isPlayer: true },
     ...botRows,
   ].sort((a, b) => b.score - a.score)
 }

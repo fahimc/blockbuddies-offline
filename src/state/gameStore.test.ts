@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { clothingItems } from '../data/avatarCustomization'
-import { defaultAvatar, normalizeSavedAvatar, useGameStore } from './gameStore'
+import { defaultAvatar, makeSaveSnapshot, normalizeSavedAvatar, useGameStore } from './gameStore'
 
 describe('avatar save migration', () => {
   it('upgrades the legacy yellow and blue default avatar', () => {
@@ -47,5 +47,19 @@ describe('avatar customization selection', () => {
     expect(useGameStore.getState().coins).toBe(1)
     expect(useGameStore.getState().unlockedItems).not.toContain(item.shopItemId)
     expect(useGameStore.getState().avatar.shirtColor).toBe(defaultAvatar.shirtColor)
+  })
+})
+
+describe('player setup flow', () => {
+  it('sanitizes and stores the character name', () => {
+    useGameStore.getState().setPlayerName('  Pixel@@ Buddy!!!  ')
+
+    expect(useGameStore.getState().playerName).toBe('Pixel Buddy')
+  })
+
+  it('includes the character name in save snapshots', () => {
+    useGameStore.setState({ playerName: 'SaveTester' })
+
+    expect(makeSaveSnapshot(useGameStore.getState()).playerName).toBe('SaveTester')
   })
 })
