@@ -1,4 +1,4 @@
-import { ArrowUp, Hand, X } from 'lucide-react'
+import { ArrowUp, Hand, RotateCw, X } from 'lucide-react'
 import type { PointerEvent } from 'react'
 import { useRef, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
@@ -16,6 +16,7 @@ export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
   const beginObby = useGameStore((state) => state.beginObby)
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
+  const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
   const joystickRef = useRef<HTMLDivElement>(null)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
@@ -105,13 +106,18 @@ export function TouchControls() {
       </button>
 
       <div className="pointer-events-auto flex items-end gap-2">
+        {buildMode ? (
+          <button type="button" className="mobile-use-button" onClick={rotateBuildPiece} title="Rotate">
+            <RotateCw size={22} aria-hidden />
+          </button>
+        ) : null}
         <button
           type="button"
           className="mobile-use-button"
           onPointerDown={press({ interact: true })}
           onPointerUp={release({ interact: false })}
           onPointerCancel={release({ interact: false })}
-          title="Interact"
+          title={buildMode ? 'Place' : 'Interact'}
         >
           <Hand size={22} aria-hidden />
         </button>

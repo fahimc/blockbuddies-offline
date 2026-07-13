@@ -18,6 +18,11 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     await hudButton.scrollIntoViewIfNeeded()
     await hudButton.click()
     await expect(page.getByRole('heading', { name: title === 'Server' ? 'Local Server' : title })).toBeVisible()
+    if (title === 'Build') {
+      await expect(page.getByRole('button', { name: 'House' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Auto Street' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Rotate' })).toBeVisible()
+    }
     await page.getByTitle('Close').click()
   }
 

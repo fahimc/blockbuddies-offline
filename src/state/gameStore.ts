@@ -10,11 +10,20 @@ import { advanceQuest, createQuestProgress } from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
 import { finishObby, startObby, updateCheckpoint } from '../ai/obby'
-import { canPlaceBlock, nextBuildPosition } from '../ai/buildMode'
+import {
+  canPlacePiece,
+  createBuildMapStamp,
+  createBuildPiece,
+  maxBuildPieces,
+  mergeBuildPieces,
+  nextBuildPosition,
+  rotateBuildYaw,
+} from '../ai/buildMode'
 import type {
   AvatarSettings,
   BadgeId,
   BuildBlock,
+  BuildPieceId,
   BotMemory,
   BotRuntime,
   ChatMessage,
@@ -62,7 +71,9 @@ type GameState = GameSave & {
   openPanel?: 'quests' | 'shop' | 'avatar' | 'settings' | 'friends' | 'leaderboard' | 'badges' | 'build' | 'server' | 'emotes'
   playerEmote: PlayerEmote
   buildMode: boolean
+  selectedBuildPiece: BuildPieceId
   selectedBuildColor: string
+  buildRotation: number
   setScreen: (screen: 'menu' | 'game') => void
   setPlayer: (position: Vec3, yaw: number) => void
   setTouch: (input: Partial<TouchInput>) => void
@@ -78,8 +89,11 @@ type GameState = GameSave & {
   applyOwnedItem: (id: ShopItemId) => void
   setPlayerEmote: (emote: PlayerEmote) => void
   setBuildMode: (enabled: boolean) => void
+  setSelectedBuildPiece: (piece: BuildPieceId) => void
   setSelectedBuildColor: (color: string) => void
+  rotateBuildPiece: () => void
   placeBlock: () => void
+  placeMapStamp: () => void
   removeLastBlock: () => void
   beginObby: (now: number) => void
   updateObby: (now: number, checkpoints: Vec3[]) => void
@@ -175,7 +189,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   saveStatus: 'idle',
   playerEmote: 'none',
   buildMode: false,
+  selectedBuildPiece: 'block',
   selectedBuildColor: '#38bdf8',
+  buildRotation: 0,
 
   setScreen: (screen) => set({ screen }),
   setPlayer: (playerPosition, playerYaw) => set({ playerPosition, playerYaw }),
@@ -293,19 +309,57 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setBuildMode: (buildMode) => set({ buildMode }),
+  setSelectedBuildPiece: (selectedBuildPiece) => set({ selectedBuildPiece }),
   setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
+  rotateBuildPiece: () => set((state) => ({ buildRotation: rotateBuildYaw(state.buildRotation) })),
   placeBlock: () =>
     set((state) => {
-      const position = nextBuildPosition(state.playerPosition, state.playerYaw)
-      if (!canPlaceBlock(state.placedBlocks, position)) return state
+      if (state.placedBlocks.length >= maxBuildPieces) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage('Custom world limit reached')],
+        }
+      }
+      const position = nextBuildPosition(state.playerPosition, state.playerYaw, state.selectedBuildPiece)
+      if (!canPlacePiece(state.placedBlocks, position, state.selectedBuildPiece)) return state
       const block: BuildBlock = {
-        id: crypto.randomUUID(),
-        position,
-        color: state.selectedBuildColor,
+        ...createBuildPiece({
+          id: crypto.randomUUID(),
+          kind: state.selectedBuildPiece,
+          position,
+          color: state.selectedBuildColor,
+          rotation: state.buildRotation,
+        }),
       }
       return {
         placedBlocks: [...state.placedBlocks, block],
-        chat: [...state.chat.slice(-60), systemMessage('Block placed')],
+        chat: [...state.chat.slice(-60), systemMessage('World piece placed')],
+        earnedBadges: state.earnedBadges.includes('builder')
+          ? state.earnedBadges
+          : [...state.earnedBadges, 'builder'],
+      }
+    }),
+  placeMapStamp: () =>
+    set((state) => {
+      if (state.placedBlocks.length >= maxBuildPieces) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage('Custom world limit reached')],
+        }
+      }
+      const origin = nextBuildPosition(state.playerPosition, state.playerYaw, 'road')
+      const stamp = createBuildMapStamp({
+        origin,
+        yaw: state.buildRotation,
+        idFactory: () => crypto.randomUUID(),
+      })
+      const accepted = mergeBuildPieces(state.placedBlocks, stamp, maxBuildPieces)
+      if (accepted.length === 0) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage('No room for that street map')],
+        }
+      }
+      return {
+        placedBlocks: [...state.placedBlocks, ...accepted],
+        chat: [...state.chat.slice(-60), systemMessage(`Street map added: ${accepted.length} pieces`)],
         earnedBadges: state.earnedBadges.includes('builder')
           ? state.earnedBadges
           : [...state.earnedBadges, 'builder'],
@@ -389,7 +443,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       placedBlocks: [],
       buildMode: false,
       playerEmote: 'none',
+      selectedBuildPiece: 'block',
       selectedBuildColor: '#38bdf8',
+      buildRotation: 0,
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,

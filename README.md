@@ -53,6 +53,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
   live synced player avatars.
+- Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
+  lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Kenney CC0 blocky character models and prototype grid textures.
 - Landscape mobile game HUD with chat icon, virtual joystick, circular jump,
   interact, and reset/remove controls.
@@ -162,6 +164,10 @@ The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.
 
+The `v1.3.9` APK adds a mobile-friendly custom world builder. The Build panel
+can place individual prefabs or stamp a tiled street map generated from a small
+procedural layout. Build pieces are saved locally with the rest of the game.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -192,7 +198,8 @@ Roblox-inspired prototype.
 - Local Party supports nearby manual peer-to-peer sessions only; it has no cloud
   matchmaking, relay/TURN fallback, persistence for remote players, or account
   system.
-- Building collision is visual-only; floor/checkpoint safety is implemented.
+- Custom world pieces are visual-only prefabs; floor/checkpoint safety is implemented.
+- Build mode limits custom world pieces to keep mobile scenes responsive.
 - Ghost racers are represented by buddy reactions rather than full racing AI.
 - The Three.js bundle is large and should be code-split before a store release.
 - Android production signing is not configured; release artifacts use debug APKs.

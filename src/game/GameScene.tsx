@@ -7,7 +7,7 @@ import { botProfiles } from '../data/botProfiles'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
-import type { BotRuntime, Vec3 } from './types'
+import type { BotRuntime, BuildBlock, Vec3 } from './types'
 
 const obbyCheckpoints: Vec3[] = [
   [16, 0.8, 12],
@@ -687,11 +687,178 @@ function PlacedBlocks() {
   return (
     <>
       {blocks.map((block) => (
-        <mesh key={block.id} castShadow receiveShadow position={block.position}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={block.color} />
-        </mesh>
+        <BuildPiece key={block.id} block={block} />
       ))}
     </>
+  )
+}
+
+function BuildPiece({ block }: { block: BuildBlock }) {
+  const rotation = block.rotation ?? 0
+  return (
+    <group position={block.position} rotation={[0, rotation, 0]}>
+      {block.kind === 'road' ? <RoadPiece color={block.color} /> : null}
+      {block.kind === 'house' ? <HousePiece color={block.color} /> : null}
+      {block.kind === 'building' ? <BuildingPiece color={block.color} /> : null}
+      {block.kind === 'shop' ? <ShopPiece color={block.color} /> : null}
+      {block.kind === 'car' ? <CarPiece color={block.color} /> : null}
+      {block.kind === 'tree' ? <TreePiece color={block.color} /> : null}
+      {block.kind === 'lamp' ? <LampPiece color={block.color} /> : null}
+      {!block.kind || block.kind === 'block' ? <BlockPiece color={block.color} /> : null}
+    </group>
+  )
+}
+
+function BlockPiece({ color }: { color: string }) {
+  return (
+    <mesh castShadow receiveShadow>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={color} roughness={0.72} />
+    </mesh>
+  )
+}
+
+function RoadPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 0, 0]}>
+        <boxGeometry args={[2.1, 0.08, 2.1]} />
+        <meshStandardMaterial color={color} roughness={0.86} />
+      </mesh>
+      <mesh position={[0, 0.055, 0]}>
+        <boxGeometry args={[0.12, 0.02, 1.35]} />
+        <meshStandardMaterial color="#fde047" emissive="#facc15" emissiveIntensity={0.12} />
+      </mesh>
+    </group>
+  )
+}
+
+function HousePiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow receiveShadow position={[0, 0.75, 0]}>
+        <boxGeometry args={[1.65, 1.45, 1.45]} />
+        <meshStandardMaterial color={color} roughness={0.76} />
+      </mesh>
+      <mesh castShadow position={[0, 1.65, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[1.25, 0.8, 4]} />
+        <meshStandardMaterial color="#ef4444" roughness={0.78} />
+      </mesh>
+      <mesh position={[0, 0.62, 0.74]}>
+        <boxGeometry args={[0.36, 0.68, 0.04]} />
+        <meshStandardMaterial color="#7c2d12" roughness={0.82} />
+      </mesh>
+      <mesh position={[-0.48, 1.02, 0.75]}>
+        <boxGeometry args={[0.32, 0.28, 0.04]} />
+        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
+      </mesh>
+      <mesh position={[0.48, 1.02, 0.75]}>
+        <boxGeometry args={[0.32, 0.28, 0.04]} />
+        <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
+      </mesh>
+    </group>
+  )
+}
+
+function BuildingPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow receiveShadow position={[0, 1.15, 0]}>
+        <boxGeometry args={[1.55, 2.3, 1.55]} />
+        <meshStandardMaterial color={color} roughness={0.78} />
+      </mesh>
+      {[0.55, 1.15, 1.75].map((height) => (
+        <group key={height}>
+          <mesh position={[-0.43, height, 0.79]}>
+            <boxGeometry args={[0.28, 0.28, 0.04]} />
+            <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
+          </mesh>
+          <mesh position={[0.43, height, 0.79]}>
+            <boxGeometry args={[0.28, 0.28, 0.04]} />
+            <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
+          </mesh>
+        </group>
+      ))}
+      <mesh castShadow position={[0, 2.45, 0]}>
+        <boxGeometry args={[1.85, 0.26, 1.85]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.76} />
+      </mesh>
+    </group>
+  )
+}
+
+function ShopPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow receiveShadow position={[0, 0.85, 0]}>
+        <boxGeometry args={[2, 1.55, 1.5]} />
+        <meshStandardMaterial color={color} roughness={0.74} />
+      </mesh>
+      <mesh castShadow position={[0, 1.72, 0.18]}>
+        <boxGeometry args={[2.25, 0.22, 1.8]} />
+        <meshStandardMaterial color="#0f172a" roughness={0.78} />
+      </mesh>
+      <mesh castShadow position={[0, 1.48, 0.86]}>
+        <boxGeometry args={[2.2, 0.24, 0.3]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.72} />
+      </mesh>
+      <mesh position={[0, 0.74, 0.77]}>
+        <boxGeometry args={[0.55, 0.85, 0.05]} />
+        <meshStandardMaterial color="#7c2d12" roughness={0.82} />
+      </mesh>
+    </group>
+  )
+}
+
+function CarPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.38, 0]}>
+        <boxGeometry args={[1.5, 0.42, 0.82]} />
+        <meshStandardMaterial color={color} roughness={0.68} />
+      </mesh>
+      <mesh castShadow position={[0.08, 0.7, -0.02]}>
+        <boxGeometry args={[0.72, 0.38, 0.68]} />
+        <meshStandardMaterial color="#bfdbfe" roughness={0.58} />
+      </mesh>
+      {[-0.55, 0.55].map((x) =>
+        [-0.46, 0.46].map((z) => (
+          <mesh key={`${x}-${z}`} castShadow position={[x, 0.18, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.17, 0.17, 0.14, 12]} />
+            <meshStandardMaterial color="#111827" roughness={0.8} />
+          </mesh>
+        )),
+      )}
+    </group>
+  )
+}
+
+function TreePiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.58, 0]}>
+        <cylinderGeometry args={[0.13, 0.2, 1.15, 8]} />
+        <meshStandardMaterial color="#92400e" roughness={0.82} />
+      </mesh>
+      <mesh castShadow position={[0, 1.35, 0]}>
+        <dodecahedronGeometry args={[0.68, 0]} />
+        <meshStandardMaterial color={color} roughness={0.74} />
+      </mesh>
+    </group>
+  )
+}
+
+function LampPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.8, 0]}>
+        <cylinderGeometry args={[0.06, 0.08, 1.6, 8]} />
+        <meshStandardMaterial color="#111827" roughness={0.78} />
+      </mesh>
+      <mesh castShadow position={[0, 1.72, 0]}>
+        <sphereGeometry args={[0.28, 12, 12]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.45} />
+      </mesh>
+    </group>
   )
 }

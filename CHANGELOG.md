@@ -1,5 +1,31 @@
 # Changelog
 
+## [v1.3.9-world-builder] - 2026-07-13
+
+### Added
+
+- Added a prefab-based custom world builder with blocks, roads, houses, towers, shops, cars, trees, and lamps.
+- Added mobile-friendly Build panel controls for prefab selection, colour swatches, rotation, placement, undo, and Auto Street generation.
+- Added a procedural street-map stamp that tiles roads, buildings, props, and cars from a deterministic map pattern.
+- Added low-poly prefab renderers for custom world pieces in the 3D scene.
+- Added build-mode unit tests for prefab placement, footprint collision, rotation, map generation, and merge filtering.
+- Added Playwright smoke coverage for the new Build panel controls.
+
+### Changed
+
+- Existing cube placement remains compatible, but saved custom world pieces can now include kind and rotation metadata.
+- Updated Android version metadata to `1.3.9` / `10309`.
+
+### Fixed
+
+- Prevented overlapping custom world pieces with footprint-aware collision checks.
+- Added a custom world piece limit to avoid unbounded mobile scene growth.
+
+### Known Issues
+
+- Custom build pieces are visual prefabs; they do not yet add full physics colliders or road navigation paths for bots.
+- Debug APK signing is used; production signing is still not configured.
+
 ## [v1.3.8-local-party-multiplayer] - 2026-07-12
 
 ### Added

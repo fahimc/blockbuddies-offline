@@ -129,10 +129,14 @@ export type BadgeDefinition = {
   icon: string
 }
 
+export type BuildPieceId = 'block' | 'road' | 'house' | 'building' | 'shop' | 'car' | 'tree' | 'lamp'
+
 export type BuildBlock = {
   id: string
+  kind?: BuildPieceId
   position: Vec3
   color: string
+  rotation?: number
 }
 
 export type LeaderboardRow = {

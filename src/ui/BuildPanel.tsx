@@ -1,48 +1,118 @@
-import { Blocks, Trash2 } from 'lucide-react'
+import { Blocks, Map, RotateCw, Sparkles, Trash2 } from 'lucide-react'
+import { buildPieceDefinitions } from '../data/buildPieces'
+import type { BuildPieceId } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { Panel } from './Panel'
 
-const colors = ['#38bdf8', '#22c55e', '#f97316', '#facc15', '#f472b6', '#a78bfa']
+const pieceIcons: Record<BuildPieceId, string> = {
+  block: 'B',
+  road: '=',
+  house: 'H',
+  building: 'T',
+  shop: '$',
+  car: 'C',
+  tree: 'TR',
+  lamp: 'L',
+}
 
 export function BuildPanel() {
   const buildMode = useGameStore((state) => state.buildMode)
+  const selectedBuildPiece = useGameStore((state) => state.selectedBuildPiece)
   const selectedBuildColor = useGameStore((state) => state.selectedBuildColor)
+  const buildRotation = useGameStore((state) => state.buildRotation)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
   const setBuildMode = useGameStore((state) => state.setBuildMode)
+  const setSelectedBuildPiece = useGameStore((state) => state.setSelectedBuildPiece)
   const setSelectedBuildColor = useGameStore((state) => state.setSelectedBuildColor)
+  const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const placeBlock = useGameStore((state) => state.placeBlock)
+  const placeMapStamp = useGameStore((state) => state.placeMapStamp)
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
+  const selectedPiece = buildPieceDefinitions.find((piece) => piece.id === selectedBuildPiece) ?? buildPieceDefinitions[0]
+  const colors = selectedPiece.colors
 
   return (
     <Panel title="Build">
-      <label className="mb-3 flex min-h-11 items-center justify-between rounded-lg bg-slate-100 px-3 font-black">
+      <label className="bb-setting-row mb-3">
         Build mode
-        <input type="checkbox" checked={buildMode} onChange={(event) => setBuildMode(event.target.checked)} className="h-6 w-6" />
+        <span className={`bb-toggle ${buildMode ? 'on' : ''}`}>
+          <input type="checkbox" checked={buildMode} onChange={(event) => setBuildMode(event.target.checked)} />
+          <span />
+        </span>
       </label>
-      <h3 className="mb-2 font-black">Block colour</h3>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {colors.map((color) => (
+
+      <div className="mb-3 grid grid-cols-4 gap-2">
+        {buildPieceDefinitions.map((piece) => (
           <button
-            key={color}
+            key={piece.id}
             type="button"
-            onClick={() => setSelectedBuildColor(color)}
-            className={`h-10 w-10 rounded-lg border-4 shadow ${selectedBuildColor === color ? 'border-slate-900' : 'border-white'}`}
-            style={{ background: color }}
-            title={color}
-          />
+            onClick={() => {
+              setSelectedBuildPiece(piece.id)
+              setSelectedBuildColor(piece.defaultColor)
+            }}
+            className={`bb-build-piece ${selectedBuildPiece === piece.id ? 'selected' : ''}`}
+            aria-label={piece.label}
+            title={piece.label}
+          >
+            <span className="text-lg" aria-hidden>
+              {pieceIcons[piece.id]}
+            </span>
+            <span>{piece.label}</span>
+          </button>
         ))}
       </div>
-      <div className="flex gap-2">
-        <button type="button" onClick={placeBlock} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 font-black text-white">
+
+      <div className="mb-3 rounded-xl bg-white p-3 shadow-sm">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div>
+            <h3 className="font-black">{selectedPiece.label}</h3>
+            <p className="text-xs font-black uppercase text-slate-500">{selectedPiece.category}</p>
+          </div>
+          <span className="rounded-lg bg-sky-100 px-3 py-1 text-xs font-black text-sky-800">
+            {Math.round((buildRotation / (Math.PI * 2)) * 360)} deg
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {colors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => setSelectedBuildColor(color)}
+              className={`h-10 w-10 rounded-lg border-4 shadow ${selectedBuildColor === color ? 'border-slate-900' : 'border-white'}`}
+              style={{ background: color }}
+              title={color}
+              aria-label={`Use colour ${color}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={placeBlock} className="bb-build-action place">
           <Blocks size={18} aria-hidden />
           Place
         </button>
-        <button type="button" onClick={removeLastBlock} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 font-black text-white">
+        <button type="button" onClick={rotateBuildPiece} className="bb-build-action rotate">
+          <RotateCw size={18} aria-hidden />
+          Rotate
+        </button>
+        <button type="button" onClick={placeMapStamp} className="bb-build-action map">
+          <Map size={18} aria-hidden />
+          Auto Street
+        </button>
+        <button type="button" onClick={removeLastBlock} className="bb-build-action undo">
           <Trash2 size={18} aria-hidden />
           Undo
         </button>
       </div>
-      <p className="mt-3 text-sm font-bold text-slate-500">Placed blocks: {placedBlocks.length}</p>
+
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-800">
+        <span className="inline-flex items-center gap-2">
+          <Sparkles size={16} aria-hidden />
+          Custom world
+        </span>
+        <span>{placedBlocks.length}/240</span>
+      </div>
     </Panel>
   )
 }

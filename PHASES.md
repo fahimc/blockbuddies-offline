@@ -217,3 +217,16 @@
 - [x] Add unit tests for local party signaling and snapshot helpers
 - [x] Add smoke coverage for the Local Party UI
 - [x] Bump Android debug APK version metadata to 1.3.8 / 10308
+
+## Post-phase custom world builder
+
+- [x] Add prefab build pieces for blocks, roads, houses, towers, shops, cars, trees, and lamps
+- [x] Add mobile-friendly Build panel with prefab selection, colour swatches, rotation, place, Auto Street, and undo
+- [x] Add footprint-aware placement checks to prevent overlapping custom world pieces
+- [x] Add procedural tiled street-map generation from a deterministic map pattern
+- [x] Render custom world pieces as low-poly Three.js prefabs
+- [x] Keep legacy saved cube blocks compatible with the new build-piece model
+- [x] Add a custom world piece limit for mobile performance
+- [x] Add unit tests for prefab placement, rotation, procedural maps, and collision filtering
+- [x] Add Playwright smoke coverage for the Build panel world-builder controls
+- [x] Bump Android debug APK version metadata to 1.3.9 / 10309
