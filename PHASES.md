@@ -261,8 +261,19 @@
 
 - [x] Keep the Body & Style avatar preview visible on portrait phones
 - [x] Replace static Body/Hair/Face/Colours buttons with working sub-section navigation
-- [x] Show only the active control group instead of all colour/style panels at once
+- [x] Add focused Body, Hair, Face, and Colours control groups
 - [x] Dock mobile colour controls below the avatar instead of over it
 - [x] Tighten compact customizer header sizing
 - [x] Add smoke coverage for Colours to Hair switching
 - [x] Bump Android debug APK version metadata to 1.4.2 / 10402
+
+## Post-phase customizer phone columns
+
+- [x] Convert portrait Body & Style into category, character, and controls columns
+- [x] Size the character preview column at 40% of the phone-width customizer
+- [x] Keep categories compact on the left rail
+- [x] Move all Body & Style controls into a scrollable right-side column
+- [x] Expand Body & Style controls to include skin, hair, eyes, accents, hair style, and face expression
+- [x] Add measured Playwright regression coverage for the portrait column layout
+- [x] Capture production portrait review screenshot
+- [x] Bump Android debug APK version metadata to 1.4.3 / 10403

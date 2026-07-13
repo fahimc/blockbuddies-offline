@@ -41,6 +41,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies fixed mobile body colours layout](docs/review/avatar-body-layout-v142-phone.png)
 
+![BlockBuddies phone-width customizer columns](docs/review/avatar-body-columns-v143-phone.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -57,8 +59,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
-- Body & Style customizer keeps the character preview visible while switching
-  between Body, Hair, Face, and Colours controls on phones.
+- Body & Style customizer uses phone-width columns for categories, character
+  preview, and controls while switching between Body, Hair, Face, and Colours.
 - Startup flow now routes Start through character customisation, character name
   entry, and then the 3D town.
 - Chosen character names appear above the player, in quick-reply chat, in Local

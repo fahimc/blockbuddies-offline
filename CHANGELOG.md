@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.4.3-customizer-phone-columns] - 2026-07-13
+
+### Added
+
+- Added production review screenshot for the phone-width Body & Style customizer columns.
+- Added Playwright smoke coverage that measures the category rail, character column, and controls column in a portrait phone viewport.
+
+### Changed
+
+- Reworked the portrait Body & Style customizer into three columns: compact categories, a 40% character preview column, and a scrollable controls column.
+- Expanded the Body & Style section to show skin, hair, eye, accent, hair style, and face controls in the right-side column.
+- Enlarged the character preview inside the middle column so colour changes remain visible on phones.
+- Updated Android version metadata to `1.4.3` / `10403`.
+
+### Fixed
+
+- Fixed the portrait customizer collapsing the avatar stage to zero width in production-style mobile sizing.
+- Fixed colour and style panels crowding the top step indicator or covering the character preview on mobile portrait screens.
+
+### Known Issues
+
+- The customizer still uses procedural CSS/React item art rather than dedicated image sprites for every cosmetic item.
+
 ## [v1.4.2-customizer-body-layout] - 2026-07-13
 
 ### Added

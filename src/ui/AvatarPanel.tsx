@@ -237,10 +237,34 @@ function BodyStep({
               onPick={(bodyColor) => updateAvatar({ bodyColor })}
             />
             <PalettePanel
+              title="Hair Colour"
+              colors={hairColors}
+              active={avatar.hairColor ?? hairColors[0]}
+              onPick={(hairColor) => updateAvatar({ hairColor })}
+            />
+            <PalettePanel
+              title="Eye Colour"
+              colors={eyeColors}
+              active={avatar.eyeColor ?? eyeColors[0]}
+              onPick={(eyeColor) => updateAvatar({ eyeColor })}
+            />
+            <PalettePanel
               title="Accent Colour"
               colors={accentColors}
               active={avatar.accentColor ?? accentColors[0]}
               onPick={(accentColor) => updateAvatar({ accentColor })}
+            />
+            <MiniStrip
+              title="Hair Style"
+              items={hairStyles}
+              active={avatar.hairStyle ?? 'spiky'}
+              onPick={(patch) => updateAvatar(patch)}
+            />
+            <MiniStrip
+              title="Face Expression"
+              items={faceStyles}
+              active={avatar.face ?? 'smile'}
+              onPick={(patch) => updateAvatar(patch)}
             />
           </>
         ) : null}
