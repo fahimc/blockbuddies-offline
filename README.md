@@ -53,6 +53,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies rescaled gameplay world](docs/review/v146-gameplay-scale-collision.png)
 
+![BlockBuddies real-world scale customizer](docs/review/v147-scale-customizer-phone.png)
+
+![BlockBuddies real-world scale gameplay](docs/review/v147-real-world-scale-gameplay.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -95,6 +99,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Coarse visible-object collision prevents the player from walking through
   buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
   pieces while still sliding along blocked axes.
+- Shared real-world scale rules keep the block avatar, doors, floor heights,
+  buildings, cars, roads, trees, and lamps in proportion to a nominal 1.78 m
+  person.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
@@ -223,6 +230,11 @@ build-mode prefabs are larger, visible scenery blocks the player with coarse
 collision, the old tight exploration clamp is removed, and the customizer/name
 screens render the real in-game avatar.
 
+The `v1.4.7` APK replaces the remaining arbitrary object-height math with a
+shared real-world ratio. Doors, floors, buildings, cars, buses, roads, lamps,
+trees, landmarks, and build-mode prefabs are derived from the avatar-as-person
+scale and covered by unit tests.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -258,6 +270,7 @@ Roblox-inspired prototype.
 - Procedural borough buildings and props use coarse player collision; roads and
   pavements remain traversable scenery and bots do not yet path around every
   obstacle.
+- Camera occlusion around very tall close buildings is still basic.
 - Build mode limits custom world pieces to keep mobile scenes responsive.
 - Some cosmetic customizer items are visual-only and do not yet have distinct
   3D gameplay geometry.

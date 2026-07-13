@@ -1,5 +1,33 @@
 # Changelog
 
+## [v1.4.7-real-world-scale] - 2026-07-13
+
+### Added
+
+- Added a shared world-scale module that treats the current block avatar as a nominal 1.78 m person and derives doors, floors, buildings, cars, buses, lamps, trees, phone boxes, and roads from that ratio.
+- Added unit tests that enforce human-scale door height, floor height, car height/length, and integer building floor heights.
+- Added procedural-world tests that verify generated buildings are at least two floors high and emit full-height doors.
+- Added review screenshots for the corrected phone customizer and gameplay scale.
+
+### Changed
+
+- Rescaled static town buildings, generated borough buildings, landmarks, build-mode houses, towers, shops, cars, trees, lamps, buses, and roads to use the shared real-world ratio.
+- Reworked building doors and windows so doors are taller than the avatar and windows are spaced per floor instead of arbitrary rows.
+- Increased build-mode footprints and auto-street spacing to match the larger real-world prefabs.
+- Updated Android version metadata to `1.4.7` / `10407`.
+
+### Fixed
+
+- Fixed doors rendering far too short compared with the player character.
+- Fixed buildings using arbitrary heights that made the character look too large relative to houses and towers.
+- Fixed cars and roads using toy-scale dimensions relative to the avatar.
+
+### Known Issues
+
+- The world now uses proportional scale rules, but camera occlusion around very tall nearby buildings is still basic.
+- Collision boxes remain coarse axis-aligned blockers; bot pathfinding still does not navigate every obstacle.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.4.6-scale-collision-avatar-preview] - 2026-07-13
 
 ### Added

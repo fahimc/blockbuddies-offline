@@ -1,4 +1,5 @@
 import type { Vec3 } from '../game/types'
+import { buildingHeightForFloors, floorCountFromHeight, meters, realScale } from '../game/scale'
 
 export type ProceduralPieceKind =
   | 'ground'
@@ -8,6 +9,7 @@ export type ProceduralPieceKind =
   | 'line'
   | 'park'
   | 'building'
+  | 'door'
   | 'roof'
   | 'window'
   | 'tree-trunk'
@@ -94,16 +96,16 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   const hasHorizontalRoad = Math.abs(cz) % 2 === 0
   const hasVerticalRoad = Math.abs(cx) % 2 === 0
   if (hasHorizontalRoad) {
-    pieces.push(piece(`road-x:${cx}:${cz}`, 'road', [centerX, 0.01, centerZ], [chunkSize, 0.08, 4.2], '#9ca3af'))
+    pieces.push(piece(`road-x:${cx}:${cz}`, 'road', [centerX, 0.01, centerZ], [chunkSize, 0.08, realScale.roadTile], '#9ca3af'))
     pieces.push(piece(`line-x:${cx}:${cz}`, 'line', [centerX, 0.065, centerZ], [chunkSize * 0.8, 0.025, 0.14], '#fde047'))
-    pieces.push(piece(`pavement-x-a:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ - 3.2], [chunkSize, 0.055, 1.1], '#e5e7eb'))
-    pieces.push(piece(`pavement-x-b:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ + 3.2], [chunkSize, 0.055, 1.1], '#e5e7eb'))
+    pieces.push(piece(`pavement-x-a:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ - realScale.roadTile * 0.72], [chunkSize, 0.055, 1.1], '#e5e7eb'))
+    pieces.push(piece(`pavement-x-b:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ + realScale.roadTile * 0.72], [chunkSize, 0.055, 1.1], '#e5e7eb'))
   }
   if (hasVerticalRoad) {
-    pieces.push(piece(`road-z:${cx}:${cz}`, 'road', [centerX, 0.015, centerZ], [4.2, 0.09, chunkSize], '#94a3b8'))
+    pieces.push(piece(`road-z:${cx}:${cz}`, 'road', [centerX, 0.015, centerZ], [realScale.roadTile, 0.09, chunkSize], '#94a3b8'))
     pieces.push(piece(`line-z:${cx}:${cz}`, 'line', [centerX, 0.07, centerZ], [0.14, 0.025, chunkSize * 0.8], '#fde047'))
-    pieces.push(piece(`pavement-z-a:${cx}:${cz}`, 'pavement', [centerX - 3.2, 0.04, centerZ], [1.1, 0.055, chunkSize], '#e5e7eb'))
-    pieces.push(piece(`pavement-z-b:${cx}:${cz}`, 'pavement', [centerX + 3.2, 0.04, centerZ], [1.1, 0.055, chunkSize], '#e5e7eb'))
+    pieces.push(piece(`pavement-z-a:${cx}:${cz}`, 'pavement', [centerX - realScale.roadTile * 0.72, 0.04, centerZ], [1.1, 0.055, chunkSize], '#e5e7eb'))
+    pieces.push(piece(`pavement-z-b:${cx}:${cz}`, 'pavement', [centerX + realScale.roadTile * 0.72, 0.04, centerZ], [1.1, 0.055, chunkSize], '#e5e7eb'))
   }
 
   const parkChance = random()
@@ -120,10 +122,11 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
       [x0 + 27, z0 + 27],
     ] as const
     plots.forEach(([x, z], index) => {
-      if ((hasHorizontalRoad && Math.abs(z - centerZ) < 6) || (hasVerticalRoad && Math.abs(x - centerX) < 6)) return
-      const height = 4.2 + Math.floor(random() * 5) * 1.15
-      const width = 5.2 + random() * 3.2
-      const depth = 5 + random() * 3
+      if ((hasHorizontalRoad && Math.abs(z - centerZ) < 7.5) || (hasVerticalRoad && Math.abs(x - centerX) < 7.5)) return
+      const floors = 2 + Math.floor(random() * 4)
+      const height = buildingHeightForFloors(floors)
+      const width = meters(3.8 + random() * 1.8)
+      const depth = meters(3.6 + random() * 1.8)
       const color = buildingPalette[Math.floor(random() * buildingPalette.length)]
       const roof = roofPalette[Math.floor(random() * roofPalette.length)]
       addBuilding(pieces, `building:${cx}:${cz}:${index}`, [x, height / 2, z], [width, height, depth], color, roof)
@@ -138,10 +141,10 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
   }
 
   if (hasHorizontalRoad && random() > 0.64) {
-    addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0.55, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
+    addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
   }
   if (random() > 0.76) {
-    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [x0 + 4 + random() * 28, 1, z0 + 4 + random() * 28], [0.95, 2, 0.95], '#dc2626'))
+    pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [x0 + 4 + random() * 28, realScale.phoneBoxHeight / 2, z0 + 4 + random() * 28], [realScale.phoneBoxWidth, realScale.phoneBoxHeight, realScale.phoneBoxWidth], '#dc2626'))
   }
   if (night || random() > 0.58) {
     addLamp(pieces, `lamp:${cx}:${cz}:a`, [x0 + 5, 0, z0 + 5], night)
@@ -153,41 +156,45 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
 
 function addBuilding(pieces: ProceduralPiece[], id: string, position: Vec3, scale: Vec3, color: string, roofColor: string) {
   pieces.push(piece(id, 'building', position, scale, color))
-  pieces.push(piece(`${id}:roof`, 'roof', [position[0], position[1] + scale[1] / 2 + 0.22, position[2]], [scale[0] * 1.08, 0.44, scale[2] * 1.08], roofColor))
-  const windowRows = Math.max(1, Math.floor(scale[1] / 1.1))
-  for (let row = 0; row < Math.min(windowRows, 4); row += 1) {
-    const y = position[1] - scale[1] / 2 + 0.75 + row * 0.85
-    pieces.push(piece(`${id}:win:${row}:l`, 'window', [position[0] - scale[0] * 0.22, y, position[2] + scale[2] / 2 + 0.03], [0.62, 0.34, 0.06], '#dbeafe', undefined, '#93c5fd', 0.12))
-    pieces.push(piece(`${id}:win:${row}:r`, 'window', [position[0] + scale[0] * 0.22, y, position[2] + scale[2] / 2 + 0.03], [0.62, 0.34, 0.06], '#dbeafe', undefined, '#93c5fd', 0.12))
+  pieces.push(piece(`${id}:roof`, 'roof', [position[0], position[1] + scale[1] / 2 + realScale.roofHeight / 2, position[2]], [scale[0] * 1.08, realScale.roofHeight, scale[2] * 1.08], roofColor))
+  pieces.push(piece(`${id}:door`, 'door', [position[0], realScale.doorHeight / 2, position[2] + scale[2] / 2 + 0.04], [realScale.doorWidth, realScale.doorHeight, realScale.doorDepth], '#7c2d12'))
+  const windowRows = Math.max(1, floorCountFromHeight(scale[1]))
+  for (let row = 0; row < Math.min(windowRows, 6); row += 1) {
+    const y = row * realScale.floorHeight + realScale.floorHeight * 0.62
+    if (y > scale[1] - realScale.windowHeight / 2) continue
+    pieces.push(piece(`${id}:win:${row}:l`, 'window', [position[0] - scale[0] * 0.24, y, position[2] + scale[2] / 2 + 0.05], [realScale.windowWidth, realScale.windowHeight, realScale.windowDepth], '#dbeafe', undefined, '#93c5fd', 0.12))
+    pieces.push(piece(`${id}:win:${row}:r`, 'window', [position[0] + scale[0] * 0.24, y, position[2] + scale[2] / 2 + 0.05], [realScale.windowWidth, realScale.windowHeight, realScale.windowDepth], '#dbeafe', undefined, '#93c5fd', 0.12))
   }
 }
 
 function addTree(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3) {
-  pieces.push(piece(`${id}:trunk`, 'tree-trunk', [x, 0.9, z], [0.32, 1.8, 0.32], '#92400e'))
-  pieces.push(piece(`${id}:top`, 'tree-top', [x, 2.18, z], [1.65, 1.65, 1.65], '#16a34a'))
+  pieces.push(piece(`${id}:trunk`, 'tree-trunk', [x, realScale.treeTrunkHeight / 2, z], [0.32, realScale.treeTrunkHeight, 0.32], '#92400e'))
+  pieces.push(piece(`${id}:top`, 'tree-top', [x, realScale.treeTrunkHeight + realScale.treeCanopySize * 0.42, z], [realScale.treeCanopySize, realScale.treeCanopySize, realScale.treeCanopySize], '#16a34a'))
 }
 
 function addLamp(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3, night: boolean) {
-  pieces.push(piece(`${id}:post`, 'lamp-post', [x, 1.1, z], [0.14, 2.2, 0.14], '#0f172a'))
-  pieces.push(piece(`${id}:light`, 'lamp-light', [x, 2.38, z], [0.55, 0.55, 0.55], '#fde68a', undefined, '#facc15', night ? 0.95 : 0.32))
+  pieces.push(piece(`${id}:post`, 'lamp-post', [x, realScale.lampHeight / 2, z], [0.14, realScale.lampHeight, 0.14], '#0f172a'))
+  pieces.push(piece(`${id}:light`, 'lamp-light', [x, realScale.lampHeight + 0.28, z], [0.55, 0.55, 0.55], '#fde68a', undefined, '#facc15', night ? 0.95 : 0.32))
 }
 
 function addBus(pieces: ProceduralPiece[], id: string, position: Vec3) {
-  pieces.push(piece(id, 'bus', position, [5.6, 1.05, 1.45], '#ef4444'))
-  pieces.push(piece(`${id}:top`, 'bus', [position[0], position[1] + 0.72, position[2]], [4.8, 0.72, 1.22], '#dc2626'))
-  pieces.push(piece(`${id}:window`, 'window', [position[0] - 0.2, position[1] + 1.12, position[2] + 0.66], [3.2, 0.42, 0.05], '#bae6fd', undefined, '#60a5fa', 0.1))
+  const lowerHeight = realScale.busHeight * 0.42
+  const upperHeight = realScale.busHeight * 0.58
+  pieces.push(piece(id, 'bus', [position[0], lowerHeight / 2, position[2]], [realScale.busLength, lowerHeight, realScale.busWidth], '#ef4444'))
+  pieces.push(piece(`${id}:top`, 'bus', [position[0], lowerHeight + upperHeight / 2, position[2]], [realScale.busLength * 0.9, upperHeight, realScale.busWidth * 0.86], '#dc2626'))
+  pieces.push(piece(`${id}:window`, 'window', [position[0] - 0.2, lowerHeight + upperHeight * 0.56, position[2] + realScale.busWidth * 0.44], [realScale.busLength * 0.55, realScale.windowHeight, realScale.windowDepth], '#bae6fd', undefined, '#60a5fa', 0.1))
 }
 
 function buildLandmarks(night: boolean): ProceduralPiece[] {
   const pieces: ProceduralPiece[] = []
-  addBuilding(pieces, 'landmark:town-hall', [0, 2.6, -34], [7, 5.2, 5.4], '#d6a06a', '#2563eb')
-  pieces.push(piece('landmark:clock-tower', 'landmark', [0, 6.2, -34], [2, 7.4, 2], '#c08457'))
-  pieces.push(piece('landmark:clock-face', 'window', [0, 8.6, -32.96], [1.08, 1.08, 0.08], '#f8fafc', undefined, '#fde68a', night ? 0.38 : 0.08))
-  pieces.push(piece('landmark:london-eye-ring', 'landmark', [-27, 5.8, 3], [7.5, 7.5, 0.32], '#e5e7eb', [Math.PI / 2, 0, 0]))
-  pieces.push(piece('landmark:shard', 'landmark', [38, 5.2, -24], [3, 10.4, 3], '#bae6fd', undefined, '#93c5fd', night ? 0.2 : 0.05))
-  pieces.push(piece('landmark:tower-bridge-a', 'landmark', [52, 2.4, 7], [3.2, 4.8, 3.2], '#d6a06a'))
-  pieces.push(piece('landmark:tower-bridge-b', 'landmark', [64, 2.4, 7], [3.2, 4.8, 3.2], '#d6a06a'))
-  pieces.push(piece('landmark:tower-bridge-road', 'road', [58, 0.32, 7], [14, 0.35, 3.2], '#94a3b8'))
+  addBuilding(pieces, 'landmark:town-hall', [0, buildingHeightForFloors(3) / 2, -34], [meters(5.8), buildingHeightForFloors(3), meters(5.2)], '#d6a06a', '#2563eb')
+  pieces.push(piece('landmark:clock-tower', 'landmark', [0, buildingHeightForFloors(3) + buildingHeightForFloors(2) / 2, -34], [meters(1.6), buildingHeightForFloors(2), meters(1.6)], '#c08457'))
+  pieces.push(piece('landmark:clock-face', 'window', [0, buildingHeightForFloors(4.25), -32.96], [1.08, 1.08, 0.08], '#f8fafc', undefined, '#fde68a', night ? 0.38 : 0.08))
+  pieces.push(piece('landmark:london-eye-ring', 'landmark', [-27, buildingHeightForFloors(2), 3], [buildingHeightForFloors(3), buildingHeightForFloors(3), 0.32], '#e5e7eb', [Math.PI / 2, 0, 0]))
+  pieces.push(piece('landmark:shard', 'landmark', [38, buildingHeightForFloors(7) / 2, -24], [meters(2.6), buildingHeightForFloors(7), meters(2.6)], '#bae6fd', undefined, '#93c5fd', night ? 0.2 : 0.05))
+  pieces.push(piece('landmark:tower-bridge-a', 'landmark', [52, buildingHeightForFloors(3) / 2, 7], [meters(3.1), buildingHeightForFloors(3), meters(3.1)], '#d6a06a'))
+  pieces.push(piece('landmark:tower-bridge-b', 'landmark', [64, buildingHeightForFloors(3) / 2, 7], [meters(3.1), buildingHeightForFloors(3), meters(3.1)], '#d6a06a'))
+  pieces.push(piece('landmark:tower-bridge-road', 'road', [58, 0.32, 7], [14, 0.35, realScale.roadTile], '#94a3b8'))
   return pieces
 }
 

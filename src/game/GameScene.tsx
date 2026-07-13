@@ -9,6 +9,7 @@ import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import { playerCollisionRadius, resolveHorizontalCollision, type CollisionBox } from './collision'
+import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
 import type {
   AvatarBottomStyle,
   AvatarFaceStyle,
@@ -30,14 +31,23 @@ const obbyCheckpoints: Vec3[] = [
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 
-const staticTownBuildings: { position: Vec3; color: string; scale: Vec3 }[] = [
-  { position: [-12, 2.4, -8], color: '#22c55e', scale: [4.2, 4.8, 3.2] },
-  { position: [12, 2.8, -7], color: '#fb923c', scale: [4.2, 5.6, 3.3] },
-  { position: [-14, 3.5, 10], color: '#a78bfa', scale: [5, 7, 3.6] },
-  { position: [2, 2.2, 18], color: '#facc15', scale: [4.1, 4.4, 3.2] },
-  { position: [-4, 1.75, 18], color: '#f9a8d4', scale: [3.1, 3.5, 2.9] },
-  { position: [8, 1.75, 18], color: '#93c5fd', scale: [3.1, 3.5, 2.9] },
+const staticTownBuildings: { position: Vec3; color: string; scale: Vec3; floors: number }[] = [
+  staticBuilding(-12, -8, 2, 4.2, 3.6, '#22c55e'),
+  staticBuilding(12, -7, 2, 4.6, 3.8, '#fb923c'),
+  staticBuilding(-14, 10, 3, 5.4, 4.2, '#a78bfa'),
+  staticBuilding(2, 18, 2, 4.4, 3.8, '#facc15'),
+  staticBuilding(-4, 18, 2, 3.8, 3.4, '#f9a8d4'),
+  staticBuilding(8, 18, 2, 3.8, 3.4, '#93c5fd'),
 ]
+
+function staticBuilding(x: number, z: number, floors: number, widthMeters: number, depthMeters: number, color: string) {
+  return {
+    position: buildingCenterPosition(x, z, floors),
+    scale: buildingScale(floors, widthMeters, depthMeters),
+    floors,
+    color,
+  }
+}
 
 const staticTreePositions: Vec3[] = [
   [-18, 0, -17],
@@ -74,8 +84,8 @@ const staticCollisionObstacles: CollisionBox[] = [
   })),
   ...staticTreePositions.map((position, index) => ({
     id: `static-tree:${index}`,
-    center: [position[0], 1, position[2]] as Vec3,
-    half: [0.6, 1.6, 0.6] as Vec3,
+    center: [position[0], buildPieceDimensions.tree.height / 2, position[2]] as Vec3,
+    half: [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2] as Vec3,
   })),
   ...staticBenchPositions.map(({ position }, index) => ({
     id: `static-bench:${index}`,
@@ -84,8 +94,8 @@ const staticCollisionObstacles: CollisionBox[] = [
   })),
   ...staticLampPositions.map((position, index) => ({
     id: `static-lamp:${index}`,
-    center: [position[0], 1.25, position[2]] as Vec3,
-    half: [0.32, 1.5, 0.32] as Vec3,
+    center: [position[0], buildPieceDimensions.lamp.height / 2, position[2]] as Vec3,
+    half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2] as Vec3,
   })),
   { id: 'static-billboard', center: [-6, 1.1, 2], half: [2, 1.3, 0.35] },
 ]
@@ -228,17 +238,17 @@ function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
 function buildCollisionHalf(kind: BuildBlock['kind']): Vec3 {
   switch (kind) {
     case 'house':
-      return [1.45, 1.4, 1.25]
+      return [buildPieceDimensions.house.width / 2, (buildPieceDimensions.house.bodyHeight + buildPieceDimensions.house.roofHeight) / 2, buildPieceDimensions.house.depth / 2]
     case 'building':
-      return [1.35, 2.35, 1.35]
+      return [buildPieceDimensions.building.width / 2, (buildPieceDimensions.building.bodyHeight + buildPieceDimensions.building.roofHeight) / 2, buildPieceDimensions.building.depth / 2]
     case 'shop':
-      return [1.6, 1.45, 1.22]
+      return [buildPieceDimensions.shop.width / 2, (buildPieceDimensions.shop.bodyHeight + buildPieceDimensions.shop.awningHeight) / 2, buildPieceDimensions.shop.depth / 2]
     case 'car':
-      return [1.28, 0.7, 0.68]
+      return [buildPieceDimensions.car.length / 2, buildPieceDimensions.car.height / 2, buildPieceDimensions.car.width / 2]
     case 'tree':
-      return [0.55, 1.5, 0.55]
+      return [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2]
     case 'lamp':
-      return [0.3, 1.45, 0.3]
+      return [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2]
     default:
       return [0.58, 0.58, 0.58]
   }
@@ -347,11 +357,11 @@ function Roads() {
   return (
     <group>
       <mesh receiveShadow position={[0, 0.025, -7.5]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[4, 22]} />
+        <planeGeometry args={[realScale.roadTile, 22]} />
         <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
       </mesh>
       <mesh receiveShadow position={[0, 0.03, 9]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
-        <planeGeometry args={[4, 32]} />
+        <planeGeometry args={[realScale.roadTile, 32]} />
         <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
       </mesh>
     </group>
@@ -359,43 +369,47 @@ function Roads() {
 }
 
 function Building({ position, color, scale }: { position: Vec3; color: string; scale: Vec3 }) {
+  const floors = floorCountFromHeight(scale[1])
+  const roofHeight = realScale.roofHeight
+  const doorY = -scale[1] / 2 + realScale.doorHeight / 2
+  const windowRows = Array.from({ length: Math.min(floors, 6) }, (_, row) => {
+    const y = -scale[1] / 2 + row * realScale.floorHeight + realScale.floorHeight * 0.62
+    return y > scale[1] / 2 - realScale.windowHeight / 2 ? null : y
+  }).filter((value): value is number => value !== null)
+
   return (
     <group position={position}>
       <mesh castShadow receiveShadow scale={scale}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={color} />
       </mesh>
-      <mesh castShadow position={[0, scale[1] / 2 + 0.45, 0]} scale={[scale[0] * 1.08, 0.8, scale[2] * 1.08]}>
+      <mesh castShadow position={[0, scale[1] / 2 + roofHeight / 2, 0]} scale={[scale[0] * 1.08, roofHeight, scale[2] * 1.08]}>
         <coneGeometry args={[0.8, 1, 4]} />
         <meshStandardMaterial color="#ef4444" />
       </mesh>
-      <mesh position={[0, -scale[1] / 2 + 0.45, scale[2] / 2 + 0.02]} scale={[0.52, 0.9, 0.06]}>
+      <mesh position={[0, doorY, scale[2] / 2 + 0.02]} scale={[realScale.doorWidth, realScale.doorHeight, realScale.doorDepth]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#7c2d12" />
       </mesh>
-      {Array.from({ length: Math.max(1, Math.min(6, Math.floor(scale[1] / 1.15))) }, (_, row) => {
-        const y = -scale[1] / 2 + 1.25 + row * 0.82
-        if (y > scale[1] / 2 - 0.45) return null
-        return (
-          <group key={row}>
-            <mesh position={[-scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[0.46, 0.38, 0.05]}>
-              <boxGeometry args={[1, 1, 1]} />
-              <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
-            </mesh>
-            <mesh position={[scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[0.46, 0.38, 0.05]}>
-              <boxGeometry args={[1, 1, 1]} />
-              <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
-            </mesh>
-          </group>
-        )
-      })}
+      {windowRows.map((y, row) => (
+        <group key={row}>
+          <mesh position={[-scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+          </mesh>
+          <mesh position={[scale[0] * 0.22, y, scale[2] / 2 + 0.03]} scale={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.15} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
 
 function Storefront({ position, label, color }: { position: Vec3; label: string; color: string }) {
   return (
-    <group position={[position[0], position[1] + 2.9, position[2] + 1.45]}>
+    <group position={[position[0], realScale.doorHeight + 0.42, position[2] + 1.45]}>
       <mesh castShadow>
         <boxGeometry args={[2.8, 0.55, 0.18]} />
         <meshStandardMaterial color={color} />
@@ -465,11 +479,11 @@ function StreetLamps() {
     <group>
       {staticLampPositions.map((position) => (
         <group key={position.join(',')} position={position}>
-          <mesh castShadow position={[0, 1.35, 0]}>
-            <cylinderGeometry args={[0.08, 0.1, 2.7, 10]} />
+          <mesh castShadow position={[0, realScale.lampHeight / 2, 0]}>
+            <cylinderGeometry args={[0.08, 0.1, realScale.lampHeight, 10]} />
             <meshStandardMaterial color="#334155" />
           </mesh>
-          <mesh castShadow position={[0, 2.8, 0]}>
+          <mesh castShadow position={[0, realScale.lampHeight + 0.34, 0]}>
             <sphereGeometry args={[0.34, 14, 10]} />
             <meshStandardMaterial color="#fde68a" emissive="#facc15" emissiveIntensity={0.55} />
           </mesh>
@@ -482,12 +496,12 @@ function StreetLamps() {
 function Tree({ position }: { position: Vec3 }) {
   return (
     <group position={position}>
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <cylinderGeometry args={[0.18, 0.25, 1.6, 8]} />
+      <mesh castShadow position={[0, realScale.treeTrunkHeight / 2, 0]}>
+        <cylinderGeometry args={[0.18, 0.25, realScale.treeTrunkHeight, 8]} />
         <meshStandardMaterial color="#92400e" />
       </mesh>
-      <mesh castShadow position={[0, 2, 0]}>
-        <dodecahedronGeometry args={[0.9, 0]} />
+      <mesh castShadow position={[0, realScale.treeTrunkHeight + realScale.treeCanopySize * 0.42, 0]}>
+        <dodecahedronGeometry args={[realScale.treeCanopySize / 2, 0]} />
         <meshStandardMaterial color="#16a34a" />
       </mesh>
     </group>
@@ -1380,11 +1394,11 @@ function RoadPiece({ color }: { color: string }) {
   return (
     <group>
       <mesh receiveShadow position={[0, 0, 0]}>
-        <boxGeometry args={[2.1, 0.08, 2.1]} />
+        <boxGeometry args={[realScale.roadTile, 0.08, realScale.roadTile]} />
         <meshStandardMaterial color={color} roughness={0.86} />
       </mesh>
       <mesh position={[0, 0.055, 0]}>
-        <boxGeometry args={[0.12, 0.02, 1.35]} />
+        <boxGeometry args={[0.12, 0.02, realScale.roadTile * 0.64]} />
         <meshStandardMaterial color="#fde047" emissive="#facc15" emissiveIntensity={0.12} />
       </mesh>
     </group>
@@ -1392,26 +1406,29 @@ function RoadPiece({ color }: { color: string }) {
 }
 
 function HousePiece({ color }: { color: string }) {
+  const { width, depth, bodyHeight, roofHeight } = buildPieceDimensions.house
+  const windowY = realScale.floorHeight * 1.43
+
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 1.1, 0]}>
-        <boxGeometry args={[2.55, 2.2, 2.1]} />
+      <mesh castShadow receiveShadow position={[0, bodyHeight / 2, 0]}>
+        <boxGeometry args={[width, bodyHeight, depth]} />
         <meshStandardMaterial color={color} roughness={0.76} />
       </mesh>
-      <mesh castShadow position={[0, 2.45, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <coneGeometry args={[1.8, 0.95, 4]} />
+      <mesh castShadow position={[0, bodyHeight + roofHeight / 2, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[Math.max(width, depth) * 0.74, roofHeight, 4]} />
         <meshStandardMaterial color="#ef4444" roughness={0.78} />
       </mesh>
-      <mesh position={[0, 0.72, 1.08]}>
-        <boxGeometry args={[0.48, 0.88, 0.05]} />
+      <mesh position={[0, realScale.doorHeight / 2, depth / 2 + 0.03]}>
+        <boxGeometry args={[realScale.doorWidth, realScale.doorHeight, realScale.doorDepth]} />
         <meshStandardMaterial color="#7c2d12" roughness={0.82} />
       </mesh>
-      <mesh position={[-0.72, 1.35, 1.09]}>
-        <boxGeometry args={[0.42, 0.38, 0.05]} />
+      <mesh position={[-width * 0.26, windowY, depth / 2 + 0.04]}>
+        <boxGeometry args={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]} />
         <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
       </mesh>
-      <mesh position={[0.72, 1.35, 1.09]}>
-        <boxGeometry args={[0.42, 0.38, 0.05]} />
+      <mesh position={[width * 0.26, windowY, depth / 2 + 0.04]}>
+        <boxGeometry args={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]} />
         <meshStandardMaterial color="#bae6fd" emissive="#38bdf8" emissiveIntensity={0.12} />
       </mesh>
     </group>
@@ -1419,26 +1436,33 @@ function HousePiece({ color }: { color: string }) {
 }
 
 function BuildingPiece({ color }: { color: string }) {
+  const { width, depth, bodyHeight, roofHeight, floors } = buildPieceDimensions.building
+  const windowRows = Array.from({ length: floors }, (_, row) => realScale.floorHeight * row + realScale.floorHeight * 0.62)
+
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 2.1, 0]}>
-        <boxGeometry args={[2.35, 4.2, 2.35]} />
+      <mesh castShadow receiveShadow position={[0, bodyHeight / 2, 0]}>
+        <boxGeometry args={[width, bodyHeight, depth]} />
         <meshStandardMaterial color={color} roughness={0.78} />
       </mesh>
-      {[0.8, 1.55, 2.3, 3.05, 3.8].map((height) => (
+      {windowRows.map((height) => (
         <group key={height}>
-          <mesh position={[-0.65, height, 1.2]}>
-            <boxGeometry args={[0.38, 0.34, 0.05]} />
+          <mesh position={[-width * 0.24, height, depth / 2 + 0.04]}>
+            <boxGeometry args={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]} />
             <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
           </mesh>
-          <mesh position={[0.65, height, 1.2]}>
-            <boxGeometry args={[0.38, 0.34, 0.05]} />
+          <mesh position={[width * 0.24, height, depth / 2 + 0.04]}>
+            <boxGeometry args={[realScale.windowWidth, realScale.windowHeight, realScale.windowDepth]} />
             <meshStandardMaterial color="#dbeafe" emissive="#93c5fd" emissiveIntensity={0.14} />
           </mesh>
         </group>
       ))}
-      <mesh castShadow position={[0, 4.35, 0]}>
-        <boxGeometry args={[2.65, 0.32, 2.65]} />
+      <mesh position={[0, realScale.doorHeight / 2, depth / 2 + 0.05]}>
+        <boxGeometry args={[realScale.doorWidth, realScale.doorHeight, realScale.doorDepth]} />
+        <meshStandardMaterial color="#7c2d12" roughness={0.82} />
+      </mesh>
+      <mesh castShadow position={[0, bodyHeight + roofHeight / 2, 0]}>
+        <boxGeometry args={[width * 1.08, roofHeight, depth * 1.08]} />
         <meshStandardMaterial color="#1e293b" roughness={0.76} />
       </mesh>
     </group>
@@ -1446,22 +1470,24 @@ function BuildingPiece({ color }: { color: string }) {
 }
 
 function ShopPiece({ color }: { color: string }) {
+  const { width, depth, bodyHeight, awningHeight } = buildPieceDimensions.shop
+
   return (
     <group>
-      <mesh castShadow receiveShadow position={[0, 1.1, 0]}>
-        <boxGeometry args={[2.8, 2.2, 2]} />
+      <mesh castShadow receiveShadow position={[0, bodyHeight / 2, 0]}>
+        <boxGeometry args={[width, bodyHeight, depth]} />
         <meshStandardMaterial color={color} roughness={0.74} />
       </mesh>
-      <mesh castShadow position={[0, 2.32, 0.18]}>
-        <boxGeometry args={[3.15, 0.26, 2.25]} />
+      <mesh castShadow position={[0, bodyHeight + awningHeight / 2, 0.18]}>
+        <boxGeometry args={[width * 1.08, awningHeight, depth * 1.08]} />
         <meshStandardMaterial color="#0f172a" roughness={0.78} />
       </mesh>
-      <mesh castShadow position={[0, 1.95, 1.13]}>
-        <boxGeometry args={[3.05, 0.32, 0.34]} />
+      <mesh castShadow position={[0, realScale.doorHeight + 0.45, depth / 2 + 0.08]}>
+        <boxGeometry args={[width * 0.9, 0.38, 0.34]} />
         <meshStandardMaterial color="#ffffff" roughness={0.72} />
       </mesh>
-      <mesh position={[0, 0.82, 1.03]}>
-        <boxGeometry args={[0.68, 1.1, 0.06]} />
+      <mesh position={[0, realScale.doorHeight / 2, depth / 2 + 0.05]}>
+        <boxGeometry args={[realScale.doorWidth, realScale.doorHeight, realScale.doorDepth]} />
         <meshStandardMaterial color="#7c2d12" roughness={0.82} />
       </mesh>
     </group>
@@ -1469,20 +1495,23 @@ function ShopPiece({ color }: { color: string }) {
 }
 
 function CarPiece({ color }: { color: string }) {
+  const bodyY = realScale.wheelRadius + realScale.carBodyHeight / 2
+  const cabinY = realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight / 2
+
   return (
     <group>
-      <mesh castShadow position={[0, 0.46, 0]}>
-        <boxGeometry args={[2.25, 0.58, 1.08]} />
+      <mesh castShadow position={[0, bodyY, 0]}>
+        <boxGeometry args={[realScale.carLength, realScale.carBodyHeight, realScale.carWidth]} />
         <meshStandardMaterial color={color} roughness={0.68} />
       </mesh>
-      <mesh castShadow position={[0.08, 0.86, -0.02]}>
-        <boxGeometry args={[1.05, 0.52, 0.82]} />
+      <mesh castShadow position={[0.08, cabinY, -0.02]}>
+        <boxGeometry args={[realScale.carLength * 0.46, realScale.carCabinHeight, realScale.carWidth * 0.78]} />
         <meshStandardMaterial color="#bfdbfe" roughness={0.58} />
       </mesh>
-      {[-0.78, 0.78].map((x) =>
-        [-0.58, 0.58].map((z) => (
-          <mesh key={`${x}-${z}`} castShadow position={[x, 0.2, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.22, 0.22, 0.16, 12]} />
+      {[-realScale.carLength * 0.32, realScale.carLength * 0.32].map((x) =>
+        [-realScale.carWidth * 0.48, realScale.carWidth * 0.48].map((z) => (
+          <mesh key={`${x}-${z}`} castShadow position={[x, realScale.wheelRadius, z]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[realScale.wheelRadius, realScale.wheelRadius, realScale.carWidth * 0.12, 12]} />
             <meshStandardMaterial color="#111827" roughness={0.8} />
           </mesh>
         )),
@@ -1494,12 +1523,12 @@ function CarPiece({ color }: { color: string }) {
 function TreePiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow position={[0, 0.58, 0]}>
-        <cylinderGeometry args={[0.13, 0.2, 1.15, 8]} />
+      <mesh castShadow position={[0, realScale.treeTrunkHeight / 2, 0]}>
+        <cylinderGeometry args={[0.18, 0.26, realScale.treeTrunkHeight, 8]} />
         <meshStandardMaterial color="#92400e" roughness={0.82} />
       </mesh>
-      <mesh castShadow position={[0, 1.35, 0]}>
-        <dodecahedronGeometry args={[0.68, 0]} />
+      <mesh castShadow position={[0, realScale.treeTrunkHeight + realScale.treeCanopySize * 0.42, 0]}>
+        <dodecahedronGeometry args={[realScale.treeCanopySize / 2, 0]} />
         <meshStandardMaterial color={color} roughness={0.74} />
       </mesh>
     </group>
@@ -1509,11 +1538,11 @@ function TreePiece({ color }: { color: string }) {
 function LampPiece({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <cylinderGeometry args={[0.06, 0.08, 1.6, 8]} />
+      <mesh castShadow position={[0, realScale.lampHeight / 2, 0]}>
+        <cylinderGeometry args={[0.07, 0.1, realScale.lampHeight, 8]} />
         <meshStandardMaterial color="#111827" roughness={0.78} />
       </mesh>
-      <mesh castShadow position={[0, 1.72, 0]}>
+      <mesh castShadow position={[0, realScale.lampHeight + 0.28, 0]}>
         <sphereGeometry args={[0.28, 12, 12]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.45} />
       </mesh>

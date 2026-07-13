@@ -1,10 +1,11 @@
 import { getBuildPiece } from '../data/buildPieces'
+import { realScale } from '../game/scale'
 import type { BuildBlock, BuildPieceId, Vec3 } from '../game/types'
 
 export const maxBuildPieces = 240
 const halfTurn = Math.PI * 2
 const quarterTurn = Math.PI / 2
-const mapTileSize = 2.2
+const mapTileSize = realScale.roadTile
 
 type IdFactory = () => string
 

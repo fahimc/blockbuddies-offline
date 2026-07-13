@@ -312,3 +312,13 @@
 - [x] Add unit tests for movement collision and update smoke coverage for the real avatar preview
 - [x] Capture updated customizer and gameplay review screenshots
 - [x] Bump Android debug APK version metadata to 1.4.6 / 10406
+
+## Post-phase real-world scale correction
+
+- [x] Add a shared avatar-as-person world scale module
+- [x] Derive door, floor, building, car, bus, road, lamp, tree, and phone-box dimensions from real-world ratios
+- [x] Rescale static town buildings, procedural borough buildings, landmarks, and build-mode prefabs
+- [x] Add unit tests for door/person, floor/person, car/person, and integer-floor building ratios
+- [x] Add procedural-world tests for generated building and door scale
+- [x] Capture updated customizer and gameplay scale screenshots
+- [x] Bump Android debug APK version metadata to 1.4.7 / 10407

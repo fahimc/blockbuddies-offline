@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { getBuildPiece } from '../data/buildPieces'
+import { buildPieceDimensions, realScale } from '../game/scale'
 import {
   canPlaceBlock,
   canPlacePiece,
@@ -12,7 +14,7 @@ import {
 describe('build mode', () => {
   it('places ahead of the player on a snapped grid', () => {
     expect(nextBuildPosition([0.1, 0, 0.1], 0)).toEqual([0, 0.55, 2.5])
-    expect(nextBuildPosition([0.1, 0, 0.1], 0, 'road')).toEqual([0, 0.05, 3])
+    expect(nextBuildPosition([0.1, 0, 0.1], 0, 'road')).toEqual([0, 0.05, 5])
   })
 
   it('rejects overlapping legacy blocks', () => {
@@ -29,7 +31,9 @@ describe('build mode', () => {
     })
 
     expect(canPlacePiece([house], [4.5, 0.05, 4], 'road')).toBe(false)
-    expect(canPlacePiece([house], [8, 0.05, 4], 'road')).toBe(true)
+    expect(canPlacePiece([house], [11, 0.05, 4], 'road')).toBe(true)
+    expect(getBuildPiece('house').footprint).toBeCloseTo(Math.max(buildPieceDimensions.house.width, buildPieceDimensions.house.depth), 2)
+    expect(getBuildPiece('car').footprint).toBeCloseTo(realScale.carLength, 2)
   })
 
   it('rotates build pieces in quarter turns', () => {
@@ -59,7 +63,7 @@ describe('build mode', () => {
     })
     const accepted = mergeBuildPieces([stamp[0]], stamp)
 
-    expect(accepted).toHaveLength(stamp.length - 3)
-    expect(accepted.map((piece) => piece.id)).not.toEqual(expect.arrayContaining(['piece-0', 'piece-8', 'piece-15']))
+    expect(accepted).toHaveLength(stamp.length - 5)
+    expect(accepted.map((piece) => piece.id)).not.toEqual(expect.arrayContaining(['piece-0', 'piece-5', 'piece-8', 'piece-12', 'piece-15']))
   })
 })
