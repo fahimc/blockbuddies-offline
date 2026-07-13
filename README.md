@@ -95,6 +95,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
   live synced player avatars.
+- Local Party invite and answer codes have Copy and Share buttons, using native
+  device sharing when available and clipboard fallback otherwise.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
@@ -117,6 +119,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
 - Landscape mobile game HUD with chat icon, status pills, virtual joystick,
   circular jump, interact, and reset/remove controls.
+- Touch and mouse dragging on the world view rotates and tilts the third-person
+  camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
   and buddy profile screens inspired by the supplied screen design sheet.
 - Responsive landscape phone layout with compact menu cards, chat icon, safe-area
@@ -218,6 +222,9 @@ the app hides them again when focus returns.
 The `v1.3.6` APK removes the forced landscape orientation so the splash can open
 in portrait. The splash uses the measured Android WebView height, so the Play
 button stays visible when system UI changes the available space.
+
+The `v1.5.0` APK adds Copy/Share actions for Local Party codes and screen-drag
+camera control for mobile gameplay.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

@@ -1,9 +1,12 @@
-import { useMemo } from 'react'
+import { Copy, Share2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { botProfiles } from '../data/botProfiles'
 import type { BotState } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
 import { Panel } from './Panel'
+import { copyPartyCode, sharePartyCode, type PartyCodeActionResult } from './partyCodeActions'
 
 const stateLabels: Record<BotState, string> = {
   idle: 'hanging out',
@@ -34,6 +37,7 @@ export function ServerPanel() {
   const startJoin = useLocalPartyStore((state) => state.startJoin)
   const acceptAnswer = useLocalPartyStore((state) => state.acceptAnswer)
   const disconnect = useLocalPartyStore((state) => state.disconnect)
+  const [codeActionMessage, setCodeActionMessage] = useState('')
   const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
 
   return (
@@ -68,7 +72,14 @@ export function ServerPanel() {
         </div>
 
         {inviteCode ? (
-          <CodeBox id="host-invite-code" label="Host invite code" value={inviteCode} placeholder="Host invite code" readOnly />
+          <CodeBox
+            id="host-invite-code"
+            label="Host invite code"
+            value={inviteCode}
+            placeholder="Host invite code"
+            readOnly
+            actions={<CodeActions label="Host invite code" value={inviteCode} onMessage={setCodeActionMessage} />}
+          />
         ) : null}
 
         <CodeBox
@@ -82,7 +93,16 @@ export function ServerPanel() {
           Create Join Answer
         </button>
 
-        {answerCode ? <CodeBox id="guest-answer-code" label="Join answer code" value={answerCode} placeholder="Join answer code" readOnly /> : null}
+        {answerCode ? (
+          <CodeBox
+            id="guest-answer-code"
+            label="Join answer code"
+            value={answerCode}
+            placeholder="Join answer code"
+            readOnly
+            actions={<CodeActions label="Join answer code" value={answerCode} onMessage={setCodeActionMessage} />}
+          />
+        ) : null}
 
         {role === 'host' ? (
           <>
@@ -100,6 +120,7 @@ export function ServerPanel() {
         ) : null}
 
         {error ? <p className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-xs font-black text-red-700">{error}</p> : null}
+        {codeActionMessage ? <p className="mt-2 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-black text-emerald-800" role="status">{codeActionMessage}</p> : null}
 
         <div className="mt-3 rounded-lg bg-slate-900/5 px-3 py-2 text-xs font-black text-slate-600">
           Local players connected: {remotePlayers.length}
@@ -144,6 +165,7 @@ function CodeBox({
   placeholder,
   readOnly,
   onChange,
+  actions,
 }: {
   id: string
   label: string
@@ -151,10 +173,13 @@ function CodeBox({
   placeholder: string
   readOnly?: boolean
   onChange?: (value: string) => void
+  actions?: ReactNode
 }) {
   return (
-    <label className="mt-3 block text-xs font-black uppercase tracking-wide text-slate-500" htmlFor={id}>
-      {label}
+    <div className="mt-3">
+      <label className="block text-xs font-black uppercase tracking-wide text-slate-500" htmlFor={id}>
+        {label}
+      </label>
       <textarea
         id={id}
         value={value}
@@ -165,6 +190,39 @@ function CodeBox({
         className="bb-party-code mt-1"
         rows={3}
       />
-    </label>
+      {actions ? <div className="bb-party-code-actions">{actions}</div> : null}
+    </div>
+  )
+}
+
+function CodeActions({ label, value, onMessage }: { label: string; value: string; onMessage: (message: string) => void }) {
+  const setMessage = (result: PartyCodeActionResult) => {
+    if (result === 'copied') onMessage(`${label} copied.`)
+    else if (result === 'shared') onMessage(`${label} shared.`)
+    else if (result === 'dismissed') onMessage('Share cancelled.')
+    else onMessage('Copy and share are unavailable on this device. Select the code manually.')
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="bb-party-code-button"
+        onClick={() => void copyPartyCode(value).then(setMessage)}
+        aria-label={`Copy ${label}`}
+      >
+        <Copy size={16} aria-hidden />
+        Copy
+      </button>
+      <button
+        type="button"
+        className="bb-party-code-button"
+        onClick={() => void sharePartyCode(value, label).then(setMessage)}
+        aria-label={`Share ${label}`}
+      >
+        <Share2 size={16} aria-hidden />
+        Share
+      </button>
+    </>
   )
 }

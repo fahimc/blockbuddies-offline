@@ -56,6 +56,8 @@ export type GameSave = {
 type TouchInput = {
   x: number
   y: number
+  lookX: number
+  lookY: number
   jump: boolean
   interact: boolean
 }
@@ -234,7 +236,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   ],
   visitedBots: [],
   obby: initialObby,
-  touch: { x: 0, y: 0, jump: false, interact: false },
+  touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false },
   loading: false,
   saveStatus: 'idle',
   playerEmote: 'none',

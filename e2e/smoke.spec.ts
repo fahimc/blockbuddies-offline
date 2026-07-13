@@ -75,6 +75,10 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
+      await page.getByRole('button', { name: 'Host Local Party' }).click()
+      await expect(page.getByRole('textbox', { name: 'Host invite code' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Copy Host invite code' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Share Host invite code' })).toBeVisible()
     }
     if (item.button === 'Settings') {
       await expect(page.getByRole('textbox', { name: 'World Seed' })).toBeVisible()
@@ -105,6 +109,7 @@ test.describe('landscape phone layout', () => {
     await expect(page.locator('.mobile-chat-button')).toBeVisible()
     await expect(page.locator('.virtual-joystick')).toBeVisible()
     await expect(page.locator('.mobile-jump-button')).toBeVisible()
+    await expect(page.getByTestId('world-drag-control')).toBeVisible()
     await expect(page.getByTestId('mini-map')).toBeVisible()
   })
 })

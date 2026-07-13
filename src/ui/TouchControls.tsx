@@ -6,11 +6,14 @@ import { useGameStore } from '../state/gameStore'
 type TouchPatch = Partial<{
   x: number
   y: number
+  lookX: number
+  lookY: number
   jump: boolean
   interact: boolean
 }>
 
 const joystickRadius = 42
+const maxQueuedLookDelta = 80
 
 export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
@@ -19,7 +22,16 @@ export function TouchControls() {
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
   const joystickRef = useRef<HTMLDivElement>(null)
+  const lookDragRef = useRef<{ pointerId: number; x: number; y: number } | undefined>(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
+
+  const queueLookDelta = (dx: number, dy: number) => {
+    const current = useGameStore.getState().touch
+    setTouch({
+      lookX: clamp(current.lookX + dx, -maxQueuedLookDelta, maxQueuedLookDelta),
+      lookY: clamp(current.lookY + dy, -maxQueuedLookDelta, maxQueuedLookDelta),
+    })
+  }
 
   const updateJoystick = (event: PointerEvent<HTMLDivElement>) => {
     const bounds = joystickRef.current?.getBoundingClientRect()
@@ -66,7 +78,36 @@ export function TouchControls() {
     }
 
   return (
-    <div className="touch-control-layer pointer-events-none absolute inset-x-0 bottom-3 z-20 hidden items-end justify-between px-5">
+    <>
+      <div
+        className="world-drag-layer absolute inset-0 z-[8]"
+        data-testid="world-drag-control"
+        aria-hidden="true"
+        onPointerDown={(event) => {
+          if (event.pointerType === 'mouse' && event.button !== 0) return
+          event.preventDefault()
+          event.currentTarget.setPointerCapture(event.pointerId)
+          lookDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+        }}
+        onPointerMove={(event) => {
+          const drag = lookDragRef.current
+          if (!drag || drag.pointerId !== event.pointerId || !event.currentTarget.hasPointerCapture(event.pointerId)) return
+          event.preventDefault()
+          const dx = event.clientX - drag.x
+          const dy = event.clientY - drag.y
+          lookDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+          queueLookDelta(dx, dy)
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+          if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
+        }}
+        onPointerCancel={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+          if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
+        }}
+      />
+      <div className="touch-control-layer pointer-events-none absolute inset-x-0 bottom-3 z-20 hidden items-end justify-between px-5">
       <div
         ref={joystickRef}
         className="virtual-joystick pointer-events-auto relative grid place-items-center rounded-full"
@@ -132,6 +173,11 @@ export function TouchControls() {
           <ArrowUp size={30} aria-hidden />
         </button>
       </div>
-    </div>
+      </div>
+    </>
   )
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
 }

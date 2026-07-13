@@ -343,3 +343,14 @@
 - [x] Separate the player from vehicle colliders if traffic moves into them
 - [x] Add unit tests for vehicle yaw, traffic collision boxes, player separation, and minimap heading
 - [x] Bump Android debug APK version metadata to 1.4.9 / 10409
+
+## Post-phase host-code sharing and camera drag
+
+- [x] Add Copy buttons for Local Party host invite and guest answer codes
+- [x] Add Share buttons for Local Party host invite and guest answer codes
+- [x] Add Web Share fallback to clipboard for devices without native sharing
+- [x] Add full-screen drag-to-look camera control for world view rotation and tilt
+- [x] Preserve mobile joystick, jump, interact, and reset controls over the drag layer
+- [x] Add unit tests for party-code actions and camera drag clamping
+- [x] Add smoke coverage for Local Party code buttons and world drag control
+- [x] Bump Android debug APK version metadata to 1.5.0 / 10500

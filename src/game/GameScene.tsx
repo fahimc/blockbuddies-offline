@@ -8,6 +8,7 @@ import { generateProceduralWorld, type ProceduralPiece } from '../data/procedura
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
+import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
 import { playerCollisionRadius, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
 import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
 import { createTrafficVehicles, makeTrafficLanes, trafficCollisionBoxesAtTime, trafficPositionAtTime, type TrafficLane, type TrafficVehicle } from './traffic'
@@ -549,6 +550,7 @@ function PlayerController() {
   const [, getKeys] = useKeyboardControls()
   const velocityY = useRef(0)
   const yaw = useRef(0)
+  const cameraPitch = useRef(0)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
   const movingRef = useRef(false)
@@ -557,6 +559,7 @@ function PlayerController() {
   const [airborne, setAirborne] = useState(false)
   const position = useRef(new THREE.Vector3(0, 0.9, 4))
   const setPlayer = useGameStore((state) => state.setPlayer)
+  const setTouch = useGameStore((state) => state.setTouch)
   const touch = useGameStore((state) => state.touch)
   const avatar = useGameStore((state) => state.avatar)
   const playerName = useGameStore((state) => state.playerName)
@@ -618,6 +621,11 @@ function PlayerController() {
     }
     const turning = strafe * 1.8 * delta
     yaw.current -= turning
+    if (Math.abs(touch.lookX) > 0.01 || Math.abs(touch.lookY) > 0.01) {
+      yaw.current = yawFromLookDrag(yaw.current, touch.lookX)
+      cameraPitch.current = pitchFromLookDrag(cameraPitch.current, touch.lookY)
+      setTouch({ lookX: 0, lookY: 0 })
+    }
 
     const direction = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
     const side = new THREE.Vector3(direction.z, 0, -direction.x)
@@ -656,12 +664,13 @@ function PlayerController() {
     if (group.current) group.current.rotation.y = yaw.current
     const mobile = state.size.width < 640
     const cameraDistance = mobile ? -13 : -8
-    const cameraHeight = mobile ? 7.4 : 5
+    const cameraHeight = (mobile ? 7.4 : 5) + cameraPitch.current * 3.2
+    const lookHeight = 1.4 + cameraPitch.current * 1.1
     const cameraTarget = position.current
       .clone()
       .add(new THREE.Vector3(Math.sin(yaw.current) * cameraDistance, cameraHeight, Math.cos(yaw.current) * cameraDistance))
     state.camera.position.lerp(cameraTarget, 0.12)
-    state.camera.lookAt(position.current.x, position.current.y + 1.4, position.current.z)
+    state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
     setPlayer([position.current.x, position.current.y - 0.9, position.current.z], yaw.current)
     if (performance.now() - lastPartyBroadcastAt.current > 120) {
       broadcastSnapshot(
