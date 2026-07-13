@@ -8,9 +8,9 @@ import { generateProceduralWorld, type ProceduralPiece } from '../data/procedura
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
-import { playerCollisionRadius, resolveHorizontalCollision, type CollisionBox } from './collision'
+import { playerCollisionRadius, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
 import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
-import { advanceTraffic, createTrafficVehicles, makeTrafficLanes, trafficPositionAt, type TrafficLane, type TrafficVehicle } from './traffic'
+import { createTrafficVehicles, makeTrafficLanes, trafficCollisionBoxesAtTime, trafficPositionAtTime, type TrafficLane, type TrafficVehicle } from './traffic'
 import type {
   AvatarBottomStyle,
   AvatarFaceStyle,
@@ -137,16 +137,10 @@ function TrafficVehicles() {
 
 function TrafficVehicleMesh({ vehicle, lane }: { vehicle: TrafficVehicle; lane: TrafficLane }) {
   const group = useRef<THREE.Group>(null)
-  const vehicleRef = useRef(vehicle)
-  const initialPose = trafficPositionAt(lane, vehicle.offset)
+  const initialPose = trafficPositionAtTime(lane, vehicle, performance.now() / 1000)
 
-  useEffect(() => {
-    vehicleRef.current = vehicle
-  }, [vehicle])
-
-  useFrame((_, delta) => {
-    vehicleRef.current = advanceTraffic(vehicleRef.current, lane, delta)
-    const pose = trafficPositionAt(lane, vehicleRef.current.offset)
+  useFrame(() => {
+    const pose = trafficPositionAtTime(lane, vehicle, performance.now() / 1000)
     group.current?.position.set(pose.position[0], pose.position[1], pose.position[2])
     if (group.current) group.current.rotation.y = pose.yaw
   })
@@ -585,6 +579,9 @@ function PlayerController() {
   const partyPlayerId = useLocalPartyStore((state) => state.playerId)
   const partyPlayerName = useLocalPartyStore((state) => state.playerName)
   const broadcastSnapshot = useLocalPartyStore((state) => state.broadcastSnapshot)
+  const trafficLanes = useMemo(() => makeTrafficLanes(), [])
+  const trafficVehicleCount = settings.quality === 'low' ? 6 : 10
+  const trafficVehicles = useMemo(() => createTrafficVehicles(trafficLanes, trafficVehicleCount), [trafficLanes, trafficVehicleCount])
   const [collisionChunk, setCollisionChunk] = useState(() => ({
     x: Math.floor(position.current.x / 36),
     z: Math.floor(position.current.z / 36),
@@ -628,14 +625,16 @@ function PlayerController() {
     const desiredPosition = position.current.clone()
     desiredPosition.addScaledVector(direction, forward * speed * delta)
     desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
+    const trafficObstacles = trafficCollisionBoxesAtTime(trafficLanes, trafficVehicles, performance.now() / 1000)
     const resolvedPosition = resolveHorizontalCollision(
       [position.current.x, position.current.y, position.current.z],
       [desiredPosition.x, desiredPosition.y, desiredPosition.z],
-      collisionObstacles,
+      [...collisionObstacles, ...trafficObstacles],
       playerCollisionRadius,
     )
-    position.current.x = resolvedPosition[0]
-    position.current.z = resolvedPosition[2]
+    const separatedPosition = separateCircleFromBoxes(resolvedPosition, trafficObstacles, playerCollisionRadius + 0.05)
+    position.current.x = separatedPosition[0]
+    position.current.z = separatedPosition[2]
     velocityY.current -= 25 * delta
     if ((keys.jump || touch.jump) && position.current.y <= 0.91) velocityY.current = 9
     position.current.y += velocityY.current * delta

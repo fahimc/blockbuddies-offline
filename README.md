@@ -59,6 +59,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 
 ![BlockBuddies traffic and minimap gameplay](docs/review/v148-traffic-minimap-phone.png)
 
+![BlockBuddies completed traffic heading and minimap](docs/review/v149-traffic-complete-phone.png)
+
 ## Features
 
 - Bright low-poly 3D town with spawn, park, shop, school, obby, and houses.
@@ -107,9 +109,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Road-aware procedural placement keeps trees and phone boxes off roads and
   pavements so scenery no longer blocks driving lanes.
 - Moving traffic cars follow deterministic procedural road-grid lanes with
-  tested wrapping/path logic.
+  tested wrapping/path logic and moving player collision boxes.
 - Responsive minimap shows nearby roads, buddies, landmarks, traffic, and the
-  player facing direction.
+  player facing direction with screen-space heading correction.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
@@ -247,6 +249,10 @@ The `v1.4.8` APK keeps procedural trees and phone boxes off roads/pavements,
 adds moving traffic cars on tested borough road lanes, and adds the responsive
 in-game minimap.
 
+The `v1.4.9` APK fixes car mesh heading, minimap player heading, syncs minimap
+traffic to the same path clock as the 3D cars, and completes runtime player
+collision against moving traffic.
+
 Release signing is not configured. For a production APK, configure Gradle
 signing properties or use Android Studio's signed bundle/APK flow, then run a
 release build.
@@ -279,9 +285,9 @@ Roblox-inspired prototype.
   system.
 - Custom world pieces use coarse player collision but do not yet provide full
   rigid-body physics or bot navigation.
-- Procedural borough buildings and props use coarse player collision; roads and
-  pavements remain traversable scenery and bots do not yet path around every
-  obstacle.
+- Procedural borough buildings, props, and moving traffic use coarse player
+  collision; roads and pavements remain traversable scenery and bots do not yet
+  path around every obstacle.
 - Camera occlusion around very tall close buildings is still basic.
 - Build mode limits custom world pieces to keep mobile scenes responsive.
 - Some cosmetic customizer items are visual-only and do not yet have distinct

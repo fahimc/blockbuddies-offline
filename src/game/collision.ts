@@ -32,6 +32,32 @@ export function resolveHorizontalCollision(current: Vec3, desired: Vec3, boxes: 
   return current
 }
 
+export function separateCircleFromBoxes(point: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius): Vec3 {
+  let x = point[0]
+  let z = point[2]
+  const epsilon = 0.001
+
+  for (const box of boxes) {
+    const minX = box.center[0] - box.half[0] - radius
+    const maxX = box.center[0] + box.half[0] + radius
+    const minZ = box.center[2] - box.half[2] - radius
+    const maxZ = box.center[2] + box.half[2] + radius
+    if (x < minX || x > maxX || z < minZ || z > maxZ) continue
+
+    const pushes = [
+      { axis: 'x' as const, amount: minX - x - epsilon },
+      { axis: 'x' as const, amount: maxX - x + epsilon },
+      { axis: 'z' as const, amount: minZ - z - epsilon },
+      { axis: 'z' as const, amount: maxZ - z + epsilon },
+    ].sort((a, b) => Math.abs(a.amount) - Math.abs(b.amount))
+    const push = pushes[0]
+    if (push.axis === 'x') x += push.amount
+    else z += push.amount
+  }
+
+  return [x, point[1], z]
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }

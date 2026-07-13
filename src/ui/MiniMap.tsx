@@ -1,10 +1,11 @@
-import { Map as MapIcon, Navigation } from 'lucide-react'
+import { Map as MapIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { worldLocations } from '../data/world'
 import { useGameStore } from '../state/gameStore'
-import { advanceTraffic, createTrafficVehicles, makeTrafficLanes, trafficPositionAt, type TrafficLane } from '../game/traffic'
+import { createTrafficVehicles, makeTrafficLanes, trafficPositionAtTime, type TrafficLane } from '../game/traffic'
 import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
+import { miniMapPlayerRotation } from './miniMapMath'
 
 const mapRange = 82
 const roadRepeat = 72
@@ -16,30 +17,22 @@ export function MiniMap() {
   const bots = useGameStore((state) => state.bots)
   const lanes = useMemo(() => makeTrafficLanes(), [])
   const laneById = useMemo(() => new Map<string, TrafficLane>(lanes.map((lane) => [lane.id, lane])), [lanes])
-  const [vehicles, setVehicles] = useState(() => createTrafficVehicles(lanes, 8))
+  const vehicles = useMemo(() => createTrafficVehicles(lanes, 8), [lanes])
+  const [trafficClock, setTrafficClock] = useState(() => performance.now() / 1000)
   const roads = useMemo(() => roadLinesFor(playerPosition), [playerPosition])
 
   useEffect(() => {
-    let last = performance.now()
     const interval = window.setInterval(() => {
-      const now = performance.now()
-      const delta = (now - last) / 1000
-      last = now
-      setVehicles((current) =>
-        current.map((vehicle) => {
-          const lane = laneById.get(vehicle.laneId)
-          return lane ? advanceTraffic(vehicle, lane, delta) : vehicle
-        }),
-      )
+      setTrafficClock(performance.now() / 1000)
     }, 180)
 
     return () => window.clearInterval(interval)
-  }, [laneById])
+  }, [])
 
   const traffic = vehicles.flatMap((vehicle) => {
     const lane = laneById.get(vehicle.laneId)
     if (!lane) return []
-    return [{ id: vehicle.id, color: vehicle.color, position: trafficPositionAt(lane, vehicle.offset).position }]
+    return [{ id: vehicle.id, color: vehicle.color, position: trafficPositionAtTime(lane, vehicle, trafficClock).position }]
   })
 
   return (
@@ -70,9 +63,7 @@ export function MiniMap() {
         {bots.filter((bot) => isOnMap(bot.position, playerPosition)).slice(0, 8).map((bot) => (
           <span key={bot.id} className="bb-mini-map-bot" style={pointStyle(bot.position, playerPosition)} title={bot.id} />
         ))}
-        <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${playerYaw}rad)` }}>
-          <Navigation size={15} aria-hidden />
-        </span>
+        <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
       </div>
     </aside>
   )
@@ -102,7 +93,7 @@ function roadLinesFor(center: Vec3) {
       id: `z:${roadZ}`,
       orientation: 'horizontal',
       style: {
-        top: `${percentFor(roadZ, center[2])}%`,
+        top: `${topPercentForZ(roadZ, center[2])}%`,
         height: `${roadWidthPercent}%`,
       },
     })
@@ -129,12 +120,16 @@ function isOnMap(position: Vec3, center: Vec3) {
 function pointStyle(position: Vec3, center: Vec3) {
   return {
     left: `${percentFor(position[0], center[0])}%`,
-    top: `${percentFor(position[2], center[2])}%`,
+    top: `${topPercentForZ(position[2], center[2])}%`,
   }
 }
 
 function percentFor(value: number, center: number) {
   return clamp(((value - center + mapRange / 2) / mapRange) * 100, 0, 100)
+}
+
+function topPercentForZ(value: number, center: number) {
+  return clamp(((center - value + mapRange / 2) / mapRange) * 100, 0, 100)
 }
 
 function clamp(value: number, min: number, max: number) {

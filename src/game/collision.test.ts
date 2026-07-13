@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collidesCircleWithBox, resolveHorizontalCollision, type CollisionBox } from './collision'
+import { collidesCircleWithBox, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
 
 const wall: CollisionBox = {
   id: 'wall',
@@ -28,5 +28,12 @@ describe('collision resolver', () => {
     }
 
     expect(resolveHorizontalCollision([1.2, 0.9, -1], [1.7, 0.9, -0.2], [wall, corner], 0.42)).toEqual([1.2, 0.9, -1])
+  })
+
+  it('separates the player from moving obstacle boxes that overlap them', () => {
+    const separated = separateCircleFromBoxes([2, 0.9, 0], [wall], 0.42)
+
+    expect(collidesCircleWithBox(separated[0], separated[2], 0.42, wall)).toBe(false)
+    expect(separated[0]).not.toBe(2)
   })
 })

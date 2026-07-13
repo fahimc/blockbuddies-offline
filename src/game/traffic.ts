@@ -1,4 +1,5 @@
 import { realScale } from './scale'
+import type { CollisionBox } from './collision'
 import type { Vec3 } from './types'
 
 export type TrafficLane = {
@@ -65,8 +66,32 @@ export function trafficPositionAt(lane: TrafficLane, offset: number): TrafficPos
       0.03,
       lane.start[2] + lane.direction[2] * distance,
     ],
-    yaw: Math.atan2(lane.direction[0], lane.direction[2]),
+    // The low-poly car mesh is modelled lengthwise on local X, not local Z.
+    yaw: Math.atan2(-lane.direction[2], lane.direction[0]),
   }
+}
+
+export function trafficPositionAtTime(lane: TrafficLane, vehicle: TrafficVehicle, timeSeconds: number): TrafficPose {
+  return trafficPositionAt(lane, vehicle.offset + vehicle.speed * Math.max(0, timeSeconds))
+}
+
+export function trafficCollisionBoxesAtTime(lanes: TrafficLane[], vehicles: TrafficVehicle[], timeSeconds: number): CollisionBox[] {
+  const laneById = new Map(lanes.map((laneItem) => [laneItem.id, laneItem]))
+  return vehicles.flatMap((vehicle) => {
+    const vehicleLane = laneById.get(vehicle.laneId)
+    if (!vehicleLane) return []
+    const pose = trafficPositionAtTime(vehicleLane, vehicle, timeSeconds)
+    const horizontal = Math.abs(vehicleLane.direction[0]) >= Math.abs(vehicleLane.direction[2])
+    return [
+      {
+        id: `traffic:${vehicle.id}`,
+        center: [pose.position[0], realScale.wheelRadius + realScale.carHeight / 2, pose.position[2]],
+        half: horizontal
+          ? [realScale.carLength / 2 + 0.12, realScale.carHeight / 2, realScale.carWidth / 2 + 0.12]
+          : [realScale.carWidth / 2 + 0.12, realScale.carHeight / 2, realScale.carLength / 2 + 0.12],
+      } satisfies CollisionBox,
+    ]
+  })
 }
 
 function lane(id: string, start: Vec3, end: Vec3): TrafficLane {

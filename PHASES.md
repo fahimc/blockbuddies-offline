@@ -333,3 +333,13 @@
 - [x] Add smoke coverage for minimap visibility in gameplay
 - [x] Capture updated phone traffic/minimap review screenshot
 - [x] Bump Android debug APK version metadata to 1.4.8 / 10408
+
+## Post-phase traffic completion
+
+- [x] Fix car mesh yaw so vehicles drive lengthwise along lanes
+- [x] Fix minimap player arrow rotation for screen-space map direction
+- [x] Sync minimap traffic dots with the 3D traffic path clock
+- [x] Add moving traffic collision boxes for player movement
+- [x] Separate the player from vehicle colliders if traffic moves into them
+- [x] Add unit tests for vehicle yaw, traffic collision boxes, player separation, and minimap heading
+- [x] Bump Android debug APK version metadata to 1.4.9 / 10409
