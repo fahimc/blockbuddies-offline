@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate'
 import type { AvatarSettings, BotRuntime, Vec3 } from '../game/types'
+import {
+  discoverSignalRooms,
+  getSignalAnswers,
+  getSignalOffer,
+  isLocalSignalSupported,
+  sanitizeRoomName,
+  sendSignalAnswer,
+  startSignalHost,
+  stopSignalHost,
+  type LanHostInfo,
+  type LanRoom,
+} from '../network/localSignal'
 
 export type LocalPartyStatus = 'idle' | 'hosting' | 'joining' | 'connecting' | 'connected' | 'error'
 export type LocalPartyRole = 'host' | 'guest'
@@ -39,12 +51,21 @@ type LocalPartyState = {
   joinCodeInput: string
   answerCode: string
   answerCodeInput: string
+  roomName: string
+  lanRooms: LanRoom[]
+  lanSearching: boolean
+  lanHost?: LanHostInfo
+  pendingLanAnswerName?: string
   error?: string
   remotePlayers: Record<string, LocalPartySnapshot>
   lastEvent: string
   setPlayerName: (name: string) => void
+  setRoomName: (name: string) => void
   setJoinCodeInput: (code: string) => void
   setAnswerCodeInput: (code: string) => void
+  discoverRooms: () => Promise<void>
+  startRoomHost: () => Promise<void>
+  joinRoom: (room: LanRoom) => Promise<void>
   startHost: () => Promise<void>
   startJoin: () => Promise<void>
   acceptAnswer: () => Promise<void>
@@ -63,6 +84,7 @@ let peer: RTCPeerConnection | undefined
 let channel: RTCDataChannel | undefined
 let signalChannel: BroadcastChannel | undefined
 let stopSignalStorageListener: (() => void) | undefined
+let lanAnswerPoll: number | undefined
 
 const compactPartyCodePrefix = 'BBP1.'
 const signalBusName = 'blockbuddies-local-party-signal'
@@ -199,6 +221,31 @@ function closePeer() {
   peer = undefined
 }
 
+function stopLanAnswerPolling() {
+  if (lanAnswerPoll !== undefined) window.clearInterval(lanAnswerPoll)
+  lanAnswerPoll = undefined
+}
+
+function startLanAnswerPolling(set: LocalPartySetter) {
+  stopLanAnswerPolling()
+  lanAnswerPoll = window.setInterval(() => {
+    void getSignalAnswers()
+      .then((answers) => {
+        const answer = answers.find((entry) => entry.answerCode.trim())
+        if (!answer) return
+        const name = sanitizePartyName(answer.name)
+        set({
+          answerCodeInput: answer.answerCode,
+          pendingLanAnswerName: name,
+          lastEvent: `${name} wants to join. Tap Accept Join Answer.`,
+        })
+      })
+      .catch(() => {
+        set({ lastEvent: 'Room is open. Waiting for join requests.' })
+      })
+  }, 1200)
+}
+
 function createSessionId() {
   return `party-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
 }
@@ -291,10 +338,12 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
   channel = nextChannel
   channel.onopen = () => {
     const state = get()
-    set({ status: 'connected', error: undefined, lastEvent: 'Local player connected.' })
+    stopLanAnswerPolling()
+    void stopSignalHost()
+    set({ status: 'connected', lanHost: undefined, pendingLanAnswerName: undefined, error: undefined, lastEvent: 'Local player connected.' })
     sendPartyMessage({ type: 'hello', id: state.playerId, name: state.playerName })
   }
-  channel.onclose = () => set({ status: 'idle', remotePlayers: {}, lastEvent: 'Local player disconnected.' })
+  channel.onclose = () => set({ status: 'idle', lanHost: undefined, pendingLanAnswerName: undefined, remotePlayers: {}, lastEvent: 'Local player disconnected.' })
   channel.onerror = () => set({ status: 'error', error: 'Local party data channel failed.' })
   channel.onmessage = (event) => {
     const message = parsePartyMessage(event.data)
@@ -329,16 +378,148 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   joinCodeInput: '',
   answerCode: '',
   answerCodeInput: '',
+  roomName: 'Buddy Room',
+  lanRooms: [],
+  lanSearching: false,
   remotePlayers: {},
   lastEvent: 'Local party is offline.',
   setPlayerName: (name) => set({ playerName: sanitizePartyName(name) }),
+  setRoomName: (name) => set({ roomName: sanitizeRoomName(name) }),
   setJoinCodeInput: (joinCodeInput) => set({ joinCodeInput }),
   setAnswerCodeInput: (answerCodeInput) => set({ answerCodeInput }),
+  discoverRooms: async () => {
+    if (!isLocalSignalSupported()) {
+      set({ error: 'Room discovery needs the Android APK. Use manual codes on web.', lastEvent: 'Manual code fallback is available below.' })
+      return
+    }
+    try {
+      set({ lanSearching: true, error: undefined, lastEvent: 'Searching for LAN rooms.' })
+      const lanRooms = await discoverSignalRooms()
+      set({
+        lanRooms,
+        lanSearching: false,
+        lastEvent: lanRooms.length > 0 ? `Found ${lanRooms.length} room${lanRooms.length === 1 ? '' : 's'}.` : 'No LAN rooms found yet.',
+      })
+    } catch (error) {
+      set({
+        lanSearching: false,
+        error: error instanceof Error ? error.message : 'Could not discover LAN rooms.',
+        lastEvent: 'Room discovery failed. Manual codes still work.',
+      })
+    }
+  },
+  startRoomHost: async () => {
+    if (!isLocalSignalSupported()) {
+      set({ error: 'Room hosting needs the Android APK. Use manual codes on web.', lastEvent: 'Manual code fallback is available below.' })
+      return
+    }
+    try {
+      stopListeningForSignals()
+      stopLanAnswerPolling()
+      await stopSignalHost()
+      closePeer()
+      set({
+        status: 'hosting',
+        role: 'host',
+        inviteCode: '',
+        answerCode: '',
+        answerCodeInput: '',
+        pendingLanAnswerName: undefined,
+        error: undefined,
+        remotePlayers: {},
+        lastEvent: 'Starting LAN room.',
+      })
+      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
+      attachDataChannel(peer.createDataChannel('blockbuddies-local-party'), set, get)
+      const offer = await peer.createOffer()
+      await peer.setLocalDescription(offer)
+      await waitForIceGathering(peer)
+      if (!peer.localDescription) throw new Error('Room invite could not be created.')
+      const sessionId = createSessionId()
+      const inviteCode = encodePartySignal({
+        v: 1,
+        type: 'offer',
+        from: get().playerId,
+        name: get().playerName,
+        sessionId,
+        sdp: peer.localDescription.toJSON(),
+      })
+      const lanHost = await startSignalHost(get().roomName, inviteCode)
+      startLanAnswerPolling(set)
+      set({
+        inviteCode,
+        lanHost,
+        roomName: lanHost.roomName,
+        lastEvent: `Room "${lanHost.roomName}" is open. Host approves join requests.`,
+      })
+    } catch (error) {
+      stopLanAnswerPolling()
+      await stopSignalHost()
+      closePeer()
+      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start LAN room.' })
+    }
+  },
+  joinRoom: async (room) => {
+    try {
+      stopListeningForSignals()
+      stopLanAnswerPolling()
+      await stopSignalHost()
+      closePeer()
+      set({
+        status: 'joining',
+        role: 'guest',
+        joinCodeInput: '',
+        answerCode: '',
+        error: undefined,
+        remotePlayers: {},
+        lastEvent: `Joining ${sanitizeRoomName(room.roomName)}.`,
+      })
+      const offerCode = await getSignalOffer(room)
+      const invite = decodePartySignal(offerCode)
+      if (invite.type !== 'offer') throw new Error('Room invite was not valid.')
+      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
+      await peer.setRemoteDescription(invite.sdp)
+      const answer = await peer.createAnswer()
+      await peer.setLocalDescription(answer)
+      await waitForIceGathering(peer)
+      if (!peer.localDescription) throw new Error('Join answer could not be created.')
+      const signal = {
+        v: 1 as const,
+        type: 'answer' as const,
+        from: get().playerId,
+        name: get().playerName,
+        sessionId: invite.sessionId,
+        sdp: peer.localDescription.toJSON(),
+      }
+      const answerCode = encodePartySignal(signal)
+      await sendSignalAnswer(room, answerCode, get().playerName)
+      set({
+        status: 'connecting',
+        answerCode,
+        lastEvent: `Join request sent to ${sanitizeRoomName(room.roomName)}. Waiting for host approval.`,
+      })
+    } catch (error) {
+      closePeer()
+      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join LAN room.' })
+    }
+  },
   startHost: async () => {
     try {
       stopListeningForSignals()
+      stopLanAnswerPolling()
+      await stopSignalHost()
       closePeer()
-      set({ status: 'hosting', role: 'host', inviteCode: '', answerCode: '', answerCodeInput: '', error: undefined, remotePlayers: {} })
+      set({
+        status: 'hosting',
+        role: 'host',
+        inviteCode: '',
+        answerCode: '',
+        answerCodeInput: '',
+        lanHost: undefined,
+        pendingLanAnswerName: undefined,
+        error: undefined,
+        remotePlayers: {},
+      })
       peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
       attachDataChannel(peer.createDataChannel('blockbuddies-local-party'), set, get)
       const offer = await peer.createOffer()
@@ -361,12 +542,15 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     } catch (error) {
       closePeer()
       stopListeningForSignals()
+      stopLanAnswerPolling()
       set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start local party.' })
     }
   },
   startJoin: async () => {
     try {
       stopListeningForSignals()
+      stopLanAnswerPolling()
+      await stopSignalHost()
       closePeer()
       const invite = decodePartySignal(get().joinCodeInput)
       if (invite.type !== 'offer') throw new Error('Paste a host invite code first.')
@@ -396,6 +580,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     } catch (error) {
       closePeer()
       stopListeningForSignals()
+      stopLanAnswerPolling()
       set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join local party.' })
     }
   },
@@ -406,6 +591,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       if (answer.type !== 'answer') throw new Error('Paste a join answer code first.')
       set({ status: 'connecting', error: undefined, lastEvent: `Connecting to ${sanitizePartyName(answer.name)}.` })
       await peer.setRemoteDescription(answer.sdp)
+      set({ pendingLanAnswerName: undefined, answerCodeInput: '' })
     } catch (error) {
       set({ status: 'error', error: error instanceof Error ? error.message : 'Could not accept local party answer.' })
     }
@@ -415,12 +601,16 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     sendPartyMessage({ type: 'bye', id: state.playerId, name: state.playerName })
     closePeer()
     stopListeningForSignals()
+    stopLanAnswerPolling()
+    void stopSignalHost()
     set({
       status: 'idle',
       role: undefined,
       inviteCode: '',
       answerCode: '',
       answerCodeInput: '',
+      lanHost: undefined,
+      pendingLanAnswerName: undefined,
       remotePlayers: {},
       error: undefined,
       lastEvent: 'Local party ended.',

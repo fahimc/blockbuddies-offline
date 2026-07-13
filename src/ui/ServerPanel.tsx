@@ -5,6 +5,7 @@ import { botProfiles } from '../data/botProfiles'
 import type { BotState } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { extractPartyCode, useLocalPartyStore } from '../state/localPartyStore'
+import { isLocalSignalSupported, roomLabel } from '../network/localSignal'
 import { Panel } from './Panel'
 import { copyPartyCode, pastePartyCode, sharePartyCode, type PartyCodeActionResult } from './partyCodeActions'
 
@@ -27,18 +28,28 @@ export function ServerPanel() {
   const joinCodeInput = useLocalPartyStore((state) => state.joinCodeInput)
   const answerCode = useLocalPartyStore((state) => state.answerCode)
   const answerCodeInput = useLocalPartyStore((state) => state.answerCodeInput)
+  const roomName = useLocalPartyStore((state) => state.roomName)
+  const lanRooms = useLocalPartyStore((state) => state.lanRooms)
+  const lanSearching = useLocalPartyStore((state) => state.lanSearching)
+  const lanHost = useLocalPartyStore((state) => state.lanHost)
+  const pendingLanAnswerName = useLocalPartyStore((state) => state.pendingLanAnswerName)
   const error = useLocalPartyStore((state) => state.error)
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
   const lastEvent = useLocalPartyStore((state) => state.lastEvent)
   const setPlayerName = useLocalPartyStore((state) => state.setPlayerName)
+  const setRoomName = useLocalPartyStore((state) => state.setRoomName)
   const setJoinCodeInput = useLocalPartyStore((state) => state.setJoinCodeInput)
   const setAnswerCodeInput = useLocalPartyStore((state) => state.setAnswerCodeInput)
+  const discoverRooms = useLocalPartyStore((state) => state.discoverRooms)
+  const startRoomHost = useLocalPartyStore((state) => state.startRoomHost)
+  const joinRoom = useLocalPartyStore((state) => state.joinRoom)
   const startHost = useLocalPartyStore((state) => state.startHost)
   const startJoin = useLocalPartyStore((state) => state.startJoin)
   const acceptAnswer = useLocalPartyStore((state) => state.acceptAnswer)
   const disconnect = useLocalPartyStore((state) => state.disconnect)
   const [codeActionMessage, setCodeActionMessage] = useState('')
   const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
+  const nativeRoomsSupported = isLocalSignalSupported()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -79,68 +90,129 @@ export function ServerPanel() {
           maxLength={18}
         />
 
+        <label className="mt-3 block text-xs font-black uppercase tracking-wide text-slate-500" htmlFor="party-room-name">
+          Room Name
+        </label>
+        <input
+          id="party-room-name"
+          value={roomName}
+          onChange={(event) => setRoomName(event.target.value)}
+          className="mt-1 w-full rounded-lg border-2 border-sky-100 bg-white px-3 py-2 text-sm font-black text-slate-900"
+          maxLength={18}
+        />
+
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => void startHost()} className="bb-party-action host">
-            Host Local Party
+          <button type="button" onClick={() => void startRoomHost()} className="bb-party-action host">
+            Host Room
           </button>
-          <button type="button" onClick={disconnect} className="bb-party-action disconnect">
-            Disconnect
+          <button type="button" onClick={() => void discoverRooms()} className="bb-party-action join compact">
+            {lanSearching ? 'Searching...' : 'Find Rooms'}
           </button>
         </div>
 
-        {inviteCode ? (
-          <CodeBox
-            id="host-invite-code"
-            label="Host invite code"
-            value={inviteCode}
-            placeholder="Host invite code"
-            readOnly
-            generated
-            hint="Send this to a nearby player. If they answer in another tab of this app, it appears below automatically."
-            actions={<CodeActions label="Host invite code" value={inviteCode} onMessage={setCodeActionMessage} />}
-          />
-        ) : null}
-
-        <CodeBox
-          id="join-invite-code"
-          label="Join with invite code"
-          value={joinCodeInput}
-          placeholder="Paste host invite code"
-          onChange={(value) => setJoinCodeInput(extractPartyCode(value))}
-          actions={<PasteAction label="Paste Invite Code" onPaste={setJoinCodeInput} onMessage={setCodeActionMessage} />}
-        />
-        <button type="button" onClick={() => void startJoin()} className="bb-party-action join">
-          Create Join Answer
+        <button type="button" onClick={disconnect} className="bb-party-action disconnect mt-2 w-full">
+          Disconnect
         </button>
 
-        {answerCode ? (
-          <CodeBox
-            id="guest-answer-code"
-            label="Join answer code"
-            value={answerCode}
-            placeholder="Join answer code"
-            readOnly
-            generated
-            hint="Send this back to the host. Their Accept button completes the connection."
-            actions={<CodeActions label="Join answer code" value={answerCode} onMessage={setCodeActionMessage} />}
-          />
+        {lanHost ? (
+          <div className="bb-party-room-card">
+            <strong>{lanHost.roomName}</strong>
+            <span>Room open on this phone. Guests can find it on the same Wi-Fi.</span>
+          </div>
         ) : null}
 
-        {role === 'host' ? (
-          <>
-            <CodeBox
-              id="host-answer-code"
-              label="Accept join answer"
-              value={answerCodeInput}
-              placeholder="Paste join answer code"
-              onChange={(value) => setAnswerCodeInput(extractPartyCode(value))}
-              actions={<PasteAction label="Paste Answer Code" onPaste={setAnswerCodeInput} onMessage={setCodeActionMessage} />}
-            />
-            <button type="button" onClick={() => void acceptAnswer()} className="bb-party-action accept">
-              Accept Join Answer
-            </button>
-          </>
+        {!nativeRoomsSupported ? (
+          <p className="mt-2 rounded-lg bg-amber-100 px-3 py-2 text-xs font-black text-amber-800">
+            Room discovery needs the Android APK. Web/PWA uses manual codes below.
+          </p>
         ) : null}
+
+        {lanRooms.length > 0 ? (
+          <div className="bb-party-room-list" aria-label="Available LAN rooms">
+            {lanRooms.map((room) => (
+              <button key={`${room.host}:${room.port}`} type="button" className="bb-party-room-button" onClick={() => void joinRoom(room)}>
+                <span>{room.roomName}</span>
+                <small>{roomLabel(room)}</small>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {role === 'host' && answerCodeInput ? (
+          <div className="bb-party-room-card pending">
+            <strong>{pendingLanAnswerName ?? 'A player'} wants to join</strong>
+            <span>Host approval is required before they enter the room.</span>
+            <button type="button" onClick={() => void acceptAnswer()} className="bb-party-action accept mt-2 w-full">
+              Accept Join Request
+            </button>
+          </div>
+        ) : null}
+
+        <details className="bb-party-manual">
+          <summary>Manual code fallback</summary>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => void startHost()} className="bb-party-action host">
+              Host Local Party
+            </button>
+            <button type="button" onClick={disconnect} className="bb-party-action disconnect">
+              Reset Codes
+            </button>
+          </div>
+
+          {inviteCode ? (
+            <CodeBox
+              id="host-invite-code"
+              label="Host invite code"
+              value={inviteCode}
+              placeholder="Host invite code"
+              readOnly
+              generated
+              hint="Fallback only: send this to a player if room discovery is unavailable."
+              actions={<CodeActions label="Host invite code" value={inviteCode} onMessage={setCodeActionMessage} />}
+            />
+          ) : null}
+
+          <CodeBox
+            id="join-invite-code"
+            label="Join with invite code"
+            value={joinCodeInput}
+            placeholder="Paste host invite code"
+            onChange={(value) => setJoinCodeInput(extractPartyCode(value))}
+            actions={<PasteAction label="Paste Invite Code" onPaste={setJoinCodeInput} onMessage={setCodeActionMessage} />}
+          />
+          <button type="button" onClick={() => void startJoin()} className="bb-party-action join">
+            Create Join Answer
+          </button>
+
+          {answerCode ? (
+            <CodeBox
+              id="guest-answer-code"
+              label="Join answer code"
+              value={answerCode}
+              placeholder="Join answer code"
+              readOnly
+              generated
+              hint="Fallback only: send this back to the host."
+              actions={<CodeActions label="Join answer code" value={answerCode} onMessage={setCodeActionMessage} />}
+            />
+          ) : null}
+
+          {role === 'host' ? (
+            <>
+              <CodeBox
+                id="host-answer-code"
+                label="Accept join answer"
+                value={answerCodeInput}
+                placeholder="Paste join answer code"
+                onChange={(value) => setAnswerCodeInput(extractPartyCode(value))}
+                actions={<PasteAction label="Paste Answer Code" onPaste={setAnswerCodeInput} onMessage={setCodeActionMessage} />}
+              />
+              <button type="button" onClick={() => void acceptAnswer()} className="bb-party-action accept">
+                Accept Join Answer
+              </button>
+            </>
+          ) : null}
+        </details>
 
         {error ? <p className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-xs font-black text-red-700">{error}</p> : null}
         {codeActionMessage ? <p className="mt-2 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-black text-emerald-800" role="status">{codeActionMessage}</p> : null}

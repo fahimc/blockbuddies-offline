@@ -368,3 +368,17 @@
 - [x] Add unit tests for compact code decoding, extraction, paste, and share fallback
 - [x] Add smoke coverage for the new Local Party code controls
 - [x] Bump Android debug APK version metadata to 1.5.1 / 10501
+
+## Post-phase Android LAN room signaling
+
+- [x] Add Android native LocalSignal Capacitor plugin
+- [x] Run a tiny LAN HTTP handshake server on the host APK
+- [x] Advertise host rooms with Android Network Service Discovery
+- [x] Discover available rooms from guest APKs on the same Wi-Fi
+- [x] Fetch host offers and send guest answers through the host room server
+- [x] Keep host approval with Accept Join Request
+- [x] Move manual invite/answer codes into a fallback section
+- [x] Stop room advertising after one local peer connects
+- [x] Add Android LAN/network permissions and cleartext allowance for local HTTP
+- [x] Add unit and smoke coverage for the room-first Local Party flow
+- [x] Bump Android debug APK version metadata to 1.5.2 / 10502

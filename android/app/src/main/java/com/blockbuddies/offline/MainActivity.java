@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(LocalSignalPlugin.class);
         clearStaleWebViewDataForThisBuild();
         super.onCreate(savedInstanceState);
         enterImmersiveMode();

@@ -1526,8 +1526,83 @@ canvas {
   background: linear-gradient(#38bdf8, #2563eb);
 }
 
+.bb-party-action.join.compact {
+  margin-top: 0;
+}
+
 .bb-party-action.disconnect {
   background: linear-gradient(#fb7185, #e11d48);
+}
+
+.bb-party-room-card {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.7rem;
+  border: 0.1rem solid rgb(34 197 94 / 0.35);
+  border-radius: 0.9rem;
+  background: linear-gradient(#effdf4, #dcfce7);
+  padding: 0.7rem;
+  color: #14532d;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.bb-party-room-card strong {
+  font-size: 0.95rem;
+  font-weight: 1000;
+}
+
+.bb-party-room-card.pending {
+  border-color: rgb(14 165 233 / 0.35);
+  background: linear-gradient(#f0f9ff, #dbeafe);
+  color: #0f3f8b;
+}
+
+.bb-party-room-list {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.bb-party-room-button {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 3.15rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(#ffffff, #e0f2fe);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  color: #0f172a;
+  box-shadow:
+    inset 0 -0.08rem 0 rgb(15 23 42 / 0.08),
+    0 0.22rem 0.55rem rgb(15 23 42 / 0.1);
+  touch-action: manipulation;
+}
+
+.bb-party-room-button span {
+  font-size: 0.86rem;
+  font-weight: 1000;
+}
+
+.bb-party-room-button small {
+  color: #475569;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.bb-party-manual {
+  margin-top: 0.7rem;
+  border-radius: 0.8rem;
+  background: rgb(15 23 42 / 0.05);
+  padding: 0.55rem;
+}
+
+.bb-party-manual summary {
+  cursor: pointer;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 1000;
+  touch-action: manipulation;
 }
 
 .bb-party-code {

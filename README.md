@@ -100,6 +100,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Local Party codes use compact compressed `BBP1` signals, Paste buttons, shared
   text extraction, and same-origin guest-answer handoff while keeping host
   approval through Accept Join Answer.
+- Android APK Local Party mode can host a LAN room from the host phone, advertise
+  it on the local network, let guests discover the room name, send the WebRTC
+  answer back through the host phone, and keep host approval through Accept Join
+  Request.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
@@ -191,6 +195,13 @@ does not use BlockBuddies cloud servers, matchmaking, accounts, or free-text
 chat. WebRTC support and local network/browser permissions can affect whether
 two nearby devices connect.
 
+In the Android APK, Local Party also includes LAN room signaling. The host phone
+runs a small local handshake server and advertises a room name with Android
+Network Service Discovery. Guests on the same Wi-Fi can find the room and send
+their join answer back to the host automatically. The host still accepts the join
+request. This native room mode is not available in the web/PWA build because
+browsers cannot open LAN server sockets from ordinary web pages.
+
 ## Android APK Build
 
 Capacitor writes the Android project to `android/`. Debug APKs are built with:
@@ -233,6 +244,10 @@ The `v1.5.1` APK compresses Local Party codes, adds Paste buttons, falls back to
 copying when Share fails, and can prefill host answers automatically for sessions
 running in the same app origin. Cross-device offline play still uses share/copy
 codes because there is no cloud signaling server.
+
+The `v1.5.2` APK adds Android LAN room signaling. Host devices advertise a room
+name and run the handshake server locally, guests discover rooms on the same
+Wi-Fi, and manual accept codes are only needed as fallback.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

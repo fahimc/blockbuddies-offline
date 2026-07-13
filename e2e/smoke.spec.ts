@@ -25,7 +25,7 @@ test('opens menu and navigates to game shell', async ({ page }) => {
 })
 
 test('opens Roblox-inspired offline feature panels', async ({ page }) => {
-  test.setTimeout(75_000)
+  test.setTimeout(120_000)
   await page.goto('/')
   await completeStartFlow(page)
   await page.getByTestId('game-canvas').waitFor()
@@ -73,6 +73,11 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     }
     if (item.button === 'Local Party') {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
+      await expect(page.getByLabel('Room Name')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Host Room' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Find Rooms' })).toBeVisible()
+      await expect(page.getByText('Room discovery needs the Android APK')).toBeVisible()
+      await page.getByText('Manual code fallback').click()
       await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Paste Invite Code' })).toBeVisible()
