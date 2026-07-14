@@ -1,6 +1,12 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import type { MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
 import { useGameStore } from '../state/gameStore'
+import {
+  makePartySnapshot,
+  useLocalPartyStore,
+  type LocalPartySnapshot,
+  type LocalPartyStatus,
+} from '../state/localPartyStore'
 
 export type MiniGameE2ESnapshot = {
   miniGame: MiniGameRuntime
@@ -12,7 +18,22 @@ export type MiniGameE2ESnapshot = {
 export type BlockBuddiesE2EBridge = {
   collectNextMiniGameTarget: () => MiniGameE2ESnapshot
   completeMiniGameRoute: () => MiniGameE2ESnapshot
+  broadcastLocalPartySnapshot: (position?: Vec3) => LocalPartyE2ESnapshot
+  getLocalPartySnapshot: () => LocalPartyE2ESnapshot
   getSnapshot: () => MiniGameE2ESnapshot
+}
+
+export type LocalPartyE2ESnapshot = {
+  playerId: string
+  playerName: string
+  status: LocalPartyStatus
+  role?: string
+  inviteCode: string
+  answerCode: string
+  answerCodeInput: string
+  remotePlayers: LocalPartySnapshot[]
+  lastEvent: string
+  error?: string
 }
 
 declare global {
@@ -27,6 +48,8 @@ export function installE2EBridge() {
   window.__blockBuddiesE2E = {
     collectNextMiniGameTarget,
     completeMiniGameRoute,
+    broadcastLocalPartySnapshot,
+    getLocalPartySnapshot,
     getSnapshot,
   }
 }
@@ -80,5 +103,38 @@ function getSnapshot(): MiniGameE2ESnapshot {
     coins: state.coins,
     earnedBadges: state.earnedBadges,
     playerPosition: state.playerPosition,
+  }
+}
+
+function broadcastLocalPartySnapshot(position?: Vec3): LocalPartyE2ESnapshot {
+  const game = useGameStore.getState()
+  const party = useLocalPartyStore.getState()
+  party.broadcastSnapshot(
+    makePartySnapshot({
+      id: party.playerId,
+      name: party.playerName,
+      position: position ?? game.playerPosition,
+      yaw: game.playerYaw,
+      avatar: game.avatar,
+      action: 'run',
+      interiorId: game.activeInterior?.id,
+    }),
+  )
+  return getLocalPartySnapshot()
+}
+
+function getLocalPartySnapshot(): LocalPartyE2ESnapshot {
+  const party = useLocalPartyStore.getState()
+  return {
+    playerId: party.playerId,
+    playerName: party.playerName,
+    status: party.status,
+    role: party.role,
+    inviteCode: party.inviteCode,
+    answerCode: party.answerCode,
+    answerCodeInput: party.answerCodeInput,
+    remotePlayers: Object.values(party.remotePlayers),
+    lastEvent: party.lastEvent,
+    error: party.error,
   }
 }
