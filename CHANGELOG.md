@@ -1,5 +1,31 @@
 # Changelog
 
+## [v1.5.5-doorway-safe-zones] - 2026-07-14
+
+### Added
+
+- Added shared doorway safe-zone collision filtering so trees, lamps, phone boxes, benches, buses, and placed prop pieces cannot block entry triggers.
+- Added procedural-world cleanup that removes rendered tree, lamp, and phone-box blockers from generated door approaches.
+- Added regression tests for doorway safe-zone collision filtering and procedural door approach clearance.
+
+### Changed
+
+- Indoor player and buddy standing height now uses a dedicated interior floor height to keep characters grounded in rooms.
+- Build-piece collision IDs now include the piece kind so only prop blockers are filtered from doorway safe zones.
+- Indoor mode no longer evaluates outdoor traffic collision boxes.
+- Updated Android version metadata to `1.5.5` / `10505`.
+
+### Fixed
+
+- Fixed indoor buddies/players appearing slightly off the interior floor plane.
+- Fixed procedural trees, lamp posts, and phone boxes being able to render or collide in front of enterable doors.
+- Fixed player-built prop collision being able to block the approach to an enterable built house/shop/tower.
+
+### Known Issues
+
+- Door safe zones clear collision for blocking props, but user-placed visual props may still remain visible until the player removes or moves them in build mode.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.4-enterable-places] - 2026-07-14
 
 ### Added

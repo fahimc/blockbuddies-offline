@@ -12,11 +12,13 @@ import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
 import { playerCollisionRadius, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
 import {
   buildBlockInteriorEntrance,
+  filterEntranceSafeZoneCollisions,
   interiorCollisionBoxes,
   interiorExitPosition,
   interiorExitRadius,
   interiorRoomHalfSize,
   interiorSpawnPosition,
+  interiorStandingY,
   makeInteriorVisit,
   nearestInteriorEntrance,
   proceduralDoorEntrance,
@@ -339,7 +341,7 @@ function InteriorWorld({ interior }: { interior: InteriorVisit }) {
         </span>
       </Html>
       <InteriorProps kind={interior.kind} />
-      <group position={[4.8, 0.9, -1.8]} rotation={[0, -0.55, 0]}>
+      <group position={[4.8, interiorStandingY, -1.8]} rotation={[0, -0.55, 0]}>
         <BlockAvatar
           bodyColor="#f2b07e"
           shirtColor={theme.buddyShirt}
@@ -463,7 +465,7 @@ function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
     const half = buildCollisionHalf(block.kind ?? 'block')
     return [
       {
-        id: `build:${block.id}`,
+        id: `build:${block.kind ?? 'block'}:${block.id}`,
         center: [block.position[0], block.position[1] + half[1], block.position[2]],
         half,
       },
@@ -760,7 +762,7 @@ function PlayerController() {
   const position = useRef(
     new THREE.Vector3(
       useGameStore.getState().playerPosition[0],
-      useGameStore.getState().playerPosition[1] + 0.9,
+      useGameStore.getState().playerPosition[1] + (useGameStore.getState().activeInterior ? interiorStandingY : 0.9),
       useGameStore.getState().playerPosition[2],
     ),
   )
@@ -810,10 +812,6 @@ function PlayerController() {
         : [],
     [collisionChunk.x, collisionChunk.z, settings.nightMode, settings.proceduralWorld, settings.worldSeed, settings.worldViewDistance],
   )
-  const collisionObstacles = useMemo(() => {
-    if (activeInterior) return interiorCollisionBoxes(activeInterior.kind)
-    return [...staticCollisionObstacles, ...proceduralPiecesToCollisionBoxes(proceduralPieces), ...buildBlocksToCollisionBoxes(placedBlocks)]
-  }, [activeInterior, placedBlocks, proceduralPieces])
   const interiorEntrances = useMemo(() => {
     if (activeInterior) return []
     const proceduralEntrances = proceduralPieces.flatMap((piece) => {
@@ -826,6 +824,11 @@ function PlayerController() {
     })
     return [...staticInteriorEntrances, ...proceduralEntrances, ...buildEntrances]
   }, [activeInterior, placedBlocks, proceduralPieces])
+  const collisionObstacles = useMemo(() => {
+    if (activeInterior) return interiorCollisionBoxes(activeInterior.kind)
+    const outsideObstacles = [...staticCollisionObstacles, ...proceduralPiecesToCollisionBoxes(proceduralPieces), ...buildBlocksToCollisionBoxes(placedBlocks)]
+    return filterEntranceSafeZoneCollisions(outsideObstacles, interiorEntrances)
+  }, [activeInterior, interiorEntrances, placedBlocks, proceduralPieces])
 
   useFrame((state, delta) => {
     const nextCollisionChunk = {
@@ -856,7 +859,7 @@ function PlayerController() {
     const desiredPosition = position.current.clone()
     desiredPosition.addScaledVector(direction, forward * speed * delta)
     desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
-    const trafficObstacles = trafficCollisionBoxesAtTime(trafficLanes, trafficVehicles, performance.now() / 1000)
+    const trafficObstacles = activeInterior ? [] : trafficCollisionBoxesAtTime(trafficLanes, trafficVehicles, performance.now() / 1000)
     const resolvedPosition = resolveHorizontalCollision(
       [position.current.x, position.current.y, position.current.z],
       [desiredPosition.x, desiredPosition.y, desiredPosition.z],
@@ -866,14 +869,15 @@ function PlayerController() {
     const separatedPosition = separateCircleFromBoxes(resolvedPosition, trafficObstacles, playerCollisionRadius + 0.05)
     position.current.x = separatedPosition[0]
     position.current.z = separatedPosition[2]
+    const standY = activeInterior ? interiorStandingY : 0.9
     velocityY.current -= 25 * delta
-    if ((keys.jump || touch.jump) && position.current.y <= 0.91) velocityY.current = 9
+    if ((keys.jump || touch.jump) && position.current.y <= standY + 0.01) velocityY.current = 9
     position.current.y += velocityY.current * delta
-    if (position.current.y < 0.9) {
-      position.current.y = 0.9
+    if (position.current.y < standY) {
+      position.current.y = standY
       velocityY.current = 0
     }
-    const isAirborne = position.current.y > 0.94
+    const isAirborne = position.current.y > standY + 0.04
     if (isAirborne !== airborneRef.current) {
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
@@ -894,13 +898,13 @@ function PlayerController() {
       .add(new THREE.Vector3(Math.sin(yaw.current) * cameraDistance, cameraHeight, Math.cos(yaw.current) * cameraDistance))
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
-    setPlayer([position.current.x, position.current.y - 0.9, position.current.z], yaw.current)
+    setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current)
     if (performance.now() - lastPartyBroadcastAt.current > 120) {
       broadcastSnapshot(
         makePartySnapshot({
           id: partyPlayerId,
           name: partyPlayerName,
-          position: [position.current.x, position.current.y - 0.9, position.current.z],
+          position: [position.current.x, position.current.y - standY, position.current.z],
           yaw: yaw.current,
           avatar,
           action: isAirborne ? 'jump' : isMoving ? 'run' : 'idle',
@@ -935,7 +939,7 @@ function PlayerController() {
       : undefined
     if (doorway) {
       enterInterior(makeInteriorVisit(doorway))
-      position.current.set(interiorSpawnPosition[0], 0.9, interiorSpawnPosition[2])
+      position.current.set(interiorSpawnPosition[0], interiorStandingY, interiorSpawnPosition[2])
       yaw.current = 0
       velocityY.current = 0
       group.current?.position.copy(position.current)

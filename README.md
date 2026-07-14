@@ -115,6 +115,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   schools, procedural borough buildings, and player-built houses/shops/towers.
 - Indoor prototype rooms include house, shop, school, and tower-lobby layouts
   with walls, furniture, exit pads, indoor minimap context, and coarse collision.
+- Doorway safe zones clear blocking collision from trees, lamp posts, phone
+  boxes, traffic props, and user-built props near supported doors.
 - Coarse visible-object collision prevents the player from walking through
   buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
   pieces while still sliding along blocked axes.
@@ -262,6 +264,10 @@ building density, and removes late-overlapping scenery blockers from roads.
 
 The `v1.5.4` APK adds enterable places. Walking into supported doorways opens an
 indoor room, and the exit pad returns the player to the same outdoor door.
+
+The `v1.5.5` APK adds doorway safe zones, removes generated scenery blockers
+from procedural door approaches, grounds indoor characters, and disables outdoor
+traffic collision checks while inside rooms.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

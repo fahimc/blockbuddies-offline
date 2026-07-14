@@ -16,6 +16,8 @@ export type InteriorEntrance = {
 export const interiorSpawnPosition: Vec3 = [0, 0, -4.45]
 export const interiorExitPosition: Vec3 = [0, 0, -5.95]
 export const interiorExitRadius = 1.05
+export const interiorStandingY = 1
+export const entranceSafeZoneRadius = 1.85
 
 const roomHalfWidth = 7
 const roomHalfDepth = 6.5
@@ -43,6 +45,11 @@ export function nearestInteriorEntrance(position: Vec3, entrances: InteriorEntra
     }
   }
   return nearest
+}
+
+export function filterEntranceSafeZoneCollisions(boxes: CollisionBox[], entrances: InteriorEntrance[]) {
+  if (entrances.length === 0) return boxes
+  return boxes.filter((box) => !isEntranceBlockerCollision(box.id) || !entrances.some((entrance) => collisionBoxOverlapsEntrance(box, entrance)))
 }
 
 export function staticBuildingEntrance({
@@ -150,6 +157,16 @@ export function interiorRoomHalfSize() {
   return { width: roomHalfWidth, depth: roomHalfDepth, wallThickness, doorHalfWidth }
 }
 
+function collisionBoxOverlapsEntrance(box: CollisionBox, entrance: InteriorEntrance) {
+  const closestX = clamp(entrance.position[0], box.center[0] - box.half[0], box.center[0] + box.half[0])
+  const closestZ = clamp(entrance.position[2], box.center[2] - box.half[2], box.center[2] + box.half[2])
+  return Math.hypot(entrance.position[0] - closestX, entrance.position[2] - closestZ) <= entranceSafeZoneRadius
+}
+
+function isEntranceBlockerCollision(id: string) {
+  return /tree|lamp|phone|bus|bench|build:(car|tree|lamp):/.test(id)
+}
+
 function buildingEntrance({
   id,
   title,
@@ -185,4 +202,8 @@ function directionFromYaw(yaw: number): [number, number] {
 
 function distance2d(a: Vec3, b: Vec3) {
   return Math.hypot(a[0] - b[0], a[2] - b[2])
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }

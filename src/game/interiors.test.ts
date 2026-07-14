@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildPieceDimensions, buildingCenterPosition, buildingScale } from './scale'
 import {
   buildBlockInteriorEntrance,
+  filterEntranceSafeZoneCollisions,
   interiorCollisionBoxes,
   interiorExitPosition,
   interiorExitRadius,
@@ -11,6 +12,7 @@ import {
   staticBuildingEntrance,
 } from './interiors'
 import type { BuildBlock } from './types'
+import type { CollisionBox } from './collision'
 import type { ProceduralPiece } from '../data/proceduralWorld'
 
 describe('interior entrances', () => {
@@ -93,5 +95,26 @@ describe('interior entrances', () => {
     expect(boxes.some((box) => box.id === 'interior:teacher-desk')).toBe(true)
     expect(interiorExitRadius).toBeGreaterThan(0.9)
     expect(boxes.every((box) => Math.hypot(box.center[0] - interiorExitPosition[0], box.center[2] - interiorExitPosition[2]) > 0.8)).toBe(true)
+  })
+
+  it('filters tree and lamp collision out of doorway safe zones', () => {
+    const entrance = staticBuildingEntrance({
+      id: 'safe-house',
+      title: 'Safe House',
+      kind: 'house',
+      center: [0, 0, 0],
+      scale: [4, 4, 4],
+    })
+    const boxes: CollisionBox[] = [
+      { id: 'static-tree:blocked', center: [entrance.position[0] + 0.2, 1, entrance.position[2]], half: [0.8, 1, 0.8] },
+      { id: 'static-lamp:blocked', center: [entrance.position[0] - 0.3, 1, entrance.position[2]], half: [0.3, 1, 0.3] },
+      { id: 'static-building:kept', center: [0, 2, 0], half: [2, 2, 2] },
+      { id: 'static-tree:kept', center: [8, 1, 8], half: [0.8, 1, 0.8] },
+    ]
+
+    expect(filterEntranceSafeZoneCollisions(boxes, [entrance]).map((box) => box.id)).toEqual([
+      'static-building:kept',
+      'static-tree:kept',
+    ])
   })
 })

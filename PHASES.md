@@ -407,3 +407,13 @@
 - [x] Guard build mode so persistent outdoor pieces are not placed from indoor coordinates
 - [x] Add unit coverage for doorway placement and interior collision layout
 - [x] Bump Android debug APK version metadata to 1.5.4 / 10504
+
+## Post-phase doorway safe-zone fix
+
+- [x] Add shared safe-zone collision filtering for doorway approaches
+- [x] Remove procedural tree, lamp, and phone-box blockers from generated door approaches
+- [x] Keep player-built prop collision from blocking built house/shop/tower doors
+- [x] Stop outdoor traffic collision checks while inside rooms
+- [x] Ground indoor buddies and players against the interior floor height
+- [x] Add unit coverage for safe-zone filtering and procedural door clearance
+- [x] Bump Android debug APK version metadata to 1.5.5 / 10505

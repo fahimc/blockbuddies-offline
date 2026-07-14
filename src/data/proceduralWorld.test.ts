@@ -110,6 +110,26 @@ describe('procedural borough world', () => {
     expect(roads.every((road) => Math.min(road.scale[0], road.scale[2]) === realScale.roadTile)).toBe(true)
     expect(roads.every(() => realScale.roadTile / realScale.carWidth > 3.4)).toBe(true)
   })
+
+  it('keeps procedural door safe zones clear of scenery blockers', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 2,
+      night: false,
+    })
+
+    const doorZones = world.pieces
+      .filter((piece) => piece.kind === 'door')
+      .map((door) => ({
+        position: [door.position[0], 0, door.position[2] + 0.58] as [number, number, number],
+        scale: [3.7, 2, 3.7] as [number, number, number],
+      }))
+    const blockers = world.pieces.filter((piece) => piece.kind === 'tree-trunk' || piece.kind === 'phone-box' || piece.kind === 'lamp-post')
+
+    expect(doorZones.length).toBeGreaterThan(0)
+    expect(blockers.every((blocker) => doorZones.every((zone) => !overlapsTopDown(blocker, zone, 0.04)))).toBe(true)
+  })
 })
 
 function overlapsTopDown(

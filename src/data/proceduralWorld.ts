@@ -48,6 +48,7 @@ const chunkSize = 36
 const riverWidth = 9
 const treeRoadClearance = realScale.roadTile * 0.66 + realScale.pavementWidth * 0.7 + 0.72
 const buildingRoadClearance = realScale.roadTile * 0.5 + realScale.pavementWidth + meters(1.35)
+const doorSafeZoneRadius = 1.85
 const plotInset = 6.45
 const buildingPalette = ['#f97316', '#facc15', '#93c5fd', '#a78bfa', '#fb7185', '#22c55e', '#f9a8d4']
 const roofPalette = ['#ef4444', '#1d4ed8', '#7c3aed', '#0f172a', '#92400e']
@@ -76,7 +77,7 @@ export function generateProceduralWorld({ seed, center, viewDistance, night }: P
   pieces.push(...buildLandmarks(night))
 
   return {
-    pieces: removeSurfaceBlockerOverlaps(pieces),
+    pieces: removeDoorBlockerOverlaps(removeSurfaceBlockerOverlaps(pieces)),
     buildingCount,
     district: districtFor(center),
   }
@@ -295,6 +296,38 @@ function removeSurfaceBlockerOverlaps(pieces: ProceduralPiece[]) {
     if ((piece.kind === 'tree-trunk' || piece.kind === 'tree-top') && blockedTreePrefixes.has(piece.id.replace(/:(trunk|top)$/, ''))) return false
     return true
   })
+}
+
+function removeDoorBlockerOverlaps(pieces: ProceduralPiece[]) {
+  const doorZones = pieces
+    .filter((piece) => piece.kind === 'door')
+    .map((door) => ({
+      position: [door.position[0], 0, door.position[2] + 0.58] as Vec3,
+      scale: [doorSafeZoneRadius * 2, 2, doorSafeZoneRadius * 2] as Vec3,
+    }))
+  if (doorZones.length === 0) return pieces
+
+  const blockedTreePrefixes = new Set<string>()
+  const blockedLampPrefixes = new Set<string>()
+  const blockedPieceIds = new Set<string>()
+
+  pieces.forEach((piece) => {
+    if (!isDoorBlocker(piece) || !doorZones.some((zone) => overlapsTopDown(piece, zone, 0.04))) return
+    if (piece.kind === 'tree-trunk') blockedTreePrefixes.add(piece.id.replace(/:trunk$/, ''))
+    else if (piece.kind === 'lamp-post') blockedLampPrefixes.add(piece.id.replace(/:post$/, ''))
+    else blockedPieceIds.add(piece.id)
+  })
+
+  return pieces.filter((piece) => {
+    if (blockedPieceIds.has(piece.id)) return false
+    if ((piece.kind === 'tree-trunk' || piece.kind === 'tree-top') && blockedTreePrefixes.has(piece.id.replace(/:(trunk|top)$/, ''))) return false
+    if ((piece.kind === 'lamp-post' || piece.kind === 'lamp-light') && blockedLampPrefixes.has(piece.id.replace(/:(post|light)$/, ''))) return false
+    return true
+  })
+}
+
+function isDoorBlocker(piece: ProceduralPiece) {
+  return piece.kind === 'tree-trunk' || piece.kind === 'lamp-post' || piece.kind === 'phone-box'
 }
 
 function overlapsTopDown(
