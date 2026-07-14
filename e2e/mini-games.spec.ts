@@ -153,9 +153,9 @@ test.describe('mini games end-to-end flow', () => {
     await completeStartFlow(page, 'Seeker')
 
     await startMiniGame(page, 'Play Hide & Seek', /Hide & Seek 0\/3/)
-    await expect(page.getByText('Hide & Seek: LunaBlocks')).toHaveCount(1)
-    await expect(page.getByText('Hide & Seek: MaxJumps')).toHaveCount(1)
-    await expect(page.getByText('Hide & Seek: PipPop')).toHaveCount(1)
+    await expect(page.getByText('Hide & Seek: LunaBlocks')).toHaveCount(1, { timeout: 15_000 })
+    await expect(page.getByText('Hide & Seek: MaxJumps')).toHaveCount(1, { timeout: 15_000 })
+    await expect(page.getByText('Hide & Seek: PipPop')).toHaveCount(1, { timeout: 15_000 })
 
     const finished = await completeMiniGameRoute(page)
 

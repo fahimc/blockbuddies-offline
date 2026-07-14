@@ -4,17 +4,22 @@
 
 ### Added
 
+- Added a responsive full-town map with selectable landmark markers and fast travel to six key places.
+- Added collision-safe arrival points, activity travel guards, and unit/E2E coverage for map travel.
 - Added a mobile Run toggle and Shift sprint controls with distinct walk/run speeds and animations.
 - Added a contextual bed action that lets players sleep, wake, or move to get out of bed inside houses.
 - Added deterministic traffic safety tests, bed interaction tests, mobile control tests, and name-screen focus coverage.
 
 ### Changed
 
+- The minimap and hamburger menu now open the full map, including from inside buildings.
+- Obby and mini-game start relocation now uses the same acknowledged controller teleport flow.
 - Traffic now advances from shared live simulation offsets and yields to players, AI buddies, and local-party players in the lane ahead.
 - Mobile interaction taps now remain active long enough for the game frame to consume quick taps reliably.
 
 ### Fixed
 
+- Prevented a retiring player-controller frame from overwriting a requested teleport destination.
 - Reversed horizontal and vertical camera orbit drag so the world follows direct touch movement correctly.
 - Prevented the name field from automatically opening the mobile keyboard when the naming screen appears.
 - Kept stopped traffic visuals and collision boxes synchronized.

@@ -3,17 +3,68 @@ import type { LocationId, Vec3 } from '../game/types'
 export type WorldLocation = {
   id: LocationId
   label: string
+  description: string
   position: Vec3
+  travelPosition: Vec3
+  travelYaw: number
   color: string
 }
 
 export const worldLocations: WorldLocation[] = [
-  { id: 'spawn', label: 'Spawn Plaza', position: [0, 0, 0], color: '#38bdf8' },
-  { id: 'park', label: 'Buddy Park', position: [-12, 0, -8], color: '#22c55e' },
-  { id: 'shop', label: 'Coin Shop', position: [12, 0, -7], color: '#f97316' },
-  { id: 'school', label: 'Skill School', position: [-14, 0, 10], color: '#a78bfa' },
-  { id: 'obby', label: 'Beginner Obby', position: [16, 0, 12], color: '#ef4444' },
-  { id: 'houses', label: 'Buddy Houses', position: [1, 0, 18], color: '#facc15' },
+  {
+    id: 'spawn',
+    label: 'Spawn Plaza',
+    description: 'Meet buddies in the centre of town.',
+    position: [0, 0, 0],
+    travelPosition: [0, 0, 4],
+    travelYaw: Math.PI,
+    color: '#38bdf8',
+  },
+  {
+    id: 'park',
+    label: 'Buddy Park',
+    description: 'Relax, collect coins, and visit the clubhouse.',
+    position: [-12, 0, -8],
+    travelPosition: [-12, 0, -3.6],
+    travelYaw: Math.PI,
+    color: '#22c55e',
+  },
+  {
+    id: 'shop',
+    label: 'Coin Shop',
+    description: 'Spend coins on new styles and accessories.',
+    position: [12, 0, -7],
+    travelPosition: [12, 0, -2.4],
+    travelYaw: Math.PI,
+    color: '#f97316',
+  },
+  {
+    id: 'school',
+    label: 'Skill School',
+    description: 'Explore the school and meet learning buddies.',
+    position: [-14, 0, 10],
+    travelPosition: [-14, 0, 14.9],
+    travelYaw: Math.PI,
+    color: '#a78bfa',
+  },
+  {
+    id: 'obby',
+    label: 'Beginner Obby',
+    description: 'Start the obstacle course and race for rewards.',
+    position: [16, 0, 12],
+    travelPosition: [12.4, 0, 12],
+    travelYaw: Math.PI / 2,
+    color: '#ef4444',
+  },
+  {
+    id: 'houses',
+    label: 'Buddy Houses',
+    description: 'Visit homes, rest, and hang out with buddies.',
+    position: [1, 0, 18],
+    travelPosition: [1, 0, 22.7],
+    travelYaw: Math.PI,
+    color: '#facc15',
+  },
 ]
 
 export function getLocation(id: LocationId) {

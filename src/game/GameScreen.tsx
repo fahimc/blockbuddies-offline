@@ -19,6 +19,7 @@ import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
 import { MiniGamesPanel } from '../ui/MiniGamesPanel'
 import { MiniMap } from '../ui/MiniMap'
+import { MapPanel } from '../ui/MapPanel'
 import { useGameStore } from '../state/gameStore'
 
 const keyboardMap = [
@@ -86,6 +87,7 @@ export function GameScreen() {
         {openPanel === 'server' ? <ServerPanel /> : null}
         {openPanel === 'emotes' ? <EmotePanel /> : null}
         {openPanel === 'minigames' ? <MiniGamesPanel /> : null}
+        {openPanel === 'map' ? <MapPanel /> : null}
       </section>
     </KeyboardControls>
   )

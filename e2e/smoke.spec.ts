@@ -59,6 +59,7 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await page.getByRole('button', { name: 'Back' }).click()
 
   for (const item of [
+    { button: 'Town Map', heading: 'Town Map' },
     { button: 'Leaderboard', heading: 'Leaderboard' },
     { button: 'Badges', heading: 'Badges' },
     { button: 'Mini Games', heading: 'Mini Games' },
@@ -69,12 +70,16 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   ]) {
     await page.getByRole('button', { name: 'Menu', exact: true }).click()
     await expect(page.locator('.bb-game-menu-drawer')).toBeVisible()
-    await page.getByRole('button', { name: item.button }).click()
+    await page.getByRole('button', { name: item.button, exact: true }).click()
     await expect(page.getByRole('heading', { name: item.heading })).toBeVisible()
     if (item.heading === 'Build') {
       await expect(page.getByRole('button', { name: 'House' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Auto Street' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Rotate' })).toBeVisible()
+    }
+    if (item.button === 'Town Map') {
+      await expect(page.getByTestId('town-map')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Travel to Spawn Plaza' })).toBeVisible()
     }
     if (item.button === 'Mini Games') {
       await expect(page.getByRole('button', { name: 'Play Coin Rush' })).toBeVisible()
@@ -136,6 +141,13 @@ test.describe('landscape phone layout', () => {
     await expect(page.getByTestId('world-drag-control')).toBeVisible()
     await expect(page.getByTestId('mini-map')).toBeVisible()
 
+    await page.getByRole('button', { name: 'Open town map' }).click()
+    const mapPanel = page.getByTestId('world-map-panel')
+    await expect(mapPanel).toBeVisible()
+    await expect(mapPanel).toBeInViewport()
+    await expect(page.getByTestId('map-marker-houses')).toBeVisible()
+    await page.getByRole('button', { name: 'Close map' }).click()
+
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
     const sleepAction = page.locator('.mobile-use-button[aria-label="Sleep"]')
     await expect(sleepAction).toBeVisible()
@@ -147,6 +159,28 @@ test.describe('landscape phone layout', () => {
     await expect(sleepAction).toBeVisible()
     expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().sleeping)).toBe(false)
   })
+})
+
+test('opens the town map and fast travels to a key place', async ({ page }) => {
+  await page.goto('/')
+  await completeStartFlow(page, 'MapRunner')
+
+  const before = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+  await page.getByRole('button', { name: 'Open town map' }).click()
+  await expect(page.getByTestId('world-map-panel')).toBeVisible()
+  await expect(page.getByTestId('town-map')).toBeVisible()
+  await expect(page.getByTestId('map-marker-school')).toBeVisible()
+  await page.getByTestId('map-marker-school').click()
+  await page.getByRole('button', { name: 'Travel to Skill School' }).click()
+
+  await expect(page.getByTestId('world-map-panel')).toBeHidden()
+  await expect.poll(async () => {
+    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    return {
+      position: snapshot.playerPosition.map((value) => Math.round(value * 10) / 10),
+      teleported: snapshot.teleportSequence > before.teleportSequence,
+    }
+  }).toEqual({ position: [-14, 0, 14.9], teleported: true })
 })
 
 test.describe('portrait splash layout', () => {

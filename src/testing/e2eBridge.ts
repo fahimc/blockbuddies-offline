@@ -30,6 +30,8 @@ export type GameplayE2ESnapshot = {
   sleeping: boolean
   interactionPrompt?: 'sleep' | 'wake'
   run: boolean
+  playerPosition: Vec3
+  teleportSequence: number
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -68,7 +70,7 @@ export function installE2EBridge() {
 function prepareHouseBedInteraction() {
   const game = useGameStore.getState()
   game.setSleeping(false)
-  game.setPlayer([houseBedWakePosition[0], 0, houseBedWakePosition[2]], 0)
+  game.setPlayer([houseBedWakePosition[0], 0, houseBedWakePosition[2]], 0, game.teleportSequence)
   game.enterInterior({
     id: 'e2e-house',
     title: 'Test House',
@@ -85,6 +87,8 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     sleeping: game.sleeping,
     interactionPrompt: game.interactionPrompt,
     run: game.touch.run,
+    playerPosition: game.playerPosition,
+    teleportSequence: game.teleportSequence,
   }
 }
 
@@ -103,7 +107,8 @@ function collectNextMiniGameTarget() {
   }
 
   const position = target.position
-  useGameStore.getState().setPlayer(position, useGameStore.getState().playerYaw)
+  const game = useGameStore.getState()
+  game.setPlayer(position, game.playerYaw, game.teleportSequence)
   useGameStore.getState().tickMiniGame(performance.now(), position)
   return getSnapshot()
 }

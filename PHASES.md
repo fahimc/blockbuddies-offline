@@ -441,3 +441,15 @@
 - [x] Add Playwright smoke coverage for the Mini Games panel
 - [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
 - [x] Bump Android debug APK version metadata to 1.5.7 / 10507
+
+## Post-phase town map and fast travel
+
+- [x] Add a responsive full-town map for desktop, landscape phone, and portrait phone layouts
+- [x] Open the full map from both the minimap and hamburger menu
+- [x] Add selectable markers for Spawn Plaza, Buddy Park, Coin Shop, Skill School, Beginner Obby, and Buddy Houses
+- [x] Add collision-safe arrival points outside buildings and activity geometry
+- [x] Exit interiors, clear held controls, and remount the live controller when travelling
+- [x] Block fast travel while an obby or timed mini-game is active
+- [x] Add controller-generation acknowledgement so stale frames cannot cancel a teleport
+- [x] Add unit and Playwright coverage for destination data, travel state, mobile layout, and live teleport behavior
+- [x] Run lint, typecheck, full unit tests, production build, full Playwright tests, Capacitor sync, and Android debug build

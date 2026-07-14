@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { coinRushTargets, createInitialMiniGame, miniGameDefinition } from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
+import { getLocation } from '../data/world'
 import { defaultAvatar, makeSaveSnapshot, normalizeSavedAvatar, useGameStore } from './gameStore'
 
 describe('avatar save migration', () => {
@@ -110,5 +111,63 @@ describe('mini game store flow', () => {
     expect(useGameStore.getState().coins).toBe(35)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
     expect(useGameStore.getState().miniGame.records['coin-rush']?.bestScore).toBe(8)
+  })
+})
+
+describe('map fast travel', () => {
+  it('leaves interiors, clears movement, and moves to a safe landmark arrival point', () => {
+    const sequence = useGameStore.getState().teleportSequence
+    useGameStore.setState((state) => ({
+      activeInterior: {
+        id: 'test-house',
+        title: 'Test House',
+        kind: 'house',
+        returnPosition: [4, 0, 4],
+        returnYaw: 0,
+      },
+      nearbyLocation: undefined,
+      openPanel: 'map',
+      buildMode: true,
+      sleeping: true,
+      interactionPrompt: 'wake',
+      touch: { x: 1, y: -1, lookX: 0, lookY: 0, jump: true, interact: true, run: true },
+      obby: { ...state.obby, active: false },
+      miniGame: createInitialMiniGame(),
+      chat: [],
+    }))
+
+    expect(useGameStore.getState().travelToLocation('school')).toBe(true)
+
+    const state = useGameStore.getState()
+    const school = getLocation('school')
+    expect(state.playerPosition).toEqual(school.travelPosition)
+    expect(state.playerYaw).toBe(school.travelYaw)
+    expect(state.teleportSequence).toBe(sequence + 1)
+    expect(state.activeInterior).toBeUndefined()
+    expect(state.openPanel).toBeUndefined()
+    expect(state.buildMode).toBe(false)
+    expect(state.sleeping).toBe(false)
+    expect(state.touch).toEqual({ x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false })
+    expect(state.chat.at(-1)?.text).toBe('Travelled to Skill School')
+
+    useGameStore.getState().setPlayer([0, 0, 4], 0, sequence)
+    expect(useGameStore.getState().playerPosition).toEqual(school.travelPosition)
+    expect(useGameStore.getState().teleportTarget).toBeDefined()
+
+    useGameStore.getState().setPlayer(school.travelPosition, school.travelYaw, sequence + 1)
+    expect(useGameStore.getState().teleportTarget).toBeUndefined()
+  })
+
+  it('blocks fast travel while a timed activity is active', () => {
+    useGameStore.setState((state) => ({
+      obby: { ...state.obby, active: true },
+      miniGame: createInitialMiniGame(),
+      playerPosition: [3, 0, 3],
+      chat: [],
+    }))
+
+    expect(useGameStore.getState().travelToLocation('park')).toBe(false)
+    expect(useGameStore.getState().playerPosition).toEqual([3, 0, 3])
+    expect(useGameStore.getState().chat.at(-1)?.text).toContain('active game')
   })
 })

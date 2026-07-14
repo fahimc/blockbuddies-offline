@@ -12,6 +12,7 @@ const roadRepeat = 72
 const roadOrigin = 18
 
 export function MiniMap() {
+  const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const activeInterior = useGameStore((state) => state.activeInterior)
   const playerPosition = useGameStore((state) => state.playerPosition)
   const playerYaw = useGameStore((state) => state.playerYaw)
@@ -39,50 +40,54 @@ export function MiniMap() {
   if (activeInterior) {
     return (
       <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">
-        <div className="bb-mini-map-title">
-          <MapIcon size={14} aria-hidden />
-          <span>Inside</span>
-        </div>
-        <div className="bb-mini-map-surface">
-          <span className="bb-mini-map-road horizontal" style={{ top: '83%', height: '11%', left: '39%', right: 'auto', width: '22%' }} />
-          <span className="bb-mini-map-location" style={{ left: '50%', top: '83%', backgroundColor: '#38bdf8' }} title="Exit" />
-          <span className="bb-mini-map-location" style={{ left: '50%', top: '34%', backgroundColor: '#facc15' }} title={activeInterior.title} />
-          <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
-        </div>
+        <button type="button" className="bb-mini-map-open" onClick={() => setOpenPanel('map')} aria-label="Open town map">
+          <span className="bb-mini-map-title">
+            <MapIcon size={14} aria-hidden />
+            <span>Inside - Open Map</span>
+          </span>
+          <span className="bb-mini-map-surface">
+            <span className="bb-mini-map-road horizontal" style={{ top: '83%', height: '11%', left: '39%', right: 'auto', width: '22%' }} />
+            <span className="bb-mini-map-location" style={{ left: '50%', top: '83%', backgroundColor: '#38bdf8' }} title="Exit" />
+            <span className="bb-mini-map-location" style={{ left: '50%', top: '34%', backgroundColor: '#facc15' }} title={activeInterior.title} />
+            <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
+          </span>
+        </button>
       </aside>
     )
   }
 
   return (
     <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">
-      <div className="bb-mini-map-title">
-        <MapIcon size={14} aria-hidden />
-        <span>Map</span>
-      </div>
-      <div className="bb-mini-map-surface">
-        {roads.map((road) => (
-          <span key={road.id} className={`bb-mini-map-road ${road.orientation}`} style={road.style} />
-        ))}
-        {worldLocations.filter((location) => isOnMap(location.position, playerPosition)).map((location) => (
-          <span
-            key={location.id}
-            className="bb-mini-map-location"
-            style={{ ...pointStyle(location.position, playerPosition), backgroundColor: location.color }}
-            title={location.label}
-          />
-        ))}
-        {traffic.filter((vehicle) => isOnMap(vehicle.position, playerPosition)).map((vehicle) => (
-          <span
-            key={vehicle.id}
-            className="bb-mini-map-traffic"
-            style={{ ...pointStyle(vehicle.position, playerPosition), backgroundColor: vehicle.color }}
-          />
-        ))}
-        {bots.filter((bot) => isOnMap(bot.position, playerPosition)).slice(0, 8).map((bot) => (
-          <span key={bot.id} className="bb-mini-map-bot" style={pointStyle(bot.position, playerPosition)} title={bot.id} />
-        ))}
-        <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
-      </div>
+      <button type="button" className="bb-mini-map-open" onClick={() => setOpenPanel('map')} aria-label="Open town map">
+        <span className="bb-mini-map-title">
+          <MapIcon size={14} aria-hidden />
+          <span>Open Map</span>
+        </span>
+        <span className="bb-mini-map-surface">
+          {roads.map((road) => (
+            <span key={road.id} className={`bb-mini-map-road ${road.orientation}`} style={road.style} />
+          ))}
+          {worldLocations.filter((location) => isOnMap(location.position, playerPosition)).map((location) => (
+            <span
+              key={location.id}
+              className="bb-mini-map-location"
+              style={{ ...pointStyle(location.position, playerPosition), backgroundColor: location.color }}
+              title={location.label}
+            />
+          ))}
+          {traffic.filter((vehicle) => isOnMap(vehicle.position, playerPosition)).map((vehicle) => (
+            <span
+              key={vehicle.id}
+              className="bb-mini-map-traffic"
+              style={{ ...pointStyle(vehicle.position, playerPosition), backgroundColor: vehicle.color }}
+            />
+          ))}
+          {bots.filter((bot) => isOnMap(bot.position, playerPosition)).slice(0, 8).map((bot) => (
+            <span key={bot.id} className="bb-mini-map-bot" style={pointStyle(bot.position, playerPosition)} title={bot.id} />
+          ))}
+          <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
+        </span>
+      </button>
     </aside>
   )
 }

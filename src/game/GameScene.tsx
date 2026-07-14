@@ -165,6 +165,7 @@ export function GameScene() {
 
 function OutdoorWorld() {
   const settings = useGameStore((state) => state.settings)
+  const teleportSequence = useGameStore((state) => state.teleportSequence)
   const trafficLanes = useMemo(() => makeTrafficLanes(), [])
   const trafficVehicleCount = settings.quality === 'low' ? 6 : 10
   const initialTrafficVehicles = useMemo(
@@ -182,7 +183,7 @@ function OutdoorWorld() {
       <ProceduralBoroughWorld />
       <Town />
       <TrafficVehicles lanes={trafficLanes} vehicles={initialTrafficVehicles} runtime={trafficRuntime} />
-      <PlayerController key="outdoor" trafficLanes={trafficLanes} trafficRuntime={trafficRuntime} />
+      <PlayerController key={`outdoor:${teleportSequence}`} trafficLanes={trafficLanes} trafficRuntime={trafficRuntime} />
       <Bots />
       <LocalPartyPlayers />
       <ObbyCourse />
@@ -872,10 +873,14 @@ function PlayerController({
   trafficLanes?: TrafficLane[]
   trafficRuntime?: MutableRefObject<TrafficVehicle[]>
 }) {
+  const initialPlayerState = useGameStore.getState()
+  const initialPlayerPosition = initialPlayerState.teleportTarget?.position ?? initialPlayerState.playerPosition
+  const initialPlayerYaw = initialPlayerState.teleportTarget?.yaw ?? initialPlayerState.playerYaw
+  const controllerTeleportSequence = initialPlayerState.teleportSequence
   const group = useRef<THREE.Group>(null)
   const [, getKeys] = useKeyboardControls()
   const velocityY = useRef(0)
-  const yaw = useRef(0)
+  const yaw = useRef(initialPlayerYaw)
   const cameraPitch = useRef(0)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
@@ -889,9 +894,9 @@ function PlayerController({
   const [airborne, setAirborne] = useState(false)
   const position = useRef(
     new THREE.Vector3(
-      useGameStore.getState().playerPosition[0],
-      useGameStore.getState().playerPosition[1] + avatarGroundOffset,
-      useGameStore.getState().playerPosition[2],
+      initialPlayerPosition[0],
+      initialPlayerPosition[1] + avatarGroundOffset,
+      initialPlayerPosition[2],
     ),
   )
   const setPlayer = useGameStore((state) => state.setPlayer)
@@ -1068,7 +1073,7 @@ function PlayerController({
       .add(new THREE.Vector3(Math.sin(yaw.current) * cameraDistance, cameraHeight, Math.cos(yaw.current) * cameraDistance))
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
-    setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current)
+    setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current, controllerTeleportSequence)
     if (performance.now() - lastPartyBroadcastAt.current > 120) {
       broadcastSnapshot(
         makePartySnapshot({
@@ -1096,7 +1101,7 @@ function PlayerController({
           velocityY.current = 0
           group.current?.position.copy(position.current)
           if (group.current) group.current.rotation.y = yaw.current
-          setPlayer([position.current.x, 0, position.current.z], yaw.current)
+          setPlayer([position.current.x, 0, position.current.z], yaw.current, controllerTeleportSequence)
           lastInteriorTransitionAt.current = performance.now()
           return
         }
@@ -1114,7 +1119,7 @@ function PlayerController({
       velocityY.current = 0
       group.current?.position.copy(position.current)
       if (group.current) group.current.rotation.y = yaw.current
-      setPlayer([position.current.x, 0, position.current.z], yaw.current)
+      setPlayer([position.current.x, 0, position.current.z], yaw.current, controllerTeleportSequence)
       lastInteriorTransitionAt.current = performance.now()
       return
     }

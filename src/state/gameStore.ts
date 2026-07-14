@@ -76,6 +76,12 @@ type TouchInput = {
 
 type InteractionPrompt = 'sleep' | 'wake'
 
+type TeleportTarget = {
+  sequence: number
+  position: Vec3
+  yaw: number
+}
+
 type CustomizationSelection = {
   name: string
   cost: number
@@ -85,6 +91,7 @@ type CustomizationSelection = {
 }
 
 export type GamePanel =
+  | 'map'
   | 'quests'
   | 'shop'
   | 'avatar'
@@ -100,6 +107,8 @@ export type GamePanel =
 type GameState = GameSave & {
   playerPosition: Vec3
   playerYaw: number
+  teleportSequence: number
+  teleportTarget?: TeleportTarget
   screen: 'menu' | 'setup-avatar' | 'setup-name' | 'game'
   bots: BotRuntime[]
   chat: ChatMessage[]
@@ -121,7 +130,8 @@ type GameState = GameSave & {
   buildRotation: number
   setScreen: (screen: GameState['screen']) => void
   setPlayerName: (name: string) => void
-  setPlayer: (position: Vec3, yaw: number) => void
+  setPlayer: (position: Vec3, yaw: number, controllerSequence?: number) => void
+  travelToLocation: (id: LocationId) => boolean
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
   enterInterior: (interior: InteriorVisit) => void
@@ -287,6 +297,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   settings: defaultSettings,
   playerPosition: [0, 0, 4],
   playerYaw: 0,
+  teleportSequence: 0,
   bots: initialBots(),
   chat: [
     systemMessage('Local server started'),
@@ -313,7 +324,51 @@ export const useGameStore = create<GameState>((set, get) => ({
     useLocalPartyStore.getState().setPlayerName(playerName)
     set({ playerName })
   },
-  setPlayer: (playerPosition, playerYaw) => set({ playerPosition, playerYaw }),
+  setPlayer: (playerPosition, playerYaw, controllerSequence) =>
+    set((state) => {
+      if (state.teleportTarget && controllerSequence !== state.teleportTarget.sequence) return state
+      return { playerPosition, playerYaw, teleportTarget: undefined }
+    }),
+  travelToLocation: (id) => {
+    const state = get()
+    if (state.obby.active || state.miniGame.status === 'running') {
+      set({
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage('Finish or cancel the active game before travelling'),
+        ],
+      })
+      return false
+    }
+
+    const destination = getLocation(id)
+    set((current) => {
+      const teleportSequence = current.teleportSequence + 1
+      return {
+        playerPosition: [...destination.travelPosition],
+        playerYaw: destination.travelYaw,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: [...destination.travelPosition],
+          yaw: destination.travelYaw,
+        },
+        activeInterior: undefined,
+        nearbyLocation: destination.id,
+        openPanel: undefined,
+        buildMode: false,
+        sleeping: false,
+        interactionPrompt: undefined,
+        playerEmote: 'none',
+        touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+        chat: [
+          ...current.chat.slice(-60),
+          systemMessage(`Travelled to ${destination.label}`),
+        ],
+      }
+    })
+    return true
+  },
   setTouch: (input) =>
     set((state) => ({ touch: { ...state.touch, ...input } })),
   setNearbyLocation: (nearbyLocation) => set({ nearbyLocation }),
@@ -707,11 +762,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   beginObby: (now) =>
-    set((state) => ({
-      obby: { ...startObby(now), bestTime: state.obby.bestTime },
-      playerPosition: [16, 0.8, 12],
-      chat: [...state.chat.slice(-60), systemMessage('Beginner obby started')],
-    })),
+    set((state) => {
+      const teleportSequence = state.teleportSequence + 1
+      return {
+        obby: { ...startObby(now), bestTime: state.obby.bestTime },
+        playerPosition: [16, 0.8, 12],
+        teleportSequence,
+        teleportTarget: { sequence: teleportSequence, position: [16, 0.8, 12], yaw: 0 },
+        chat: [...state.chat.slice(-60), systemMessage('Beginner obby started')],
+      }
+    }),
 
   updateObby: (_now, checkpoints) =>
     set((state) => ({
@@ -750,9 +810,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
       const definition = miniGameDefinition(id)
+      const teleportSequence = state.teleportSequence + 1
       return {
         miniGame: startMiniGameSession(id, now, state.miniGame.records),
         playerPosition: definition.startPosition,
+        teleportSequence,
+        teleportTarget: { sequence: teleportSequence, position: definition.startPosition, yaw: 0 },
         activeInterior: undefined,
         buildMode: false,
         openPanel: undefined,
@@ -871,6 +934,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   resetSave: () => {
     useLocalPartyStore.getState().setPlayerName(defaultPlayerName)
+    const teleportSequence = get().teleportSequence + 1
     set({
       playerName: defaultPlayerName,
       coins: 0,
@@ -892,6 +956,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       nearbyLocation: undefined,
       playerPosition: [0, 0, 4],
       playerYaw: 0,
+      teleportSequence,
+      teleportTarget: { sequence: teleportSequence, position: [0, 0, 4], yaw: 0 },
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,

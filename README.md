@@ -135,7 +135,12 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   tested wrapping/path logic, synchronized collision boxes, and pedestrian
   yielding for players, AI buddies, and local-party players.
 - Responsive minimap shows nearby roads, buddies, landmarks, traffic, and the
-  player facing direction with screen-space heading correction.
+  player facing direction with screen-space heading correction. Tap it, or use
+  Town Map in the hamburger menu, to open a full map and fast travel to Spawn
+  Plaza, Buddy Park, Coin Shop, Skill School, Beginner Obby, or Buddy Houses.
+- Fast travel uses tested arrival points outside occupied building footprints,
+  exits interiors cleanly, resets held controls, and is disabled while a timed
+  obby or mini-game is active.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.

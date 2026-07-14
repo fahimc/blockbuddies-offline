@@ -107,8 +107,24 @@ canvas {
   right: max(0.85rem, env(safe-area-inset-right));
   z-index: 18;
   width: clamp(8rem, 12vw, 10rem);
-  pointer-events: none;
+  pointer-events: auto;
   user-select: none;
+}
+
+.bb-mini-map-open {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.bb-mini-map-open:focus-visible {
+  outline: 0.18rem solid #facc15;
+  outline-offset: 0.18rem;
 }
 
 .bb-mini-map-title {
@@ -128,6 +144,7 @@ canvas {
 
 .bb-mini-map-surface {
   position: relative;
+  display: block;
   overflow: hidden;
   aspect-ratio: 1;
   border: 0.12rem solid rgb(255 255 255 / 0.82);
@@ -214,6 +231,576 @@ canvas {
   border-left: 0.32rem solid transparent;
   content: "";
   filter: drop-shadow(0 0.05rem 0 rgb(255 255 255 / 0.72));
+}
+
+.bb-map-overlay {
+  position: absolute;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(15 23 42 / 0.58);
+  padding:
+    max(0.65rem, env(safe-area-inset-top))
+    max(0.65rem, env(safe-area-inset-right))
+    max(0.65rem, env(safe-area-inset-bottom))
+    max(0.65rem, env(safe-area-inset-left));
+  backdrop-filter: blur(0.22rem);
+}
+
+.bb-map-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(66rem, 100%);
+  height: min(42rem, 100%);
+  min-height: 0;
+  overflow: hidden;
+  border: 0.18rem solid rgb(255 255 255 / 0.94);
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  box-shadow: 0 1.4rem 4rem rgb(15 23 42 / 0.45);
+}
+
+.bb-map-header {
+  display: flex;
+  min-height: 4.65rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 0.12rem solid rgb(15 23 42 / 0.12);
+  background: linear-gradient(180deg, #1976d2, #0f5ca8);
+  padding: 0.7rem 1rem;
+  color: white;
+}
+
+.bb-map-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  line-height: 1.05;
+}
+
+.bb-map-eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #dbeafe;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bb-map-header > button {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0.1rem solid rgb(255 255 255 / 0.75);
+  border-radius: 0.5rem;
+  background: white;
+  color: #0f5ca8;
+  box-shadow: 0 0.35rem 0.8rem rgb(15 23 42 / 0.2);
+}
+
+.bb-map-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.72fr);
+  min-height: 0;
+  background: #e2e8f0;
+}
+
+.bb-town-map {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 0.12rem solid rgb(15 23 42 / 0.14);
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0.13) 0.08rem, transparent 0.08rem),
+    linear-gradient(rgb(255 255 255 / 0.13) 0.08rem, transparent 0.08rem),
+    #4fc76a;
+  background-size: 2.4rem 2.4rem;
+  isolation: isolate;
+}
+
+.bb-town-map::after {
+  position: absolute;
+  z-index: -1;
+  inset: 1rem;
+  border: 0.1rem dashed rgb(15 23 42 / 0.18);
+  border-radius: 0.5rem;
+  content: "";
+  pointer-events: none;
+}
+
+.bb-town-map-road {
+  position: absolute;
+  z-index: -1;
+  border: 0.12rem solid rgb(255 255 255 / 0.42);
+  background: #76849a;
+  box-shadow: inset 0 0 0 0.18rem rgb(71 85 105 / 0.28);
+}
+
+.bb-town-map-road.vertical {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 19.8%;
+  transform: translateX(-50%);
+}
+
+.bb-town-map-road.horizontal {
+  top: 33.3%;
+  right: 0;
+  left: 0;
+  height: 19.8%;
+  transform: translateY(-50%);
+}
+
+.bb-town-map-road::after {
+  position: absolute;
+  background: repeating-linear-gradient(0deg, #facc15 0 0.7rem, transparent 0.7rem 1.35rem);
+  content: "";
+}
+
+.bb-town-map-road.vertical::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0.11rem;
+}
+
+.bb-town-map-road.horizontal::after {
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 0.11rem;
+  background: repeating-linear-gradient(90deg, #facc15 0 0.7rem, transparent 0.7rem 1.35rem);
+}
+
+.bb-town-map-plaza {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: min(24%, 8.5rem);
+  aspect-ratio: 1;
+  border: 0.16rem solid white;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 0 0 0.35rem rgb(255 255 255 / 0.38);
+}
+
+.bb-town-map-district {
+  position: absolute;
+  z-index: 0;
+  color: rgb(15 23 42 / 0.54);
+  font-size: clamp(0.58rem, 1.3vw, 0.76rem);
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.bb-town-map-district.north {
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bb-town-map-district.west {
+  bottom: 3%;
+  left: 3%;
+}
+
+.bb-town-map-district.east {
+  right: 3%;
+  bottom: 3%;
+}
+
+.bb-town-map-marker {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  min-width: 2.45rem;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  border: 0.13rem solid white;
+  border-radius: 0.5rem;
+  color: white;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0.35rem 0.7rem rgb(15 23 42 / 0.32);
+  touch-action: manipulation;
+}
+
+.bb-town-map-marker > span {
+  position: absolute;
+  top: calc(100% + 0.18rem);
+  left: 50%;
+  border-radius: 0.3rem;
+  background: rgb(15 23 42 / 0.88);
+  padding: 0.14rem 0.34rem;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.bb-town-map-marker.selected {
+  outline: 0.24rem solid #facc15;
+  outline-offset: 0.12rem;
+  z-index: 5;
+}
+
+.bb-town-map-player {
+  position: absolute;
+  z-index: 7;
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border: 0.12rem solid white;
+  border-radius: 999px;
+  background: #facc15;
+  box-shadow: 0 0.3rem 0.75rem rgb(15 23 42 / 0.4);
+}
+
+.bb-town-map-player::before {
+  width: 0;
+  height: 0;
+  border-right: 0.32rem solid transparent;
+  border-bottom: 0.72rem solid #111827;
+  border-left: 0.32rem solid transparent;
+  content: "";
+}
+
+.bb-town-map-key {
+  position: absolute;
+  z-index: 8;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.82);
+  padding: 0.28rem 0.5rem;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.bb-town-map-key > span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 0.08rem solid white;
+  border-radius: 999px;
+  background: #facc15;
+}
+
+.bb-map-destinations {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  background: #f8fafc;
+}
+
+.bb-map-destinations-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 0.08rem solid #dbe5f0;
+  padding: 0.75rem 0.85rem 0.6rem;
+}
+
+.bb-map-destinations-heading strong {
+  font-size: 0.92rem;
+}
+
+.bb-map-destinations-heading span {
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.bb-map-destination-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.45rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.bb-map-destination {
+  display: flex;
+  min-width: 0;
+  min-height: 3.25rem;
+  align-items: center;
+  gap: 0.48rem;
+  border: 0.1rem solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: white;
+  padding: 0.4rem;
+  color: #1e293b;
+  text-align: left;
+  box-shadow: 0 0.2rem 0.5rem rgb(15 23 42 / 0.06);
+}
+
+.bb-map-destination > span {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.4rem;
+  color: white;
+}
+
+.bb-map-destination strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.72rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+}
+
+.bb-map-destination.selected {
+  border-color: #1673d1;
+  background: #eaf4ff;
+  color: #0f5ca8;
+  box-shadow: inset 0 0 0 0.08rem #1673d1;
+}
+
+.bb-map-travel-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  border-top: 0.12rem solid #cbd5e1;
+  background: white;
+  padding: 0.75rem 0.9rem;
+}
+
+.bb-map-travel-summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.bb-map-selected-icon {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0.1rem solid rgb(15 23 42 / 0.12);
+  border-radius: 0.5rem;
+  color: white;
+}
+
+.bb-map-travel-summary > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.bb-map-travel-summary strong {
+  font-size: 0.9rem;
+}
+
+.bb-map-travel-summary small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-map-travel-button {
+  display: inline-flex;
+  min-width: 11rem;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0.1rem solid #15803d;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, #55dd52, #16a137);
+  padding: 0.45rem 0.85rem;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 1000;
+  box-shadow:
+    inset 0 0.12rem 0 rgb(255 255 255 / 0.4),
+    0 0.35rem 0.7rem rgb(22 163 74 / 0.23);
+  touch-action: manipulation;
+}
+
+.bb-map-travel-button:disabled {
+  cursor: not-allowed;
+  border-color: #94a3b8;
+  background: #94a3b8;
+  box-shadow: none;
+}
+
+.bb-map-travel-button > span {
+  white-space: nowrap;
+}
+
+.bb-map-travel-notice {
+  grid-column: 1 / -1;
+  margin: -0.2rem 0 0;
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+@media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
+  .bb-map-overlay {
+    padding:
+      max(0.3rem, env(safe-area-inset-top))
+      max(0.3rem, env(safe-area-inset-right))
+      max(0.3rem, env(safe-area-inset-bottom))
+      max(0.3rem, env(safe-area-inset-left));
+  }
+
+  .bb-map-panel {
+    width: 100%;
+    height: 100%;
+  }
+
+  .bb-map-header {
+    min-height: 3.45rem;
+    padding: 0.42rem 0.65rem;
+  }
+
+  .bb-map-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .bb-map-header > button {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .bb-map-content {
+    grid-template-columns: minmax(0, 1.25fr) minmax(13.5rem, 0.75fr);
+  }
+
+  .bb-town-map-marker {
+    min-width: 2.15rem;
+    min-height: 2.15rem;
+  }
+
+  .bb-map-destinations-heading {
+    padding: 0.45rem 0.55rem 0.4rem;
+  }
+
+  .bb-map-destination-list {
+    gap: 0.32rem;
+    padding: 0.45rem;
+  }
+
+  .bb-map-destination {
+    min-height: 2.65rem;
+    gap: 0.35rem;
+    padding: 0.28rem;
+  }
+
+  .bb-map-destination > span {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .bb-map-destination strong {
+    font-size: 0.66rem;
+  }
+
+  .bb-map-travel-bar {
+    gap: 0.45rem 0.7rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .bb-map-selected-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .bb-map-travel-summary small {
+    max-width: 48vw;
+  }
+
+  .bb-map-travel-button {
+    min-width: 9.5rem;
+    min-height: 2.65rem;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .bb-map-content {
+    grid-template-rows: minmax(15rem, 66%) minmax(0, 34%);
+    grid-template-columns: 1fr;
+  }
+
+  .bb-town-map {
+    border-right: 0;
+    border-bottom: 0.12rem solid rgb(15 23 42 / 0.14);
+  }
+
+  .bb-map-destination-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bb-map-destination {
+    display: grid;
+    justify-items: center;
+    min-height: 3.25rem;
+    text-align: center;
+  }
+
+  .bb-map-destination strong {
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .bb-map-travel-summary small {
+    display: none;
+  }
+
+  .bb-map-travel-button {
+    min-width: 8.8rem;
+  }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .bb-map-eyebrow,
+  .bb-town-map-district,
+  .bb-town-map-marker > span,
+  .bb-map-travel-summary small {
+    display: none;
+  }
+
+  .bb-map-header {
+    min-height: 2.9rem;
+  }
+
+  .bb-map-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .bb-map-travel-button {
+    min-height: 2.35rem;
+  }
 }
 
 .mobile-action-pill {
