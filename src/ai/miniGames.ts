@@ -1,4 +1,9 @@
-import type { MiniGameId, MiniGameRecord, MiniGameRuntime, Vec3 } from '../game/types'
+import type {
+  MiniGameId,
+  MiniGameRecord,
+  MiniGameRuntime,
+  Vec3,
+} from '../game/types'
 
 export type MiniGameDefinition = {
   id: MiniGameId
@@ -51,7 +56,7 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
 ]
 
 export const coinRushTargets: MiniGameTarget[] = [
-  { id: 'rush-coin-1', label: 'Coin', position: [8, 0, -2] },
+  { id: 'rush-coin-1', label: 'Coin', position: [6, 0, -2] },
   { id: 'rush-coin-2', label: 'Coin', position: [11, 0, -1] },
   { id: 'rush-coin-3', label: 'Coin', position: [14, 0, -3] },
   { id: 'rush-coin-4', label: 'Coin', position: [12, 0, -8] },
@@ -74,7 +79,9 @@ export const hideAndSeekTargets: MiniGameTarget[] = [
 ]
 
 export function miniGameDefinition(id: MiniGameId) {
-  return miniGameDefinitions.find((game) => game.id === id) ?? miniGameDefinitions[0]
+  return (
+    miniGameDefinitions.find((game) => game.id === id) ?? miniGameDefinitions[0]
+  )
 }
 
 export function miniGameTargets(id: MiniGameId): MiniGameTarget[] {
@@ -83,7 +90,9 @@ export function miniGameTargets(id: MiniGameId): MiniGameTarget[] {
   return hideAndSeekTargets
 }
 
-export function createInitialMiniGame(records: Partial<Record<MiniGameId, MiniGameRecord>> = {}): MiniGameRuntime {
+export function createInitialMiniGame(
+  records: Partial<Record<MiniGameId, MiniGameRecord>> = {},
+): MiniGameRuntime {
   return {
     status: 'idle',
     startedAt: 0,
@@ -121,9 +130,19 @@ export type MiniGameTickResult = {
   reward: number
 }
 
-export function tickMiniGameSession(state: MiniGameRuntime, now: number, playerPosition: Vec3): MiniGameTickResult {
+export function tickMiniGameSession(
+  state: MiniGameRuntime,
+  now: number,
+  playerPosition: Vec3,
+): MiniGameTickResult {
   if (state.status !== 'running' || !state.activeId) {
-    return { state, collected: [], completedNow: false, failedNow: false, reward: 0 }
+    return {
+      state,
+      collected: [],
+      completedNow: false,
+      failedNow: false,
+      reward: 0,
+    }
   }
 
   const definition = miniGameDefinition(state.activeId)
@@ -133,10 +152,14 @@ export function tickMiniGameSession(state: MiniGameRuntime, now: number, playerP
 
   if (state.activeId === 'delivery-dash') {
     const target = targets[state.score]
-    if (target && distance2d(playerPosition, target.position) <= 1.7) collected.push(target)
+    if (target && distance2d(playerPosition, target.position) <= 1.7)
+      collected.push(target)
   } else {
     for (const target of targets) {
-      if (!state.collected.includes(target.id) && distance2d(playerPosition, target.position) <= 1.35) {
+      if (
+        !state.collected.includes(target.id) &&
+        distance2d(playerPosition, target.position) <= 1.35
+      ) {
         collected.push(target)
       }
     }
@@ -194,7 +217,13 @@ export function tickMiniGameSession(state: MiniGameRuntime, now: number, playerP
     }
   }
 
-  return { state: nextState, collected, completedNow: false, failedNow: false, reward: 0 }
+  return {
+    state: nextState,
+    collected,
+    completedNow: false,
+    failedNow: false,
+    reward: 0,
+  }
 }
 
 function distance2d(a: Vec3, b: Vec3) {

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { Capacitor } from '@capacitor/core'
 import './index.css'
 import App from './App'
+import { installE2EBridge } from './testing/e2eBridge'
 
 function updateViewportHeight() {
   const height = window.visualViewport?.height ?? window.innerHeight
@@ -21,7 +22,9 @@ async function clearNativeWebCaches() {
   if (!Capacitor.isNativePlatform()) return
   if ('serviceWorker' in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations()
-    await Promise.all(registrations.map((registration) => registration.unregister()))
+    await Promise.all(
+      registrations.map((registration) => registration.unregister()),
+    )
   }
   if ('caches' in window) {
     const keys = await caches.keys()
@@ -32,5 +35,6 @@ async function clearNativeWebCaches() {
 updateViewportHeight()
 window.visualViewport?.addEventListener('resize', updateViewportHeight)
 window.addEventListener('resize', updateViewportHeight)
+installE2EBridge()
 
 void clearNativeWebCaches().finally(renderApp)
