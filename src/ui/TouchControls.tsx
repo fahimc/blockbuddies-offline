@@ -1,6 +1,6 @@
 import { ArrowUp, BedDouble, Gauge, Hand, RotateCw, X } from 'lucide-react'
 import type { PointerEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
 
 type TouchPatch = Partial<{
@@ -30,6 +30,13 @@ export function TouchControls() {
   const lookDragRef = useRef<{ pointerId: number; x: number; y: number } | undefined>(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
 
+  useEffect(
+    () => () => {
+      useGameStore.getState().setTouch({ run: false })
+    },
+    [],
+  )
+
   const queueLookDelta = (dx: number, dy: number) => {
     const current = useGameStore.getState().touch
     setTouch({
@@ -58,7 +65,7 @@ export function TouchControls() {
 
   const resetJoystick = (event: PointerEvent<HTMLDivElement>) => {
     event.preventDefault()
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
     setThumb({ x: 0, y: 0 })
@@ -69,14 +76,14 @@ export function TouchControls() {
     (input: TouchPatch) =>
     (event: PointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
-      event.currentTarget.setPointerCapture(event.pointerId)
+      event.currentTarget.setPointerCapture?.(event.pointerId)
       setTouch(input)
     }
   const release =
     (input: TouchPatch) =>
     (event: PointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId)
       }
       setTouch(input)
@@ -96,12 +103,12 @@ export function TouchControls() {
         onPointerDown={(event) => {
           if (event.pointerType === 'mouse' && event.button !== 0) return
           event.preventDefault()
-          event.currentTarget.setPointerCapture(event.pointerId)
+          event.currentTarget.setPointerCapture?.(event.pointerId)
           lookDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
         }}
         onPointerMove={(event) => {
           const drag = lookDragRef.current
-          if (!drag || drag.pointerId !== event.pointerId || !event.currentTarget.hasPointerCapture(event.pointerId)) return
+          if (!drag || drag.pointerId !== event.pointerId || (event.currentTarget.hasPointerCapture && !event.currentTarget.hasPointerCapture(event.pointerId))) return
           event.preventDefault()
           const dx = event.clientX - drag.x
           const dy = event.clientY - drag.y
@@ -109,11 +116,11 @@ export function TouchControls() {
           queueLookDelta(dx, dy)
         }}
         onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
           if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
         }}
         onPointerCancel={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
           if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
         }}
       />
@@ -123,11 +130,11 @@ export function TouchControls() {
         className="virtual-joystick pointer-events-auto relative grid place-items-center rounded-full"
         onPointerDown={(event) => {
           event.preventDefault()
-          event.currentTarget.setPointerCapture(event.pointerId)
+          event.currentTarget.setPointerCapture?.(event.pointerId)
           updateJoystick(event)
         }}
         onPointerMove={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) updateJoystick(event)
+          if (!event.currentTarget.hasPointerCapture || event.currentTarget.hasPointerCapture(event.pointerId)) updateJoystick(event)
         }}
         onPointerUp={resetJoystick}
         onPointerCancel={resetJoystick}
@@ -168,10 +175,13 @@ export function TouchControls() {
             <button
               type="button"
               className={`mobile-run-button ${running ? 'active' : ''}`}
-              onClick={() => setTouch({ run: !running })}
+              onPointerDown={press({ run: true })}
+              onPointerUp={release({ run: false })}
+              onPointerCancel={release({ run: false })}
+              onLostPointerCapture={() => setTouch({ run: false })}
               aria-label="Run"
               aria-pressed={running}
-              title={running ? 'Walk' : 'Run'}
+              title="Hold to run"
             >
               <Gauge size={20} aria-hidden />
               <span>Run</span>

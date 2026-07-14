@@ -1,5 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useGameStore } from '../state/gameStore'
 import { TouchControls } from './TouchControls'
@@ -13,15 +12,20 @@ describe('TouchControls', () => {
     }))
   })
 
-  it('provides a persistent mobile run toggle', async () => {
+  it('runs only while the mobile run control is held', () => {
     render(<TouchControls />)
     const runButton = screen.getByRole('button', { name: 'Run' })
 
     expect(runButton).toHaveAttribute('aria-pressed', 'false')
-    await userEvent.click(runButton)
+    fireEvent.pointerDown(runButton, { pointerId: 1 })
 
     expect(runButton).toHaveAttribute('aria-pressed', 'true')
     expect(useGameStore.getState().touch.run).toBe(true)
+
+    fireEvent.pointerUp(runButton, { pointerId: 1 })
+
+    expect(runButton).toHaveAttribute('aria-pressed', 'false')
+    expect(useGameStore.getState().touch.run).toBe(false)
   })
 
   it('turns the interaction control into a bed action when nearby', () => {

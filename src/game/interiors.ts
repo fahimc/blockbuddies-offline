@@ -1,7 +1,7 @@
 import type { ProceduralPiece } from '../data/proceduralWorld'
 import type { BuildBlock, InteriorKind, InteriorVisit, Vec3 } from './types'
 import { avatarGroundOffset, buildPieceDimensions } from './scale'
-import type { CollisionBox } from './collision'
+import { playerCollisionRadius, type CollisionBox } from './collision'
 
 export type InteriorEntrance = {
   id: string
@@ -20,13 +20,19 @@ export const interiorStandingY = avatarGroundOffset
 export const entranceSafeZoneRadius = 1.85
 export const houseBedCenter: Vec3 = [3.8, 0.38, 2.8]
 export const houseBedHalfSize: Vec3 = [1.3, 0.38, 1.75]
+export const houseBedHeadboardZ = 4.2
+export const houseBedPillowCenter: Vec3 = [houseBedCenter[0], 0.82, 3.72]
 export const houseBedInteractionRadius = 2.35
 export const houseBedSleepPosition: Vec3 = [
   houseBedCenter[0],
   avatarGroundOffset + houseBedCenter[1] + houseBedHalfSize[1],
+  houseBedCenter[2] - houseBedHalfSize[2] + 0.12,
+]
+export const houseBedWakePosition: Vec3 = [
+  houseBedCenter[0] - houseBedHalfSize[0] - playerCollisionRadius - 0.28,
+  avatarGroundOffset,
   houseBedCenter[2],
 ]
-export const houseBedWakePosition: Vec3 = [1.85, avatarGroundOffset, houseBedCenter[2]]
 
 const roomHalfWidth = 7
 const roomHalfDepth = 6.5

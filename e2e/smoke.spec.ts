@@ -135,9 +135,12 @@ test.describe('landscape phone layout', () => {
     const runButton = page.getByRole('button', { name: 'Run' })
     await expect(runButton).toBeVisible()
     await expect(runButton).toHaveAttribute('aria-pressed', 'false')
-    await runButton.click()
+    await runButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true })
     await expect(runButton).toHaveAttribute('aria-pressed', 'true')
     expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().run)).toBe(true)
+    await runButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true })
+    await expect(runButton).toHaveAttribute('aria-pressed', 'false')
+    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().run)).toBe(false)
     await expect(page.getByTestId('world-drag-control')).toBeVisible()
     await expect(page.getByTestId('mini-map')).toBeVisible()
 
@@ -151,13 +154,19 @@ test.describe('landscape phone layout', () => {
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
     const sleepAction = page.locator('.mobile-use-button[aria-label="Sleep"]')
     await expect(sleepAction).toBeVisible()
-    await sleepAction.click()
+    await page.getByTestId('bed-action-button').click()
     const wakeAction = page.locator('.mobile-use-button[aria-label="Wake up"]')
     await expect(wakeAction).toBeVisible()
-    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().sleeping)).toBe(true)
+    const sleepingSnapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    expect(sleepingSnapshot.sleeping).toBe(true)
+    expect(sleepingSnapshot.playerPosition[1]).toBeGreaterThan(0.7)
+    expect(sleepingSnapshot.playerPosition[2]).toBeLessThan(2)
     await wakeAction.click()
     await expect(sleepAction).toBeVisible()
-    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().sleeping)).toBe(false)
+    const awakeSnapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    expect(awakeSnapshot.sleeping).toBe(false)
+    expect(awakeSnapshot.playerPosition[0]).toBeLessThan(2)
+    expect(awakeSnapshot.playerPosition[1]).toBeCloseTo(0, 1)
   })
 })
 
@@ -180,7 +189,7 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
       position: snapshot.playerPosition.map((value) => Math.round(value * 10) / 10),
       teleported: snapshot.teleportSequence > before.teleportSequence,
     }
-  }).toEqual({ position: [-14, 0, 14.9], teleported: true })
+  }).toEqual({ position: [-14, 0.1, 14.9], teleported: true })
 })
 
 test.describe('portrait splash layout', () => {

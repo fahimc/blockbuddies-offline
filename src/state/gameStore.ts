@@ -9,7 +9,7 @@ import { selectDialogue, type DialogueContext } from '../ai/dialogue'
 import { advanceQuest, createQuestProgress } from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
-import { finishObby, startObby, updateCheckpoint } from '../ai/obby'
+import { finishObby, obbyStart, startObby, updateCheckpoint } from '../ai/obby'
 import {
   createInitialMiniGame,
   miniGameDefinition,
@@ -276,7 +276,7 @@ function makeId(prefix: string) {
 
 const initialObby: ObbyState = {
   active: false,
-  checkpoint: [16, 0.8, 12],
+  checkpoint: obbyStart,
   startedAt: 0,
   finished: false,
 }
@@ -766,9 +766,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       const teleportSequence = state.teleportSequence + 1
       return {
         obby: { ...startObby(now), bestTime: state.obby.bestTime },
-        playerPosition: [16, 0.8, 12],
+        playerPosition: obbyStart,
         teleportSequence,
-        teleportTarget: { sequence: teleportSequence, position: [16, 0.8, 12], yaw: 0 },
+        teleportTarget: { sequence: teleportSequence, position: obbyStart, yaw: 0 },
         chat: [...state.chat.slice(-60), systemMessage('Beginner obby started')],
       }
     }),

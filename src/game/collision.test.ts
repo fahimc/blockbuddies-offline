@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { collidesCircleWithBox, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
+import {
+  collisionBoxesBlockingPlayer,
+  collidesCircleWithBox,
+  playerIsGrounded,
+  resolveHorizontalCollision,
+  resolvePlayerVerticalCollision,
+  separateCircleFromBoxes,
+  type CollisionBox,
+} from './collision'
+import { avatarGroundOffset } from './scale'
 
 const wall: CollisionBox = {
   id: 'wall',
@@ -35,5 +44,56 @@ describe('collision resolver', () => {
 
     expect(collidesCircleWithBox(separated[0], separated[2], 0.42, wall)).toBe(false)
     expect(separated[0]).not.toBe(2)
+  })
+
+  it('blocks obstacle sides below their top but allows movement while standing on top', () => {
+    const crate: CollisionBox = { id: 'crate', center: [0, 0.5, 0], half: [1, 0.5, 1] }
+
+    expect(collisionBoxesBlockingPlayer([crate], avatarGroundOffset)).toEqual([crate])
+    expect(collisionBoxesBlockingPlayer([crate], avatarGroundOffset + 1)).toEqual([])
+  })
+
+  it('lands a falling player on the highest solid object top', () => {
+    const lowCrate: CollisionBox = { id: 'low', center: [0, 0.5, 0], half: [1, 0.5, 1] }
+    const highCrate: CollisionBox = { id: 'high', center: [0, 1.25, 0], half: [0.7, 0.25, 0.7] }
+    const point: [number, number, number] = [0, avatarGroundOffset + 2, 0]
+    const result = resolvePlayerVerticalCollision({
+      point,
+      desiredY: avatarGroundOffset + 1.2,
+      boxes: [lowCrate, highCrate],
+    })
+
+    expect(result).toEqual({ y: avatarGroundOffset + 1.5, grounded: true, surfaceId: 'high' })
+    expect(playerIsGrounded([0, result.y, 0], [lowCrate, highCrate])).toBe(true)
+  })
+
+  it('steps onto low surfaces and falls back to the world floor', () => {
+    const curb: CollisionBox = { id: 'curb', center: [0, 0.08, 0], half: [1, 0.08, 1] }
+    const stepped = resolvePlayerVerticalCollision({
+      point: [0, avatarGroundOffset, 0],
+      desiredY: avatarGroundOffset - 0.05,
+      boxes: [curb],
+    })
+    const grounded = resolvePlayerVerticalCollision({
+      point: [3, avatarGroundOffset + 0.5, 0],
+      desiredY: avatarGroundOffset - 0.1,
+      boxes: [curb],
+    })
+
+    expect(stepped).toEqual({ y: avatarGroundOffset + 0.16, grounded: true, surfaceId: 'curb' })
+    expect(grounded).toEqual({ y: avatarGroundOffset, grounded: true, surfaceId: 'ground' })
+  })
+
+  it('stops the avatar head at solid undersides while jumping', () => {
+    const ceiling: CollisionBox = { id: 'ceiling', center: [0, 3, 0], half: [2, 0.25, 2] }
+    const result = resolvePlayerVerticalCollision({
+      point: [0, avatarGroundOffset, 0],
+      desiredY: avatarGroundOffset + 1,
+      boxes: [ceiling],
+    })
+
+    expect(result.grounded).toBe(false)
+    expect(result.surfaceId).toBe('ceiling')
+    expect(result.y).toBeLessThan(avatarGroundOffset + 1)
   })
 })

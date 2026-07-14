@@ -93,6 +93,17 @@ describe('procedural borough world', () => {
     expect(blockers.every((blocker) => roadsAndPavements.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
   })
 
+  it('does not generate obsolete stationary buses in traffic lanes', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 3,
+      night: false,
+    })
+
+    expect(world.pieces.some((piece) => piece.id.startsWith('bus:'))).toBe(false)
+  })
+
   it('uses sparse sandbox-style building plots and wide roads', () => {
     const world = generateProceduralWorld({
       seed: 'LONDON-2026',

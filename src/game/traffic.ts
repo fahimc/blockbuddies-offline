@@ -117,6 +117,7 @@ export function trafficCollisionBoxesAtTime(lanes: TrafficLane[], vehicles: Traf
 
 export function trafficCollisionBoxes(lanes: TrafficLane[], vehicles: TrafficVehicle[]): CollisionBox[] {
   const laneById = new Map(lanes.map((laneItem) => [laneItem.id, laneItem]))
+  const renderedCarHeight = realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight
   return vehicles.flatMap((vehicle) => {
     const vehicleLane = laneById.get(vehicle.laneId)
     if (!vehicleLane) return []
@@ -125,10 +126,10 @@ export function trafficCollisionBoxes(lanes: TrafficLane[], vehicles: TrafficVeh
     return [
       {
         id: `traffic:${vehicle.id}`,
-        center: [pose.position[0], realScale.wheelRadius + realScale.carHeight / 2, pose.position[2]],
+        center: [pose.position[0], pose.position[1] + renderedCarHeight / 2, pose.position[2]],
         half: horizontal
-          ? [realScale.carLength / 2 + 0.12, realScale.carHeight / 2, realScale.carWidth / 2 + 0.12]
-          : [realScale.carWidth / 2 + 0.12, realScale.carHeight / 2, realScale.carLength / 2 + 0.12],
+          ? [realScale.carLength / 2 + 0.12, renderedCarHeight / 2, realScale.carWidth / 2 + 0.12]
+          : [realScale.carWidth / 2 + 0.12, renderedCarHeight / 2, realScale.carLength / 2 + 0.12],
       } satisfies CollisionBox,
     ]
   })

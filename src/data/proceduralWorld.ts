@@ -16,7 +16,6 @@ export type ProceduralPieceKind =
   | 'tree-top'
   | 'lamp-post'
   | 'lamp-light'
-  | 'bus'
   | 'phone-box'
   | 'landmark'
 
@@ -157,9 +156,6 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
     addTree(pieces, `street-tree:${cx}:${cz}:${i}`, findStreetTreePoint(random, roadLayout, i))
   }
 
-  if (hasHorizontalRoad && random() > 0.64) {
-    addBus(pieces, `bus:${cx}:${cz}`, [centerX - 8 + random() * 16, 0, centerZ + (random() > 0.5 ? 0.9 : -0.9)])
-  }
   if (random() > 0.76) {
     const phonePosition = findClearSceneryPoint(random, roadLayout, x0 + 4, x0 + 32, z0 + 4, z0 + 32)
     pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [phonePosition[0], realScale.phoneBoxHeight / 2, phonePosition[2]], [realScale.phoneBoxWidth, realScale.phoneBoxHeight, realScale.phoneBoxWidth], '#dc2626'))
@@ -361,14 +357,6 @@ function addTree(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3) {
 function addLamp(pieces: ProceduralPiece[], id: string, [x, , z]: Vec3, night: boolean) {
   pieces.push(piece(`${id}:post`, 'lamp-post', [x, realScale.lampHeight / 2, z], [0.14, realScale.lampHeight, 0.14], '#0f172a'))
   pieces.push(piece(`${id}:light`, 'lamp-light', [x, realScale.lampHeight + 0.28, z], [0.55, 0.55, 0.55], '#fde68a', undefined, '#facc15', night ? 0.95 : 0.32))
-}
-
-function addBus(pieces: ProceduralPiece[], id: string, position: Vec3) {
-  const lowerHeight = realScale.busHeight * 0.42
-  const upperHeight = realScale.busHeight * 0.58
-  pieces.push(piece(id, 'bus', [position[0], lowerHeight / 2, position[2]], [realScale.busLength, lowerHeight, realScale.busWidth], '#ef4444'))
-  pieces.push(piece(`${id}:top`, 'bus', [position[0], lowerHeight + upperHeight / 2, position[2]], [realScale.busLength * 0.9, upperHeight, realScale.busWidth * 0.86], '#dc2626'))
-  pieces.push(piece(`${id}:window`, 'window', [position[0] - 0.2, lowerHeight + upperHeight * 0.56, position[2] + realScale.busWidth * 0.44], [realScale.busLength * 0.55, realScale.windowHeight, realScale.windowDepth], '#bae6fd', undefined, '#60a5fa', 0.1))
 }
 
 function buildLandmarks(night: boolean): ProceduralPiece[] {

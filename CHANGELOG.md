@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added height-aware player gravity with landable solid tops and solid undersides for world, interior, build-mode, traffic, and obby collision objects.
+- Added deterministic tests for object-top landing, low-step traversal, ceiling collision, sleep orientation, wake clearance, 2x run speed, rendered traffic height, and procedural road clearance.
+
+### Changed
+
+- Mobile Run is now a press-and-hold control and running is exactly twice walking speed; desktop Shift remains hold-to-run.
+- Obby checkpoint positions now use the rendered platform tops so players land on the course instead of intersecting its blocks.
+- Build-mode and moving-traffic collision heights now match their rendered geometry, including rotated rectangular pieces.
+
+### Fixed
+
+- Corrected the bed pose so the avatar faces upward with their head at the pillow.
+- Routed bed taps and action-button taps through the same controller transition and moved waking players beside the bed at floor height.
+- Prevented players from sinking through furniture and becoming trapped inside collision objects after waking.
+- Removed obsolete stationary red procedural buses that occupied live traffic lanes.
+
+### Known Issues
+
+- World scenery remains intentionally static rather than destructible rigid-body simulation; gameplay objects now provide deterministic gravity support and solid surfaces.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.8-town-map-fast-travel] - 2026-07-14
 
 ### Added

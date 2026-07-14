@@ -6,17 +6,28 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'rea
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
+import { obbyCheckpoints, obbyPlatforms } from '../ai/obby'
 import { generateProceduralWorld, type ProceduralPiece } from '../data/proceduralWorld'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
-import { playerCollisionRadius, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
+import {
+  collisionBoxesBlockingPlayer,
+  playerCollisionRadius,
+  playerIsGrounded,
+  resolveHorizontalCollision,
+  resolvePlayerVerticalCollision,
+  separateCircleFromBoxes,
+  type CollisionBox,
+} from './collision'
 import {
   buildBlockInteriorEntrance,
   filterEntranceSafeZoneCollisions,
   houseBedCenter,
+  houseBedHeadboardZ,
   houseBedHalfSize,
+  houseBedPillowCenter,
   houseBedSleepPosition,
   houseBedWakePosition,
   interiorCollisionBoxes,
@@ -33,6 +44,8 @@ import {
   type InteriorEntrance,
 } from './interiors'
 import { avatarBodyBaseY, avatarGroundOffset, buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import { playerMovementSpeed } from './movement'
+import { avatarSleepRotation } from './sleepPose'
 import {
   advanceTrafficForPedestrians,
   createTrafficVehicles,
@@ -55,13 +68,6 @@ import type {
   ShopItemId,
   Vec3,
 } from './types'
-
-const obbyCheckpoints: Vec3[] = [
-  [16, 0.8, 12],
-  [18.5, 1.8, 13.5],
-  [20.5, 3.1, 16],
-  [22, 4.6, 18],
-]
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 const worldActionZIndexRange: [number, number] = [26, 25]
@@ -136,6 +142,11 @@ const staticCollisionObstacles: CollisionBox[] = [
     half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2] as Vec3,
   })),
   { id: 'static-billboard', center: [-6, 1.1, 2], half: [2, 1.3, 0.35] },
+  ...obbyPlatforms.map(({ position, scale }, index) => ({
+    id: `obby-platform:${index}`,
+    center: position,
+    half: [scale[0] / 2, scale[1] / 2, scale[2] / 2] as Vec3,
+  })),
 ]
 
 const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map((building) =>
@@ -479,7 +490,7 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
 
 function HouseBed() {
   const sleeping = useGameStore((state) => state.sleeping)
-  const setSleeping = useGameStore((state) => state.setSleeping)
+  const setTouch = useGameStore((state) => state.setTouch)
   const [nearby, setNearby] = useState(false)
 
   useFrame(() => {
@@ -488,10 +499,12 @@ function HouseBed() {
     if (nextNearby !== nearby) setNearby(nextNearby)
   })
 
-  const toggleSleep = () => {
+  const requestBedAction = () => {
     const state = useGameStore.getState()
     if (state.activeInterior?.kind !== 'house' || (!state.sleeping && !isNearHouseBed(state.playerPosition))) return
-    setSleeping(!state.sleeping)
+    if (state.touch.interact) return
+    setTouch({ interact: true })
+    window.setTimeout(() => useGameStore.getState().setTouch({ interact: false }), 100)
   }
 
   return (
@@ -502,14 +515,14 @@ function HouseBed() {
         position={houseBedCenter}
         onClick={(event) => {
           event.stopPropagation()
-          toggleSleep()
+          requestBedAction()
         }}
       >
         <boxGeometry args={[houseBedHalfSize[0] * 2, houseBedHalfSize[1] * 2, houseBedHalfSize[2] * 2]} />
         <meshStandardMaterial color="#f9a8d4" roughness={0.76} />
       </mesh>
-      <InteriorBox position={[houseBedCenter[0], 0.94, 4.2]} scale={[2.6, 1.12, 0.24]} color="#be185d" />
-      <InteriorBox position={[houseBedCenter[0], 0.82, 3.72]} scale={[1.7, 0.18, 0.72]} color="#f8fafc" />
+      <InteriorBox position={[houseBedCenter[0], 0.94, houseBedHeadboardZ]} scale={[2.6, 1.12, 0.24]} color="#be185d" />
+      <InteriorBox position={houseBedPillowCenter} scale={[1.7, 0.18, 0.72]} color="#f8fafc" />
       {nearby || sleeping ? (
         <Html center position={[houseBedCenter[0], 1.75, houseBedCenter[2]]} zIndexRange={worldActionZIndexRange}>
           <button
@@ -519,7 +532,7 @@ function HouseBed() {
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation()
-              toggleSleep()
+              requestBedAction()
             }}
           >
             <BedDouble size={18} aria-hidden />
@@ -570,26 +583,30 @@ function interiorTheme(kind: InteriorKind) {
 
 function proceduralPiecesToCollisionBoxes(pieces: ProceduralPiece[]) {
   return pieces.flatMap((piece): CollisionBox[] => {
-    if (piece.kind === 'building' || piece.kind === 'phone-box' || piece.kind === 'tree-trunk' || piece.kind === 'lamp-post') {
-      return [visibleBox(piece, piece.kind === 'building' ? 0.18 : 0.08)]
-    }
-    if (piece.kind === 'bus' && !piece.id.endsWith(':top')) return [visibleBox(piece, 0.12)]
-    if (piece.kind === 'landmark' && piece.id !== 'landmark:london-eye-ring') return [visibleBox(piece, 0.22)]
-    return []
+    if (piece.kind === 'ground' || piece.kind === 'water' || piece.kind === 'line' || piece.kind === 'door' || piece.kind === 'window') return []
+    if (piece.id === 'landmark:london-eye-ring') return []
+    const padding = piece.kind === 'building' ? 0.18 : piece.kind === 'landmark' ? 0.22 : 0
+    return [visibleBox(piece, padding)]
   })
 }
 
 function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
-  return blocks.flatMap((block): CollisionBox[] => {
-    if (block.kind === 'road') return []
+  return blocks.map((block): CollisionBox => {
+    if (block.kind === 'road') {
+      return {
+        id: `build:road:${block.id}`,
+        center: block.position,
+        half: [realScale.roadTile / 2, 0.04, realScale.roadTile / 2],
+      }
+    }
     const half = buildCollisionHalf(block.kind ?? 'block')
-    return [
-      {
-        id: `build:${block.kind ?? 'block'}:${block.id}`,
-        center: [block.position[0], block.position[1] + half[1], block.position[2]],
-        half,
-      },
-    ]
+    const rotatedHalf = rotatedCollisionHalf(half, block.rotation ?? 0)
+    const centerY = !block.kind || block.kind === 'block' ? block.position[1] : block.position[1] + half[1]
+    return {
+      id: `build:${block.kind ?? 'block'}:${block.id}`,
+      center: [block.position[0], centerY, block.position[2]],
+      half: rotatedHalf,
+    }
   })
 }
 
@@ -602,14 +619,28 @@ function buildCollisionHalf(kind: BuildBlock['kind']): Vec3 {
     case 'shop':
       return [buildPieceDimensions.shop.width / 2, (buildPieceDimensions.shop.bodyHeight + buildPieceDimensions.shop.awningHeight) / 2, buildPieceDimensions.shop.depth / 2]
     case 'car':
-      return [buildPieceDimensions.car.length / 2, buildPieceDimensions.car.height / 2, buildPieceDimensions.car.width / 2]
+      return [
+        buildPieceDimensions.car.length / 2,
+        (realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight) / 2,
+        buildPieceDimensions.car.width / 2,
+      ]
     case 'tree':
-      return [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2]
+      return [
+        buildPieceDimensions.tree.footprint / 2,
+        (realScale.treeTrunkHeight + realScale.treeCanopySize * 0.92) / 2,
+        buildPieceDimensions.tree.footprint / 2,
+      ]
     case 'lamp':
-      return [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2]
+      return [buildPieceDimensions.lamp.footprint / 2, (realScale.lampHeight + 0.56) / 2, buildPieceDimensions.lamp.footprint / 2]
     default:
-      return [0.58, 0.58, 0.58]
+      return [0.5, 0.5, 0.5]
   }
+}
+
+function rotatedCollisionHalf(half: Vec3, yaw: number): Vec3 {
+  const cosine = Math.abs(Math.cos(yaw))
+  const sine = Math.abs(Math.sin(yaw))
+  return [half[0] * cosine + half[2] * sine, half[1], half[0] * sine + half[2] * cosine]
 }
 
 function visibleBox(piece: ProceduralPiece, padding: number): CollisionBox {
@@ -1030,29 +1061,48 @@ function PlayerController({
       position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
       velocityY.current = 0
     } else {
-      const speed = isRunning ? 8 : 5
+      const speed = playerMovementSpeed(isRunning)
       const desiredPosition = position.current.clone()
       desiredPosition.addScaledVector(direction, forward * speed * delta)
       desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
       const trafficObstacles = activeInterior || !trafficRuntime ? [] : trafficCollisionBoxes(trafficLanes, trafficRuntime.current)
+      const solidObstacles = [...collisionObstacles, ...trafficObstacles]
+      const blockingObstacles = collisionBoxesBlockingPlayer(solidObstacles, position.current.y)
+      const blockingTraffic = collisionBoxesBlockingPlayer(trafficObstacles, position.current.y)
       const resolvedPosition = resolveHorizontalCollision(
         [position.current.x, position.current.y, position.current.z],
         [desiredPosition.x, desiredPosition.y, desiredPosition.z],
-        [...collisionObstacles, ...trafficObstacles],
+        blockingObstacles,
         playerCollisionRadius,
       )
-      const separatedPosition = separateCircleFromBoxes(resolvedPosition, trafficObstacles, playerCollisionRadius + 0.05)
+      const separatedPosition = separateCircleFromBoxes(resolvedPosition, blockingTraffic, playerCollisionRadius + 0.05)
       position.current.x = separatedPosition[0]
       position.current.z = separatedPosition[2]
-      velocityY.current -= 25 * delta
-      if ((keys.jump || touch.jump) && position.current.y <= standY + 0.01) velocityY.current = 9
-      position.current.y += velocityY.current * delta
-      if (position.current.y < standY) {
-        position.current.y = standY
-        velocityY.current = 0
-      }
+      const groundY = standY - avatarGroundOffset
+      const groundedBeforeMove = playerIsGrounded(
+        [position.current.x, position.current.y, position.current.z],
+        solidObstacles,
+        groundY,
+      )
+      if ((keys.jump || touch.jump) && groundedBeforeMove) velocityY.current = 9
+      else velocityY.current -= 25 * delta
+      const vertical = resolvePlayerVerticalCollision({
+        point: [position.current.x, position.current.y, position.current.z],
+        desiredY: position.current.y + velocityY.current * delta,
+        boxes: solidObstacles,
+        groundY,
+      })
+      position.current.y = vertical.y
+      if (vertical.surfaceId) velocityY.current = 0
     }
-    const isAirborne = !sleepingThisFrame && position.current.y > standY + 0.04
+    const trafficObstaclesForGrounding = activeInterior || !trafficRuntime ? [] : trafficCollisionBoxes(trafficLanes, trafficRuntime.current)
+    const isAirborne =
+      !sleepingThisFrame &&
+      !playerIsGrounded(
+        [position.current.x, position.current.y, position.current.z],
+        [...collisionObstacles, ...trafficObstaclesForGrounding],
+        standY - avatarGroundOffset,
+      )
     if (isAirborne !== airborneRef.current) {
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
@@ -1353,7 +1403,8 @@ export function BlockAvatar({
     const danceTilt = currentEmote === 'dance' ? Math.sin(clock.elapsedTime * 5.2) * 0.22 : 0
 
     if (body.current) {
-      body.current.rotation.x = sleeping ? -Math.PI / 2 : 0
+      body.current.rotation.x = sleeping ? avatarSleepRotation[0] : 0
+      body.current.rotation.y = sleeping ? avatarSleepRotation[1] : 0
       body.current.rotation.z = sleeping ? 0 : danceTilt
       body.current.position.y = avatarBodyBaseY + (sleeping ? 0.08 : currentAction === 'jump' ? 0.1 : Math.abs(stride) * 0.025 + idle)
     }
@@ -1808,17 +1859,17 @@ function ObbyCourse() {
   const beginObby = useGameStore((state) => state.beginObby)
   return (
     <group>
-      {obbyCheckpoints.map((position, index) => (
+      {obbyPlatforms.map(({ position, scale }, index) => (
         <mesh
           key={position.join(',')}
           castShadow
           receiveShadow
           position={position}
-          scale={index === 0 || index === obbyCheckpoints.length - 1 ? [2.2, 0.35, 2.2] : [1.7, 0.3, 1.7]}
+          scale={scale}
           onClick={() => (index === 0 ? beginObby(performance.now()) : undefined)}
         >
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={index === obbyCheckpoints.length - 1 ? '#22c55e' : '#ef4444'} />
+          <meshStandardMaterial color={index === obbyPlatforms.length - 1 ? '#22c55e' : '#ef4444'} />
         </mesh>
       ))}
     </group>

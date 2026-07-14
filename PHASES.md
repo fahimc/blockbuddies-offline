@@ -454,3 +454,15 @@
 - [x] Add unit and Playwright coverage for destination data, travel state, mobile layout, and live teleport behavior
 - [x] Run lint, typecheck, full unit tests, production build, full Playwright tests, Capacitor sync, and Android debug build
 - [x] Bump Android debug APK version metadata to 1.5.8 / 10508
+
+## Post-phase physical surfaces and bed controls
+
+- [x] Correct the sleep pose so the avatar faces up with their head at the pillow
+- [x] Route bed and HUD interactions through one collision-safe sleep/wake transition
+- [x] Place waking players beside the bed at floor height
+- [x] Add height-aware gravity, obstacle sides, landable tops, and solid undersides
+- [x] Align build-piece, moving-car, and obby platform collision with rendered geometry
+- [x] Change mobile Run from a toggle to hold-to-run at exactly 2x walk speed
+- [x] Remove obsolete stationary red buses from procedural traffic lanes
+- [x] Add regression tests for physics, bed transitions, run speed, traffic height, and road clearance
+- [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests

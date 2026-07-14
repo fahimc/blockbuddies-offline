@@ -17,7 +17,7 @@ import {
   staticBuildingEntrance,
 } from './interiors'
 import type { BuildBlock } from './types'
-import type { CollisionBox } from './collision'
+import { collidesCircleWithBox, playerCollisionRadius, type CollisionBox } from './collision'
 import type { ProceduralPiece } from '../data/proceduralWorld'
 
 describe('interior entrances', () => {
@@ -130,10 +130,11 @@ describe('interior entrances', () => {
 
     expect(bed.center).toEqual(houseBedCenter)
     expect(houseBedSleepPosition[1]).toBeCloseTo(interiorStandingY + bed.center[1] + bed.half[1])
+    expect(houseBedSleepPosition[2]).toBeLessThan(houseBedCenter[2])
     expect(isNearHouseBed(houseBedWakePosition)).toBe(true)
+    expect(collidesCircleWithBox(houseBedWakePosition[0], houseBedWakePosition[2], playerCollisionRadius, bed)).toBe(false)
     expect(
       boxes
-        .filter((box) => box.id !== 'interior:house-bed')
         .every((box) => Math.hypot(box.center[0] - houseBedWakePosition[0], box.center[2] - houseBedWakePosition[2]) > 0.9),
     ).toBe(true)
   })

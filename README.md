@@ -110,7 +110,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
-  buildings, street props, buses, phone boxes, landmarks, world seeds, view
+  buildings, street props, phone boxes, landmarks, world seeds, view
   distance, and night mode settings.
 - Procedural borough chunks now use sparser building placement and wider roads
   so the town feels more open for blocky sandbox movement, traffic, and building.
@@ -121,9 +121,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   a contextual sleep/wake interaction on house beds.
 - Doorway safe zones clear blocking collision from trees, lamp posts, phone
   boxes, traffic props, and user-built props near supported doors.
-- Coarse visible-object collision prevents the player from walking through
-  buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
-  pieces while still sliding along blocked axes.
+- Height-aware visible-object collision prevents the player from walking through
+  buildings, moving cars, trees, lamps, phone boxes, landmarks, furniture, and
+  placed build pieces while supporting gravity, landable tops, and blocked undersides.
 - Shared real-world scale rules keep the block avatar, doors, floor heights,
   buildings, cars, roads, trees, and lamps in proportion to a nominal 1.78 m
   person.
@@ -145,8 +145,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
 - Landscape mobile game HUD with chat icon, status pills, virtual joystick,
-  circular jump, run, contextual interact, and reset/remove controls. Desktop
-  players can hold Shift to run.
+  circular jump, hold-to-run, contextual interact, and reset/remove controls.
+  Running is 2x walking speed; desktop players hold Shift to run.
 - Touch and mouse dragging on the world view rotates and tilts the third-person
   camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,

@@ -1,7 +1,24 @@
 import type { ObbyState, Vec3 } from '../game/types'
 
-export const obbyStart: Vec3 = [16, 0.8, 12]
-export const obbyFinish: Vec3 = [22, 4.6, 18]
+export type ObbyPlatform = {
+  position: Vec3
+  scale: Vec3
+}
+
+export const obbyPlatforms: ObbyPlatform[] = [
+  { position: [16, 0.8, 12], scale: [2.2, 0.35, 2.2] },
+  { position: [18.5, 1.8, 13.5], scale: [1.7, 0.3, 1.7] },
+  { position: [20.5, 3.1, 16], scale: [1.7, 0.3, 1.7] },
+  { position: [22, 4.6, 18], scale: [2.2, 0.35, 2.2] },
+]
+
+export const obbyCheckpoints: Vec3[] = obbyPlatforms.map(({ position, scale }) => [
+  position[0],
+  position[1] + scale[1] / 2,
+  position[2],
+])
+export const obbyStart: Vec3 = obbyCheckpoints[0]
+export const obbyFinish: Vec3 = obbyCheckpoints[obbyCheckpoints.length - 1]
 
 export function startObby(now: number): ObbyState {
   return {

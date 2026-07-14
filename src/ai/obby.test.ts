@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { finishObby, startObby, updateCheckpoint } from './obby'
+import { finishObby, obbyPlatforms, obbyStart, startObby, updateCheckpoint } from './obby'
 
 describe('obby state', () => {
   it('starts with an active checkpoint', () => {
     const state = startObby(1000)
     expect(state.active).toBe(true)
     expect(state.checkpoint[0]).toBe(16)
+    expect(obbyStart[1]).toBe(obbyPlatforms[0].position[1] + obbyPlatforms[0].scale[1] / 2)
   })
 
   it('updates checkpoints and rewards finish', () => {

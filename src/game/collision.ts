@@ -1,4 +1,5 @@
 import type { Vec3 } from './types'
+import { avatarGroundOffset, avatarVisualHeight } from './scale'
 
 export type CollisionBox = {
   id: string
@@ -7,6 +8,14 @@ export type CollisionBox = {
 }
 
 export const playerCollisionRadius = 0.42
+export const collisionSkin = 0.035
+export const maxWalkableStepHeight = 0.24
+
+export type VerticalCollisionResult = {
+  y: number
+  grounded: boolean
+  surfaceId?: string
+}
 
 export function collidesCircleWithBox(x: number, z: number, radius: number, box: CollisionBox) {
   const closestX = clamp(x, box.center[0] - box.half[0], box.center[0] + box.half[0])
@@ -18,6 +27,101 @@ export function collidesCircleWithBox(x: number, z: number, radius: number, box:
 
 export function pointHitsAnyBox(point: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius) {
   return boxes.some((box) => collidesCircleWithBox(point[0], point[2], radius, box))
+}
+
+export function collisionBoxTop(box: CollisionBox) {
+  return box.center[1] + box.half[1]
+}
+
+export function collisionBoxBottom(box: CollisionBox) {
+  return box.center[1] - box.half[1]
+}
+
+export function playerVerticalBounds(rootY: number) {
+  const bottom = rootY - avatarGroundOffset
+  return { bottom, top: bottom + avatarVisualHeight }
+}
+
+export function collisionBoxesBlockingPlayer(
+  boxes: CollisionBox[],
+  playerRootY: number,
+  stepHeight = maxWalkableStepHeight,
+) {
+  const player = playerVerticalBounds(playerRootY)
+  return boxes.filter((box) => {
+    const boxTop = collisionBoxTop(box)
+    const boxBottom = collisionBoxBottom(box)
+    const canStepOntoTop = boxTop - player.bottom <= stepHeight + collisionSkin
+    const alreadyAboveTop = player.bottom >= boxTop - collisionSkin
+    return !canStepOntoTop && !alreadyAboveTop && player.top > boxBottom + collisionSkin
+  })
+}
+
+export function playerIsGrounded(
+  point: Vec3,
+  boxes: CollisionBox[],
+  groundY = 0,
+  radius = playerCollisionRadius,
+) {
+  const feetY = point[1] - avatarGroundOffset
+  if (Math.abs(feetY - groundY) <= collisionSkin * 2) return true
+  return boxes.some(
+    (box) =>
+      collidesCircleWithBox(point[0], point[2], radius, box) &&
+      Math.abs(feetY - collisionBoxTop(box)) <= collisionSkin * 2,
+  )
+}
+
+export function resolvePlayerVerticalCollision({
+  point,
+  desiredY,
+  boxes,
+  groundY = 0,
+  radius = playerCollisionRadius,
+  stepHeight = maxWalkableStepHeight,
+}: {
+  point: Vec3
+  desiredY: number
+  boxes: CollisionBox[]
+  groundY?: number
+  radius?: number
+  stepHeight?: number
+}): VerticalCollisionResult {
+  const current = playerVerticalBounds(point[1])
+  const desired = playerVerticalBounds(desiredY)
+  const overlapping = boxes.filter((box) => collidesCircleWithBox(point[0], point[2], radius, box))
+
+  if (desiredY > point[1]) {
+    const ceiling = overlapping
+      .map((box) => ({ id: box.id, height: collisionBoxBottom(box) }))
+      .filter(({ height }) => height >= current.top - collisionSkin && height <= desired.top + collisionSkin)
+      .sort((a, b) => a.height - b.height)[0]
+    if (ceiling) {
+      return {
+        y: ceiling.height - avatarVisualHeight + avatarGroundOffset - collisionSkin,
+        grounded: false,
+        surfaceId: ceiling.id,
+      }
+    }
+    return { y: desiredY, grounded: false }
+  }
+
+  const reachableTop = current.bottom + stepHeight + collisionSkin
+  const supports = overlapping
+    .map((box) => ({ id: box.id, height: collisionBoxTop(box) }))
+    .filter(({ height }) => height <= reachableTop && height >= desired.bottom - collisionSkin)
+
+  if (groundY <= reachableTop && groundY >= desired.bottom - collisionSkin) {
+    supports.push({ id: 'ground', height: groundY })
+  }
+
+  const support = supports.sort((a, b) => b.height - a.height)[0]
+  if (!support) return { y: desiredY, grounded: false }
+  return {
+    y: support.height + avatarGroundOffset,
+    grounded: true,
+    surfaceId: support.id,
+  }
 }
 
 export function resolveHorizontalCollision(current: Vec3, desired: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius): Vec3 {

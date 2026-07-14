@@ -60,6 +60,10 @@ describe('traffic paths', () => {
     expect(northBox.half[0]).toBeCloseTo(realScale.carWidth / 2 + 0.12, 3)
     expect(eastBox.half[0]).toBeCloseTo(realScale.carLength / 2 + 0.12, 3)
     expect(eastBox.half[2]).toBeCloseTo(realScale.carWidth / 2 + 0.12, 3)
+    expect(northBox.center[1] + northBox.half[1]).toBeCloseTo(
+      0.03 + realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight,
+      3,
+    )
   })
 
   it('stops for a pedestrian ahead in the lane and resumes when clear', () => {
