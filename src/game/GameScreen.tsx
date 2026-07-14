@@ -27,6 +27,7 @@ const keyboardMap = [
   { name: 'left', keys: ['KeyA', 'ArrowLeft'] },
   { name: 'right', keys: ['KeyD', 'ArrowRight'] },
   { name: 'jump', keys: ['Space'] },
+  { name: 'run', keys: ['ShiftLeft', 'ShiftRight'] },
   { name: 'interact', keys: ['KeyE'] },
   { name: 'menu', keys: ['Escape'] },
 ]

@@ -71,7 +71,10 @@ type TouchInput = {
   lookY: number
   jump: boolean
   interact: boolean
+  run: boolean
 }
+
+type InteractionPrompt = 'sleep' | 'wake'
 
 type CustomizationSelection = {
   name: string
@@ -110,6 +113,8 @@ type GameState = GameSave & {
   saveStatus: 'idle' | 'saving' | 'saved'
   openPanel?: GamePanel
   playerEmote: PlayerEmote
+  sleeping: boolean
+  interactionPrompt?: InteractionPrompt
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
   selectedBuildColor: string
@@ -136,6 +141,8 @@ type GameState = GameSave & {
   deleteSavedAvatarStyle: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
+  setSleeping: (sleeping: boolean) => void
+  setInteractionPrompt: (prompt?: InteractionPrompt) => void
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
   setSelectedBuildColor: (color: string) => void
@@ -290,10 +297,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   visitedBots: [],
   obby: initialObby,
   miniGame: initialMiniGame,
-  touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false },
+  touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
   loading: false,
   saveStatus: 'idle',
   playerEmote: 'none',
+  sleeping: false,
   buildMode: false,
   selectedBuildPiece: 'block',
   selectedBuildColor: '#38bdf8',
@@ -315,6 +323,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       nearbyLocation: undefined,
       openPanel: undefined,
       buildMode: false,
+      sleeping: false,
+      interactionPrompt: undefined,
       touch: { ...state.touch, interact: false },
       chat: [
         ...state.chat.slice(-60),
@@ -326,6 +336,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!activeInterior) return undefined
     set((state) => ({
       activeInterior: undefined,
+      sleeping: false,
+      interactionPrompt: undefined,
       touch: { ...state.touch, interact: false },
       chat: [
         ...state.chat.slice(-60),
@@ -455,7 +467,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
 
   setPlayerEmote: (playerEmote) => {
-    set({ playerEmote })
+    set({ playerEmote, sleeping: false, interactionPrompt: undefined })
     if (playerEmote !== 'none') {
       set((state) => ({
         chat: [
@@ -469,6 +481,24 @@ export const useGameStore = create<GameState>((set, get) => ({
       }, 2600)
     }
   },
+  setSleeping: (sleeping) =>
+    set((state) =>
+      state.sleeping === sleeping
+        ? state
+        : {
+            sleeping,
+            playerEmote: sleeping ? 'none' : state.playerEmote,
+            interactionPrompt: sleeping ? 'wake' : undefined,
+            chat: [
+              ...state.chat.slice(-60),
+              systemMessage(sleeping ? 'You are sleeping' : 'You woke up'),
+            ],
+          },
+    ),
+  setInteractionPrompt: (interactionPrompt) =>
+    set((state) =>
+      state.interactionPrompt === interactionPrompt ? state : { interactionPrompt },
+    ),
 
   setBuildMode: (buildMode) =>
     set((state) =>
@@ -852,6 +882,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       settings: defaultSettings,
       buildMode: false,
       playerEmote: 'none',
+      sleeping: false,
+      interactionPrompt: undefined,
+      touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
       selectedBuildPiece: 'block',
       selectedBuildColor: '#38bdf8',
       buildRotation: 0,
@@ -889,6 +922,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           save.miniGameRecords ?? state.miniGame.records,
         ),
         activeInterior: undefined,
+        sleeping: false,
+        interactionPrompt: undefined,
         loading: false,
       }
     }),

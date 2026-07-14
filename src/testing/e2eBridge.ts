@@ -1,5 +1,6 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import type { MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
+import { houseBedWakePosition } from '../game/interiors'
 import { useGameStore } from '../state/gameStore'
 import {
   makePartySnapshot,
@@ -20,7 +21,15 @@ export type BlockBuddiesE2EBridge = {
   completeMiniGameRoute: () => MiniGameE2ESnapshot
   broadcastLocalPartySnapshot: (position?: Vec3) => LocalPartyE2ESnapshot
   getLocalPartySnapshot: () => LocalPartyE2ESnapshot
+  getGameplaySnapshot: () => GameplayE2ESnapshot
   getSnapshot: () => MiniGameE2ESnapshot
+  prepareHouseBedInteraction: () => GameplayE2ESnapshot
+}
+
+export type GameplayE2ESnapshot = {
+  sleeping: boolean
+  interactionPrompt?: 'sleep' | 'wake'
+  run: boolean
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -50,7 +59,32 @@ export function installE2EBridge() {
     completeMiniGameRoute,
     broadcastLocalPartySnapshot,
     getLocalPartySnapshot,
+    getGameplaySnapshot,
     getSnapshot,
+    prepareHouseBedInteraction,
+  }
+}
+
+function prepareHouseBedInteraction() {
+  const game = useGameStore.getState()
+  game.setSleeping(false)
+  game.setPlayer([houseBedWakePosition[0], 0, houseBedWakePosition[2]], 0)
+  game.enterInterior({
+    id: 'e2e-house',
+    title: 'Test House',
+    kind: 'house',
+    returnPosition: [0, 0, 4],
+    returnYaw: 0,
+  })
+  return getGameplaySnapshot()
+}
+
+function getGameplaySnapshot(): GameplayE2ESnapshot {
+  const game = useGameStore.getState()
+  return {
+    sleeping: game.sleeping,
+    interactionPrompt: game.interactionPrompt,
+    run: game.touch.run,
   }
 }
 

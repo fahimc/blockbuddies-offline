@@ -117,7 +117,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Walk-in doorway triggers let the player enter static town houses, shops,
   schools, procedural borough buildings, and player-built houses/shops/towers.
 - Indoor prototype rooms include house, shop, school, and tower-lobby layouts
-  with walls, furniture, exit pads, indoor minimap context, and coarse collision.
+  with walls, furniture, exit pads, indoor minimap context, coarse collision, and
+  a contextual sleep/wake interaction on house beds.
 - Doorway safe zones clear blocking collision from trees, lamp posts, phone
   boxes, traffic props, and user-built props near supported doors.
 - Coarse visible-object collision prevents the player from walking through
@@ -131,14 +132,16 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Landmark roads are included in the final scenery cleanup, so generated trees
   and phone boxes are removed if a later road or pavement overlaps them.
 - Moving traffic cars follow deterministic procedural road-grid lanes with
-  tested wrapping/path logic and moving player collision boxes.
+  tested wrapping/path logic, synchronized collision boxes, and pedestrian
+  yielding for players, AI buddies, and local-party players.
 - Responsive minimap shows nearby roads, buddies, landmarks, traffic, and the
   player facing direction with screen-space heading correction.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
 - Landscape mobile game HUD with chat icon, status pills, virtual joystick,
-  circular jump, interact, and reset/remove controls.
+  circular jump, run, contextual interact, and reset/remove controls. Desktop
+  players can hold Shift to run.
 - Touch and mouse dragging on the world view rotates and tilts the third-person
   camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,

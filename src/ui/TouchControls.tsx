@@ -1,4 +1,4 @@
-import { ArrowUp, Hand, RotateCw, X } from 'lucide-react'
+import { ArrowUp, BedDouble, Gauge, Hand, RotateCw, X } from 'lucide-react'
 import type { PointerEvent } from 'react'
 import { useRef, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
@@ -10,6 +10,7 @@ type TouchPatch = Partial<{
   lookY: number
   jump: boolean
   interact: boolean
+  run: boolean
 }>
 
 const joystickRadius = 42
@@ -23,6 +24,8 @@ export function TouchControls() {
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
+  const running = useGameStore((state) => state.touch.run)
+  const interactionPrompt = useGameStore((state) => state.interactionPrompt)
   const joystickRef = useRef<HTMLDivElement>(null)
   const lookDragRef = useRef<{ pointerId: number; x: number; y: number } | undefined>(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
@@ -78,6 +81,11 @@ export function TouchControls() {
       }
       setTouch(input)
     }
+
+  const pulseInteract = () => {
+    setTouch({ interact: true })
+    window.setTimeout(() => useGameStore.getState().setTouch({ interact: false }), 100)
+  }
 
   return (
     <>
@@ -150,22 +158,35 @@ export function TouchControls() {
         <span>{buildMode ? 'Remove' : miniGame.status === 'running' ? 'Cancel' : 'Reset'}</span>
       </button>
 
-      <div className="pointer-events-auto flex items-end gap-2">
-        {buildMode ? (
-          <button type="button" className="mobile-use-button" onClick={rotateBuildPiece} title="Rotate">
-            <RotateCw size={22} aria-hidden />
+      <div className="mobile-action-cluster pointer-events-auto flex items-end gap-2">
+        <div className="flex flex-col gap-2">
+          {buildMode ? (
+            <button type="button" className="mobile-use-button" onClick={rotateBuildPiece} title="Rotate" aria-label="Rotate">
+              <RotateCw size={22} aria-hidden />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`mobile-run-button ${running ? 'active' : ''}`}
+              onClick={() => setTouch({ run: !running })}
+              aria-label="Run"
+              aria-pressed={running}
+              title={running ? 'Walk' : 'Run'}
+            >
+              <Gauge size={20} aria-hidden />
+              <span>Run</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
+            onClick={pulseInteract}
+            title={buildMode ? 'Place' : interactionPrompt === 'sleep' ? 'Sleep' : interactionPrompt === 'wake' ? 'Wake up' : 'Interact'}
+            aria-label={buildMode ? 'Place' : interactionPrompt === 'sleep' ? 'Sleep' : interactionPrompt === 'wake' ? 'Wake up' : 'Interact'}
+          >
+            {interactionPrompt ? <BedDouble size={22} aria-hidden /> : <Hand size={22} aria-hidden />}
           </button>
-        ) : null}
-        <button
-          type="button"
-          className="mobile-use-button"
-          onPointerDown={press({ interact: true })}
-          onPointerUp={release({ interact: false })}
-          onPointerCancel={release({ interact: false })}
-          title={buildMode ? 'Place' : 'Interact'}
-        >
-          <Hand size={22} aria-hidden />
-        </button>
+        </div>
         <button
           type="button"
           className="mobile-jump-button"

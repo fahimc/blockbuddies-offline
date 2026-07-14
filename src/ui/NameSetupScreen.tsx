@@ -53,7 +53,6 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
             onChange={(event) => setDraftName(event.target.value)}
             maxLength={18}
             autoComplete="off"
-            autoFocus
             aria-label="Character name"
             placeholder="BlockBuddy"
           />

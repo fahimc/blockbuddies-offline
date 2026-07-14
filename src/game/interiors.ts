@@ -18,6 +18,15 @@ export const interiorExitPosition: Vec3 = [0, 0, -5.95]
 export const interiorExitRadius = 1.05
 export const interiorStandingY = avatarGroundOffset
 export const entranceSafeZoneRadius = 1.85
+export const houseBedCenter: Vec3 = [3.8, 0.38, 2.8]
+export const houseBedHalfSize: Vec3 = [1.3, 0.38, 1.75]
+export const houseBedInteractionRadius = 2.35
+export const houseBedSleepPosition: Vec3 = [
+  houseBedCenter[0],
+  avatarGroundOffset + houseBedCenter[1] + houseBedHalfSize[1],
+  houseBedCenter[2],
+]
+export const houseBedWakePosition: Vec3 = [1.85, avatarGroundOffset, houseBedCenter[2]]
 
 const roomHalfWidth = 7
 const roomHalfDepth = 6.5
@@ -148,9 +157,15 @@ export function interiorFurnitureCollisionBoxes(kind: InteriorKind): CollisionBo
   }
   return [
     { id: 'interior:house-sofa', center: [-4.1, 0.45, 1.3], half: [0.58, 0.45, 1.6] },
-    { id: 'interior:house-bed', center: [3.8, 0.38, 2.8], half: [1.3, 0.38, 1.75] },
+    { id: 'interior:house-bed', center: houseBedCenter, half: houseBedHalfSize },
     { id: 'interior:house-table', center: [0, 0.42, 1.15], half: [0.88, 0.42, 0.88] },
   ]
+}
+
+export function isNearHouseBed(position: Vec3, maxDistance = houseBedInteractionRadius) {
+  const closestX = clamp(position[0], houseBedCenter[0] - houseBedHalfSize[0], houseBedCenter[0] + houseBedHalfSize[0])
+  const closestZ = clamp(position[2], houseBedCenter[2] - houseBedHalfSize[2], houseBedCenter[2] + houseBedHalfSize[2])
+  return Math.hypot(position[0] - closestX, position[2] - closestZ) <= maxDistance
 }
 
 export function interiorRoomHalfSize() {

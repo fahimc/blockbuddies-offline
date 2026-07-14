@@ -16,6 +16,7 @@ export type TrafficVehicle = {
   offset: number
   speed: number
   color: string
+  stopped?: boolean
 }
 
 export type TrafficPose = {
@@ -27,6 +28,8 @@ const trafficRoadCenters = [18, -54, 90]
 const trafficExtent = 94
 const laneOffset = realScale.roadTile * 0.22
 const trafficColors = ['#ef4444', '#f97316', '#2563eb', '#22c55e', '#eab308', '#8b5cf6', '#06b6d4', '#f43f5e']
+export const trafficPedestrianLookAhead = realScale.carLength + 1.5
+export const trafficPedestrianHalfWidth = realScale.carWidth / 2 + 0.72
 
 export function makeTrafficLanes(): TrafficLane[] {
   const lanes: TrafficLane[] = []
@@ -55,7 +58,34 @@ export function advanceTraffic(vehicle: TrafficVehicle, lane: TrafficLane, delta
   return {
     ...vehicle,
     offset: wrapDistance(vehicle.offset + vehicle.speed * Math.max(0, deltaSeconds), lane.length),
+    stopped: false,
   }
+}
+
+export function advanceTrafficForPedestrians(
+  vehicle: TrafficVehicle,
+  lane: TrafficLane,
+  deltaSeconds: number,
+  pedestrianPositions: Vec3[],
+): TrafficVehicle {
+  if (hasPedestrianAhead(vehicle, lane, pedestrianPositions)) {
+    return { ...vehicle, stopped: true }
+  }
+  return advanceTraffic(vehicle, lane, deltaSeconds)
+}
+
+export function hasPedestrianAhead(vehicle: TrafficVehicle, lane: TrafficLane, pedestrianPositions: Vec3[]) {
+  const pose = trafficPositionAt(lane, vehicle.offset)
+  const sideX = -lane.direction[2]
+  const sideZ = lane.direction[0]
+
+  return pedestrianPositions.some((pedestrian) => {
+    const relativeX = pedestrian[0] - pose.position[0]
+    const relativeZ = pedestrian[2] - pose.position[2]
+    const ahead = relativeX * lane.direction[0] + relativeZ * lane.direction[2]
+    const lateral = Math.abs(relativeX * sideX + relativeZ * sideZ)
+    return ahead >= -0.1 && ahead <= trafficPedestrianLookAhead && lateral <= trafficPedestrianHalfWidth
+  })
 }
 
 export function trafficPositionAt(lane: TrafficLane, offset: number): TrafficPose {
@@ -76,11 +106,21 @@ export function trafficPositionAtTime(lane: TrafficLane, vehicle: TrafficVehicle
 }
 
 export function trafficCollisionBoxesAtTime(lanes: TrafficLane[], vehicles: TrafficVehicle[], timeSeconds: number): CollisionBox[] {
+  return trafficCollisionBoxes(
+    lanes,
+    vehicles.map((vehicle) => ({
+      ...vehicle,
+      offset: vehicle.offset + vehicle.speed * Math.max(0, timeSeconds),
+    })),
+  )
+}
+
+export function trafficCollisionBoxes(lanes: TrafficLane[], vehicles: TrafficVehicle[]): CollisionBox[] {
   const laneById = new Map(lanes.map((laneItem) => [laneItem.id, laneItem]))
   return vehicles.flatMap((vehicle) => {
     const vehicleLane = laneById.get(vehicle.laneId)
     if (!vehicleLane) return []
-    const pose = trafficPositionAtTime(vehicleLane, vehicle, timeSeconds)
+    const pose = trafficPositionAt(vehicleLane, vehicle.offset)
     const horizontal = Math.abs(vehicleLane.direction[0]) >= Math.abs(vehicleLane.direction[2])
     return [
       {

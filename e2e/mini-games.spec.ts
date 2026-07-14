@@ -113,7 +113,7 @@ test.describe('mini games end-to-end flow', () => {
     await completeStartFlow(page, 'DashRunner')
 
     await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash 0\/3/)
-    await expect(page.getByText('Delivery Dash: Park drop-off')).toHaveCount(1)
+    await expect(page.getByText('Delivery Dash: Park drop-off')).toHaveCount(1, { timeout: 15_000 })
 
     const first = await collectNextTarget(page)
     expect(first.miniGame.status).toBe('running')

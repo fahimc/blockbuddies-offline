@@ -1,5 +1,29 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Added a mobile Run toggle and Shift sprint controls with distinct walk/run speeds and animations.
+- Added a contextual bed action that lets players sleep, wake, or move to get out of bed inside houses.
+- Added deterministic traffic safety tests, bed interaction tests, mobile control tests, and name-screen focus coverage.
+
+### Changed
+
+- Traffic now advances from shared live simulation offsets and yields to players, AI buddies, and local-party players in the lane ahead.
+- Mobile interaction taps now remain active long enough for the game frame to consume quick taps reliably.
+
+### Fixed
+
+- Reversed horizontal and vertical camera orbit drag so the world follows direct touch movement correctly.
+- Prevented the name field from automatically opening the mobile keyboard when the naming screen appears.
+- Kept stopped traffic visuals and collision boxes synchronized.
+
+### Known Issues
+
+- Traffic uses lane-based safety zones rather than full rigid-body vehicle physics.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.7-original-mini-games] - 2026-07-14
 
 ### Added

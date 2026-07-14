@@ -7,6 +7,10 @@ import {
   interiorExitPosition,
   interiorExitRadius,
   interiorStandingY,
+  houseBedCenter,
+  houseBedSleepPosition,
+  houseBedWakePosition,
+  isNearHouseBed,
   makeInteriorVisit,
   nearestInteriorEntrance,
   proceduralDoorEntrance,
@@ -118,5 +122,19 @@ describe('interior entrances', () => {
       'static-building:kept',
       'static-tree:kept',
     ])
+  })
+
+  it('provides a reachable bed sleep position and a collision-free wake point', () => {
+    const boxes = interiorCollisionBoxes('house')
+    const bed = boxes.find((box) => box.id === 'interior:house-bed')!
+
+    expect(bed.center).toEqual(houseBedCenter)
+    expect(houseBedSleepPosition[1]).toBeCloseTo(interiorStandingY + bed.center[1] + bed.half[1])
+    expect(isNearHouseBed(houseBedWakePosition)).toBe(true)
+    expect(
+      boxes
+        .filter((box) => box.id !== 'interior:house-bed')
+        .every((box) => Math.hypot(box.center[0] - houseBedWakePosition[0], box.center[2] - houseBedWakePosition[2]) > 0.9),
+    ).toBe(true)
   })
 })

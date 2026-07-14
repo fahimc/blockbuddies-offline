@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { realScale } from './scale'
-import { advanceTraffic, createTrafficVehicles, makeTrafficLanes, trafficCollisionBoxesAtTime, trafficPositionAt } from './traffic'
+import {
+  advanceTraffic,
+  advanceTrafficForPedestrians,
+  createTrafficVehicles,
+  makeTrafficLanes,
+  trafficCollisionBoxesAtTime,
+  trafficPedestrianHalfWidth,
+  trafficPositionAt,
+} from './traffic'
 
 describe('traffic paths', () => {
   it('creates bidirectional lanes on borough road centers', () => {
@@ -52,5 +60,31 @@ describe('traffic paths', () => {
     expect(northBox.half[0]).toBeCloseTo(realScale.carWidth / 2 + 0.12, 3)
     expect(eastBox.half[0]).toBeCloseTo(realScale.carLength / 2 + 0.12, 3)
     expect(eastBox.half[2]).toBeCloseTo(realScale.carWidth / 2 + 0.12, 3)
+  })
+
+  it('stops for a pedestrian ahead in the lane and resumes when clear', () => {
+    const lane = makeTrafficLanes().find((item) => item.id.includes('east'))!
+    const vehicle = { ...createTrafficVehicles([lane], 1)[0], offset: lane.length / 2, speed: 5 }
+    const pose = trafficPositionAt(lane, vehicle.offset)
+    const pedestrianAhead: [number, number, number] = [pose.position[0] + 4, 0, pose.position[2]]
+
+    const stopped = advanceTrafficForPedestrians(vehicle, lane, 1, [pedestrianAhead])
+    const resumed = advanceTrafficForPedestrians(stopped, lane, 1, [])
+
+    expect(stopped.offset).toBe(vehicle.offset)
+    expect(stopped.stopped).toBe(true)
+    expect(resumed.offset).toBeGreaterThan(vehicle.offset)
+    expect(resumed.stopped).toBe(false)
+  })
+
+  it('does not stop for pedestrians behind the car or clear of its lane', () => {
+    const lane = makeTrafficLanes().find((item) => item.id.includes('east'))!
+    const vehicle = { ...createTrafficVehicles([lane], 1)[0], offset: lane.length / 2, speed: 5 }
+    const pose = trafficPositionAt(lane, vehicle.offset)
+    const behind: [number, number, number] = [pose.position[0] - 3, 0, pose.position[2]]
+    const onPavement: [number, number, number] = [pose.position[0] + 3, 0, pose.position[2] + trafficPedestrianHalfWidth + 0.2]
+
+    expect(advanceTrafficForPedestrians(vehicle, lane, 1, [behind]).offset).toBeGreaterThan(vehicle.offset)
+    expect(advanceTrafficForPedestrians(vehicle, lane, 1, [onPavement]).offset).toBeGreaterThan(vehicle.offset)
   })
 })
