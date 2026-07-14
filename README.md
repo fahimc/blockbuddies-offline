@@ -111,6 +111,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   distance, and night mode settings.
 - Procedural borough chunks now use sparser building placement and wider roads
   so the town feels more open for blocky sandbox movement, traffic, and building.
+- Walk-in doorway triggers let the player enter static town houses, shops,
+  schools, procedural borough buildings, and player-built houses/shops/towers.
+- Indoor prototype rooms include house, shop, school, and tower-lobby layouts
+  with walls, furniture, exit pads, indoor minimap context, and coarse collision.
 - Coarse visible-object collision prevents the player from walking through
   buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
   pieces while still sliding along blocked axes.
@@ -255,6 +259,9 @@ Wi-Fi, and manual accept codes are only needed as fallback.
 
 The `v1.5.3` APK widens procedural roads and pavements, reduces generated
 building density, and removes late-overlapping scenery blockers from roads.
+
+The `v1.5.4` APK adds enterable places. Walking into supported doorways opens an
+indoor room, and the exit pad returns the player to the same outdoor door.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

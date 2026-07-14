@@ -393,3 +393,17 @@
 - [x] Add unit coverage for sparse building density, wide road scale, and build-mode footprint updates
 - [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
 - [x] Bump Android debug APK version metadata to 1.5.3 / 10503
+
+## Post-phase enterable houses and places
+
+- [x] Add doorway triggers for static town places
+- [x] Add doorway triggers for procedural borough building doors
+- [x] Add doorway triggers for player-built houses, shops, and towers
+- [x] Add indoor house, shop, school, and building lobby room layouts
+- [x] Add room wall and furniture collision so interiors are playable spaces
+- [x] Add exit pads that return the player to the correct outdoor doorway
+- [x] Scope Local Party remote avatars to the same indoor/outdoor space
+- [x] Add HUD and minimap indoor context
+- [x] Guard build mode so persistent outdoor pieces are not placed from indoor coordinates
+- [x] Add unit coverage for doorway placement and interior collision layout
+- [x] Bump Android debug APK version metadata to 1.5.4 / 10504

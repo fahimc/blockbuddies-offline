@@ -1,5 +1,30 @@
 # Changelog
 
+## [v1.5.4-enterable-places] - 2026-07-14
+
+### Added
+
+- Added walk-in doorway triggers for static town houses, the coin shop, the school, procedural borough buildings, and player-built houses/shops/towers.
+- Added indoor rooms for houses, shops, schools, and building lobbies with walls, furniture, exit pads, labels, and a local buddy inside.
+- Added interior collision boxes so players can walk around inside rooms without passing through walls or furniture.
+- Added unit tests for static, procedural, and build-mode doorway placement plus interior collision layout.
+
+### Changed
+
+- The HUD and minimap now switch to an indoor context while the player is inside a place.
+- Local Party player snapshots include optional interior scope so remote players are only shown in the same indoor/outdoor space.
+- Build mode now asks the player to leave a building before placing persistent outdoor world pieces.
+- Updated Android version metadata to `1.5.4` / `10504`.
+
+### Fixed
+
+- Fixed the hardcoded controller spawn so entering/exiting rooms remounts at the current saved player position.
+
+### Known Issues
+
+- Interiors are prototype rooms with coarse collision and do not yet include per-building floor plans or bot pathfinding.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.3-open-roads-sparse-buildings] - 2026-07-14
 
 ### Added

@@ -2,6 +2,16 @@ export type Vec3 = [number, number, number]
 
 export type LocationId = 'spawn' | 'park' | 'shop' | 'school' | 'obby' | 'houses'
 
+export type InteriorKind = 'house' | 'shop' | 'school' | 'building'
+
+export type InteriorVisit = {
+  id: string
+  title: string
+  kind: InteriorKind
+  returnPosition: Vec3
+  returnYaw: number
+}
+
 export type BotMood = 'happy' | 'curious' | 'focused' | 'playful'
 
 export type BotState =

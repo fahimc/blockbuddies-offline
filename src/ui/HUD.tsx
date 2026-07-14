@@ -11,10 +11,11 @@ import { useGameStore } from '../state/gameStore'
 export function HUD() {
   const coins = useGameStore((state) => state.coins)
   const nearbyLocation = useGameStore((state) => state.nearbyLocation)
+  const activeInterior = useGameStore((state) => state.activeInterior)
   const obby = useGameStore((state) => state.obby)
   const saveStatus = useGameStore((state) => state.saveStatus)
 
-  const locationLabel = nearbyLocation ? getLocation(nearbyLocation).label : undefined
+  const locationLabel = activeInterior ? `Inside ${activeInterior.title}` : nearbyLocation ? getLocation(nearbyLocation).label : undefined
 
   return (
     <>
@@ -22,7 +23,7 @@ export function HUD() {
         <div className="pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-lg bg-white/90 p-2 shadow-xl backdrop-blur">
           <Badge icon={<Coins size={18} />} text={`${coins}`} tone="bg-amber-300" />
           {obby.active ? <Badge icon={<Trophy size={18} />} text="Obby running" tone="bg-red-200" /> : null}
-          {locationLabel ? <Badge icon={<Backpack size={18} />} text={`Near ${locationLabel}`} tone="bg-sky-200" /> : null}
+          {locationLabel ? <Badge icon={<Backpack size={18} />} text={activeInterior ? locationLabel : `Near ${locationLabel}`} tone="bg-sky-200" /> : null}
           <span className="px-2 text-xs font-bold text-slate-500">{saveStatus}</span>
         </div>
       </div>

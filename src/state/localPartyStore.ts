@@ -34,6 +34,7 @@ export type LocalPartySnapshot = {
   yaw: number
   avatar: AvatarSettings
   action: BotRuntime['action']
+  interiorId?: string
   updatedAt: number
 }
 
@@ -174,6 +175,7 @@ export function makePartySnapshot(snapshot: Omit<LocalPartySnapshot, 'updatedAt'
     ...snapshot,
     name: sanitizePartyName(snapshot.name),
     position: [snapshot.position[0], snapshot.position[1], snapshot.position[2]],
+    interiorId: snapshot.interiorId,
     updatedAt: snapshot.updatedAt ?? Date.now(),
   }
 }

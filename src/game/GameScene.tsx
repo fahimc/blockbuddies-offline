@@ -10,6 +10,19 @@ import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
 import { playerCollisionRadius, resolveHorizontalCollision, separateCircleFromBoxes, type CollisionBox } from './collision'
+import {
+  buildBlockInteriorEntrance,
+  interiorCollisionBoxes,
+  interiorExitPosition,
+  interiorExitRadius,
+  interiorRoomHalfSize,
+  interiorSpawnPosition,
+  makeInteriorVisit,
+  nearestInteriorEntrance,
+  proceduralDoorEntrance,
+  staticBuildingEntrance,
+  type InteriorEntrance,
+} from './interiors'
 import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
 import { createTrafficVehicles, makeTrafficLanes, trafficCollisionBoxesAtTime, trafficPositionAtTime, type TrafficLane, type TrafficVehicle } from './traffic'
 import type {
@@ -20,6 +33,8 @@ import type {
   AvatarShoeStyle,
   BotRuntime,
   BuildBlock,
+  InteriorKind,
+  InteriorVisit,
   ShopItemId,
   Vec3,
 } from './types'
@@ -33,17 +48,20 @@ const obbyCheckpoints: Vec3[] = [
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 
-const staticTownBuildings: { position: Vec3; color: string; scale: Vec3; floors: number }[] = [
-  staticBuilding(-12, -8, 2, 4.2, 3.6, '#22c55e'),
-  staticBuilding(12, -7, 2, 4.6, 3.8, '#fb923c'),
-  staticBuilding(-14, 10, 3, 5.4, 4.2, '#a78bfa'),
-  staticBuilding(2, 18, 2, 4.4, 3.8, '#facc15'),
-  staticBuilding(-4, 18, 2, 3.8, 3.4, '#f9a8d4'),
-  staticBuilding(8, 18, 2, 3.8, 3.4, '#93c5fd'),
+const staticTownBuildings: { id: string; title: string; interiorKind: InteriorKind; position: Vec3; color: string; scale: Vec3; floors: number }[] = [
+  staticBuilding('park-clubhouse', 'Park Clubhouse', 'house', -12, -8, 2, 4.2, 3.6, '#22c55e'),
+  staticBuilding('coin-shop', 'Coin Shop', 'shop', 12, -7, 2, 4.6, 3.8, '#fb923c'),
+  staticBuilding('skill-school', 'Skill School', 'school', -14, 10, 3, 5.4, 4.2, '#a78bfa'),
+  staticBuilding('buddy-house-a', 'Buddy House', 'house', 2, 18, 2, 4.4, 3.8, '#facc15'),
+  staticBuilding('buddy-house-b', 'Pink Buddy House', 'house', -4, 18, 2, 3.8, 3.4, '#f9a8d4'),
+  staticBuilding('buddy-house-c', 'Blue Buddy House', 'house', 8, 18, 2, 3.8, 3.4, '#93c5fd'),
 ]
 
-function staticBuilding(x: number, z: number, floors: number, widthMeters: number, depthMeters: number, color: string) {
+function staticBuilding(id: string, title: string, interiorKind: InteriorKind, x: number, z: number, floors: number, widthMeters: number, depthMeters: number, color: string) {
   return {
+    id,
+    title,
+    interiorKind,
     position: buildingCenterPosition(x, z, floors),
     scale: buildingScale(floors, widthMeters, depthMeters),
     floors,
@@ -102,7 +120,28 @@ const staticCollisionObstacles: CollisionBox[] = [
   { id: 'static-billboard', center: [-6, 1.1, 2], half: [2, 1.3, 0.35] },
 ]
 
+const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map((building) =>
+  staticBuildingEntrance({
+    id: `static:${building.id}`,
+    title: building.title,
+    kind: building.interiorKind,
+    center: building.position,
+    scale: building.scale,
+  }),
+)
+
 export function GameScene() {
+  const activeInterior = useGameStore((state) => state.activeInterior)
+  if (activeInterior) {
+    return (
+      <>
+        <InteriorWorld interior={activeInterior} />
+        <PlayerController />
+        <LocalPartyPlayers />
+      </>
+    )
+  }
+
   return (
     <>
       <ProceduralBoroughWorld />
@@ -245,6 +284,166 @@ function ProceduralPieceMesh({ piece }: { piece: ProceduralPiece }) {
       ) : null}
     </group>
   )
+}
+
+function InteriorWorld({ interior }: { interior: InteriorVisit }) {
+  const room = interiorRoomHalfSize()
+  const theme = interiorTheme(interior.kind)
+
+  return (
+    <group data-testid="interior-world">
+      <mesh receiveShadow position={[0, -0.05, 0]}>
+        <boxGeometry args={[room.width * 2, 0.1, room.depth * 2]} />
+        <meshStandardMaterial color={theme.floor} roughness={0.86} />
+      </mesh>
+      <mesh receiveShadow position={[0, 0.02, 0]}>
+        <boxGeometry args={[room.width * 1.45, 0.04, room.depth * 1.08]} />
+        <meshStandardMaterial color={theme.rug} roughness={0.72} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, 1.8, room.depth + room.wallThickness / 2]}>
+        <boxGeometry args={[room.width * 2, 3.6, room.wallThickness]} />
+        <meshStandardMaterial color={theme.wall} roughness={0.74} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-room.width - room.wallThickness / 2, 1.8, 0]}>
+        <boxGeometry args={[room.wallThickness, 3.6, room.depth * 2]} />
+        <meshStandardMaterial color={theme.wall} roughness={0.74} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[room.width + room.wallThickness / 2, 1.8, 0]}>
+        <boxGeometry args={[room.wallThickness, 3.6, room.depth * 2]} />
+        <meshStandardMaterial color={theme.wall} roughness={0.74} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-(room.width + room.doorHalfWidth) / 2, 1.8, -room.depth - room.wallThickness / 2]}>
+        <boxGeometry args={[room.width - room.doorHalfWidth, 3.6, room.wallThickness]} />
+        <meshStandardMaterial color={theme.wall} roughness={0.74} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[(room.width + room.doorHalfWidth) / 2, 1.8, -room.depth - room.wallThickness / 2]}>
+        <boxGeometry args={[room.width - room.doorHalfWidth, 3.6, room.wallThickness]} />
+        <meshStandardMaterial color={theme.wall} roughness={0.74} />
+      </mesh>
+      <mesh castShadow position={[0, realScale.doorHeight / 2, -room.depth - room.wallThickness / 2 + 0.03]}>
+        <boxGeometry args={[realScale.doorWidth * 1.2, realScale.doorHeight, realScale.doorDepth]} />
+        <meshStandardMaterial color="#7c2d12" roughness={0.82} />
+      </mesh>
+      <mesh position={interiorExitPosition}>
+        <cylinderGeometry args={[interiorExitRadius, interiorExitRadius, 0.06, 24]} />
+        <meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={0.28} transparent opacity={0.6} />
+      </mesh>
+      <Html center position={[0, 2.65, -room.depth + 0.25]} zIndexRange={worldHtmlZIndexRange}>
+        <span className="whitespace-nowrap rounded-lg bg-slate-950/85 px-3 py-1 text-xs font-black text-white shadow">
+          Exit to town
+        </span>
+      </Html>
+      <Html center position={[0, 3.2, 2.7]} zIndexRange={worldHtmlZIndexRange}>
+        <span className="whitespace-nowrap rounded-xl bg-white/95 px-4 py-2 text-sm font-black text-slate-950 shadow">
+          {interior.title}
+        </span>
+      </Html>
+      <InteriorProps kind={interior.kind} />
+      <group position={[4.8, 0.9, -1.8]} rotation={[0, -0.55, 0]}>
+        <BlockAvatar
+          bodyColor="#f2b07e"
+          shirtColor={theme.buddyShirt}
+          hairColor="#5a2f16"
+          hairStyle={interior.kind === 'school' ? 'bob' : 'short'}
+          pantsColor="#1f2937"
+          outfitStyle="hoodie"
+          bottomStyle="jeans"
+          shoeStyle="sneakers"
+          username={interior.kind === 'shop' ? 'ShopBuddy' : interior.kind === 'school' ? 'ClassBuddy' : 'HomeBuddy'}
+          emote="wave"
+          action="idle"
+        />
+      </group>
+    </group>
+  )
+}
+
+function InteriorProps({ kind }: { kind: InteriorKind }) {
+  if (kind === 'shop') {
+    return (
+      <group>
+        <InteriorBox position={[0, 0.55, 3.9]} scale={[4.3, 1.1, 1.1]} color="#0f172a" />
+        <InteriorBox position={[0, 1.2, 3.32]} scale={[3.6, 0.22, 0.12]} color="#facc15" />
+        <InteriorShelf x={-5.1} color="#38bdf8" />
+        <InteriorShelf x={5.1} color="#f472b6" />
+        {[-1.1, 0, 1.1].map((x) => (
+          <mesh key={x} castShadow position={[x, 1.35, 3.2]}>
+            <cylinderGeometry args={[0.22, 0.22, 0.12, 18]} />
+            <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.16} />
+          </mesh>
+        ))}
+      </group>
+    )
+  }
+  if (kind === 'school') {
+    return (
+      <group>
+        <InteriorBox position={[0, 2.05, 5.95]} scale={[4.7, 1.3, 0.12]} color="#0f172a" />
+        <Html center position={[0, 2.08, 5.86]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="text-xs font-black text-white">Build. Explore. Play.</span>
+        </Html>
+        <InteriorBox position={[0, 0.45, 4.25]} scale={[2.9, 0.9, 1.04]} color="#a16207" />
+        {[-2.4, 0, 2.4].map((x) => (
+          <InteriorBox key={x} position={[x, 0.38, 0.9]} scale={[1.44, 0.76, 1.04]} color="#facc15" />
+        ))}
+      </group>
+    )
+  }
+  if (kind === 'building') {
+    return (
+      <group>
+        <InteriorBox position={[0, 0.5, 3.8]} scale={[3.6, 1, 0.96]} color="#334155" />
+        <InteriorBox position={[-4.1, 0.42, 0.6]} scale={[1.1, 0.84, 2.9]} color="#2563eb" />
+        <InteriorBox position={[4.1, 0.42, 0.6]} scale={[1.1, 0.84, 2.9]} color="#2563eb" />
+        <InteriorBox position={[0, 2.1, 5.95]} scale={[3.7, 1, 0.12]} color="#bae6fd" emissive="#38bdf8" />
+      </group>
+    )
+  }
+  return (
+    <group>
+      <InteriorBox position={[-4.1, 0.45, 1.3]} scale={[1.16, 0.9, 3.2]} color="#60a5fa" />
+      <InteriorBox position={[3.8, 0.38, 2.8]} scale={[2.6, 0.76, 3.5]} color="#f9a8d4" />
+      <InteriorBox position={[0, 0.42, 1.15]} scale={[1.76, 0.84, 1.76]} color="#a16207" />
+      <InteriorBox position={[0, 1.15, 1.15]} scale={[0.72, 0.16, 0.72]} color="#fde68a" />
+    </group>
+  )
+}
+
+function InteriorShelf({ x, color }: { x: number; color: string }) {
+  return (
+    <group>
+      <InteriorBox position={[x, 0.95, 0.8]} scale={[0.84, 1.9, 4.2]} color="#e5e7eb" />
+      {[-0.8, 0.2, 1.2].map((z, index) => (
+        <InteriorBox key={z} position={[x, 0.8 + index * 0.42, z]} scale={[0.9, 0.28, 0.52]} color={color} />
+      ))}
+    </group>
+  )
+}
+
+function InteriorBox({
+  position,
+  scale,
+  color,
+  emissive,
+}: {
+  position: Vec3
+  scale: Vec3
+  color: string
+  emissive?: string
+}) {
+  return (
+    <mesh castShadow receiveShadow position={position}>
+      <boxGeometry args={scale} />
+      <meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={emissive ? 0.16 : 0} roughness={0.76} />
+    </mesh>
+  )
+}
+
+function interiorTheme(kind: InteriorKind) {
+  if (kind === 'shop') return { floor: '#fef3c7', wall: '#bfdbfe', rug: '#f97316', buddyShirt: '#22c55e' }
+  if (kind === 'school') return { floor: '#e0f2fe', wall: '#dbeafe', rug: '#a78bfa', buddyShirt: '#3b82f6' }
+  if (kind === 'building') return { floor: '#e2e8f0', wall: '#cbd5e1', rug: '#64748b', buddyShirt: '#0f172a' }
+  return { floor: '#fef9c3', wall: '#fde68a', rug: '#22c55e', buddyShirt: '#f472b6' }
 }
 
 function proceduralPiecesToCollisionBoxes(pieces: ProceduralPiece[]) {
@@ -553,11 +752,18 @@ function PlayerController() {
   const cameraPitch = useRef(0)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
+  const lastInteriorTransitionAt = useRef(0)
   const movingRef = useRef(false)
   const airborneRef = useRef(false)
   const [moving, setMoving] = useState(false)
   const [airborne, setAirborne] = useState(false)
-  const position = useRef(new THREE.Vector3(0, 0.9, 4))
+  const position = useRef(
+    new THREE.Vector3(
+      useGameStore.getState().playerPosition[0],
+      useGameStore.getState().playerPosition[1] + 0.9,
+      useGameStore.getState().playerPosition[2],
+    ),
+  )
   const setPlayer = useGameStore((state) => state.setPlayer)
   const setTouch = useGameStore((state) => state.setTouch)
   const touch = useGameStore((state) => state.touch)
@@ -565,6 +771,7 @@ function PlayerController() {
   const playerName = useGameStore((state) => state.playerName)
   const playerEmote = useGameStore((state) => state.playerEmote)
   const settings = useGameStore((state) => state.settings)
+  const activeInterior = useGameStore((state) => state.activeInterior)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
   const buildMode = useGameStore((state) => state.buildMode)
   const placeBlock = useGameStore((state) => state.placeBlock)
@@ -574,6 +781,8 @@ function PlayerController() {
   const updateObby = useGameStore((state) => state.updateObby)
   const obby = useGameStore((state) => state.obby)
   const setNearbyLocation = useGameStore((state) => state.setNearbyLocation)
+  const enterInterior = useGameStore((state) => state.enterInterior)
+  const leaveInterior = useGameStore((state) => state.leaveInterior)
   const advanceQuest = useGameStore((state) => state.advanceQuest)
   const botReact = useGameStore((state) => state.botReact)
   const recordBotMeet = useGameStore((state) => state.recordBotMeet)
@@ -589,20 +798,34 @@ function PlayerController() {
     x: Math.floor(position.current.x / 36),
     z: Math.floor(position.current.z / 36),
   }))
-  const collisionObstacles = useMemo(() => {
-    const proceduralObstacles = settings.proceduralWorld
-      ? proceduralPiecesToCollisionBoxes(
-          generateProceduralWorld({
+  const proceduralPieces = useMemo(
+    () =>
+      settings.proceduralWorld
+        ? generateProceduralWorld({
             seed: settings.worldSeed || 'LONDON-2026',
             center: [collisionChunk.x * 36 + 18, 0, collisionChunk.z * 36 + 18],
             viewDistance: settings.worldViewDistance,
             night: settings.nightMode,
-          }).pieces,
-        )
-      : []
-
-    return [...staticCollisionObstacles, ...proceduralObstacles, ...buildBlocksToCollisionBoxes(placedBlocks)]
-  }, [collisionChunk.x, collisionChunk.z, placedBlocks, settings.nightMode, settings.proceduralWorld, settings.worldSeed, settings.worldViewDistance])
+          }).pieces
+        : [],
+    [collisionChunk.x, collisionChunk.z, settings.nightMode, settings.proceduralWorld, settings.worldSeed, settings.worldViewDistance],
+  )
+  const collisionObstacles = useMemo(() => {
+    if (activeInterior) return interiorCollisionBoxes(activeInterior.kind)
+    return [...staticCollisionObstacles, ...proceduralPiecesToCollisionBoxes(proceduralPieces), ...buildBlocksToCollisionBoxes(placedBlocks)]
+  }, [activeInterior, placedBlocks, proceduralPieces])
+  const interiorEntrances = useMemo(() => {
+    if (activeInterior) return []
+    const proceduralEntrances = proceduralPieces.flatMap((piece) => {
+      const entrance = proceduralDoorEntrance(piece)
+      return entrance ? [entrance] : []
+    })
+    const buildEntrances = placedBlocks.flatMap((block) => {
+      const entrance = buildBlockInteriorEntrance(block)
+      return entrance ? [entrance] : []
+    })
+    return [...staticInteriorEntrances, ...proceduralEntrances, ...buildEntrances]
+  }, [activeInterior, placedBlocks, proceduralPieces])
 
   useFrame((state, delta) => {
     const nextCollisionChunk = {
@@ -681,9 +904,45 @@ function PlayerController() {
           yaw: yaw.current,
           avatar,
           action: isAirborne ? 'jump' : isMoving ? 'run' : 'idle',
+          interiorId: activeInterior?.id,
         }),
       )
       lastPartyBroadcastAt.current = performance.now()
+    }
+
+    const groundPosition: Vec3 = [position.current.x, 0, position.current.z]
+    const transitionReady = performance.now() - lastInteriorTransitionAt.current > 850
+    if (activeInterior) {
+      setNearbyLocation(undefined)
+      if (transitionReady && (isMoving || keys.interact || touch.interact) && distance2d(groundPosition, interiorExitPosition) < interiorExitRadius) {
+        const previousInterior = leaveInterior()
+        if (previousInterior) {
+          position.current.set(previousInterior.returnPosition[0], 0.9, previousInterior.returnPosition[2])
+          yaw.current = previousInterior.returnYaw
+          velocityY.current = 0
+          group.current?.position.copy(position.current)
+          if (group.current) group.current.rotation.y = yaw.current
+          setPlayer([position.current.x, 0, position.current.z], yaw.current)
+          lastInteriorTransitionAt.current = performance.now()
+          return
+        }
+      }
+      return
+    }
+
+    const doorway = transitionReady && (isMoving || keys.interact || touch.interact)
+      ? nearestInteriorEntrance(groundPosition, interiorEntrances)
+      : undefined
+    if (doorway) {
+      enterInterior(makeInteriorVisit(doorway))
+      position.current.set(interiorSpawnPosition[0], 0.9, interiorSpawnPosition[2])
+      yaw.current = 0
+      velocityY.current = 0
+      group.current?.position.copy(position.current)
+      if (group.current) group.current.rotation.y = yaw.current
+      setPlayer([position.current.x, 0, position.current.z], yaw.current)
+      lastInteriorTransitionAt.current = performance.now()
+      return
     }
 
     const nearby = nearestLocation([position.current.x, 0, position.current.z])
@@ -746,7 +1005,12 @@ function LocalPartyPlayers() {
   const lastPruneAt = useRef(0)
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
   const pruneRemotePlayers = useLocalPartyStore((state) => state.pruneRemotePlayers)
-  const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
+  const activeInterior = useGameStore((state) => state.activeInterior)
+  const activeInteriorId = activeInterior?.id
+  const remotePlayers = useMemo(
+    () => Object.values(remotePlayerRecord).filter((player) => player.interiorId === activeInteriorId),
+    [activeInteriorId, remotePlayerRecord],
+  )
 
   useFrame(() => {
     const now = Date.now()

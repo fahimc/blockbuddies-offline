@@ -12,6 +12,7 @@ const roadRepeat = 72
 const roadOrigin = 18
 
 export function MiniMap() {
+  const activeInterior = useGameStore((state) => state.activeInterior)
   const playerPosition = useGameStore((state) => state.playerPosition)
   const playerYaw = useGameStore((state) => state.playerYaw)
   const bots = useGameStore((state) => state.bots)
@@ -34,6 +35,23 @@ export function MiniMap() {
     if (!lane) return []
     return [{ id: vehicle.id, color: vehicle.color, position: trafficPositionAtTime(lane, vehicle, trafficClock).position }]
   })
+
+  if (activeInterior) {
+    return (
+      <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">
+        <div className="bb-mini-map-title">
+          <MapIcon size={14} aria-hidden />
+          <span>Inside</span>
+        </div>
+        <div className="bb-mini-map-surface">
+          <span className="bb-mini-map-road horizontal" style={{ top: '83%', height: '11%', left: '39%', right: 'auto', width: '22%' }} />
+          <span className="bb-mini-map-location" style={{ left: '50%', top: '83%', backgroundColor: '#38bdf8' }} title="Exit" />
+          <span className="bb-mini-map-location" style={{ left: '50%', top: '34%', backgroundColor: '#facc15' }} title={activeInterior.title} />
+          <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
+        </div>
+      </aside>
+    )
+  }
 
   return (
     <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">

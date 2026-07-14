@@ -29,6 +29,7 @@ import type {
   BotRuntime,
   ChatMessage,
   GameSettings,
+  InteriorVisit,
   LocationId,
   ObbyState,
   PlayerEmote,
@@ -79,6 +80,7 @@ type GameState = GameSave & {
   bots: BotRuntime[]
   chat: ChatMessage[]
   nearbyLocation?: LocationId
+  activeInterior?: InteriorVisit
   visitedBots: string[]
   obby: ObbyState
   touch: TouchInput
@@ -95,6 +97,8 @@ type GameState = GameSave & {
   setPlayer: (position: Vec3, yaw: number) => void
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
+  enterInterior: (interior: InteriorVisit) => void
+  leaveInterior: () => InteriorVisit | undefined
   tickBots: (now: number) => void
   botReact: (botId: string, context: DialogueContext) => void
   sendQuickReply: (text: string, context: DialogueContext) => void
@@ -254,6 +258,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   setPlayer: (playerPosition, playerYaw) => set({ playerPosition, playerYaw }),
   setTouch: (input) => set((state) => ({ touch: { ...state.touch, ...input } })),
   setNearbyLocation: (nearbyLocation) => set({ nearbyLocation }),
+  enterInterior: (activeInterior) =>
+    set((state) => ({
+      activeInterior,
+      nearbyLocation: undefined,
+      openPanel: undefined,
+      buildMode: false,
+      touch: { ...state.touch, interact: false },
+      chat: [...state.chat.slice(-60), systemMessage(`Entered ${activeInterior.title}`)],
+    })),
+  leaveInterior: () => {
+    const activeInterior = get().activeInterior
+    if (!activeInterior) return undefined
+    set((state) => ({
+      activeInterior: undefined,
+      touch: { ...state.touch, interact: false },
+      chat: [...state.chat.slice(-60), systemMessage(`Left ${activeInterior.title}`)],
+    }))
+    return activeInterior
+  },
   setOpenPanel: (openPanel) => set({ openPanel }),
 
   tickBots: (now) =>
@@ -365,12 +388,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  setBuildMode: (buildMode) => set({ buildMode }),
+  setBuildMode: (buildMode) =>
+    set((state) =>
+      buildMode && state.activeInterior
+        ? { buildMode: false, chat: [...state.chat.slice(-60), systemMessage('Leave the building before using build mode')] }
+        : { buildMode },
+    ),
   setSelectedBuildPiece: (selectedBuildPiece) => set({ selectedBuildPiece }),
   setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
   rotateBuildPiece: () => set((state) => ({ buildRotation: rotateBuildYaw(state.buildRotation) })),
   placeBlock: () =>
     set((state) => {
+      if (state.activeInterior) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage('Leave the building before placing world pieces')],
+        }
+      }
       if (state.placedBlocks.length >= maxBuildPieces) {
         return {
           chat: [...state.chat.slice(-60), systemMessage('Custom world limit reached')],
@@ -397,6 +430,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
   placeMapStamp: () =>
     set((state) => {
+      if (state.activeInterior) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage('Leave the building before adding street maps')],
+        }
+      }
       if (state.placedBlocks.length >= maxBuildPieces) {
         return {
           chat: [...state.chat.slice(-60), systemMessage('Custom world limit reached')],
@@ -566,6 +604,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       selectedBuildPiece: 'block',
       selectedBuildColor: '#38bdf8',
       buildRotation: 0,
+      activeInterior: undefined,
+      nearbyLocation: undefined,
+      playerPosition: [0, 0, 4],
+      playerYaw: 0,
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,
@@ -589,6 +631,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         botMemory: save.botMemory ?? state.botMemory,
         settings: { ...state.settings, ...save.settings },
         obby: { ...state.obby, bestTime: save.obbyBestTime },
+        activeInterior: undefined,
         loading: false,
       }
     }),
