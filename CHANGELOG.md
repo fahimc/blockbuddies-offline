@@ -15,9 +15,9 @@
 
 ### Fixed
 
-- Fixed animated avatars floating because the walk/idle animation loop overwrote the body group’s base Y offset.
+- Fixed animated avatars floating because the walk/idle animation loop overwrote the body group's base Y offset.
 - Fixed outdoor and indoor characters appearing detached from floors after movement or idle animation.
-- Fixed the customization preview clipping the avatar’s head/hair by using a wider camera fit.
+- Fixed the customization preview clipping the avatar head/hair by using a wider camera fit.
 
 ### Known Issues
 
