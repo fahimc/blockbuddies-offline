@@ -417,3 +417,13 @@
 - [x] Ground indoor buddies and players against the interior floor height
 - [x] Add unit coverage for safe-zone filtering and procedural door clearance
 - [x] Bump Android debug APK version metadata to 1.5.5 / 10505
+
+## Post-phase grounded avatars and preview framing
+
+- [x] Preserve the avatar body base Y offset during idle, walk, run, jump, wave, cheer, and dance animation
+- [x] Replace hardcoded outdoor and network avatar standing offsets with the shared measured ground offset
+- [x] Tie interior standing height to the same shared avatar ground offset
+- [x] Reframe the 3D customization preview so the real in-game avatar has headroom on mobile
+- [x] Add unit coverage for avatar foot-bottom math and interior standing height
+- [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
+- [x] Bump Android debug APK version metadata to 1.5.6 / 10506

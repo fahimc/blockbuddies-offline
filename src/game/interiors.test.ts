@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildPieceDimensions, buildingCenterPosition, buildingScale } from './scale'
+import { avatarGroundOffset, buildPieceDimensions, buildingCenterPosition, buildingScale } from './scale'
 import {
   buildBlockInteriorEntrance,
   filterEntranceSafeZoneCollisions,
   interiorCollisionBoxes,
   interiorExitPosition,
   interiorExitRadius,
+  interiorStandingY,
   makeInteriorVisit,
   nearestInteriorEntrance,
   proceduralDoorEntrance,
@@ -90,6 +91,7 @@ describe('interior entrances', () => {
   it('keeps an exit doorway open while walls and furniture still collide', () => {
     const boxes = interiorCollisionBoxes('school')
 
+    expect(interiorStandingY).toBe(avatarGroundOffset)
     expect(boxes.some((box) => box.id === 'interior:front-left-wall')).toBe(true)
     expect(boxes.some((box) => box.id === 'interior:front-right-wall')).toBe(true)
     expect(boxes.some((box) => box.id === 'interior:teacher-desk')).toBe(true)

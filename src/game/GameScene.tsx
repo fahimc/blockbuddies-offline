@@ -25,7 +25,7 @@ import {
   staticBuildingEntrance,
   type InteriorEntrance,
 } from './interiors'
-import { buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import { avatarBodyBaseY, avatarGroundOffset, buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
 import { createTrafficVehicles, makeTrafficLanes, trafficCollisionBoxesAtTime, trafficPositionAtTime, type TrafficLane, type TrafficVehicle } from './traffic'
 import type {
   AvatarBottomStyle,
@@ -762,7 +762,7 @@ function PlayerController() {
   const position = useRef(
     new THREE.Vector3(
       useGameStore.getState().playerPosition[0],
-      useGameStore.getState().playerPosition[1] + (useGameStore.getState().activeInterior ? interiorStandingY : 0.9),
+      useGameStore.getState().playerPosition[1] + avatarGroundOffset,
       useGameStore.getState().playerPosition[2],
     ),
   )
@@ -869,7 +869,7 @@ function PlayerController() {
     const separatedPosition = separateCircleFromBoxes(resolvedPosition, trafficObstacles, playerCollisionRadius + 0.05)
     position.current.x = separatedPosition[0]
     position.current.z = separatedPosition[2]
-    const standY = activeInterior ? interiorStandingY : 0.9
+    const standY = activeInterior ? interiorStandingY : avatarGroundOffset
     velocityY.current -= 25 * delta
     if ((keys.jump || touch.jump) && position.current.y <= standY + 0.01) velocityY.current = 9
     position.current.y += velocityY.current * delta
@@ -883,7 +883,7 @@ function PlayerController() {
       setAirborne(isAirborne)
     }
     if (position.current.y < -2 && obby.active) {
-      position.current.set(obby.checkpoint[0], obby.checkpoint[1] + 0.8, obby.checkpoint[2])
+      position.current.set(obby.checkpoint[0], obby.checkpoint[1] + avatarGroundOffset, obby.checkpoint[2])
       velocityY.current = 0
     }
 
@@ -921,7 +921,7 @@ function PlayerController() {
       if (transitionReady && (isMoving || keys.interact || touch.interact) && distance2d(groundPosition, interiorExitPosition) < interiorExitRadius) {
         const previousInterior = leaveInterior()
         if (previousInterior) {
-          position.current.set(previousInterior.returnPosition[0], 0.9, previousInterior.returnPosition[2])
+          position.current.set(previousInterior.returnPosition[0], avatarGroundOffset, previousInterior.returnPosition[2])
           yaw.current = previousInterior.returnYaw
           velocityY.current = 0
           group.current?.position.copy(position.current)
@@ -1035,7 +1035,7 @@ function LocalPartyPlayers() {
 
 function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
   return (
-    <group position={[player.position[0], player.position[1] + 0.9, player.position[2]]} rotation={[0, player.yaw, 0]}>
+    <group position={[player.position[0], player.position[1] + avatarGroundOffset, player.position[2]]} rotation={[0, player.yaw, 0]}>
       <BlockAvatar
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}
@@ -1084,7 +1084,7 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
   const dz = bot.target[2] - bot.position[2]
   const yaw = bot.action === 'walk' || bot.action === 'run' ? Math.atan2(dx, dz) : 0
   return (
-    <group position={[bot.position[0], 0.9 + jumpLift, bot.position[2]]} rotation={[0, yaw, 0]}>
+    <group position={[bot.position[0], avatarGroundOffset + jumpLift, bot.position[2]]} rotation={[0, yaw, 0]}>
       <BlockAvatar
         bodyColor={color}
         shirtColor={shirtColor}
@@ -1177,7 +1177,7 @@ export function BlockAvatar({
 
     if (body.current) {
       body.current.rotation.z = danceTilt
-      body.current.position.y = currentAction === 'jump' ? 0.1 : Math.abs(stride) * 0.025 + idle
+      body.current.position.y = avatarBodyBaseY + (currentAction === 'jump' ? 0.1 : Math.abs(stride) * 0.025 + idle)
     }
     if (leftLeg.current) {
       leftLeg.current.rotation.x = stride
@@ -1208,7 +1208,7 @@ export function BlockAvatar({
           </span>
         </Html>
       ) : null}
-      <group ref={body} position={[0, -0.9, 0]}>
+      <group ref={body} position={[0, avatarBodyBaseY, 0]}>
         <group ref={leftLeg} position={[-0.22, 0.64, 0]}>
           <AvatarLeg
             bodyColor={bodyColor}

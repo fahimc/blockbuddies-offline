@@ -1,6 +1,7 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
 import { BlockAvatar } from '../game/GameScene'
+import { avatarGroundOffset } from '../game/scale'
 import type { AvatarSettings, PlayerEmote } from '../game/types'
 
 type GameAvatarPreviewProps = {
@@ -15,7 +16,7 @@ export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvat
   return (
     <Canvas
       className={className ?? 'bb-game-avatar-preview'}
-      camera={{ position: [0, 0.72, 5.7], fov: 34 }}
+      camera={{ position: [0, 1.32, 6.2], fov: 32 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: true }}
       shadows={false}
@@ -24,7 +25,7 @@ export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvat
       <directionalLight position={[3, 5, 4]} intensity={1.35} />
       <directionalLight position={[-3, 3, 2]} intensity={0.45} />
       <PreviewCamera />
-      <group position={[0, -0.42, 0]} rotation={[0, -0.2, 0]} scale={1.12}>
+      <group position={[0, avatarGroundOffset, 0]} rotation={[0, -0.2, 0]} scale={0.94}>
         <BlockAvatar
           bodyColor={avatar.bodyColor}
           shirtColor={avatar.shirtColor}
@@ -55,7 +56,7 @@ function PreviewCamera() {
   const camera = useThree((state) => state.camera)
 
   useEffect(() => {
-    camera.lookAt(0, 0.22, 0)
+    camera.lookAt(0, 1.12, 0)
   }, [camera])
 
   return null

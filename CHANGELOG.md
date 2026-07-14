@@ -1,5 +1,29 @@
 # Changelog
 
+## [v1.5.6-grounded-avatars-preview] - 2026-07-14
+
+### Added
+
+- Added shared avatar geometry constants for foot-bottom, standing height, and visual height calculations.
+- Added regression coverage that ties indoor standing height to the shared avatar ground offset.
+
+### Changed
+
+- Player, bot, remote party avatar, interior buddy, and obby reset standing heights now use the same measured avatar ground offset.
+- Character customization preview now frames the real in-game 3D avatar at standing height with extra headroom.
+- Updated Android version metadata to `1.5.6` / `10506`.
+
+### Fixed
+
+- Fixed animated avatars floating because the walk/idle animation loop overwrote the body group’s base Y offset.
+- Fixed outdoor and indoor characters appearing detached from floors after movement or idle animation.
+- Fixed the customization preview clipping the avatar’s head/hair by using a wider camera fit.
+
+### Known Issues
+
+- Avatar gravity still clamps to the main floor plane; raised obby platforms remain prototype activity geometry rather than full platform physics.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.5-doorway-safe-zones] - 2026-07-14
 
 ### Added

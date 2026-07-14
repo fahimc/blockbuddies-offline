@@ -269,6 +269,10 @@ The `v1.5.5` APK adds doorway safe zones, removes generated scenery blockers
 from procedural door approaches, grounds indoor characters, and disables outdoor
 traffic collision checks while inside rooms.
 
+The `v1.5.6` APK grounds animated player, bot, local-party, and indoor buddy
+avatars against a shared measured foot offset, and reframes the 3D character
+customization preview so the avatar head is not clipped on phone screens.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

@@ -9,6 +9,27 @@ export const worldScale = {
 
 export const unitsPerMeter = worldScale.avatarHeightUnits / worldScale.averagePersonMeters
 
+export const avatarGeometry = {
+  bodyBaseY: -0.9,
+  legJointY: 0.64,
+  sneakerCenterY: -0.68,
+  sneakerHeight: 0.12,
+  bootHeight: 0.2,
+  tallestHairCenterY: 2.45,
+  tallestHairHeight: 0.34,
+}
+
+export const avatarBodyBaseY = avatarGeometry.bodyBaseY
+export const avatarSneakerFootBottomY = roundUnit(
+  avatarGeometry.bodyBaseY + avatarGeometry.legJointY + avatarGeometry.sneakerCenterY - avatarGeometry.sneakerHeight / 2,
+)
+export const avatarBootFootBottomY = roundUnit(
+  avatarGeometry.bodyBaseY + avatarGeometry.legJointY + avatarGeometry.sneakerCenterY - avatarGeometry.bootHeight / 2,
+)
+export const avatarGroundOffset = roundUnit(-avatarSneakerFootBottomY)
+export const avatarVisualTopY = roundUnit(avatarGeometry.bodyBaseY + avatarGeometry.tallestHairCenterY + avatarGeometry.tallestHairHeight / 2)
+export const avatarVisualHeight = roundUnit(avatarVisualTopY - avatarSneakerFootBottomY)
+
 export function meters(value: number) {
   return roundUnit(value * unitsPerMeter)
 }

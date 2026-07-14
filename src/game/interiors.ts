@@ -1,6 +1,6 @@
 import type { ProceduralPiece } from '../data/proceduralWorld'
 import type { BuildBlock, InteriorKind, InteriorVisit, Vec3 } from './types'
-import { buildPieceDimensions } from './scale'
+import { avatarGroundOffset, buildPieceDimensions } from './scale'
 import type { CollisionBox } from './collision'
 
 export type InteriorEntrance = {
@@ -16,7 +16,7 @@ export type InteriorEntrance = {
 export const interiorSpawnPosition: Vec3 = [0, 0, -4.45]
 export const interiorExitPosition: Vec3 = [0, 0, -5.95]
 export const interiorExitRadius = 1.05
-export const interiorStandingY = 1
+export const interiorStandingY = avatarGroundOffset
 export const entranceSafeZoneRadius = 1.85
 
 const roomHalfWidth = 7

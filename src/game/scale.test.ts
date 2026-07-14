@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { buildPieceDimensions, buildingHeightForFloors, realScale, unitsPerMeter, worldScale } from './scale'
+import { avatarBootFootBottomY, avatarGroundOffset, avatarSneakerFootBottomY, avatarVisualHeight, buildPieceDimensions, buildingHeightForFloors, realScale, unitsPerMeter, worldScale } from './scale'
 
 describe('world scale', () => {
   it('uses the block avatar as a real person scale reference', () => {
     expect(unitsPerMeter).toBeCloseTo(worldScale.avatarHeightUnits / worldScale.averagePersonMeters, 5)
     expect(realScale.avatarHeight).toBeCloseTo(2.64, 2)
+  })
+
+  it('keeps the animated avatar feet grounded at the shared standing height', () => {
+    expect(avatarGroundOffset + avatarSneakerFootBottomY).toBeCloseTo(0, 5)
+    expect(avatarGroundOffset).toBeCloseTo(1, 5)
+    expect(avatarBootFootBottomY).toBeLessThanOrEqual(avatarSneakerFootBottomY)
+    expect(avatarVisualHeight / realScale.avatarHeight).toBeGreaterThan(0.98)
+    expect(avatarVisualHeight / realScale.avatarHeight).toBeLessThan(1.05)
   })
 
   it('keeps doors and storeys proportional to a person', () => {
