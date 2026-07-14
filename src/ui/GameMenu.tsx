@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Blocks,
+  Gamepad2,
   HeartHandshake,
   ListChecks,
   Medal,
@@ -24,6 +25,7 @@ const menuItems: {
 }[] = [
   { panel: 'avatar', label: 'Customise Character', icon: <Palette size={21} aria-hidden /> },
   { panel: 'quests', label: 'Quests', icon: <ListChecks size={21} aria-hidden /> },
+  { panel: 'minigames', label: 'Mini Games', icon: <Gamepad2 size={21} aria-hidden /> },
   { panel: 'build', label: 'Build Mode', icon: <Blocks size={21} aria-hidden /> },
   { panel: 'shop', label: 'Shop', icon: <ShoppingBag size={21} aria-hidden /> },
   { panel: 'friends', label: 'Buddies', icon: <HeartHandshake size={21} aria-hidden /> },

@@ -4,6 +4,7 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
+import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import { generateProceduralWorld, type ProceduralPiece } from '../data/proceduralWorld'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
@@ -154,6 +155,7 @@ export function GameScene() {
       <LocalPartyPlayers />
       <ObbyCourse />
       <CoinField />
+      <MiniGameWorld />
       <ToyPickup />
       <PlacedBlocks />
     </>
@@ -781,6 +783,7 @@ function PlayerController() {
   const beginObby = useGameStore((state) => state.beginObby)
   const completeObby = useGameStore((state) => state.completeObby)
   const updateObby = useGameStore((state) => state.updateObby)
+  const tickMiniGame = useGameStore((state) => state.tickMiniGame)
   const obby = useGameStore((state) => state.obby)
   const setNearbyLocation = useGameStore((state) => state.setNearbyLocation)
   const enterInterior = useGameStore((state) => state.enterInterior)
@@ -960,6 +963,7 @@ function PlayerController() {
     }
 
     updateObby(performance.now(), obbyCheckpoints)
+    tickMiniGame(performance.now(), [position.current.x, position.current.y - standY, position.current.z])
     if (distance2d([position.current.x, 0, position.current.z], [22, 0, 18]) < 1.8 && obby.active) {
       completeObby(performance.now())
       bots.slice(0, 2).forEach((bot) => botReact(bot.id, 'questComplete'))
@@ -1659,6 +1663,92 @@ function CoinField() {
         </mesh>
       ))}
     </>
+  )
+}
+
+function MiniGameWorld() {
+  const miniGame = useGameStore((state) => state.miniGame)
+  if (miniGame.status !== 'running' || !miniGame.activeId) return <MiniGamePortals />
+
+  const definition = miniGameDefinition(miniGame.activeId)
+  const targets = miniGameTargets(miniGame.activeId)
+  const activeTargets =
+    miniGame.activeId === 'delivery-dash'
+      ? targets.slice(miniGame.score, miniGame.score + 1)
+      : targets.filter((target) => !miniGame.collected.includes(target.id))
+
+  return (
+    <group>
+      <MiniGamePortals />
+      {activeTargets.map((target, index) => (
+        <group key={target.id} position={target.position}>
+          {miniGame.activeId === 'coin-rush' ? (
+            <mesh position={[0, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.34, 0.08, 8, 24]} />
+              <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.5} />
+            </mesh>
+          ) : null}
+          {miniGame.activeId === 'delivery-dash' ? (
+            <mesh receiveShadow position={[0, 0.08, 0]}>
+              <cylinderGeometry args={[1.1, 1.1, 0.16, 24]} />
+              <meshStandardMaterial color="#22c55e" emissive="#16a34a" emissiveIntensity={0.25} />
+            </mesh>
+          ) : null}
+          {miniGame.activeId === 'hide-and-seek' ? (
+            <group position={[0, avatarGroundOffset, 0]} rotation={[0, index * 0.7, 0]}>
+              <BlockAvatar
+                bodyColor="#f2b07e"
+                shirtColor={index % 2 === 0 ? '#f472b6' : '#60a5fa'}
+                hairColor={index === 1 ? '#4c1d95' : '#5a2f16'}
+                hairStyle={index === 2 ? 'bob' : 'spiky'}
+                pantsColor="#111827"
+                outfitStyle="tee"
+                bottomStyle="jeans"
+                shoeStyle="sneakers"
+                username={target.label}
+                emote="wave"
+                action="idle"
+              />
+            </group>
+          ) : null}
+          <Html center position={[0, 2.85, 0]} zIndexRange={worldHtmlZIndexRange}>
+            <span className="whitespace-nowrap rounded-lg bg-slate-950/85 px-3 py-1 text-xs font-black text-white shadow">
+              {definition.title}: {target.label}
+            </span>
+          </Html>
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function MiniGamePortals() {
+  const startMiniGame = useGameStore((state) => state.startMiniGame)
+  const portals = [
+    { id: 'coin-rush' as const, label: 'Coin Rush', position: [9, 0, -2] as Vec3, color: '#facc15' },
+    { id: 'delivery-dash' as const, label: 'Delivery Dash', position: [12, 0, -5] as Vec3, color: '#22c55e' },
+    { id: 'hide-and-seek' as const, label: 'Hide & Seek', position: [0, 0, 12] as Vec3, color: '#a78bfa' },
+  ]
+  return (
+    <group>
+      {portals.map((portal) => (
+        <group key={portal.id} position={portal.position}>
+          <mesh receiveShadow position={[0, 0.07, 0]} onClick={() => startMiniGame(portal.id, performance.now())}>
+            <cylinderGeometry args={[1.25, 1.25, 0.14, 28]} />
+            <meshStandardMaterial color={portal.color} emissive={portal.color} emissiveIntensity={0.16} />
+          </mesh>
+          <Html center position={[0, 1.15, 0]} zIndexRange={worldHtmlZIndexRange}>
+            <button
+              type="button"
+              className="whitespace-nowrap rounded-lg bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow"
+              onClick={() => startMiniGame(portal.id, performance.now())}
+            >
+              {portal.label}
+            </button>
+          </Html>
+        </group>
+      ))}
+    </group>
   )
 }
 

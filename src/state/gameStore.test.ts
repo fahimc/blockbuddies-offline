@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { coinRushTargets, createInitialMiniGame, miniGameDefinition } from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
 import { defaultAvatar, makeSaveSnapshot, normalizeSavedAvatar, useGameStore } from './gameStore'
 
@@ -78,5 +79,36 @@ describe('player setup flow', () => {
 
     expect(useGameStore.getState().savedAvatars).toHaveLength(1)
     expect(useGameStore.getState().avatar.shirtColor).toBe('#14b8a6')
+  })
+})
+
+describe('mini game store flow', () => {
+  it('starts a mini game, completes it, and awards coins plus a badge', () => {
+    useGameStore.setState({
+      miniGame: createInitialMiniGame(),
+      activeInterior: undefined,
+      openPanel: 'minigames',
+      buildMode: true,
+      coins: 0,
+      earnedBadges: [],
+      chat: [],
+      playerPosition: [0, 0, 0],
+    })
+
+    useGameStore.getState().startMiniGame('coin-rush', 1_000)
+
+    expect(useGameStore.getState().miniGame.status).toBe('running')
+    expect(useGameStore.getState().playerPosition).toEqual(miniGameDefinition('coin-rush').startPosition)
+    expect(useGameStore.getState().openPanel).toBeUndefined()
+    expect(useGameStore.getState().buildMode).toBe(false)
+
+    coinRushTargets.forEach((target, index) => {
+      useGameStore.getState().tickMiniGame(2_000 + index * 100, target.position)
+    })
+
+    expect(useGameStore.getState().miniGame.status).toBe('completed')
+    expect(useGameStore.getState().coins).toBe(35)
+    expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
+    expect(useGameStore.getState().miniGame.records['coin-rush']?.bestScore).toBe(8)
   })
 })

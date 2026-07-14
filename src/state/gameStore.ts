@@ -10,6 +10,7 @@ import { advanceQuest, createQuestProgress } from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
 import { finishObby, startObby, updateCheckpoint } from '../ai/obby'
+import { createInitialMiniGame, miniGameDefinition, startMiniGameSession, tickMiniGameSession } from '../ai/miniGames'
 import { sanitizePartyName, useLocalPartyStore } from './localPartyStore'
 import {
   canPlacePiece,
@@ -31,6 +32,9 @@ import type {
   GameSettings,
   InteriorVisit,
   LocationId,
+  MiniGameId,
+  MiniGameRecord,
+  MiniGameRuntime,
   ObbyState,
   PlayerEmote,
   QuestId,
@@ -51,6 +55,7 @@ export type GameSave = {
   settings: GameSettings
   earnedBadges: BadgeId[]
   placedBlocks: BuildBlock[]
+  miniGameRecords?: Partial<Record<MiniGameId, MiniGameRecord>>
   obbyBestTime?: number
 }
 
@@ -71,7 +76,18 @@ type CustomizationSelection = {
   emote?: PlayerEmote
 }
 
-export type GamePanel = 'quests' | 'shop' | 'avatar' | 'settings' | 'friends' | 'leaderboard' | 'badges' | 'build' | 'server' | 'emotes'
+export type GamePanel =
+  | 'quests'
+  | 'shop'
+  | 'avatar'
+  | 'settings'
+  | 'friends'
+  | 'leaderboard'
+  | 'badges'
+  | 'build'
+  | 'server'
+  | 'emotes'
+  | 'minigames'
 
 type GameState = GameSave & {
   playerPosition: Vec3
@@ -83,6 +99,7 @@ type GameState = GameSave & {
   activeInterior?: InteriorVisit
   visitedBots: string[]
   obby: ObbyState
+  miniGame: MiniGameRuntime
   touch: TouchInput
   loading: boolean
   saveStatus: 'idle' | 'saving' | 'saved'
@@ -124,6 +141,9 @@ type GameState = GameSave & {
   beginObby: (now: number) => void
   updateObby: (now: number, checkpoints: Vec3[]) => void
   completeObby: (now: number) => void
+  startMiniGame: (id: MiniGameId, now: number) => void
+  tickMiniGame: (now: number, position: Vec3) => void
+  cancelMiniGame: () => void
   recordBotMeet: (botId: string) => void
   updateSettings: (settings: Partial<GameSettings>) => void
   resetSave: () => void
@@ -219,6 +239,8 @@ const initialObby: ObbyState = {
   finished: false,
 }
 
+const initialMiniGame = createInitialMiniGame()
+
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'menu',
   playerName: defaultPlayerName,
@@ -240,6 +262,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   ],
   visitedBots: [],
   obby: initialObby,
+  miniGame: initialMiniGame,
   touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false },
   loading: false,
   saveStatus: 'idle',
@@ -561,6 +584,58 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }),
 
+  startMiniGame: (id, now) =>
+    set((state) => {
+      if (state.activeInterior) {
+        return { chat: [...state.chat.slice(-60), systemMessage('Leave the building before starting a mini game')] }
+      }
+      const definition = miniGameDefinition(id)
+      return {
+        miniGame: startMiniGameSession(id, now, state.miniGame.records),
+        playerPosition: definition.startPosition,
+        activeInterior: undefined,
+        buildMode: false,
+        openPanel: undefined,
+        chat: [...state.chat.slice(-60), systemMessage(`${definition.title} started: ${definition.objective}`)],
+      }
+    }),
+
+  tickMiniGame: (now, position) =>
+    set((state) => {
+      if (state.miniGame.status !== 'running') return state
+      const activeId = state.miniGame.activeId
+      const result = tickMiniGameSession(state.miniGame, now, position)
+      if (result.state === state.miniGame) return state
+      const definition = activeId ? miniGameDefinition(activeId) : undefined
+      const collectedMessages = result.collected.map((target) => systemMessage(`${target.label} tagged! ${result.state.score}/${result.state.target}`))
+      const completedMessages =
+        result.completedNow && definition
+          ? [
+              systemMessage(`${definition.title} complete! +${result.reward} coins`),
+              botMessage('SunnyBot', `Nice run in ${definition.title}!`),
+            ]
+          : []
+      const failedMessages =
+        result.failedNow && definition
+          ? [systemMessage(`${definition.title} ended. Try again for the reward!`)]
+          : []
+      return {
+        miniGame: result.state,
+        coins: state.coins + result.reward,
+        earnedBadges:
+          result.completedNow && !state.earnedBadges.includes('mini-game-star')
+            ? [...state.earnedBadges, 'mini-game-star']
+            : state.earnedBadges,
+        chat: [...state.chat.slice(-60), ...collectedMessages, ...completedMessages, ...failedMessages],
+      }
+    }),
+
+  cancelMiniGame: () =>
+    set((state) => ({
+      miniGame: { ...state.miniGame, activeId: undefined, status: 'idle', score: 0, target: 0, collected: [] },
+      chat: state.miniGame.status === 'running' ? [...state.chat.slice(-60), systemMessage('Mini game cancelled')] : state.chat,
+    })),
+
   recordBotMeet: (botId) =>
     set((state) => {
       const now = Date.now()
@@ -611,6 +686,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,
+      miniGame: createInitialMiniGame(),
       chat: [systemMessage('Save reset')],
     })
   },
@@ -631,6 +707,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         botMemory: save.botMemory ?? state.botMemory,
         settings: { ...state.settings, ...save.settings },
         obby: { ...state.obby, bestTime: save.obbyBestTime },
+        miniGame: createInitialMiniGame(save.miniGameRecords ?? state.miniGame.records),
         activeInterior: undefined,
         loading: false,
       }
@@ -653,6 +730,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     botMemory: state.botMemory,
     settings: state.settings,
     obbyBestTime: state.obby.bestTime,
+    miniGameRecords: state.miniGame.records,
   }
 }
 

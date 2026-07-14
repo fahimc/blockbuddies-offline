@@ -1,5 +1,30 @@
 # Changelog
 
+## [v1.5.7-original-mini-games] - 2026-07-14
+
+### Added
+
+- Added an original Mini Games panel in the hamburger menu with Coin Rush, Delivery Dash, Hide & Seek, and Beginner Obby entry points.
+- Added start pads and in-world targets for Coin Rush, ordered Delivery Dash stops, and Hide & Seek buddies.
+- Added mini-game runtime state, local records, coin rewards, chat reactions, save persistence, and the Mini Game Star badge.
+- Added unit coverage for mini-game timers, ordered scoring, completion records, timeout failure, and store reward flow.
+- Added Playwright smoke coverage for the Mini Games menu panel.
+
+### Changed
+
+- The HUD now shows active mini-game score progress while a mini-game is running.
+- The mobile reset button becomes a Cancel Mini Game control while a mini-game is active.
+- Updated Android version metadata to `1.5.7` / `10507`.
+
+### Fixed
+
+- Mini-game activity access is now centralized in the in-game menu instead of relying only on world proximity.
+
+### Known Issues
+
+- Mini-games are original offline activities inspired by blocky sandbox play; Roblox branding, assets, marketplace systems, global servers, and copied game modes are intentionally not included.
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.6-grounded-avatars-preview] - 2026-07-14
 
 ### Added

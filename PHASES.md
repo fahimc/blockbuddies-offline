@@ -427,3 +427,17 @@
 - [x] Add unit coverage for avatar foot-bottom math and interior standing height
 - [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
 - [x] Bump Android debug APK version metadata to 1.5.6 / 10506
+
+## Post-phase original mini-games
+
+- [x] Add an in-game Mini Games panel to the hamburger menu
+- [x] Add Coin Rush with timed collectible targets and coin rewards
+- [x] Add Delivery Dash with ordered town drop-off pads
+- [x] Add Hide & Seek with hidden buddy targets around town
+- [x] Add world start pads, active targets, HUD score progress, and mobile cancel control
+- [x] Save local mini-game records and award the Mini Game Star badge
+- [x] Keep the activities original and avoid Roblox branding, copied assets, or copied game modes
+- [x] Add unit tests for mini-game logic and store reward flow
+- [x] Add Playwright smoke coverage for the Mini Games panel
+- [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
+- [x] Bump Android debug APK version metadata to 1.5.7 / 10507

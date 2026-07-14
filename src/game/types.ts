@@ -223,6 +223,27 @@ export type ObbyState = {
   finished: boolean
 }
 
+export type MiniGameId = 'coin-rush' | 'delivery-dash' | 'hide-and-seek'
+
+export type MiniGameStatus = 'idle' | 'running' | 'completed' | 'failed'
+
+export type MiniGameRecord = {
+  plays: number
+  bestScore: number
+  bestTime?: number
+}
+
+export type MiniGameRuntime = {
+  activeId?: MiniGameId
+  status: MiniGameStatus
+  startedAt: number
+  endsAt: number
+  score: number
+  target: number
+  collected: string[]
+  records: Partial<Record<MiniGameId, MiniGameRecord>>
+}
+
 export type BadgeId =
   | 'welcome'
   | 'social-buddy'
@@ -231,6 +252,7 @@ export type BadgeId =
   | 'shopper'
   | 'builder'
   | 'friend-maker'
+  | 'mini-game-star'
 
 export type BadgeDefinition = {
   id: BadgeId

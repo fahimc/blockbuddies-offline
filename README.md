@@ -73,6 +73,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   reactions.
 - Beginner obby with checkpoints, finish reward, restart/start control, and bot
   cheering.
+- Original offline mini-games: Coin Rush, Delivery Dash, and Hide & Seek with
+  world start pads, score HUD, timed goals, local records, chat reactions, coin
+  rewards, and a Mini Game Star badge.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
@@ -273,6 +276,11 @@ The `v1.5.6` APK grounds animated player, bot, local-party, and indoor buddy
 avatars against a shared measured foot offset, and reframes the 3D character
 customization preview so the avatar head is not clipped on phone screens.
 
+The `v1.5.7` APK adds original offline mini-games through the hamburger menu and
+town start pads: Coin Rush, Delivery Dash, Hide & Seek, and the existing
+Beginner Obby. These use local score state, rewards, records, and buddy chat
+reactions without Roblox-owned branding or copied assets.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.
@@ -347,6 +355,8 @@ Roblox-inspired prototype.
 - Some cosmetic customizer items are visual-only and do not yet have distinct
   3D gameplay geometry.
 - Ghost racers are represented by buddy reactions rather than full racing AI.
+- Mini-games are original prototype activities rather than Roblox platform
+  experiences or copied Roblox game modes.
 - The Three.js bundle is large and should be code-split before a store release.
 - Android production signing is not configured; release artifacts use debug APKs.
 - Full Roblox-platform features such as global multiplayer servers, Robux,

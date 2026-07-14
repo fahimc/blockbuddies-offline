@@ -57,6 +57,7 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   for (const item of [
     { button: 'Leaderboard', heading: 'Leaderboard' },
     { button: 'Badges', heading: 'Badges' },
+    { button: 'Mini Games', heading: 'Mini Games' },
     { button: 'Build Mode', heading: 'Build' },
     { button: 'Local Party', heading: 'Local Server' },
     { button: 'Emotes', heading: 'Emotes' },
@@ -70,6 +71,12 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
       await expect(page.getByRole('button', { name: 'House' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Auto Street' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Rotate' })).toBeVisible()
+    }
+    if (item.button === 'Mini Games') {
+      await expect(page.getByRole('button', { name: 'Play Coin Rush' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Play Delivery Dash' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Play Hide & Seek' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Play Beginner Obby' })).toBeVisible()
     }
     if (item.button === 'Local Party') {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()

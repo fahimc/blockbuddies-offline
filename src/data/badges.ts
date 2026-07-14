@@ -43,6 +43,12 @@ export const badgeDefinitions: BadgeDefinition[] = [
     description: 'Meet three buddies.',
     icon: 'F',
   },
+  {
+    id: 'mini-game-star',
+    title: 'Mini Game Star',
+    description: 'Complete any town mini game.',
+    icon: '*',
+  },
 ]
 
 export function findBadge(id: BadgeDefinition['id']) {

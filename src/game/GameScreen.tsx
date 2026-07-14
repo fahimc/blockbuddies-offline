@@ -17,6 +17,7 @@ import { BadgesPanel } from '../ui/BadgesPanel'
 import { BuildPanel } from '../ui/BuildPanel'
 import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
+import { MiniGamesPanel } from '../ui/MiniGamesPanel'
 import { MiniMap } from '../ui/MiniMap'
 import { useGameStore } from '../state/gameStore'
 
@@ -83,6 +84,7 @@ export function GameScreen() {
         {openPanel === 'build' ? <BuildPanel /> : null}
         {openPanel === 'server' ? <ServerPanel /> : null}
         {openPanel === 'emotes' ? <EmotePanel /> : null}
+        {openPanel === 'minigames' ? <MiniGamesPanel /> : null}
       </section>
     </KeyboardControls>
   )

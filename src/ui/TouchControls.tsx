@@ -18,6 +18,8 @@ const maxQueuedLookDelta = 80
 export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
   const beginObby = useGameStore((state) => state.beginObby)
+  const miniGame = useGameStore((state) => state.miniGame)
+  const cancelMiniGame = useGameStore((state) => state.cancelMiniGame)
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
@@ -136,14 +138,16 @@ export function TouchControls() {
           event.preventDefault()
           if (buildMode) {
             removeLastBlock()
+          } else if (miniGame.status === 'running') {
+            cancelMiniGame()
           } else {
             beginObby(performance.now())
           }
         }}
-        title={buildMode ? 'Remove block' : 'Restart obby'}
+        title={buildMode ? 'Remove block' : miniGame.status === 'running' ? 'Cancel mini game' : 'Restart obby'}
       >
         <X size={28} aria-hidden />
-        <span>{buildMode ? 'Remove' : 'Reset'}</span>
+        <span>{buildMode ? 'Remove' : miniGame.status === 'running' ? 'Cancel' : 'Reset'}</span>
       </button>
 
       <div className="pointer-events-auto flex items-end gap-2">
