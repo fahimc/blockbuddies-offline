@@ -146,10 +146,31 @@ test.describe('portrait splash layout', () => {
     expect(scrollWidth).toBeLessThanOrEqual(720)
   })
 
-  test('keeps the body customizer in phone-width columns', async ({ page }) => {
+  test('keeps the body customizer in a preview-first phone layout', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Start' }).click()
     await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+    const hub = page.locator('.bb-customizer-hub')
+    const hubStage = hub.locator('.bb-hub-stage')
+    const hubLeftRail = hub.locator('.bb-hub-rail.left')
+    const hubRightRail = hub.locator('.bb-hub-rail.right')
+    await expect(hubStage.locator('.bb-game-avatar-preview')).toBeVisible()
+    const [hubBox, hubStageBox, hubLeftBox, hubRightBox] = await Promise.all([
+      hub.boundingBox(),
+      hubStage.boundingBox(),
+      hubLeftRail.boundingBox(),
+      hubRightRail.boundingBox(),
+    ])
+    expect(hubBox).not.toBeNull()
+    expect(hubStageBox).not.toBeNull()
+    expect(hubLeftBox).not.toBeNull()
+    expect(hubRightBox).not.toBeNull()
+    if (!hubBox || !hubStageBox || !hubLeftBox || !hubRightBox) return
+    expect(hubStageBox.y).toBeLessThan(hubLeftBox.y)
+    expect(hubLeftBox.y).toBeLessThan(hubRightBox.y)
+    expect(hubLeftBox.width / hubBox.width).toBeGreaterThan(0.86)
+    expect(hubRightBox.width / hubBox.width).toBeGreaterThan(0.86)
+    await expect(page.getByRole('button', { name: 'Customize' })).toBeInViewport()
     await page.getByRole('button', { name: 'Customize' }).click()
     await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
 
@@ -158,8 +179,8 @@ test.describe('portrait splash layout', () => {
     const stage = bodyCustomizer.locator('.bb-body-stage')
     const controls = bodyCustomizer.locator('.bb-body-controls')
     await expect(stage.locator('.bb-game-avatar-preview')).toBeVisible()
-    await expect(bodyCustomizer.getByText('Hair Style')).toBeVisible()
-    await expect(bodyCustomizer.getByText('Face Expression')).toBeVisible()
+    await expect(bodyCustomizer.getByText('Skin Tone')).toBeVisible()
+    await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
 
     const [mainBox, railBox, stageBox, controlsBox] = await Promise.all([
       bodyCustomizer.boundingBox(),
@@ -173,13 +194,16 @@ test.describe('portrait splash layout', () => {
     expect(controlsBox).not.toBeNull()
     if (!mainBox || !railBox || !stageBox || !controlsBox) return
 
-    expect(railBox.x).toBeLessThan(stageBox.x)
-    expect(stageBox.x + stageBox.width).toBeLessThanOrEqual(controlsBox.x + 6)
+    expect(stageBox.y).toBeLessThan(railBox.y)
+    expect(railBox.y).toBeLessThan(controlsBox.y)
+    expect(railBox.width / mainBox.width).toBeGreaterThan(0.86)
+    expect(controlsBox.width / mainBox.width).toBeGreaterThan(0.86)
+    expect(stageBox.x).toBeGreaterThanOrEqual(0)
+    expect(railBox.x).toBeGreaterThanOrEqual(0)
+    expect(controlsBox.x).toBeGreaterThanOrEqual(0)
+    expect(stageBox.x + stageBox.width).toBeLessThanOrEqual(720)
+    expect(railBox.x + railBox.width).toBeLessThanOrEqual(720)
     expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(720)
-    expect(railBox.width / mainBox.width).toBeGreaterThan(0.08)
-    expect(railBox.width / mainBox.width).toBeLessThan(0.16)
-    expect(stageBox.width / mainBox.width).toBeGreaterThan(0.34)
-    expect(stageBox.width / mainBox.width).toBeLessThan(0.46)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
     expect(scrollWidth).toBeLessThanOrEqual(720)
 

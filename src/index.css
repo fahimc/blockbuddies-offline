@@ -3338,6 +3338,365 @@ canvas {
   }
 }
 
+@media (max-width: 760px) and (orientation: portrait) {
+  .bb-customizer-bg {
+    inset: clamp(4.8rem, 12dvh, 6.05rem) 0 0;
+  }
+
+  .bb-customizer-topbar {
+    grid-template-columns: clamp(3.1rem, 12vw, 3.75rem) minmax(0, 1fr) auto;
+    min-height: clamp(4.85rem, 12dvh, 5.75rem);
+    padding: max(0.55rem, env(safe-area-inset-top)) max(0.55rem, env(safe-area-inset-right)) 0.5rem
+      max(0.55rem, env(safe-area-inset-left));
+  }
+
+  .bb-customizer-topbar h2 {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: clamp(1.02rem, 4.7vw, 1.52rem);
+    line-height: 1.02;
+    text-wrap: balance;
+    text-overflow: clip;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .bb-customizer-back {
+    width: clamp(3.1rem, 12vw, 3.75rem);
+    height: clamp(3.1rem, 12vw, 3.75rem);
+    border-radius: 0.9rem;
+  }
+
+  .bb-customizer-wallet {
+    gap: 0.25rem;
+  }
+
+  .bb-coin-pill {
+    min-height: 1.95rem;
+    border-radius: 0.7rem;
+    padding: 0.22rem 0.38rem;
+    font-size: clamp(0.72rem, 3vw, 0.84rem);
+  }
+
+  .bb-level-badge {
+    width: clamp(2.85rem, 11vw, 3.25rem);
+    height: clamp(3.15rem, 12vw, 3.55rem);
+    font-size: clamp(0.72rem, 3vw, 0.82rem);
+  }
+
+  .bb-step-meta {
+    top: clamp(5.4rem, 13dvh, 6.2rem);
+    gap: 0.34rem;
+  }
+
+  .bb-step-meta > span {
+    padding: 0.32rem 0.9rem;
+    font-size: clamp(0.76rem, 3.4vw, 0.9rem);
+  }
+
+  .bb-step-dots {
+    gap: 0.36rem;
+  }
+
+  .bb-step-dots button {
+    width: 0.58rem;
+    height: 0.58rem;
+  }
+
+  .bb-step-dots .active {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .bb-customizer-main {
+    inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(7.45rem, 17dvh, 8.35rem);
+    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .bb-customizer-footer {
+    bottom: max(0.55rem, env(safe-area-inset-bottom));
+    gap: 0.38rem;
+    padding-inline: 0.75rem;
+  }
+
+  .bb-customizer-cta {
+    width: min(32rem, 88vw);
+    min-height: clamp(4.1rem, 10.8dvh, 5.05rem);
+    border-radius: 1.8rem;
+    font-size: clamp(1.7rem, 7.8vw, 2.45rem);
+  }
+
+  .bb-customizer-note {
+    width: min(31rem, 88vw);
+    min-height: 2.7rem;
+    padding: 0.38rem 0.85rem;
+    font-size: clamp(0.72rem, 3.1vw, 0.9rem);
+  }
+
+  .bb-customizer-hub {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding-top: 0;
+  }
+
+  .bb-hub-stage {
+    grid-row: 1;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .bb-hub-stage .bb-avatar-stage.large {
+    width: min(21rem, 72vw, 39dvh);
+  }
+
+  .bb-hub-rail {
+    display: flex;
+    gap: 0.48rem;
+    align-content: initial;
+    overflow-x: auto;
+    padding: 0.05rem 0.1rem 0.46rem;
+    scrollbar-width: none;
+  }
+
+  .bb-hub-rail::-webkit-scrollbar {
+    height: 0;
+  }
+
+  .bb-hub-rail.left {
+    grid-row: 2;
+  }
+
+  .bb-hub-rail.right {
+    grid-row: 3;
+  }
+
+  .bb-hub-button {
+    flex: 0 0 clamp(4.75rem, 21vw, 6.1rem);
+    min-height: clamp(3.45rem, 8.6dvh, 4.25rem);
+    border-radius: 0.82rem;
+    padding: 0.3rem 0.22rem;
+    font-size: clamp(0.58rem, 2.7vw, 0.8rem);
+    line-height: 1.02;
+  }
+
+  .bb-hub-button svg {
+    width: clamp(1.3rem, 5.6vw, 1.8rem);
+    height: clamp(1.3rem, 5.6vw, 1.8rem);
+  }
+
+  .bb-customizer-main.bb-customizer-body {
+    inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(7.45rem, 17dvh, 8.35rem);
+    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .bb-customizer-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(8.9rem, 36%) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.5rem;
+    padding-top: 0;
+  }
+
+  .bb-body-stage {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    justify-self: center;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .bb-customizer-body .bb-avatar-stage.large {
+    width: min(19rem, 64vw, 31dvh);
+  }
+
+  .bb-customizer-body .bb-mini-avatar {
+    width: 58%;
+    height: 76%;
+    min-width: 0;
+  }
+
+  .bb-body-section-rail {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    gap: 0.45rem;
+    align-content: initial;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 0.05rem 0.1rem 0.38rem;
+    scrollbar-width: none;
+  }
+
+  .bb-body-section-rail::-webkit-scrollbar {
+    height: 0;
+  }
+
+  .bb-body-section-rail button {
+    flex: 0 0 clamp(4.65rem, 21vw, 6.1rem);
+    min-height: clamp(3.35rem, 7.8dvh, 4.1rem);
+    padding: 0.28rem 0.22rem;
+  }
+
+  .bb-body-controls {
+    grid-column: 1;
+    grid-row: 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    align-self: stretch;
+    justify-self: center;
+    width: min(40rem, 100%);
+    max-height: 100%;
+    border: 0.14rem solid rgb(255 255 255 / 0.55);
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, rgb(27 111 226 / 0.92), rgb(10 77 190 / 0.92));
+    overflow-y: auto;
+    padding: 0.58rem;
+    scrollbar-width: none;
+  }
+
+  .bb-body-controls::-webkit-scrollbar {
+    width: 0;
+  }
+
+  .bb-body-controls-wardrobe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bb-customizer-body .bb-palette-panel,
+  .bb-customizer-body .bb-mini-strip,
+  .bb-customizer-body .bb-wardrobe-panel {
+    border-radius: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  .bb-customizer-body .bb-palette-panel h3,
+  .bb-customizer-body .bb-mini-strip h3,
+  .bb-customizer-body .bb-wardrobe-panel h3 {
+    margin-bottom: 0.35rem;
+    font-size: clamp(0.78rem, 3.2vw, 0.95rem);
+  }
+
+  .bb-customizer-body .bb-palette-panel div,
+  .bb-customizer-body .bb-mini-strip div {
+    gap: clamp(0.28rem, 1.4vw, 0.42rem);
+  }
+
+  .bb-customizer-body .bb-palette-panel button {
+    width: clamp(2.15rem, 9.6vw, 2.75rem);
+    height: clamp(2.15rem, 9.6vw, 2.75rem);
+  }
+
+  .bb-customizer-body .bb-mini-strip button {
+    width: clamp(2.2rem, 9.8vw, 2.8rem);
+    height: clamp(2.2rem, 9.8vw, 2.8rem);
+  }
+
+  .bb-customizer-clothing,
+  .bb-customizer-accessories,
+  .bb-customizer-trails {
+    grid-template-rows: minmax(8rem, 34%) minmax(0, 1fr);
+  }
+
+  .bb-customizer-clothing .bb-avatar-stage.medium,
+  .bb-customizer-trails .bb-avatar-stage.medium {
+    width: min(16.5rem, 52vw, 28dvh);
+  }
+
+  .bb-customizer-accessories .bb-avatar-stage.small {
+    width: min(13rem, 44vw, 24dvh);
+  }
+
+  .bb-custom-catalog {
+    width: min(40rem, 100%);
+    min-height: 0;
+  }
+
+  .bb-custom-grid,
+  .bb-custom-catalog.dense .bb-custom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 100%;
+    gap: 0.55rem;
+  }
+
+  .bb-floating-tool {
+    min-height: 3.1rem;
+    width: auto;
+    min-width: 4.6rem;
+    grid-auto-flow: column;
+    gap: 0.28rem;
+    padding-inline: 0.45rem;
+  }
+
+  .bb-floating-tool svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .bb-floating-tool.one {
+    top: 0.35rem;
+  }
+
+  .bb-floating-tool.two {
+    top: 3.9rem;
+  }
+
+  .bb-customizer-main.bb-customizer-emotes {
+    inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(7.45rem, 17dvh, 8.35rem);
+    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .bb-customizer-emotes {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(8rem, 31%) auto minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+
+  .bb-customizer-emotes .bb-emote-preview {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    grid-template-columns: minmax(7rem, 12rem) minmax(6rem, 9rem);
+    justify-content: center;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding: 0.05rem 0.1rem 0.35rem;
+    scrollbar-width: none;
+  }
+
+  .bb-customizer-emotes .bb-custom-side-rail button {
+    flex: 0 0 clamp(4.6rem, 21vw, 6.1rem);
+    min-height: clamp(3.35rem, 7.8dvh, 4.05rem);
+  }
+
+  .bb-customizer-emotes .bb-custom-catalog {
+    grid-column: 1;
+    grid-row: 3;
+    width: min(40rem, 100%);
+    align-self: stretch;
+  }
+
+  .bb-customizer-emotes .bb-custom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 100%;
+  }
+
+  .bb-customizer-emotes .bb-quick-preview {
+    grid-column: 1;
+    grid-row: 4;
+    width: min(40rem, 100%);
+  }
+}
+
 @media (max-height: 620px) and (orientation: landscape) {
   .bb-customizer-topbar {
     min-height: 4.6rem;

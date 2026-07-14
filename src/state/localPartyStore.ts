@@ -309,7 +309,7 @@ function listenForJoinAnswer(sessionId: string, set: LocalPartySetter) {
 function waitForIceGathering(connection: RTCPeerConnection) {
   if (connection.iceGatheringState === 'complete') return Promise.resolve()
   return new Promise<void>((resolve) => {
-    const timeout = window.setTimeout(resolve, 2500)
+    const timeout = window.setTimeout(resolve, 8000)
     const done = () => {
       if (connection.iceGatheringState !== 'complete') return
       window.clearTimeout(timeout)
