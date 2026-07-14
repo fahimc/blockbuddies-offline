@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.5.3-open-roads-sparse-buildings] - 2026-07-14
+
+### Added
+
+- Added sparse procedural-world layout tests that cap generated building density around the player.
+- Added scale coverage for wide sandbox roads with enough room for traffic and player movement.
+
+### Changed
+
+- Widened procedural borough roads and pavements to feel more like an open blocky sandbox town.
+- Reduced procedural building density so generated chunks leave more playable open space.
+- Build-mode road placement and procedural street-stamp collision tests now use the wider road footprint.
+- Updated Android version metadata to `1.5.3` / `10503`.
+
+### Fixed
+
+- Fixed generated trees and phone boxes being able to remain on roads introduced by landmark pieces.
+- Fixed stale build-mode placement expectations that still assumed the old narrow road footprint.
+
+### Known Issues
+
+- Android production signing is still not configured; debug APKs remain the expected release artifact.
+
 ## [v1.5.2-lan-room-signaling] - 2026-07-13
 
 ### Added

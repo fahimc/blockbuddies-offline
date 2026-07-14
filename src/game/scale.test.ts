@@ -21,6 +21,12 @@ describe('world scale', () => {
     expect(realScale.carLength / realScale.avatarHeight).toBeLessThan(2.55)
   })
 
+  it('uses wide sandbox roads with room for traffic and players', () => {
+    expect(realScale.roadTile / realScale.carWidth).toBeGreaterThan(3.4)
+    expect(realScale.roadTile / realScale.busWidth).toBeGreaterThan(2.5)
+    expect(realScale.pavementWidth / realScale.avatarHeight).toBeGreaterThan(0.7)
+  })
+
   it('makes buildings integer floor heights above door height', () => {
     expect(buildingHeightForFloors(1)).toBeGreaterThan(realScale.doorHeight)
     expect(buildingHeightForFloors(2) / realScale.avatarHeight).toBeGreaterThan(3.5)

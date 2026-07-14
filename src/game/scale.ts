@@ -37,7 +37,8 @@ export const realScale = {
   lampHeight: meters(3.6),
   treeTrunkHeight: meters(2.4),
   treeCanopySize: meters(2.4),
-  roadTile: meters(4.2),
+  roadTile: meters(7.2),
+  pavementWidth: meters(1.4),
 }
 
 export function buildingHeightForFloors(floors: number) {

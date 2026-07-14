@@ -382,3 +382,14 @@
 - [x] Add Android LAN/network permissions and cleartext allowance for local HTTP
 - [x] Add unit and smoke coverage for the room-first Local Party flow
 - [x] Bump Android debug APK version metadata to 1.5.2 / 10502
+
+## Post-phase open roads and sparse buildings
+
+- [x] Widen procedural roads for a more open blocky sandbox driving/walking layout
+- [x] Widen pavements to preserve clear walking space beside roads
+- [x] Reduce generated building density around procedural chunks
+- [x] Keep intersection chunks clear of generated buildings
+- [x] Remove generated scenery blockers that overlap roads or pavements after landmarks are added
+- [x] Add unit coverage for sparse building density, wide road scale, and build-mode footprint updates
+- [x] Run lint, typecheck, full unit tests, production build, and Playwright smoke tests
+- [x] Bump Android debug APK version metadata to 1.5.3 / 10503

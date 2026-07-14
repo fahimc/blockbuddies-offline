@@ -109,6 +109,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
   buildings, street props, buses, phone boxes, landmarks, world seeds, view
   distance, and night mode settings.
+- Procedural borough chunks now use sparser building placement and wider roads
+  so the town feels more open for blocky sandbox movement, traffic, and building.
 - Coarse visible-object collision prevents the player from walking through
   buildings, cars, trees, lamps, buses, phone boxes, landmarks, and placed build
   pieces while still sliding along blocked axes.
@@ -117,6 +119,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   person.
 - Road-aware procedural placement keeps trees and phone boxes off roads and
   pavements so scenery no longer blocks driving lanes.
+- Landmark roads are included in the final scenery cleanup, so generated trees
+  and phone boxes are removed if a later road or pavement overlaps them.
 - Moving traffic cars follow deterministic procedural road-grid lanes with
   tested wrapping/path logic and moving player collision boxes.
 - Responsive minimap shows nearby roads, buddies, landmarks, traffic, and the
@@ -248,6 +252,9 @@ codes because there is no cloud signaling server.
 The `v1.5.2` APK adds Android LAN room signaling. Host devices advertise a room
 name and run the handshake server locally, guests discover rooms on the same
 Wi-Fi, and manual accept codes are only needed as fallback.
+
+The `v1.5.3` APK widens procedural roads and pavements, reduces generated
+building density, and removes late-overlapping scenery blockers from roads.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

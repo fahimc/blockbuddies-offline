@@ -92,6 +92,24 @@ describe('procedural borough world', () => {
     expect(roadsAndPavements.length).toBeGreaterThan(0)
     expect(blockers.every((blocker) => roadsAndPavements.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
   })
+
+  it('uses sparse sandbox-style building plots and wide roads', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 2,
+      night: false,
+    })
+
+    const generatedBuildings = world.pieces.filter((piece) => piece.kind === 'building' && piece.id.startsWith('building:'))
+    const roads = world.pieces.filter((piece) => piece.kind === 'road' && piece.id.startsWith('road-'))
+
+    expect(generatedBuildings.length).toBeLessThanOrEqual(18)
+    expect(generatedBuildings.length).toBeGreaterThan(0)
+    expect(roads.every((road) => Math.max(road.scale[0], road.scale[2]) === 36)).toBe(true)
+    expect(roads.every((road) => Math.min(road.scale[0], road.scale[2]) === realScale.roadTile)).toBe(true)
+    expect(roads.every(() => realScale.roadTile / realScale.carWidth > 3.4)).toBe(true)
+  })
 })
 
 function overlapsTopDown(
