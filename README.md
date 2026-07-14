@@ -289,6 +289,12 @@ town start pads: Coin Rush, Delivery Dash, Hide & Seek, and the existing
 Beginner Obby. These use local score state, rewards, records, and buddy chat
 reactions without Roblox-owned branding or copied assets.
 
+The `v1.5.8` APK adds a responsive full-town map with collision-safe fast travel
+to six key places. It also includes cleaner mobile customization, tested local
+party and mini-game flows, sprint controls, safer traffic yielding, bed sleep
+interaction, direct camera orbit, and a name screen that does not open the
+keyboard until tapped.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

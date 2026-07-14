@@ -2,10 +2,13 @@
 
 ## [Unreleased]
 
+## [v1.5.8-town-map-fast-travel] - 2026-07-14
+
 ### Added
 
 - Added a responsive full-town map with selectable landmark markers and fast travel to six key places.
 - Added collision-safe arrival points, activity travel guards, and unit/E2E coverage for map travel.
+- Added end-to-end browser coverage for all four mini-games and local-party multiplayer connection and state synchronization.
 - Added a mobile Run toggle and Shift sprint controls with distinct walk/run speeds and animations.
 - Added a contextual bed action that lets players sleep, wake, or move to get out of bed inside houses.
 - Added deterministic traffic safety tests, bed interaction tests, mobile control tests, and name-screen focus coverage.
@@ -16,6 +19,8 @@
 - Obby and mini-game start relocation now uses the same acknowledged controller teleport flow.
 - Traffic now advances from shared live simulation offsets and yields to players, AI buddies, and local-party players in the lane ahead.
 - Mobile interaction taps now remain active long enough for the game frame to consume quick taps reliably.
+- Mobile customization screens now keep the live avatar visible while presenting categories and options in cleaner phone-sized layouts.
+- Updated Android version metadata to `1.5.8` / `10508`.
 
 ### Fixed
 

@@ -453,3 +453,4 @@
 - [x] Add controller-generation acknowledgement so stale frames cannot cancel a teleport
 - [x] Add unit and Playwright coverage for destination data, travel state, mobile layout, and live teleport behavior
 - [x] Run lint, typecheck, full unit tests, production build, full Playwright tests, Capacitor sync, and Android debug build
+- [x] Bump Android debug APK version metadata to 1.5.8 / 10508
