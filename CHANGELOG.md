@@ -10,6 +10,24 @@
 
 ### Known Issues
 
+## [v1.5.17-character-control-mapping] - 2026-07-15
+
+### Added
+
+- Added regression coverage for screen-relative character left and right movement.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.17` / `10517`.
+
+### Fixed
+
+- Fixed walking character left/right input being mirrored in the game camera view.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.16-driving-control-mapping] - 2026-07-15
 
 ### Added

@@ -57,7 +57,7 @@ import {
   seatMarkerRadius,
   seatsForContext,
 } from './seating'
-import { cameraRelativeMovement, cameraViewHeading, orbitYawForCameraHeading, playerMovementSpeed } from './movement'
+import { cameraRelativeMovement, cameraViewHeading, orbitYawForCameraHeading, playerMovementSpeed, playerStrafeFromInput } from './movement'
 import { avatarSleepRotation } from './sleepPose'
 import {
   coreActivityPositions,
@@ -1444,7 +1444,7 @@ function PlayerController({
         { x: state.camera.position.x, z: state.camera.position.z },
         fallbackCameraHeading,
       )
-      const movement = cameraRelativeMovement(forward, strafe, cameraHeading)
+      const movement = cameraRelativeMovement(forward, playerStrafeFromInput(strafe), cameraHeading)
       if (movement.magnitude > 0) {
         yaw.current = movement.yaw
         cameraOrbitYaw.current = orbitYawForCameraHeading(cameraHeading, yaw.current)

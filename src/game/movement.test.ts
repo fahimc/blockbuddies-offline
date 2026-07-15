@@ -6,6 +6,7 @@ import {
   playerMovementSpeed,
   playerRunMultiplier,
   playerRunSpeed,
+  playerStrafeFromInput,
   playerWalkSpeed,
 } from './movement'
 
@@ -27,13 +28,23 @@ describe('player movement speed', () => {
   })
 
   it('maps sideways and diagonal input to the camera plane without a speed boost', () => {
-    const right = cameraRelativeMovement(0, 1, 0)
+    const positiveStrafe = cameraRelativeMovement(0, 1, 0)
     const diagonal = cameraRelativeMovement(1, 1, 0)
 
-    expect(right.x).toBeCloseTo(1)
-    expect(right.z).toBeCloseTo(0)
+    expect(positiveStrafe.x).toBeCloseTo(1)
+    expect(positiveStrafe.z).toBeCloseTo(0)
     expect(Math.hypot(diagonal.x, diagonal.z)).toBeCloseTo(1)
     expect(diagonal.yaw).toBeCloseTo(Math.PI / 4)
+  })
+
+  it('maps character left and right controls to screen-relative movement', () => {
+    const leftInput = cameraRelativeMovement(0, playerStrafeFromInput(-1), 0)
+    const rightInput = cameraRelativeMovement(0, playerStrafeFromInput(1), 0)
+
+    expect(leftInput.x).toBeGreaterThan(0)
+    expect(leftInput.z).toBeCloseTo(0)
+    expect(rightInput.x).toBeLessThan(0)
+    expect(rightInput.z).toBeCloseTo(0)
   })
 
   it('derives forward from the visible camera position after left and right orbit', () => {

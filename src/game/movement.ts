@@ -18,6 +18,10 @@ export function playerMovementSpeed(running: boolean) {
   return running ? playerRunSpeed : playerWalkSpeed
 }
 
+export function playerStrafeFromInput(strafe: number) {
+  return -strafe
+}
+
 export function cameraRelativeMovement(forward: number, strafe: number, cameraYaw: number): PlanarMovement {
   const inputMagnitude = Math.hypot(forward, strafe)
   if (inputMagnitude < 0.0001) return { x: 0, z: 0, yaw: cameraYaw, magnitude: 0 }

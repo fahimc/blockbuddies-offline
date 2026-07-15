@@ -558,3 +558,10 @@
 - [x] Add regression coverage for left screen input turning the car left instead of right
 - [x] Re-run focused vehicle and touch-control tests
 - [x] Bump Android debug APK version metadata to 1.5.16 / 10516
+
+## Post-phase character control mapping fix
+
+- [x] Invert character strafe input so left/right movement matches the visible camera view
+- [x] Keep the driving steer adapter separate from walking movement
+- [x] Add regression coverage for screen-relative character left and right movement
+- [x] Bump Android debug APK version metadata to 1.5.17 / 10517

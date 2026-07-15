@@ -160,6 +160,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   left/right screen input is mapped through the car steering adapter so it turns
   in the pressed direction, the same movement input accelerates, and jump becomes a
   hold-to-brake button, and the contextual action exits the car.
+- Character left/right movement is screen-relative to the visible camera view,
+  so left input moves the avatar left on screen after camera orbit.
 - Touch and mouse dragging on the world view rotates and tilts the third-person
   camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
@@ -344,6 +346,9 @@ turn the vehicle the same way the player is pressing.
 
 The `v1.5.16` APK fixes the remaining driving control mapping issue where left
 screen input could still turn the car right.
+
+The `v1.5.17` APK fixes walking character left/right input being mirrored in the
+game camera view.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
