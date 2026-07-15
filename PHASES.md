@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase room entry facing
+
+- [x] Add an explicit inward-facing room entry yaw.
+- [x] Reset camera view on room entry and exit transitions.
+- [x] Add tests for entry yaw and transition reset flags.
+- [x] Package and release Android debug APK for the room entry facing build.
+
 ## Post-phase doorway transition clearance
 
 - [x] Move interior arrival deeper into rooms so the player is clear of exit triggers.

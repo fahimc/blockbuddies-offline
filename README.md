@@ -408,6 +408,10 @@ player deeper inside, leaving a room returns the player outside the doorway
 trigger radius, and active touch movement is cleared during transitions so held
 joystick input cannot bounce the player in and out.
 
+The `v1.5.28` APK fixes room-entry facing. Entering a room now uses an explicit
+inward-facing yaw and resets the camera orbit for the transition, so the player
+does not keep an outside camera angle that points movement back toward the exit.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

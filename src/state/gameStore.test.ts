@@ -7,7 +7,7 @@ import {
 } from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
 import { getLocation } from '../data/world'
-import { interiorSpawnPosition } from '../game/interiors'
+import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
 import {
   defaultAvatar,
   defaultPlayerName,
@@ -355,9 +355,16 @@ describe('world interaction state', () => {
       returnYaw: 1.2,
     }
 
-    useGameStore.getState().enterInterior(visit, interiorSpawnPosition, 0)
+    useGameStore.getState().enterInterior(visit, interiorSpawnPosition, interiorEntryYaw)
     expect(useGameStore.getState().teleportSequence).toBe(21)
     expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
+    expect(useGameStore.getState().playerYaw).toBe(interiorEntryYaw)
+    expect(useGameStore.getState().teleportTarget).toMatchObject({
+      sequence: 21,
+      position: interiorSpawnPosition,
+      yaw: interiorEntryYaw,
+      resetView: true,
+    })
     expect(useGameStore.getState().touch).toEqual({
       x: 0,
       y: 0,
@@ -370,12 +377,18 @@ describe('world interaction state', () => {
 
     useGameStore.getState().setPlayer([99, 0, 99], 2, 20)
     expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
-    useGameStore.getState().setPlayer(interiorSpawnPosition, 0, 21)
+    useGameStore.getState().setPlayer(interiorSpawnPosition, interiorEntryYaw, 21)
     expect(useGameStore.getState().teleportTarget).toBeUndefined()
 
     expect(useGameStore.getState().leaveInterior()).toEqual(visit)
     expect(useGameStore.getState().teleportSequence).toBe(22)
     expect(useGameStore.getState().playerPosition).toEqual(visit.returnPosition)
+    expect(useGameStore.getState().teleportTarget).toMatchObject({
+      sequence: 22,
+      position: visit.returnPosition,
+      yaw: visit.returnYaw,
+      resetView: true,
+    })
     expect(useGameStore.getState().touch).toEqual({
       x: 0,
       y: 0,

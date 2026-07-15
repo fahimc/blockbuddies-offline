@@ -15,6 +15,7 @@ export type InteriorEntrance = {
 }
 
 export const interiorSpawnPosition: Vec3 = [0, 0, -3.35]
+export const interiorEntryYaw = 0
 export const interiorExitPosition: Vec3 = [0, 0, -5.95]
 export const interiorExitRadius = 1.05
 export const interiorStandingY = avatarGroundOffset

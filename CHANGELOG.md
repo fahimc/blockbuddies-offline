@@ -10,6 +10,26 @@
 
 ### Known Issues
 
+## [v1.5.28-room-entry-facing] - 2026-07-15
+
+### Added
+
+- Added regression coverage for the interior entry yaw and room transition camera reset flags.
+
+### Changed
+
+- Room entry now uses an explicit inward-facing yaw constant.
+- Room entry and exit teleport targets now request a camera view reset so the player does not keep an outside orbit angle.
+- Updated Android and package version metadata to `1.5.28` / `10528`.
+
+### Fixed
+
+- Fixed entering a room with the camera/facing state pointing back toward the exit, which could send the player straight back out.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.27-doorway-clearance] - 2026-07-15
 
 ### Added

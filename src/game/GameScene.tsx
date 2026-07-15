@@ -37,6 +37,7 @@ import {
   houseBedSleepPosition,
   houseBedWakePosition,
   interiorCollisionBoxes,
+  interiorEntryYaw,
   interiorExitPosition,
   interiorExitRadius,
   interiorRoomHalfSize,
@@ -1701,7 +1702,7 @@ function PlayerController({
       ? nearestInteriorEntrance(groundPosition, interiorEntrances)
       : undefined
     if (doorway) {
-      enterInterior(makeInteriorVisit(doorway), interiorSpawnPosition, 0)
+      enterInterior(makeInteriorVisit(doorway), interiorSpawnPosition, interiorEntryYaw)
       lastInteriorTransitionAt.current = performance.now()
       return
     }

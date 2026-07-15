@@ -5,6 +5,7 @@ import {
   exteriorDoorClearanceDistance,
   filterEntranceSafeZoneCollisions,
   interiorCollisionBoxes,
+  interiorEntryYaw,
   interiorExitPosition,
   interiorExitRadius,
   interiorSpawnPosition,
@@ -113,6 +114,8 @@ describe('interior entrances', () => {
     expect(Math.hypot(interiorSpawnPosition[0] - interiorExitPosition[0], interiorSpawnPosition[2] - interiorExitPosition[2])).toBeGreaterThan(
       interiorExitRadius + playerCollisionRadius + 0.75,
     )
+    expect(Math.cos(interiorEntryYaw)).toBeGreaterThan(0.99)
+    expect(interiorSpawnPosition[2] + Math.cos(interiorEntryYaw)).toBeGreaterThan(interiorSpawnPosition[2])
     expect(boxes.every((box) => Math.hypot(box.center[0] - interiorExitPosition[0], box.center[2] - interiorExitPosition[2]) > 0.8)).toBe(true)
   })
 
