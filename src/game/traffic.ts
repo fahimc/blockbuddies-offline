@@ -125,6 +125,10 @@ export function trafficPositionAt(lane: TrafficLane, offset: number): TrafficPos
   }
 }
 
+export function trafficHeadingYaw(lane: TrafficLane) {
+  return Math.atan2(lane.direction[0], lane.direction[2])
+}
+
 export function trafficPositionAtTime(lane: TrafficLane, vehicle: TrafficVehicle, timeSeconds: number): TrafficPose {
   return trafficPositionAt(lane, vehicle.offset + vehicle.speed * Math.max(0, timeSeconds))
 }

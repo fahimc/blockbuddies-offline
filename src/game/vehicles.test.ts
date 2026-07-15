@@ -9,6 +9,7 @@ import {
   drivingInputFromControls,
   drivingSteerFromStrafe,
   drivableVehicleCollisionBox,
+  getDrivableVehicle,
   parkingLot,
   parkingClearancePadding,
   safeVehicleExitPosition,
@@ -32,9 +33,9 @@ describe('parking and drivable vehicles', () => {
     const vehicle = createParkedVehicles()[0]
     const moved = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1)
 
-    expect(moved.position[0]).toBeLessThan(vehicle.position[0])
+    expect(moved.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(moved.speed).toBeGreaterThan(0)
-    expect(vehicleRenderYaw(-Math.PI / 2)).toBeCloseTo(-Math.PI)
+    expect(vehicleRenderYaw(Math.PI / 2)).toBeCloseTo(0)
   })
 
   it('steers, reverses, and brakes without exceeding configured motion', () => {
@@ -46,7 +47,7 @@ describe('parking and drivable vehicles', () => {
 
     expect(positiveSteer.yaw).toBeGreaterThan(vehicle.yaw)
     expect(negativeSteer.yaw).toBeLessThan(vehicle.yaw)
-    expect(reversed.position[0]).toBeGreaterThan(vehicle.position[0])
+    expect(reversed.position[0]).toBeLessThan(vehicle.position[0])
     expect(Math.abs(braked.speed)).toBeLessThan(Math.abs(vehicle.speed))
   })
 
@@ -72,17 +73,21 @@ describe('parking and drivable vehicles', () => {
     const forward = advanceDrivableVehicle(vehicle, drivingInputFromControls(1, 0, false), 0.1)
     const reverse = advanceDrivableVehicle(vehicle, drivingInputFromControls(-1, 0, false), 0.1)
 
-    expect(forward.position[0]).toBeLessThan(vehicle.position[0])
+    expect(forward.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(forward.speed).toBeGreaterThan(0)
-    expect(reverse.position[0]).toBeGreaterThan(vehicle.position[0])
+    expect(reverse.position[0]).toBeLessThan(vehicle.position[0])
     expect(reverse.speed).toBeLessThan(0)
+  })
+
+  it('labels hijacked traffic cars as drivable HUD vehicles', () => {
+    expect(getDrivableVehicle('traffic-drive:traffic-1')?.label).toBe('Traffic Car')
   })
 
   it('stops against solid objects instead of passing through them', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 8 }
     const obstacle = {
       id: 'wall',
-      center: [vehicle.position[0] - realScale.carLength / 2 - 0.25, 1, vehicle.position[2]] as [number, number, number],
+      center: [vehicle.position[0] + realScale.carLength / 2 + 0.25, 1, vehicle.position[2]] as [number, number, number],
       half: [0.2, 1, 2] as [number, number, number],
     }
     const stopped = advanceDrivableVehicleWithCollisions(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1, [obstacle])
@@ -95,7 +100,7 @@ describe('parking and drivable vehicles', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 11 }
     const thinPost = {
       id: 'lamp-post',
-      center: [vehicle.position[0] - realScale.carLength / 2 - 0.8, 1.2, vehicle.position[2]] as [number, number, number],
+      center: [vehicle.position[0] + realScale.carLength / 2 + 0.8, 1.2, vehicle.position[2]] as [number, number, number],
       half: [0.08, 1.2, 0.08] as [number, number, number],
     }
     const stopped = advanceDrivableVehicleWithCollisions(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1, [thinPost])

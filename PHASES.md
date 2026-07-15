@@ -623,3 +623,12 @@
 - [x] Preserve sidewalk lamps unless they block vehicle lanes
 - [x] Add unit and Playwright coverage for drive direction and road clearance
 - [x] Bump Android debug APK version metadata to 1.5.24 / 10524
+
+## Post-phase traffic hijack driving fix
+
+- [x] Flip parked car heading so forward input moves through the visible front
+- [x] Add Drive Traffic Car indicators to nearby moving traffic
+- [x] Convert selected traffic cars into drivable vehicles and remove their old traffic collision
+- [x] Make roads, sidewalks, parks, and built roads non-solid traversal surfaces
+- [x] Add unit coverage for traffic takeover heading and traffic-car HUD labels
+- [x] Bump Android debug APK version metadata to 1.5.25 / 10525

@@ -51,6 +51,16 @@ export function createParkedVehicles() {
 }
 
 export function getDrivableVehicle(id: string) {
+  if (id.startsWith('traffic-drive:')) {
+    return {
+      id,
+      label: 'Traffic Car',
+      color: '#f97316',
+      position: [0, 0, 0] as Vec3,
+      yaw: 0,
+      speed: 0,
+    }
+  }
   return parkedVehicleDefinitions.find((vehicle) => vehicle.id === id)
 }
 
@@ -198,7 +208,7 @@ function parkedVehicle(id: string, label: string, color: string, z: number): Dri
     label,
     color,
     position: [parkingLot.center[0], parkingLot.center[1] * 2, z],
-    yaw: -Math.PI / 2,
+    yaw: Math.PI / 2,
     speed: 0,
   }
 }

@@ -391,6 +391,12 @@ through a tested drive-input adapter, cars have clear front/rear lights, and the
 procedural borough keeps trees, phones, and lamps outside a wider drivable road
 corridor while preserving sidewalk furniture.
 
+The `v1.5.25` APK fixes the remaining driving direction and traffic takeover
+flow. Parked cars now drive forward through their visible front, nearby moving
+traffic cars show Drive Traffic Car prompts, selected traffic cars become
+player-drivable without leaving invisible collision copies, and roads/sidewalks
+are treated as traversal surfaces rather than blockers.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

@@ -72,6 +72,7 @@ import {
   createTrafficVehicles,
   makeTrafficLanes,
   trafficCollisionBoxes,
+  trafficHeadingYaw,
   trafficPositionAt,
   type TrafficLane,
   type TrafficVehicle,
@@ -190,7 +191,7 @@ function OutdoorWorld() {
       <Town />
       <SeatActionMarkers />
       <ParkingLot vehicles={parkedVehicles} runtime={drivableRuntime} />
-      <TrafficVehicles lanes={trafficLanes} vehicles={initialTrafficVehicles} runtime={trafficRuntime} />
+      <TrafficVehicles lanes={trafficLanes} vehicles={initialTrafficVehicles} runtime={trafficRuntime} drivableRuntime={drivableRuntime} />
       <PlayerController
         key={`outdoor:${teleportSequence}`}
         trafficLanes={trafficLanes}
@@ -212,10 +213,12 @@ function TrafficVehicles({
   lanes,
   vehicles,
   runtime,
+  drivableRuntime,
 }: {
   lanes: TrafficLane[]
   vehicles: TrafficVehicle[]
   runtime: MutableRefObject<TrafficVehicle[]>
+  drivableRuntime: MutableRefObject<DrivableVehicle[]>
 }) {
   const laneById = useMemo(() => new Map(lanes.map((lane) => [lane.id, lane])), [lanes])
 
@@ -241,7 +244,15 @@ function TrafficVehicles({
     <group>
       {vehicles.map((vehicle) => {
         const lane = laneById.get(vehicle.laneId)
-        return lane ? <TrafficVehicleMesh key={vehicle.id} vehicle={vehicle} lane={lane} runtime={runtime} /> : null
+        return lane ? (
+          <TrafficVehicleMesh
+            key={vehicle.id}
+            vehicle={vehicle}
+            lane={lane}
+            runtime={runtime}
+            drivableRuntime={drivableRuntime}
+          />
+        ) : null
       })}
     </group>
   )
@@ -251,24 +262,76 @@ function TrafficVehicleMesh({
   vehicle,
   lane,
   runtime,
+  drivableRuntime,
 }: {
   vehicle: TrafficVehicle
   lane: TrafficLane
   runtime: MutableRefObject<TrafficVehicle[]>
+  drivableRuntime: MutableRefObject<DrivableVehicle[]>
 }) {
   const group = useRef<THREE.Group>(null)
   const initialPose = trafficPositionAt(lane, vehicle.offset)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const setActiveVehicle = useGameStore((state) => state.setActiveVehicle)
+  const [nearby, setNearby] = useState(false)
 
   useFrame(() => {
     const current = runtime.current.find((item) => item.id === vehicle.id) ?? vehicle
+    if (!runtime.current.some((item) => item.id === vehicle.id)) {
+      if (group.current) group.current.visible = false
+      if (nearby) setNearby(false)
+      return
+    }
     const pose = trafficPositionAt(lane, current.offset)
     group.current?.position.set(pose.position[0], pose.position[1], pose.position[2])
     if (group.current) group.current.rotation.y = pose.yaw
+    const playerPosition = useGameStore.getState().playerPosition
+    const nextNearby =
+      !activeVehicleId &&
+      Math.hypot(playerPosition[0] - pose.position[0], playerPosition[2] - pose.position[2]) <= 3.2
+    if (nextNearby !== nearby) setNearby(nextNearby)
   })
+
+  const driveTrafficCar = () => {
+    const current = runtime.current.find((item) => item.id === vehicle.id)
+    if (!current || activeVehicleId) return
+    const pose = trafficPositionAt(lane, current.offset)
+    const drivableId = `traffic-drive:${current.id}`
+    runtime.current = runtime.current.filter((item) => item.id !== current.id)
+    drivableRuntime.current = [
+      ...drivableRuntime.current.filter((item) => item.id !== drivableId),
+      {
+        id: drivableId,
+        label: 'Traffic Car',
+        color: current.color,
+        position: [pose.position[0], pose.position[1] + 0.04, pose.position[2]],
+        yaw: trafficHeadingYaw(lane),
+        speed: 0,
+      },
+    ]
+    setActiveVehicle(drivableId)
+  }
 
   return (
     <group ref={group} position={initialPose.position} rotation={[0, initialPose.yaw, 0]}>
       <CarPiece color={vehicle.color} />
+      {nearby ? (
+        <Html center position={[0, 2.45, 0]} zIndexRange={worldActionZIndexRange}>
+          <button
+            type="button"
+            className="bb-world-action-button"
+            data-testid={`traffic-drive-${vehicle.id}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              driveTrafficCar()
+            }}
+          >
+            <CarFront size={18} aria-hidden />
+            Drive Traffic Car
+          </button>
+        </Html>
+      ) : null}
     </group>
   )
 }
@@ -589,6 +652,9 @@ function ParkingLot({
   vehicles: DrivableVehicle[]
   runtime: MutableRefObject<DrivableVehicle[]>
 }) {
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const visibleVehicles = activeVehicleId || runtime.current.length > 0 ? runtime.current : vehicles
+
   return (
     <group data-testid="parking-lot">
       <mesh receiveShadow position={parkingLot.center}>
@@ -623,7 +689,7 @@ function ParkingLot({
           Buddy Parking - tap a car to drive
         </span>
       </Html>
-      {vehicles.map((vehicle) => (
+      {visibleVehicles.map((vehicle) => (
         <DrivableVehicleMesh key={vehicle.id} vehicle={vehicle} runtime={runtime} />
       ))}
     </group>
@@ -812,7 +878,16 @@ function interiorTheme(kind: InteriorKind) {
 
 function proceduralPiecesToCollisionBoxes(pieces: ProceduralPiece[]) {
   return pieces.flatMap((piece): CollisionBox[] => {
-    if (piece.kind === 'ground' || piece.kind === 'water' || piece.kind === 'line' || piece.kind === 'door' || piece.kind === 'window') return []
+    if (
+      piece.kind === 'ground' ||
+      piece.kind === 'water' ||
+      piece.kind === 'road' ||
+      piece.kind === 'pavement' ||
+      piece.kind === 'line' ||
+      piece.kind === 'park' ||
+      piece.kind === 'door' ||
+      piece.kind === 'window'
+    ) return []
     if (piece.id === 'landmark:london-eye-ring') return []
     const padding = piece.kind === 'building' ? 0.18 : piece.kind === 'landmark' ? 0.22 : 0
     return [visibleBox(piece, padding)]
@@ -820,13 +895,9 @@ function proceduralPiecesToCollisionBoxes(pieces: ProceduralPiece[]) {
 }
 
 function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
-  return blocks.map((block): CollisionBox => {
+  return blocks.map((block): CollisionBox | undefined => {
     if (block.kind === 'road') {
-      return {
-        id: `build:road:${block.id}`,
-        center: block.position,
-        half: [realScale.roadTile / 2, 0.04, realScale.roadTile / 2],
-      }
+      return undefined
     }
     const half = buildCollisionHalf(block.kind ?? 'block')
     const rotatedHalf = rotatedCollisionHalf(half, block.rotation ?? 0)
@@ -836,7 +907,7 @@ function buildBlocksToCollisionBoxes(blocks: BuildBlock[]) {
       center: [block.position[0], centerY, block.position[2]],
       half: rotatedHalf,
     }
-  })
+  }).filter((box): box is CollisionBox => Boolean(box))
 }
 
 function buildCollisionHalf(kind: BuildBlock['kind']): Vec3 {

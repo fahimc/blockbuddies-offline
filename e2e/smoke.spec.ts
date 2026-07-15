@@ -223,10 +223,12 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
   await expect.poll(async () => {
     const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
     return {
-      position: snapshot.playerPosition.map((value) => Math.round(value * 10) / 10),
+      x: Math.round(snapshot.playerPosition[0] * 10) / 10,
+      z: Math.round(snapshot.playerPosition[2] * 10) / 10,
+      grounded: Math.abs(snapshot.playerPosition[1]) <= 0.15,
       teleported: snapshot.teleportSequence > before.teleportSequence,
     }
-  }).toEqual({ position: [-14, 0.1, 14.9], teleported: true })
+  }).toEqual({ x: -14, z: 14.9, grounded: true, teleported: true })
 })
 
 test.describe('portrait splash layout', () => {

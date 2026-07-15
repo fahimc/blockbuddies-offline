@@ -7,6 +7,7 @@ import {
   createTrafficVehicles,
   makeTrafficLanes,
   trafficCollisionBoxesAtTime,
+  trafficHeadingYaw,
   trafficPedestrianHalfWidth,
   trafficPositionAt,
 } from './traffic'
@@ -33,6 +34,16 @@ describe('traffic paths', () => {
     expect(eastPose.position[0]).toBeCloseTo(0, 1)
     expect(eastPose.yaw).toBeCloseTo(0, 3)
     expect(northPose.yaw).toBeCloseTo(-Math.PI / 2, 3)
+  })
+
+  it('converts traffic lane direction to drivable heading yaw for takeovers', () => {
+    const northbound = makeTrafficLanes().find((lane) => lane.id.includes('north'))!
+    const eastbound = makeTrafficLanes().find((lane) => lane.id.includes('east'))!
+    const westbound = makeTrafficLanes().find((lane) => lane.id.includes('west'))!
+
+    expect(trafficHeadingYaw(northbound)).toBeCloseTo(0, 3)
+    expect(trafficHeadingYaw(eastbound)).toBeCloseTo(Math.PI / 2, 3)
+    expect(trafficHeadingYaw(westbound)).toBeCloseTo(-Math.PI / 2, 3)
   })
 
   it('advances and wraps vehicle offsets around the lane', () => {

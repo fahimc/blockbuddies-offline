@@ -10,6 +10,30 @@
 
 ### Known Issues
 
+## [v1.5.25-traffic-hijack-driving] - 2026-07-15
+
+### Added
+
+- Added Drive Traffic Car indicators on nearby moving traffic cars.
+- Added traffic-car takeover so a selected traffic car is removed from traffic simulation and becomes the active drivable car.
+- Added tests for traffic lane heading conversion and hijacked traffic HUD labels.
+
+### Changed
+
+- Flipped parked-car spawn heading so forward input drives through the visible front of the car.
+- Made procedural roads, sidewalks, parks, and build-mode roads non-solid surfaces so they do not behave like invisible blockers.
+- Updated Android and package version metadata to `1.5.25` / `10525`.
+
+### Fixed
+
+- Fixed forward driving moving in the wrong direction from parked cars.
+- Fixed hijacked traffic cars leaving an invisible traffic collision copy behind.
+- Fixed road and sidewalk surface collision boxes that could block driving or walking.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.24-gta-driving-roads] - 2026-07-15
 
 ### Added
