@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase customizer grid fit
+
+- [x] Add narrow portrait regression coverage for the Body & Style customizer.
+- [x] Convert the phone Body & Style screen into a strict preview, category, and controls grid.
+- [x] Cap the character preview size so it cannot overlap category buttons.
+- [x] Package and release Android debug APK for the customizer grid fit build.
+
 ## Post-phase road surface driving
 
 - [x] Reproduce the open-road forward driving block with a vehicle regression test.

@@ -87,9 +87,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
-- Body & Style customizer uses phone-width columns for categories, character
-  preview, and controls while switching between Body, Hair, Face, Colours, and
-  Wardrobe.
+- Body & Style customizer uses a responsive phone grid for the character
+  preview, five category buttons, and colour/control panels while switching
+  between Body, Hair, Face, Colours, and Wardrobe.
 - Character customisation and name setup use the same 3D block avatar renderer
   as the in-game player, so selected colours and parts match gameplay.
 - Brick Borough-inspired wardrobe controls with local presets, saved avatar
@@ -421,6 +421,11 @@ The `v1.5.30` APK fixes a second open-road driving blocker. Vehicle collision
 now filters low traversable road, driveway, pavement, and parking surface boxes
 so a car can move forward across floor-like road geometry while still stopping
 at posts, buildings, pedestrians, parked cars, and traffic.
+
+The `v1.5.31` APK fixes the Body & Style customization layout on narrower
+phones. The character preview is capped inside a grid row so it no longer
+overlaps the category buttons or colour controls, and all five section buttons
+remain visible.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

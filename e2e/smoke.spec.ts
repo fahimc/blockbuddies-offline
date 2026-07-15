@@ -207,6 +207,49 @@ test.describe('landscape phone layout', () => {
   })
 })
 
+test.describe('narrow portrait customizer layout', () => {
+  test.use({
+    viewport: { width: 576, height: 1024 },
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('keeps the Body & Style preview clear of the category and colour grids', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Start' }).click()
+    await page.getByRole('button', { name: 'Customize' }).click()
+    await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+
+    const bodyCustomizer = page.locator('.bb-customizer-body')
+    const preview = bodyCustomizer.locator('.bb-avatar-turntable')
+    const rail = bodyCustomizer.locator('.bb-body-section-rail')
+    const controls = bodyCustomizer.locator('.bb-body-controls')
+    const [previewBox, railBox, controlsBox] = await Promise.all([
+      preview.boundingBox(),
+      rail.boundingBox(),
+      controls.boundingBox(),
+    ])
+
+    expect(previewBox).not.toBeNull()
+    expect(railBox).not.toBeNull()
+    expect(controlsBox).not.toBeNull()
+    if (!previewBox || !railBox || !controlsBox) return
+
+    expect(previewBox.y + previewBox.height).toBeLessThanOrEqual(railBox.y - 4)
+    expect(railBox.y + railBox.height).toBeLessThanOrEqual(controlsBox.y - 4)
+    expect(previewBox.x + previewBox.width).toBeLessThanOrEqual(576)
+    expect(railBox.x + railBox.width).toBeLessThanOrEqual(576)
+    expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(576)
+    await expect(bodyCustomizer.getByRole('button', { name: 'Body & Style' })).toBeInViewport()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Hair', exact: true })).toBeInViewport()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Face', exact: true })).toBeInViewport()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Colours', exact: true })).toBeInViewport()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true })).toBeInViewport()
+    await expect(bodyCustomizer.getByText('Skin Tone')).toBeInViewport()
+    await expect(bodyCustomizer.getByText('Accent Colour')).toBeInViewport()
+  })
+})
+
 test('opens the town map and fast travels to a key place', async ({ page }) => {
   await page.goto('/')
   await completeStartFlow(page, 'MapRunner')
@@ -312,6 +355,12 @@ test.describe('portrait splash layout', () => {
     expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(720)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
     expect(scrollWidth).toBeLessThanOrEqual(720)
+    const avatarBox = await avatarTurn.boundingBox()
+    expect(avatarBox).not.toBeNull()
+    if (!avatarBox) return
+    expect(avatarBox.y + avatarBox.height).toBeLessThanOrEqual(railBox.y - 4)
+    await expect(bodyCustomizer.getByRole('button', { name: 'Hair', exact: true })).toBeInViewport()
+    await expect(bodyCustomizer.getByRole('button', { name: 'Colours', exact: true })).toBeInViewport()
 
     const initialPreviewYaw = await avatarTurn.getAttribute('data-preview-yaw')
     await avatarTurn.dispatchEvent('pointerdown', { pointerId: 9, pointerType: 'touch', clientX: 220, clientY: 260, isPrimary: true })

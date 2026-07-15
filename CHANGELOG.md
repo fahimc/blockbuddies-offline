@@ -10,6 +10,25 @@
 
 ### Known Issues
 
+## [v1.5.31-customizer-grid-fit] - 2026-07-15
+
+### Added
+
+- Added narrow portrait Playwright coverage for the Body & Style customizer at a 576 px Android-style viewport.
+
+### Changed
+
+- Body & Style customization now uses a strict mobile grid with a capped character preview row, five visible category buttons, and a scrollable controls panel.
+- Updated Android and package version metadata to `1.5.31` / `10531`.
+
+### Fixed
+
+- Fixed the character preview being too large and visually overlapping the Body & Style category buttons and colour controls on narrower phone screens.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.30-road-surface-driving] - 2026-07-15
 
 ### Added
