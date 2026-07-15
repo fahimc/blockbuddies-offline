@@ -2352,10 +2352,12 @@ function MiniGameWorld() {
             <CoinRushPickup points={target.points ?? definition.pointsPerTarget} index={index} />
           ) : null}
           {miniGame.activeId === 'delivery-dash' ? (
-            <mesh receiveShadow position={[0, 0.08, 0]}>
-              <cylinderGeometry args={[1.1, 1.1, 0.16, 24]} />
-              <meshStandardMaterial color="#22c55e" emissive="#16a34a" emissiveIntensity={0.25} />
-            </mesh>
+            <DeliveryDashTarget
+              label={target.mapLabel ?? target.label}
+              kind={target.kind}
+              coins={target.coinReward ?? 0}
+              timeBonusMs={target.timeBonusMs ?? 0}
+            />
           ) : null}
           {miniGame.activeId === 'hide-and-seek' ? (
             <group position={[0, avatarGroundOffset, 0]} rotation={[0, index * 0.7, 0]}>
@@ -2376,11 +2378,59 @@ function MiniGameWorld() {
           ) : null}
           <Html center position={[0, 2.85, 0]} zIndexRange={worldHtmlZIndexRange}>
             <span className="whitespace-nowrap rounded-lg bg-slate-950/85 px-3 py-1 text-xs font-black text-white shadow">
-              {definition.title}: {target.label}
+              {definition.title}: {target.mapLabel ?? target.label}
             </span>
           </Html>
         </group>
       ))}
+    </group>
+  )
+}
+
+function DeliveryDashTarget({
+  label,
+  kind,
+  coins,
+  timeBonusMs,
+}: {
+  label: string
+  kind?: string
+  coins: number
+  timeBonusMs: number
+}) {
+  const isPickup = kind === 'pickup'
+  return (
+    <group>
+      <mesh receiveShadow position={[0, 0.08, 0]}>
+        <cylinderGeometry args={[1.18, 1.18, 0.16, 24]} />
+        <meshStandardMaterial
+          color={isPickup ? '#fb923c' : '#22c55e'}
+          emissive={isPickup ? '#f97316' : '#16a34a'}
+          emissiveIntensity={0.28}
+        />
+      </mesh>
+      <mesh castShadow position={[0, 0.72, 0]}>
+        <boxGeometry args={isPickup ? [0.8, 0.58, 0.65] : [0.82, 0.46, 0.82]} />
+        <meshStandardMaterial color={isPickup ? '#a16207' : '#0f766e'} roughness={0.75} />
+      </mesh>
+      {isPickup ? (
+        <mesh castShadow position={[0, 1.03, 0]}>
+          <boxGeometry args={[0.9, 0.08, 0.12]} />
+          <meshStandardMaterial color="#fef3c7" roughness={0.65} />
+        </mesh>
+      ) : (
+        <mesh castShadow position={[0, 1.08, 0]}>
+          <coneGeometry args={[0.42, 0.72, 4]} />
+          <meshStandardMaterial color="#facc15" emissive="#facc15" emissiveIntensity={0.18} roughness={0.55} />
+        </mesh>
+      )}
+      <Html center position={[0, 1.8, 0]} zIndexRange={worldHtmlZIndexRange}>
+        <span className="whitespace-nowrap rounded-full bg-white px-3 py-1 text-xs font-black text-slate-950 shadow">
+          {label}
+          {coins ? ` +${coins} coins` : ''}
+          {timeBonusMs ? ` +${Math.round(timeBonusMs / 1000)}s` : ''}
+        </span>
+      </Html>
     </group>
   )
 }

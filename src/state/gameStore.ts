@@ -1052,12 +1052,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       const result = tickMiniGameSession(state.miniGame, now, position)
       if (result.state === state.miniGame) return state
       const definition = activeId ? miniGameDefinition(activeId) : undefined
-      const pickupCoins = activeId === 'coin-rush' ? result.collected.length : 0
-      const collectedMessages = result.collected.map((target) =>
-        systemMessage(
-          `${target.label} collected! +${target.points ?? definition?.pointsPerTarget ?? 0} pts${activeId === 'coin-rush' ? ', +1 coin' : ''} (${result.state.score}/${result.state.target})`,
-        ),
-      )
+      const collectedMessages = result.collected.map((target) => {
+        const coinText = target.coinReward
+          ? `, +${target.coinReward} ${target.coinReward === 1 ? 'coin' : 'coins'}`
+          : ''
+        return systemMessage(
+          `${target.label} collected! +${target.points ?? definition?.pointsPerTarget ?? 0} pts${coinText}${target.timeBonusMs ? `, +${Math.round(target.timeBonusMs / 1000)}s` : ''} (${result.state.score}/${result.state.target})`,
+        )
+      })
       const completedMessages =
         result.completedNow && definition
           ? [
@@ -1080,7 +1082,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           : []
       return {
         miniGame: result.state,
-        coins: state.coins + pickupCoins + result.reward,
+        coins: state.coins + result.coinsAwarded + result.reward,
         earnedBadges:
           result.completedNow && !state.earnedBadges.includes('mini-game-star')
             ? [...state.earnedBadges, 'mini-game-star']

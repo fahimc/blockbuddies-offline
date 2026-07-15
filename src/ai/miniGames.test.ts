@@ -31,6 +31,7 @@ describe('mini game sessions', () => {
 
     expect(first.collected).toHaveLength(1)
     expect(first.pointsAwarded).toBe(miniGameDefinition('coin-rush').pointsPerTarget)
+    expect(first.coinsAwarded).toBe(1)
     expect(repeated.collected).toHaveLength(0)
     expect(session.score).toBe(1)
     expect(session.points).toBe(10)
@@ -53,10 +54,21 @@ describe('mini game sessions', () => {
     expect(skipped.collected).toHaveLength(0)
     expect(session.score).toBe(0)
 
-    const firstStop = tickMiniGameSession(session, 700, deliveryDashTargets[0].position)
+    const pickup = tickMiniGameSession(session, 700, deliveryDashTargets[0].position)
+    session = pickup.state
 
-    expect(firstStop.collected[0]?.id).toBe('delivery-park')
-    expect(firstStop.state.score).toBe(1)
+    expect(pickup.collected[0]?.id).toBe('delivery-pickup')
+    expect(pickup.pointsAwarded).toBe(5)
+    expect(pickup.coinsAwarded).toBe(0)
+    expect(session.score).toBe(1)
+
+    const firstDropOff = tickMiniGameSession(session, 900, deliveryDashTargets[1].position)
+
+    expect(firstDropOff.collected[0]?.id).toBe('delivery-park')
+    expect(firstDropOff.state.score).toBe(2)
+    expect(firstDropOff.coinsAwarded).toBe(8)
+    expect(firstDropOff.timeBonusMs).toBe(5_000)
+    expect(firstDropOff.state.endsAt).toBe(session.endsAt + 5_000)
   })
 
   it('fails on timeout and records the best partial score without reward', () => {

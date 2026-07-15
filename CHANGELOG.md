@@ -10,6 +10,30 @@
 
 ### Known Issues
 
+## [v1.5.20-delivery-dash-route-map] - 2026-07-15
+
+### Added
+
+- Added target-level mini-game coin rewards and time bonuses to the reusable mini-game engine.
+- Added active mini-game target helpers shared by HUD, minimap, and town map UI.
+- Added Delivery Dash minimap and town map objective markers for the current pickup or drop-off.
+- Added Delivery Dash route tests covering pickup order, drop-off coins, time bonuses, map markers, and completion totals.
+
+### Changed
+
+- Rebuilt Delivery Dash as a clearer ordered delivery route: pick up a parcel, then deliver to Park, School, and Houses.
+- Updated Delivery Dash rewards to give `+8` coins and `+5s` for each drop-off, plus a `+40` completion reward.
+- Updated Delivery Dash HUD, in-world target labels, and mini-game panel copy so the next action is always visible.
+- Updated Android and package version metadata to `1.5.20` / `10520`.
+
+### Fixed
+
+- Fixed Delivery Dash starting directly on top of the first objective by moving the start position outside the pickup radius.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.19-coin-rush-hud-performance] - 2026-07-15
 
 ### Added

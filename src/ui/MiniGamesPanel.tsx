@@ -54,7 +54,7 @@ export function MiniGamesPanel() {
                   {activeDefinition.title}
                 </span>
                 <span>
-                  {miniGame.score}/{miniGame.target} · {miniGame.points} pts
+                  {miniGame.score}/{miniGame.target} - {miniGame.points} pts
                 </span>
               </div>
               {miniGame.status === 'running' ? (
@@ -77,6 +77,7 @@ export function MiniGamesPanel() {
             const isActive =
               miniGame.activeId === game.id && miniGame.status === 'running'
             const isCoinRush = game.id === 'coin-rush'
+            const isDeliveryDash = game.id === 'delivery-dash'
             return (
               <article
                 key={game.id}
@@ -97,6 +98,11 @@ export function MiniGamesPanel() {
                           Featured: collect coins, stack points, beat the clock.
                         </p>
                       ) : null}
+                      {isDeliveryDash ? (
+                        <p className="mt-1 text-xs font-black uppercase text-emerald-700">
+                          Route game: pickup first, follow map marker, deliver in order.
+                        </p>
+                      ) : null}
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-300 px-2.5 py-1 text-sm font-black text-slate-950 shadow">
                       <Coins size={15} aria-hidden />
@@ -115,6 +121,7 @@ export function MiniGamesPanel() {
                     </span>
                     <span className="rounded-lg bg-amber-50 px-2 py-1 text-amber-800">
                       Points {game.pointsPerTarget} each + {game.completionBonus}
+                      {isDeliveryDash ? ' - +8 coins per drop-off - +5s' : ''}
                     </span>
                     <span className="rounded-lg bg-blue-50 px-2 py-1 text-blue-800">
                       Plays {record?.plays ?? 0}

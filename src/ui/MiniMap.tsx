@@ -1,5 +1,6 @@
 import { Map as MapIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { activeMiniGameTarget } from '../ai/miniGameProgress'
 import { worldLocations } from '../data/world'
 import { useGameStore } from '../state/gameStore'
 import { createTrafficVehicles, makeTrafficLanes, trafficPositionAtTime, type TrafficLane } from '../game/traffic'
@@ -17,6 +18,7 @@ export function MiniMap() {
   const playerPosition = useGameStore((state) => state.playerPosition)
   const playerYaw = useGameStore((state) => state.playerYaw)
   const bots = useGameStore((state) => state.bots)
+  const miniGame = useGameStore((state) => state.miniGame)
   const lanes = useMemo(() => makeTrafficLanes(), [])
   const laneById = useMemo(() => new Map<string, TrafficLane>(lanes.map((lane) => [lane.id, lane])), [lanes])
   const vehicles = useMemo(() => createTrafficVehicles(lanes, 8), [lanes])
@@ -36,6 +38,7 @@ export function MiniMap() {
     if (!lane) return []
     return [{ id: vehicle.id, color: vehicle.color, position: trafficPositionAtTime(lane, vehicle, trafficClock).position }]
   })
+  const activeTarget = activeMiniGameTarget(miniGame)
 
   if (activeInterior) {
     return (
@@ -85,6 +88,14 @@ export function MiniMap() {
           {bots.filter((bot) => isOnMap(bot.position, playerPosition)).slice(0, 8).map((bot) => (
             <span key={bot.id} className="bb-mini-map-bot" style={pointStyle(bot.position, playerPosition)} title={bot.id} />
           ))}
+          {activeTarget ? (
+            <span
+              className={`bb-mini-map-objective ${activeTarget.kind ?? 'dropoff'}`}
+              data-testid="mini-map-objective"
+              style={pointStyle(activeTarget.position, playerPosition)}
+              title={activeTarget.mapLabel ?? activeTarget.label}
+            />
+          ) : null}
           <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
         </span>
       </button>

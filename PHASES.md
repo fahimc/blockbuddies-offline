@@ -582,3 +582,12 @@
 - [x] Remove expensive per-pickup DOM labels and point lights for mobile performance
 - [x] Reuse one WebAudio context for mini-game tones
 - [x] Bump Android debug APK version metadata to 1.5.19 / 10519
+
+## Post-phase Delivery Dash route and map update
+
+- [x] Add reusable per-target coin rewards and time bonuses to the mini-game engine
+- [x] Rework Delivery Dash into parcel pickup plus three ordered drop-offs
+- [x] Show the active Delivery Dash target in the HUD, minimap, and town map
+- [x] Award immediate drop-off coins and time bonuses before the completion reward
+- [x] Add unit and end-to-end coverage for route order, map markers, rewards, and completion
+- [x] Bump Android debug APK version metadata to 1.5.20 / 10520

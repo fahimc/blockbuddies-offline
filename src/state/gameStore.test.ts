@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   coinRushTargets,
   createInitialMiniGame,
+  deliveryDashTargets,
   miniGameDefinition,
 } from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
@@ -181,6 +182,28 @@ describe('mini game store flow', () => {
     expect(useGameStore.getState().miniGame.points).toBe(10)
     expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
       'Coin collected! +10 pts, +1 coin (1/8)',
+    )
+  })
+
+  it('awards Delivery Dash drop-off coins and time bonuses before completion', () => {
+    useGameStore.setState({
+      miniGame: createInitialMiniGame(),
+      activeInterior: undefined,
+      coins: 0,
+      earnedBadges: [],
+      chat: [],
+    })
+
+    useGameStore.getState().startMiniGame('delivery-dash', 1_000)
+    const initialEndsAt = useGameStore.getState().miniGame.endsAt
+    useGameStore.getState().tickMiniGame(2_000, deliveryDashTargets[0].position)
+    useGameStore.getState().tickMiniGame(3_000, deliveryDashTargets[1].position)
+
+    expect(useGameStore.getState().coins).toBe(8)
+    expect(useGameStore.getState().miniGame.score).toBe(2)
+    expect(useGameStore.getState().miniGame.endsAt).toBe(initialEndsAt + 5_000)
+    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
+      'Park drop-off collected! +20 pts, +8 coins, +5s (2/4)',
     )
   })
 

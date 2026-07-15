@@ -2,6 +2,7 @@ import { Armchair, Backpack, CarFront, Coins, Gamepad2, Sparkles, Trophy } from 
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { miniGameDefinition } from '../ai/miniGames'
+import { miniGameTargetInstruction } from '../ai/miniGameProgress'
 import { getLocation } from '../data/world'
 import { getDrivableVehicle } from '../game/vehicles'
 import { useGameStore } from '../state/gameStore'
@@ -41,6 +42,7 @@ export function HUD() {
   const miniGameSecondsLeft = activeMiniGame
     ? Math.max(0, Math.ceil((miniGame.endsAt - now) / 1000))
     : 0
+  const miniGameInstruction = miniGameTargetInstruction(miniGame)
 
   return (
     <>
@@ -67,6 +69,11 @@ export function HUD() {
               <span>{activeMiniGame.title}</span>
               <span className="rounded-md bg-blue-500 px-2 py-1">{miniGame.score}/{miniGame.target}</span>
               <span className="rounded-md bg-amber-300 px-2 py-1 text-slate-950">{miniGame.points} pts</span>
+              {miniGameInstruction ? (
+                <span className="max-w-48 truncate rounded-md bg-white px-2 py-1 text-slate-950">
+                  {miniGameInstruction.text}
+                </span>
+              ) : null}
               <strong className="rounded-md bg-rose-500 px-2 py-1 text-lg leading-none">{miniGameSecondsLeft}s</strong>
             </span>
           ) : null}
@@ -105,6 +112,11 @@ export function HUD() {
               <Gamepad2 size={14} aria-hidden />
               <span>{miniGame.score}/{miniGame.target}</span>
               <span>{miniGame.points}p</span>
+              {miniGameInstruction ? (
+                <span className="max-w-20 truncate rounded-full bg-white px-1.5 py-0.5 text-slate-950">
+                  {miniGameInstruction.text}
+                </span>
+              ) : null}
               <strong className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[13px] leading-none">{miniGameSecondsLeft}s</strong>
             </span>
           ) : null}

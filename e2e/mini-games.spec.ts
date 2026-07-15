@@ -132,33 +132,47 @@ test.describe('mini games end-to-end flow', () => {
     await page.goto('/')
     await completeStartFlow(page, 'DashRunner')
 
-    await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash.*0\/3/)
-    await expect(page.getByText('Delivery Dash: Park drop-off')).toHaveCount(1, { timeout: 15_000 })
+    await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash.*0\/4/)
+    await expect(page.getByTestId('mini-game-hud')).toContainText('Pickup parcel')
+    await expect(page.getByTestId('mini-map-objective')).toBeVisible()
+    await page.getByRole('button', { name: 'Open town map' }).click()
+    await expect(page.getByTestId('town-map-objective')).toContainText('Pickup parcel')
+    await expect(page.getByText('Active target: Pickup parcel')).toBeVisible()
+    await page.getByRole('button', { name: 'Close map' }).click()
+    await expect(page.getByText('Delivery Dash: Pickup parcel').first()).toBeVisible({ timeout: 15_000 })
 
-    const first = await collectNextTarget(page)
-    expect(first.miniGame.status).toBe('running')
-    expect(first.miniGame.score).toBe(1)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*1\/3/)
-    await expect(page.getByText('Delivery Dash: School drop-off')).toHaveCount(
-      1,
-    )
-    await expect(page.getByText('Park drop-off collected! +15 pts (1/3)')).toBeVisible()
+    const pickup = await collectNextTarget(page)
+    expect(pickup.miniGame.status).toBe('running')
+    expect(pickup.miniGame.score).toBe(1)
+    expect(pickup.miniGame.points).toBe(5)
+    expect(pickup.coins).toBe(0)
+    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*1\/4/)
+    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to Park')
+    await expect(page.getByText('Parcel pickup collected! +5 pts (1/4)')).toBeVisible()
 
-    const second = await collectNextTarget(page)
-    expect(second.miniGame.score).toBe(2)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*2\/3/)
-    await expect(page.getByText('Delivery Dash: House drop-off')).toHaveCount(1)
+    const firstDropOff = await collectNextTarget(page)
+    expect(firstDropOff.miniGame.score).toBe(2)
+    expect(firstDropOff.miniGame.points).toBe(25)
+    expect(firstDropOff.coins).toBe(8)
+    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*2\/4/)
+    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to School')
+    await expect(page.getByText('Park drop-off collected! +20 pts, +8 coins, +5s (2/4)')).toBeVisible()
+
+    const secondDropOff = await collectNextTarget(page)
+    expect(secondDropOff.miniGame.score).toBe(3)
+    expect(secondDropOff.coins).toBe(16)
+    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to Houses')
 
     const finished = await collectNextTarget(page)
     expect(finished.miniGame.status).toBe('completed')
     expect(finished.miniGame.records['delivery-dash']).toMatchObject({
       plays: 1,
-      bestScore: 3,
-      bestPoints: 85,
+      bestScore: 4,
+      bestPoints: 105,
     })
-    expect(finished.coins).toBe(45)
+    expect(finished.coins).toBe(64)
     await expect(
-      page.getByText('Delivery Dash complete! 85 pts, +45 coins'),
+      page.getByText('Delivery Dash complete! 105 pts, +40 coins'),
     ).toBeVisible()
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })

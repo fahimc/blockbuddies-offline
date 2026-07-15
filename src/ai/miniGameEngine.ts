@@ -23,6 +23,10 @@ export type MiniGameTarget = {
   label: string
   position: Vec3
   points?: number
+  coinReward?: number
+  timeBonusMs?: number
+  kind?: 'pickup' | 'dropoff' | 'search' | 'coin'
+  mapLabel?: string
 }
 
 export type MiniGameCatalog = {
@@ -34,6 +38,8 @@ export type MiniGameTickResult = {
   state: MiniGameRuntime
   collected: MiniGameTarget[]
   pointsAwarded: number
+  coinsAwarded: number
+  timeBonusMs: number
   completedNow: boolean
   failedNow: boolean
   reward: number
@@ -98,12 +104,17 @@ export function createMiniGameEngine(catalog: MiniGameCatalog) {
     const collected = collectTargets(game, activeTargets, state, playerPosition)
     let nextState = state
     let pointsAwarded = 0
+    let coinsAwarded = 0
+    let timeBonusMs = 0
 
     if (collected.length > 0) {
       pointsAwarded = collected.reduce((total, target) => total + (target.points ?? game.pointsPerTarget), 0)
+      coinsAwarded = collected.reduce((total, target) => total + (target.coinReward ?? 0), 0)
+      timeBonusMs = collected.reduce((total, target) => total + (target.timeBonusMs ?? 0), 0)
       const collectedIds = collected.map((target) => target.id)
       nextState = {
         ...nextState,
+        endsAt: nextState.endsAt + timeBonusMs,
         score: Math.min(game.target, nextState.score + collected.length),
         points: nextState.points + pointsAwarded,
         collected: [...nextState.collected, ...collectedIds],
@@ -130,6 +141,8 @@ export function createMiniGameEngine(catalog: MiniGameCatalog) {
         },
         collected,
         pointsAwarded: pointsAwarded + game.completionBonus,
+        coinsAwarded,
+        timeBonusMs,
         completedNow: true,
         failedNow: false,
         reward: game.reward,
@@ -153,6 +166,8 @@ export function createMiniGameEngine(catalog: MiniGameCatalog) {
         },
         collected,
         pointsAwarded,
+        coinsAwarded,
+        timeBonusMs,
         completedNow: false,
         failedNow: true,
         reward: 0,
@@ -163,6 +178,8 @@ export function createMiniGameEngine(catalog: MiniGameCatalog) {
       state: nextState,
       collected,
       pointsAwarded,
+      coinsAwarded,
+      timeBonusMs,
       completedNow: false,
       failedNow: false,
       reward: 0,
@@ -195,6 +212,8 @@ function unchanged(state: MiniGameRuntime): MiniGameTickResult {
     state,
     collected: [],
     pointsAwarded: 0,
+    coinsAwarded: 0,
+    timeBonusMs: 0,
     completedNow: false,
     failedNow: false,
     reward: 0,

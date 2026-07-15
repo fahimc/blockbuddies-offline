@@ -80,6 +80,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects. Coin Rush is the first polished flow with spendable
   pickup coins, glowing mesh pickups, and completion scoring.
+- Delivery Dash is a mapped delivery route with a parcel pickup, ordered
+  drop-offs, active minimap/town-map markers, per-stop coin rewards, and time
+  bonuses.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
@@ -362,6 +365,11 @@ The `v1.5.19` APK fixes Coin Rush coin-balance feedback so the top HUD updates
 on each pickup. It also reduces mobile freeze risk by removing per-pickup DOM
 labels and point lights, lowering coin geometry cost, and reusing one WebAudio
 context for mini-game tones.
+
+The `v1.5.20` APK rebuilds Delivery Dash into a clearer pickup-and-drop-off
+route. The HUD, minimap, and town map all point to the active delivery target,
+drop-offs award immediate coins and time bonuses, and the route no longer
+starts on top of the first objective.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

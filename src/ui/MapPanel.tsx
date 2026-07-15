@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { activeMiniGameTarget } from '../ai/miniGameProgress'
 import { distance2d, worldLocations, type WorldLocation } from '../data/world'
 import { unitsPerMeter } from '../game/scale'
 import type { LocationId, Vec3 } from '../game/types'
@@ -46,6 +47,7 @@ export function MapPanel() {
   const nearbyLocation = useGameStore((state) => state.nearbyLocation)
   const obbyActive = useGameStore((state) => state.obby.active)
   const miniGameRunning = useGameStore((state) => state.miniGame.status === 'running')
+  const miniGame = useGameStore((state) => state.miniGame)
   const [selectedId, setSelectedId] = useState<LocationId>(nearbyLocation ?? 'spawn')
   const selected = useMemo(
     () => worldLocations.find((location) => location.id === selectedId) ?? worldLocations[0],
@@ -53,6 +55,7 @@ export function MapPanel() {
   )
   const mapPlayerPosition = activeInterior?.returnPosition ?? playerPosition
   const travelBlocked = obbyActive || miniGameRunning
+  const activeTarget = activeMiniGameTarget(miniGame)
   const distanceMeters = Math.max(1, Math.round(distance2d(mapPlayerPosition, selected.travelPosition) / unitsPerMeter))
 
   return (
@@ -83,6 +86,7 @@ export function MapPanel() {
             selectedId={selectedId}
             playerPosition={mapPlayerPosition}
             playerYaw={playerYaw}
+            activeTarget={activeTarget}
             onSelect={setSelectedId}
           />
 
@@ -126,7 +130,9 @@ export function MapPanel() {
           </button>
           {travelBlocked ? (
             <p className="bb-map-travel-notice" role="status">
-              Finish or cancel the active game before using fast travel.
+              {activeTarget
+                ? `Active target: ${activeTarget.mapLabel ?? activeTarget.label}. Finish or cancel the active game before fast travel.`
+                : 'Finish or cancel the active game before using fast travel.'}
             </p>
           ) : null}
         </footer>
@@ -139,11 +145,13 @@ function TownMap({
   selectedId,
   playerPosition,
   playerYaw,
+  activeTarget,
   onSelect,
 }: {
   selectedId: LocationId
   playerPosition: Vec3
   playerYaw: number
+  activeTarget?: { label: string; mapLabel?: string; position: Vec3; kind?: string }
   onSelect: (id: LocationId) => void
 }) {
   return (
@@ -181,6 +189,16 @@ function TownMap({
         title="You are here"
         aria-label="Your current position"
       />
+      {activeTarget ? (
+        <span
+          className={`bb-town-map-objective ${activeTarget.kind ?? 'dropoff'}`}
+          style={townPointStyle(activeTarget.position)}
+          data-testid="town-map-objective"
+          title={activeTarget.mapLabel ?? activeTarget.label}
+        >
+          {activeTarget.mapLabel ?? activeTarget.label}
+        </span>
+      ) : null}
       <span className="bb-town-map-key">
         <span /> You are here
       </span>
