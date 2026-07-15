@@ -151,6 +151,18 @@ test.describe('landscape phone layout', () => {
     await expect(page.getByTestId('map-marker-houses')).toBeVisible()
     await page.getByRole('button', { name: 'Close map' }).click()
 
+    await page.evaluate(() => window.__blockBuddiesE2E!.prepareMovementInteraction())
+    for (let step = 0; step < 7; step += 1) {
+      await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0, 0, -80))
+      await page.waitForTimeout(50)
+    }
+    const beforeForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
+    await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(1))
+    await page.waitForTimeout(450)
+    await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0))
+    const afterForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
+    expect(afterForward[2]).toBeLessThan(beforeForward[2] - 0.5)
+
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
     await expect
       .poll(

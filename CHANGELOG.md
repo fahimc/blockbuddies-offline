@@ -10,6 +10,26 @@
 
 ### Known Issues
 
+## [v1.5.11-camera-relative-movement] - 2026-07-15
+
+### Added
+
+- Added deterministic movement-vector tests for forward, reverse-camera, sideways, diagonal, and camera-heading preservation cases.
+- Added a mobile Playwright regression that orbits to the avatar's front before holding joystick-forward.
+
+### Changed
+
+- Walking and running are now relative to the current camera heading, including after full screen-drag orbit.
+- The avatar turns toward its actual travel direction while the camera keeps the player's chosen orbit heading.
+- Updated Android and package version metadata to `1.5.11` / `10511`.
+
+### Fixed
+
+- Fixed joystick-forward and keyboard-forward moving toward the camera after orbiting to view the avatar from the front.
+- Removed diagonal movement speed gain by normalising the combined movement vector.
+
+### Known Issues
+
 ## [v1.5.10-world-grid-camera] - 2026-07-15
 
 ### Added

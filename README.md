@@ -318,6 +318,11 @@ control. Its rule-based world grid keeps roads clear, widens sidewalks, places
 street furniture at sidewalk edges, and prevents scenery, activities, and coins
 from sharing occupied cells.
 
+The `v1.5.11` APK makes walking and running camera-relative. Joystick or keyboard
+forward now always moves away from the camera after orbiting, while the avatar
+turns toward travel without changing the chosen camera angle. Combined diagonal
+input is normalised to the same maximum speed as straight movement.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

@@ -57,7 +57,7 @@ import {
   seatMarkerRadius,
   seatsForContext,
 } from './seating'
-import { playerMovementSpeed } from './movement'
+import { cameraRelativeMovement, orbitYawForCameraHeading, playerMovementSpeed } from './movement'
 import { avatarSleepRotation } from './sleepPose'
 import {
   coreActivityPositions,
@@ -1436,13 +1436,16 @@ function PlayerController({
       position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
       velocityY.current = 0
     } else {
-      yaw.current -= strafe * 1.8 * delta
-      const direction = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
-      const side = new THREE.Vector3(direction.z, 0, -direction.x)
+      const cameraHeading = yaw.current + cameraOrbitYaw.current
+      const movement = cameraRelativeMovement(forward, strafe, cameraHeading)
+      if (movement.magnitude > 0) {
+        yaw.current = movement.yaw
+        cameraOrbitYaw.current = orbitYawForCameraHeading(cameraHeading, yaw.current)
+      }
       const speed = playerMovementSpeed(inputRunning)
       const desiredPosition = position.current.clone()
-      desiredPosition.addScaledVector(direction, forward * speed * delta)
-      desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
+      desiredPosition.x += movement.x * speed * delta
+      desiredPosition.z += movement.z * speed * delta
       const blockingObstacles = collisionBoxesBlockingPlayer(solidObstacles, position.current.y)
       const blockingVehicles = collisionBoxesBlockingPlayer([...trafficObstacles, ...parkedVehicleObstacles], position.current.y)
       const resolvedPosition = resolveHorizontalCollision(

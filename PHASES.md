@@ -507,3 +507,12 @@
 - [x] Add unit and Playwright regression coverage for customisation drag, orbit input, placement cells, and terrain rules
 - [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests
 - [x] Bump Android debug APK version metadata to 1.5.10 / 10510
+
+## Post-phase camera-relative movement repair
+
+- [x] Move joystick and keyboard input relative to the current orbit camera heading
+- [x] Turn the avatar toward travel while preserving the selected camera heading
+- [x] Normalise diagonal movement so it cannot exceed straight movement speed
+- [x] Add deterministic movement-direction and camera-heading tests
+- [x] Add a phone Playwright regression for forward movement after a 180-degree orbit
+- [x] Bump Android debug APK version metadata to 1.5.11 / 10511

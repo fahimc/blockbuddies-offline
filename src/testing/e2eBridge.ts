@@ -28,7 +28,9 @@ export type BlockBuddiesE2EBridge = {
   prepareHouseBedInteraction: () => GameplayE2ESnapshot
   prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
   prepareParkingInteraction: () => GameplayE2ESnapshot
+  prepareMovementInteraction: () => GameplayE2ESnapshot
   setDriveInput: (throttle: number, steer?: number, brake?: boolean) => GameplayE2ESnapshot
+  setMovementInput: (forward: number, strafe?: number, lookX?: number) => GameplayE2ESnapshot
 }
 
 export type GameplayE2ESnapshot = {
@@ -77,28 +79,27 @@ export function installE2EBridge() {
     prepareHouseBedInteraction,
     prepareClassroomSeatInteraction,
     prepareParkingInteraction,
+    prepareMovementInteraction,
     setDriveInput,
+    setMovementInput,
   }
 }
 
 function prepareClassroomSeatInteraction() {
   const game = useGameStore.getState()
   const seat = seatsForContext('school').find((target) => target.id.includes('back-centre')) ?? seatsForContext('school')[0]
-  useGameStore.setState({
-    activeInterior: {
+  game.enterInterior(
+    {
       id: 'e2e-school',
       title: 'Test Classroom',
       kind: 'school',
       returnPosition: [0, 0, 4],
       returnYaw: 0,
     },
-    playerPosition: [seat.exitPosition[0], 0, seat.exitPosition[2]],
-    playerYaw: seat.yaw,
-    sleeping: false,
-    seatedSeatId: undefined,
-    activeVehicleId: undefined,
-    interactionPrompt: undefined,
-    worldActionRequest: undefined,
+    [seat.exitPosition[0], 0, seat.exitPosition[2]],
+    seat.yaw,
+  )
+  useGameStore.setState({
     touch: { ...game.touch, x: 0, y: 0, jump: false, interact: false, run: false },
   })
   return getGameplaySnapshot()
@@ -131,6 +132,34 @@ function setDriveInput(throttle: number, steer = 0, brake = false) {
     y: -Math.max(-1, Math.min(1, throttle)),
     x: Math.max(-1, Math.min(1, steer)),
     jump: brake,
+  })
+  return getGameplaySnapshot()
+}
+
+function prepareMovementInteraction() {
+  const game = useGameStore.getState()
+  game.enterInterior(
+    {
+      id: 'e2e-movement-room',
+      title: 'Movement Test Room',
+      kind: 'shop',
+      returnPosition: [0, 0, 4],
+      returnYaw: 0,
+    },
+    [0, 0, 0],
+    0,
+  )
+  useGameStore.setState({
+    touch: { ...game.touch, x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+  })
+  return getGameplaySnapshot()
+}
+
+function setMovementInput(forward: number, strafe = 0, lookX = 0) {
+  useGameStore.getState().setTouch({
+    y: -Math.max(-1, Math.min(1, forward)),
+    x: Math.max(-1, Math.min(1, strafe)),
+    lookX,
   })
   return getGameplaySnapshot()
 }
