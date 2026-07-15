@@ -42,9 +42,9 @@ export function MiniGameAudio() {
 
 function playTone(frequencies: number[], durationSeconds: number) {
   try {
-    const AudioContextClass = window.AudioContext ?? window.webkitAudioContext
-    if (!AudioContextClass) return
-    const context = new AudioContextClass()
+    const context = getAudioContext()
+    if (!context) return
+    if (context.state === 'suspended') void context.resume()
     let startAt = context.currentTime
     frequencies.forEach((frequency) => {
       const oscillator = context.createOscillator()
@@ -60,10 +60,21 @@ function playTone(frequencies: number[], durationSeconds: number) {
       oscillator.stop(startAt + durationSeconds + 0.02)
       startAt += durationSeconds
     })
-    window.setTimeout(() => void context.close(), Math.ceil((startAt - context.currentTime + 0.15) * 1000))
   } catch {
     // Audio can be blocked until a user gesture on some WebViews.
   }
+}
+
+let sharedAudioContext: AudioContext | undefined
+
+function getAudioContext() {
+  if (sharedAudioContext && sharedAudioContext.state !== 'closed') {
+    return sharedAudioContext
+  }
+  const AudioContextClass = window.AudioContext ?? window.webkitAudioContext
+  if (!AudioContextClass) return undefined
+  sharedAudioContext = new AudioContextClass()
+  return sharedAudioContext
 }
 
 declare global {

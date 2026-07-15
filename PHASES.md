@@ -574,3 +574,11 @@
 - [x] Add local sound effects for mini-game start, pickups, completion, and failure
 - [x] Add unit and end-to-end coverage for Coin Rush start, scoring, rewards, and cancellation
 - [x] Bump Android debug APK version metadata to 1.5.18 / 10518
+
+## Post-phase Coin Rush HUD and performance fix
+
+- [x] Make Coin Rush pickups update the top coin HUD immediately
+- [x] Add regression tests for pickup-level coin balance updates
+- [x] Remove expensive per-pickup DOM labels and point lights for mobile performance
+- [x] Reuse one WebAudio context for mini-game tones
+- [x] Bump Android debug APK version metadata to 1.5.19 / 10519

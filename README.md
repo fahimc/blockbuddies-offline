@@ -78,8 +78,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   rewards, and a Mini Game Star badge.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
-  local sound effects. Coin Rush is the first polished flow with glowing
-  point-labelled pickups and completion scoring.
+  local sound effects. Coin Rush is the first polished flow with spendable
+  pickup coins, glowing mesh pickups, and completion scoring.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
@@ -357,6 +357,11 @@ game camera view.
 The `v1.5.18` APK adds the reusable mini-game engine layer and polishes Coin
 Rush with a start popup, bold timer, points, records, sound effects, and tested
 end-to-end gameplay.
+
+The `v1.5.19` APK fixes Coin Rush coin-balance feedback so the top HUD updates
+on each pickup. It also reduces mobile freeze risk by removing per-pickup DOM
+labels and point lights, lowering coin geometry cost, and reusing one WebAudio
+context for mini-game tones.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

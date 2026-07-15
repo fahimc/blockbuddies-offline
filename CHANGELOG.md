@@ -10,6 +10,28 @@
 
 ### Known Issues
 
+## [v1.5.19-coin-rush-hud-performance] - 2026-07-15
+
+### Added
+
+- Added regression coverage proving the coin HUD updates immediately after the first Coin Rush pickup.
+
+### Changed
+
+- Coin Rush pickups now award one spendable coin per collected event coin, plus the existing completion reward.
+- Reduced Coin Rush mobile rendering cost by removing per-pickup DOM labels and point lights, and lowering pickup geometry segment counts.
+- Reused a shared WebAudio context for mini-game sound effects instead of creating a new context for every pickup tone.
+- Updated Android and package version metadata to `1.5.19` / `10519`.
+
+### Fixed
+
+- Fixed the top coin counter staying unchanged while collecting Coin Rush coins.
+- Fixed a likely mobile freeze source during Coin Rush by reducing expensive 3D/DOM/audio work on each active pickup.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.18-mini-game-engine-coin-rush] - 2026-07-15
 
 ### Added

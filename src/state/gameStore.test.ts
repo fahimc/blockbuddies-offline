@@ -165,6 +165,25 @@ describe('player setup flow', () => {
 })
 
 describe('mini game store flow', () => {
+  it('adds a spendable coin immediately for each Coin Rush pickup', () => {
+    useGameStore.setState({
+      miniGame: createInitialMiniGame(),
+      activeInterior: undefined,
+      coins: 0,
+      earnedBadges: [],
+      chat: [],
+    })
+
+    useGameStore.getState().startMiniGame('coin-rush', 1_000)
+    useGameStore.getState().tickMiniGame(2_000, coinRushTargets[0].position)
+
+    expect(useGameStore.getState().coins).toBe(1)
+    expect(useGameStore.getState().miniGame.points).toBe(10)
+    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
+      'Coin collected! +10 pts, +1 coin (1/8)',
+    )
+  })
+
   it('starts a mini game, completes it, and awards coins plus a badge', () => {
     useGameStore.setState({
       miniGame: createInitialMiniGame(),
@@ -195,7 +214,7 @@ describe('mini game store flow', () => {
     })
 
     expect(useGameStore.getState().miniGame.status).toBe('completed')
-    expect(useGameStore.getState().coins).toBe(35)
+    expect(useGameStore.getState().coins).toBe(43)
     expect(useGameStore.getState().miniGame.points).toBe(130)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
     expect(

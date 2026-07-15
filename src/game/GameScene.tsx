@@ -2385,7 +2385,7 @@ function MiniGameWorld() {
   )
 }
 
-function CoinRushPickup({ points, index }: { points: number; index: number }) {
+function CoinRushPickup({ index }: { points: number; index: number }) {
   const group = useRef<THREE.Group>(null)
   useFrame((state) => {
     if (!group.current) return
@@ -2395,20 +2395,14 @@ function CoinRushPickup({ points, index }: { points: number; index: number }) {
 
   return (
     <group ref={group}>
-      <pointLight position={[0, 0.35, 0]} intensity={0.75} distance={3.4} color="#fde047" />
       <mesh position={[0, 0.82, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.43, 0.11, 10, 32]} />
+        <torusGeometry args={[0.43, 0.11, 8, 18]} />
         <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.75} metalness={0.2} roughness={0.35} />
       </mesh>
       <mesh position={[0, 0.82, 0]}>
-        <cylinderGeometry args={[0.32, 0.32, 0.1, 28]} />
+        <cylinderGeometry args={[0.32, 0.32, 0.1, 18]} />
         <meshStandardMaterial color="#fef3c7" emissive="#facc15" emissiveIntensity={0.55} />
       </mesh>
-      <Html center position={[0, 1.65, 0]} zIndexRange={worldHtmlZIndexRange}>
-        <span className="whitespace-nowrap rounded-full bg-amber-300 px-2.5 py-1 text-xs font-black text-slate-950 shadow">
-          +{points} pts
-        </span>
-      </Html>
     </group>
   )
 }

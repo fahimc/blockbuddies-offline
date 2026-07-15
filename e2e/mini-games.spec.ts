@@ -100,7 +100,11 @@ test.describe('mini games end-to-end flow', () => {
     const firstCoin = await collectNextTarget(page)
     expect(firstCoin.miniGame.score).toBe(1)
     expect(firstCoin.miniGame.points).toBe(10)
+    expect(firstCoin.coins).toBe(1)
     await expect(page.getByTestId('mini-game-hud')).toContainText('10 pts')
+    await expect(
+      page.locator('.desktop-hud').getByText('1').first(),
+    ).toBeVisible()
 
     const snapshot = await completeMiniGameRoute(page)
 
@@ -110,7 +114,7 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 8,
       bestPoints: 130,
     })
-    expect(snapshot.coins).toBe(35)
+    expect(snapshot.coins).toBe(43)
     expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
     await expect(page.getByText('Coin Rush complete! 130 pts, +35 coins')).toBeVisible()
@@ -118,7 +122,7 @@ test.describe('mini games end-to-end flow', () => {
     await expect(page.getByText('Nice run in Coin Rush!')).toBeVisible()
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
     await expect(
-      page.locator('.desktop-hud').getByText('35').first(),
+      page.locator('.desktop-hud').getByText('43').first(),
     ).toBeVisible()
   })
 
