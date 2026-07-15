@@ -50,6 +50,7 @@ import type {
 } from '../game/types'
 
 export type GameSave = {
+  profileComplete: boolean
   playerName: string
   coins: number
   avatar: AvatarSettings
@@ -75,12 +76,7 @@ type TouchInput = {
 }
 
 export type InteractionPrompt =
-  | 'sleep'
-  | 'wake'
-  | 'sit'
-  | 'stand'
-  | 'enter-vehicle'
-  | 'exit-vehicle'
+  'sleep' | 'wake' | 'sit' | 'stand' | 'enter-vehicle' | 'exit-vehicle'
 
 export type WorldActionRequest = {
   type: 'seat' | 'vehicle'
@@ -122,6 +118,7 @@ type GameState = GameSave & {
   teleportSequence: number
   teleportTarget?: TeleportTarget
   screen: 'menu' | 'setup-avatar' | 'setup-name' | 'game'
+  saveLoaded: boolean
   bots: BotRuntime[]
   chat: ChatMessage[]
   nearbyLocation?: LocationId
@@ -145,11 +142,16 @@ type GameState = GameSave & {
   buildRotation: number
   setScreen: (screen: GameState['screen']) => void
   setPlayerName: (name: string) => void
+  completePlayerProfile: (name: string) => void
   setPlayer: (position: Vec3, yaw: number, controllerSequence?: number) => void
   travelToLocation: (id: LocationId) => boolean
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
-  enterInterior: (interior: InteriorVisit, arrivalPosition: Vec3, arrivalYaw: number) => void
+  enterInterior: (
+    interior: InteriorVisit,
+    arrivalPosition: Vec3,
+    arrivalYaw: number,
+  ) => void
   leaveInterior: () => InteriorVisit | undefined
   tickBots: (now: number) => void
   botReact: (botId: string, context: DialogueContext) => void
@@ -188,6 +190,7 @@ type GameState = GameSave & {
   updateSettings: (settings: Partial<GameSettings>) => void
   resetSave: () => void
   loadFromSave: (save: Partial<GameSave>) => void
+  markSaveLoaded: () => void
   markSaving: () => void
   markSaved: () => void
   setOpenPanel: (panel?: GamePanel) => void
@@ -246,6 +249,24 @@ export const defaultSettings: GameSettings = {
 
 export const defaultPlayerName = 'BlockBuddy'
 
+function avatarMatches(a: AvatarSettings, b: AvatarSettings) {
+  return (
+    JSON.stringify(normalizeSavedAvatar(a)) ===
+    JSON.stringify(normalizeSavedAvatar(b))
+  )
+}
+
+function hasCompletedLegacyProfile(save: Partial<GameSave>) {
+  if (typeof save.profileComplete === 'boolean') return save.profileComplete
+  const nameChanged = Boolean(
+    save.playerName && sanitizePartyName(save.playerName) !== defaultPlayerName,
+  )
+  const avatarChanged = Boolean(
+    save.avatar && !avatarMatches(save.avatar, defaultAvatar),
+  )
+  return nameChanged || avatarChanged
+}
+
 function systemMessage(text: string): ChatMessage {
   return {
     id: crypto.randomUUID(),
@@ -303,6 +324,8 @@ const initialMiniGame = createInitialMiniGame()
 
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'menu',
+  profileComplete: false,
+  saveLoaded: false,
   playerName: defaultPlayerName,
   coins: 0,
   earnedBadges: ['welcome'],
@@ -326,7 +349,15 @@ export const useGameStore = create<GameState>((set, get) => ({
   visitedBots: [],
   obby: initialObby,
   miniGame: initialMiniGame,
-  touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+  touch: {
+    x: 0,
+    y: 0,
+    lookX: 0,
+    lookY: 0,
+    jump: false,
+    interact: false,
+    run: false,
+  },
   loading: false,
   saveStatus: 'idle',
   playerEmote: 'none',
@@ -345,9 +376,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     useLocalPartyStore.getState().setPlayerName(playerName)
     set({ playerName })
   },
+  completePlayerProfile: (name) => {
+    const playerName = sanitizePartyName(name) || defaultPlayerName
+    useLocalPartyStore.getState().setPlayerName(playerName)
+    set({ playerName, profileComplete: true })
+  },
   setPlayer: (playerPosition, playerYaw, controllerSequence) =>
     set((state) => {
-      if (state.teleportTarget && controllerSequence !== state.teleportTarget.sequence) return state
+      if (
+        state.teleportTarget &&
+        controllerSequence !== state.teleportTarget.sequence
+      )
+        return state
       return { playerPosition, playerYaw, teleportTarget: undefined }
     }),
   travelToLocation: (id) => {
@@ -384,7 +424,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         playerEmote: 'none',
-        touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+        touch: {
+          x: 0,
+          y: 0,
+          lookX: 0,
+          lookY: 0,
+          jump: false,
+          interact: false,
+          run: false,
+        },
         chat: [
           ...current.chat.slice(-60),
           systemMessage(`Travelled to ${destination.label}`),
@@ -632,13 +680,17 @@ export const useGameStore = create<GameState>((set, get) => ({
             interactionPrompt: activeVehicleId ? 'exit-vehicle' : undefined,
             chat: [
               ...state.chat.slice(-60),
-              systemMessage(activeVehicleId ? 'You started driving' : 'You left the car'),
+              systemMessage(
+                activeVehicleId ? 'You started driving' : 'You left the car',
+              ),
             ],
           },
     ),
   setInteractionPrompt: (interactionPrompt) =>
     set((state) =>
-      state.interactionPrompt === interactionPrompt ? state : { interactionPrompt },
+      state.interactionPrompt === interactionPrompt
+        ? state
+        : { interactionPrompt },
     ),
   requestWorldAction: (type, id) =>
     set((state) => ({
@@ -867,12 +919,19 @@ export const useGameStore = create<GameState>((set, get) => ({
         obby: { ...startObby(now), bestTime: state.obby.bestTime },
         playerPosition: obbyStart,
         teleportSequence,
-        teleportTarget: { sequence: teleportSequence, position: obbyStart, yaw: 0 },
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: obbyStart,
+          yaw: 0,
+        },
         seatedSeatId: undefined,
         activeVehicleId: undefined,
         interactionPrompt: undefined,
         worldActionRequest: undefined,
-        chat: [...state.chat.slice(-60), systemMessage('Beginner obby started')],
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage('Beginner obby started'),
+        ],
       }
     }),
 
@@ -918,7 +977,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         miniGame: startMiniGameSession(id, now, state.miniGame.records),
         playerPosition: definition.startPosition,
         teleportSequence,
-        teleportTarget: { sequence: teleportSequence, position: definition.startPosition, yaw: 0 },
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: definition.startPosition,
+          yaw: 0,
+        },
         activeInterior: undefined,
         buildMode: false,
         seatedSeatId: undefined,
@@ -1043,6 +1106,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     useLocalPartyStore.getState().setPlayerName(defaultPlayerName)
     const teleportSequence = get().teleportSequence + 1
     set({
+      profileComplete: false,
       playerName: defaultPlayerName,
       coins: 0,
       avatar: defaultAvatar,
@@ -1058,7 +1122,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       activeVehicleId: undefined,
       interactionPrompt: undefined,
       worldActionRequest: undefined,
-      touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+      touch: {
+        x: 0,
+        y: 0,
+        lookX: 0,
+        lookY: 0,
+        jump: false,
+        interact: false,
+        run: false,
+      },
       selectedBuildPiece: 'block',
       selectedBuildColor: '#38bdf8',
       buildRotation: 0,
@@ -1067,7 +1139,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       playerPosition: [0, 0, 4],
       playerYaw: 0,
       teleportSequence,
-      teleportTarget: { sequence: teleportSequence, position: [0, 0, 4], yaw: 0 },
+      teleportTarget: {
+        sequence: teleportSequence,
+        position: [0, 0, 4],
+        yaw: 0,
+      },
       questProgress: initialQuestProgress(),
       botMemory: {},
       obby: initialObby,
@@ -1083,6 +1159,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         : state.playerName
       useLocalPartyStore.getState().setPlayerName(playerName)
       return {
+        profileComplete: hasCompletedLegacyProfile(save),
         playerName,
         coins: save.coins ?? state.coins,
         avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
@@ -1107,12 +1184,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }),
 
+  markSaveLoaded: () => set({ saveLoaded: true }),
   markSaving: () => set({ saveStatus: 'saving' }),
   markSaved: () => set({ saveStatus: 'saved' }),
 }))
 
 export function makeSaveSnapshot(state: GameState): GameSave {
   return {
+    profileComplete: state.profileComplete,
     playerName: state.playerName,
     coins: state.coins,
     avatar: state.avatar,

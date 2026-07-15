@@ -5,13 +5,17 @@ import { BrandLogo } from './BrandLogo'
 
 type MainMenuProps = {
   onStart: () => void
+  ready?: boolean
 }
 
-export function MainMenu({ onStart }: MainMenuProps) {
+export function MainMenu({ onStart, ready = true }: MainMenuProps) {
   return (
     <section
       className="bb-splash bb-splash-poster"
-      style={{ '--splash-image': `url(${splashPortrait})` } as CSSProperties & Record<'--splash-image', string>}
+      style={
+        { '--splash-image': `url(${splashPortrait})` } as CSSProperties &
+          Record<'--splash-image', string>
+      }
     >
       <div className="bb-splash-art" aria-hidden />
       <div className="bb-splash-vignette" aria-hidden />
@@ -32,9 +36,15 @@ export function MainMenu({ onStart }: MainMenuProps) {
       </div>
 
       <div className="bb-splash-controls">
-        <button type="button" onClick={onStart} aria-label="Start" className="bb-splash-play">
+        <button
+          type="button"
+          onClick={onStart}
+          aria-label="Start"
+          className="bb-splash-play"
+          disabled={!ready}
+        >
           <Play aria-hidden size={34} fill="currentColor" />
-          START
+          {ready ? 'START' : 'LOADING'}
         </button>
 
         <div className="bb-splash-feature-strip" aria-label="Game features">

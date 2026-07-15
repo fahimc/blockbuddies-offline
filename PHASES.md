@@ -481,3 +481,13 @@
 - [x] Add desktop and mobile Playwright journeys with rendered-canvas pixel checks
 - [x] Guard interior arrival/return positions from stale controller frames
 - [x] Release remounted avatar-preview WebGL contexts for stable repeated customization
+
+## Post-phase saved character profile
+
+- [x] Save completed character profiles with the player name and avatar settings
+- [x] Wait for localForage/IndexedDB save loading before autosaving defaults
+- [x] Send returning players straight from Start into the game with their saved character
+- [x] Preserve legacy saved profiles by detecting non-default names or avatars
+- [x] Add unit coverage for save snapshots, profile restoration, startup routing, and autosave load ordering
+- [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests
+- [x] Bump Android debug APK version metadata to 1.5.9 / 10509

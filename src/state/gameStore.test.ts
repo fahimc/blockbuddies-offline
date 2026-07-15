@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { coinRushTargets, createInitialMiniGame, miniGameDefinition } from '../ai/miniGames'
+import {
+  coinRushTargets,
+  createInitialMiniGame,
+  miniGameDefinition,
+} from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
 import { getLocation } from '../data/world'
-import { defaultAvatar, makeSaveSnapshot, normalizeSavedAvatar, useGameStore } from './gameStore'
+import {
+  defaultAvatar,
+  defaultPlayerName,
+  makeSaveSnapshot,
+  normalizeSavedAvatar,
+  useGameStore,
+} from './gameStore'
 
 describe('avatar save migration', () => {
   it('upgrades the legacy yellow and blue default avatar', () => {
@@ -25,31 +35,47 @@ describe('avatar save migration', () => {
     }
 
     expect(normalizeSavedAvatar(customAvatar)).toMatchObject(customAvatar)
-    expect(normalizeSavedAvatar(customAvatar)?.outfitStyle).toBe(defaultAvatar.outfitStyle)
+    expect(normalizeSavedAvatar(customAvatar)?.outfitStyle).toBe(
+      defaultAvatar.outfitStyle,
+    )
   })
 })
 
 describe('avatar customization selection', () => {
   it('unlocks and applies paid customization items', () => {
     const item = clothingItems[2]
-    useGameStore.setState({ coins: item.cost, unlockedItems: [], avatar: defaultAvatar, chat: [] })
+    useGameStore.setState({
+      coins: item.cost,
+      unlockedItems: [],
+      avatar: defaultAvatar,
+      chat: [],
+    })
 
     useGameStore.getState().selectCustomizationItem(item)
 
     expect(useGameStore.getState().coins).toBe(0)
     expect(useGameStore.getState().unlockedItems).toContain(item.shopItemId)
-    expect(useGameStore.getState().avatar.shirtColor).toBe(item.patch.shirtColor)
+    expect(useGameStore.getState().avatar.shirtColor).toBe(
+      item.patch.shirtColor,
+    )
   })
 
   it('does not unlock paid customization items without enough coins', () => {
     const item = clothingItems[3]
-    useGameStore.setState({ coins: 1, unlockedItems: [], avatar: defaultAvatar, chat: [] })
+    useGameStore.setState({
+      coins: 1,
+      unlockedItems: [],
+      avatar: defaultAvatar,
+      chat: [],
+    })
 
     useGameStore.getState().selectCustomizationItem(item)
 
     expect(useGameStore.getState().coins).toBe(1)
     expect(useGameStore.getState().unlockedItems).not.toContain(item.shopItemId)
-    expect(useGameStore.getState().avatar.shirtColor).toBe(defaultAvatar.shirtColor)
+    expect(useGameStore.getState().avatar.shirtColor).toBe(
+      defaultAvatar.shirtColor,
+    )
   })
 })
 
@@ -61,14 +87,69 @@ describe('player setup flow', () => {
   })
 
   it('includes the character name in save snapshots', () => {
-    useGameStore.setState({ playerName: 'SaveTester' })
+    useGameStore.setState({ playerName: 'SaveTester', profileComplete: true })
 
-    expect(makeSaveSnapshot(useGameStore.getState()).playerName).toBe('SaveTester')
+    expect(makeSaveSnapshot(useGameStore.getState()).playerName).toBe(
+      'SaveTester',
+    )
+    expect(makeSaveSnapshot(useGameStore.getState()).profileComplete).toBe(true)
+  })
+
+  it('persists the current created avatar in save snapshots', () => {
+    const customAvatar = {
+      ...defaultAvatar,
+      bodyColor: '#f1b27a',
+      shirtColor: '#7c3aed',
+      hairStyle: 'curly' as const,
+      hairColor: '#2f1b10',
+      face: 'wink' as const,
+      pantsColor: '#1d4ed8',
+      shoeStyle: 'boots' as const,
+    }
+    useGameStore.setState({
+      profileComplete: true,
+      playerName: 'CustomBuddy',
+      avatar: customAvatar,
+    })
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+
+    expect(snapshot.avatar).toEqual(customAvatar)
+    expect(snapshot.playerName).toBe('CustomBuddy')
+    expect(snapshot.profileComplete).toBe(true)
+  })
+
+  it('restores completed saved profiles with the avatar for returning players', () => {
+    const savedAvatar = {
+      ...defaultAvatar,
+      shirtColor: '#f97316',
+      hairStyle: 'bob' as const,
+      face: 'happy' as const,
+    }
+
+    useGameStore.setState({
+      profileComplete: false,
+      playerName: defaultPlayerName,
+      avatar: defaultAvatar,
+    })
+    useGameStore.getState().loadFromSave({
+      profileComplete: true,
+      playerName: 'ReturnBuddy',
+      avatar: savedAvatar,
+    })
+
+    expect(useGameStore.getState().profileComplete).toBe(true)
+    expect(useGameStore.getState().playerName).toBe('ReturnBuddy')
+    expect(useGameStore.getState().avatar).toEqual(savedAvatar)
   })
 
   it('saves and reapplies local avatar styles', () => {
     useGameStore.setState({
-      avatar: { ...defaultAvatar, shirtColor: '#14b8a6', avatarSource: 'Test Fit' },
+      avatar: {
+        ...defaultAvatar,
+        shirtColor: '#14b8a6',
+        avatarSource: 'Test Fit',
+      },
       savedAvatars: [],
       chat: [],
     })
@@ -99,7 +180,9 @@ describe('mini game store flow', () => {
     useGameStore.getState().startMiniGame('coin-rush', 1_000)
 
     expect(useGameStore.getState().miniGame.status).toBe('running')
-    expect(useGameStore.getState().playerPosition).toEqual(miniGameDefinition('coin-rush').startPosition)
+    expect(useGameStore.getState().playerPosition).toEqual(
+      miniGameDefinition('coin-rush').startPosition,
+    )
     expect(useGameStore.getState().openPanel).toBeUndefined()
     expect(useGameStore.getState().buildMode).toBe(false)
 
@@ -110,7 +193,9 @@ describe('mini game store flow', () => {
     expect(useGameStore.getState().miniGame.status).toBe('completed')
     expect(useGameStore.getState().coins).toBe(35)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
-    expect(useGameStore.getState().miniGame.records['coin-rush']?.bestScore).toBe(8)
+    expect(
+      useGameStore.getState().miniGame.records['coin-rush']?.bestScore,
+    ).toBe(8)
   })
 })
 
@@ -130,7 +215,15 @@ describe('map fast travel', () => {
       buildMode: true,
       sleeping: true,
       interactionPrompt: 'wake',
-      touch: { x: 1, y: -1, lookX: 0, lookY: 0, jump: true, interact: true, run: true },
+      touch: {
+        x: 1,
+        y: -1,
+        lookX: 0,
+        lookY: 0,
+        jump: true,
+        interact: true,
+        run: true,
+      },
       obby: { ...state.obby, active: false },
       miniGame: createInitialMiniGame(),
       chat: [],
@@ -147,14 +240,26 @@ describe('map fast travel', () => {
     expect(state.openPanel).toBeUndefined()
     expect(state.buildMode).toBe(false)
     expect(state.sleeping).toBe(false)
-    expect(state.touch).toEqual({ x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false })
+    expect(state.touch).toEqual({
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    })
     expect(state.chat.at(-1)?.text).toBe('Travelled to Skill School')
 
     useGameStore.getState().setPlayer([0, 0, 4], 0, sequence)
-    expect(useGameStore.getState().playerPosition).toEqual(school.travelPosition)
+    expect(useGameStore.getState().playerPosition).toEqual(
+      school.travelPosition,
+    )
     expect(useGameStore.getState().teleportTarget).toBeDefined()
 
-    useGameStore.getState().setPlayer(school.travelPosition, school.travelYaw, sequence + 1)
+    useGameStore
+      .getState()
+      .setPlayer(school.travelPosition, school.travelYaw, sequence + 1)
     expect(useGameStore.getState().teleportTarget).toBeUndefined()
   })
 

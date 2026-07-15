@@ -1,4 +1,9 @@
-import { ArrowLeft, ChevronRight, CircleDollarSign, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Sparkles,
+} from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { useGameStore } from '../state/gameStore'
@@ -13,12 +18,14 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
   const avatar = useGameStore((state) => state.avatar)
   const coins = useGameStore((state) => state.coins)
   const playerName = useGameStore((state) => state.playerName)
-  const setPlayerName = useGameStore((state) => state.setPlayerName)
+  const completePlayerProfile = useGameStore(
+    (state) => state.completePlayerProfile,
+  )
   const [draftName, setDraftName] = useState(playerName)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    setPlayerName(draftName)
+    completePlayerProfile(draftName)
     onStart()
   }
 
@@ -28,7 +35,12 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
         <div className="bb-town-skyline" />
       </div>
       <header className="bb-customizer-topbar">
-        <button type="button" className="bb-customizer-back" onClick={onBack} aria-label="Back">
+        <button
+          type="button"
+          className="bb-customizer-back"
+          onClick={onBack}
+          aria-label="Back"
+        >
           <ArrowLeft size={30} aria-hidden />
         </button>
         <h2>Name Your Buddy</h2>

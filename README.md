@@ -305,6 +305,11 @@ party and mini-game flows, sprint controls, safer traffic yielding, bed sleep
 interaction, direct camera orbit, and a name screen that does not open the
 keyboard until tapped.
 
+The `v1.5.9` APK saves the character profile created during setup, including the
+chosen avatar and character name. Returning players now go straight from Start
+into the game after the local save loads, and startup autosave waits for
+IndexedDB/localForage so defaults cannot overwrite an existing character.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

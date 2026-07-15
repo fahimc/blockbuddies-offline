@@ -4,12 +4,24 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Known Issues
+
+## [v1.5.9-saved-character-profile] - 2026-07-15
+
+### Added
+
 - Added Ms Maple as a classroom teacher, a readable lesson whiteboard, a teacher desk, and six student desk stations in school interiors.
 - Added reusable chair interactions across classroom chairs, house and lobby sofas, and outdoor benches, with visible chair icons and seated avatar poses.
 - Added Buddy Parking with three enterable cars, mobile and desktop driving controls, braking, steering, collision-safe exits, and obstacle/pedestrian collision handling.
 - Added deterministic unit tests and desktop/mobile Playwright journeys for classroom lessons, sitting, entering cars, driving, braking, and exiting.
 - Added height-aware player gravity with landable solid tops and solid undersides for world, interior, build-mode, traffic, and obby collision objects.
 - Added deterministic tests for object-top landing, low-step traversal, ceiling collision, sleep orientation, wake clearance, 2x run speed, rendered traffic height, and procedural road clearance.
+- Added a completed-profile save flag so created characters are recognised as returning players on later launches.
+- Added focused save-manager regression coverage to prevent autosave from overwriting saved avatars before IndexedDB/localForage finishes loading.
 
 ### Changed
 
@@ -18,6 +30,9 @@
 - Mobile Run is now a press-and-hold control and running is exactly twice walking speed; desktop Shift remains hold-to-run.
 - Obby checkpoint positions now use the rendered platform tops so players land on the course instead of intersecting its blocks.
 - Build-mode and moving-traffic collision heights now match their rendered geometry, including rotated rectangular pieces.
+- The main Start button now waits for local save loading, then sends returning players straight into the game with their saved character.
+- Completing the name screen now saves the character name and avatar as a durable player profile.
+- Updated Android version metadata to `1.5.9` / `10509`.
 
 ### Fixed
 
@@ -28,6 +43,7 @@
 - Routed bed taps and action-button taps through the same controller transition and moved waking players beside the bed at floor height.
 - Prevented players from sinking through furniture and becoming trapped inside collision objects after waking.
 - Removed obsolete stationary red procedural buses that occupied live traffic lanes.
+- Prevented first-launch autosave from racing stored save loading and replacing a previously created character with defaults.
 
 ### Known Issues
 
