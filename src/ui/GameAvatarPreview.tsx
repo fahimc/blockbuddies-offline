@@ -25,6 +25,7 @@ export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvat
       <directionalLight position={[3, 5, 4]} intensity={1.35} />
       <directionalLight position={[-3, 3, 2]} intensity={0.45} />
       <PreviewCamera />
+      <PreviewRendererCleanup />
       <group position={[0, avatarGroundOffset, 0]} rotation={[0, -0.2, 0]} scale={0.86}>
         <BlockAvatar
           bodyColor={avatar.bodyColor}
@@ -50,6 +51,20 @@ export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvat
       </group>
     </Canvas>
   )
+}
+
+function PreviewRendererCleanup() {
+  const renderer = useThree((state) => state.gl)
+
+  useEffect(
+    () => () => {
+      renderer.dispose()
+      renderer.forceContextLoss()
+    },
+    [renderer],
+  )
+
+  return null
 }
 
 function PreviewCamera() {

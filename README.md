@@ -119,6 +119,14 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Indoor prototype rooms include house, shop, school, and tower-lobby layouts
   with walls, furniture, exit pads, indoor minimap context, coarse collision, and
   a contextual sleep/wake interaction on house beds.
+- School classrooms include Ms Maple, a lesson whiteboard, a teacher desk, and
+  six student stations. Chair icons appear near usable classroom chairs, house
+  and lobby sofas, and outdoor benches; selecting one seats the live avatar and
+  exposes a Stand action.
+- Buddy Parking contains three enterable cars. Players can drive, steer, brake,
+  orbit the chase camera, and exit at a collision-safe position. Cars collide
+  with scenery, parked and moving vehicles, buildings, buddies, and local-party
+  players instead of passing through them.
 - Doorway safe zones clear blocking collision from trees, lamp posts, phone
   boxes, traffic props, and user-built props near supported doors.
 - Height-aware visible-object collision prevents the player from walking through
@@ -146,7 +154,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
 - Landscape mobile game HUD with chat icon, status pills, virtual joystick,
   circular jump, hold-to-run, contextual interact, and reset/remove controls.
-  Running is 2x walking speed; desktop players hold Shift to run.
+  Running is 2x walking speed; desktop players hold Shift to run. While driving,
+  the same movement input steers and accelerates, the jump control becomes a
+  hold-to-brake button, and the contextual action exits the car.
 - Touch and mouse dragging on the world view rotates and tilts the third-person
   camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,

@@ -20,6 +20,10 @@ export const avatarGeometry = {
 }
 
 export const avatarBodyBaseY = avatarGeometry.bodyBaseY
+export const avatarSitDrop = 0.35
+export const avatarSeatRootLift = roundUnit(
+  avatarSitDrop - avatarGeometry.bodyBaseY - avatarGeometry.legJointY,
+)
 export const avatarSneakerFootBottomY = roundUnit(
   avatarGeometry.bodyBaseY + avatarGeometry.legJointY + avatarGeometry.sneakerCenterY - avatarGeometry.sneakerHeight / 2,
 )

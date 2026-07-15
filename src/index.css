@@ -871,6 +871,10 @@ canvas {
   background: rgb(15 23 42 / 0.38);
 }
 
+.mobile-jump-button.brake {
+  background: rgb(220 38 38 / 0.88);
+}
+
 .mobile-run-button {
   display: flex;
   width: 3.2rem;

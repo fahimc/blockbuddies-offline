@@ -1,4 +1,5 @@
 import type { ProceduralPiece } from '../data/proceduralWorld'
+import { classroomStations, classroomTeacherDesk } from './classroom'
 import type { BuildBlock, InteriorKind, InteriorVisit, Vec3 } from './types'
 import { avatarGroundOffset, buildPieceDimensions } from './scale'
 import { playerCollisionRadius, type CollisionBox } from './collision'
@@ -148,10 +149,23 @@ export function interiorFurnitureCollisionBoxes(kind: InteriorKind): CollisionBo
   }
   if (kind === 'school') {
     return [
-      { id: 'interior:teacher-desk', center: [0, 0.45, 4.25], half: [1.45, 0.45, 0.52] },
-      { id: 'interior:desk-a', center: [-2.4, 0.38, 0.9], half: [0.72, 0.38, 0.52] },
-      { id: 'interior:desk-b', center: [0, 0.38, 0.9], half: [0.72, 0.38, 0.52] },
-      { id: 'interior:desk-c', center: [2.4, 0.38, 0.9], half: [0.72, 0.38, 0.52] },
+      {
+        id: 'interior:teacher-desk',
+        center: classroomTeacherDesk.position,
+        half: [classroomTeacherDesk.size[0] / 2, classroomTeacherDesk.size[1] / 2, classroomTeacherDesk.size[2] / 2],
+      },
+      ...classroomStations.flatMap((station) => [
+        {
+          id: `interior:desk-${station.id}`,
+          center: station.deskPosition,
+          half: [0.72, 0.38, 0.52] as Vec3,
+        },
+        {
+          id: `interior:chair-${station.id}`,
+          center: [station.chairPosition[0], 0.52, station.chairPosition[2]] as Vec3,
+          half: [0.42, 0.52, 0.42] as Vec3,
+        },
+      ]),
     ]
   }
   if (kind === 'building') {

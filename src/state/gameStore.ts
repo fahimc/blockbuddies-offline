@@ -74,7 +74,19 @@ type TouchInput = {
   run: boolean
 }
 
-type InteractionPrompt = 'sleep' | 'wake'
+export type InteractionPrompt =
+  | 'sleep'
+  | 'wake'
+  | 'sit'
+  | 'stand'
+  | 'enter-vehicle'
+  | 'exit-vehicle'
+
+export type WorldActionRequest = {
+  type: 'seat' | 'vehicle'
+  id: string
+  sequence: number
+}
 
 type TeleportTarget = {
   sequence: number
@@ -123,7 +135,10 @@ type GameState = GameSave & {
   openPanel?: GamePanel
   playerEmote: PlayerEmote
   sleeping: boolean
+  seatedSeatId?: string
+  activeVehicleId?: string
   interactionPrompt?: InteractionPrompt
+  worldActionRequest?: WorldActionRequest
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
   selectedBuildColor: string
@@ -134,7 +149,7 @@ type GameState = GameSave & {
   travelToLocation: (id: LocationId) => boolean
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
-  enterInterior: (interior: InteriorVisit) => void
+  enterInterior: (interior: InteriorVisit, arrivalPosition: Vec3, arrivalYaw: number) => void
   leaveInterior: () => InteriorVisit | undefined
   tickBots: (now: number) => void
   botReact: (botId: string, context: DialogueContext) => void
@@ -152,7 +167,10 @@ type GameState = GameSave & {
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
   setSleeping: (sleeping: boolean) => void
+  setSeatedSeat: (seatId?: string) => void
+  setActiveVehicle: (vehicleId?: string) => void
   setInteractionPrompt: (prompt?: InteractionPrompt) => void
+  requestWorldAction: (type: WorldActionRequest['type'], id: string) => void
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
   setSelectedBuildColor: (color: string) => void
@@ -313,6 +331,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   saveStatus: 'idle',
   playerEmote: 'none',
   sleeping: false,
+  seatedSeatId: undefined,
+  activeVehicleId: undefined,
+  worldActionRequest: undefined,
   buildMode: false,
   selectedBuildPiece: 'block',
   selectedBuildColor: '#38bdf8',
@@ -358,7 +379,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         openPanel: undefined,
         buildMode: false,
         sleeping: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
         interactionPrompt: undefined,
+        worldActionRequest: undefined,
         playerEmote: 'none',
         touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
         chat: [
@@ -372,33 +396,61 @@ export const useGameStore = create<GameState>((set, get) => ({
   setTouch: (input) =>
     set((state) => ({ touch: { ...state.touch, ...input } })),
   setNearbyLocation: (nearbyLocation) => set({ nearbyLocation }),
-  enterInterior: (activeInterior) =>
-    set((state) => ({
-      activeInterior,
-      nearbyLocation: undefined,
-      openPanel: undefined,
-      buildMode: false,
-      sleeping: false,
-      interactionPrompt: undefined,
-      touch: { ...state.touch, interact: false },
-      chat: [
-        ...state.chat.slice(-60),
-        systemMessage(`Entered ${activeInterior.title}`),
-      ],
-    })),
+  enterInterior: (activeInterior, arrivalPosition, arrivalYaw) =>
+    set((state) => {
+      const teleportSequence = state.teleportSequence + 1
+      return {
+        activeInterior,
+        playerPosition: [...arrivalPosition],
+        playerYaw: arrivalYaw,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: [...arrivalPosition],
+          yaw: arrivalYaw,
+        },
+        nearbyLocation: undefined,
+        openPanel: undefined,
+        buildMode: false,
+        sleeping: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
+        interactionPrompt: undefined,
+        worldActionRequest: undefined,
+        touch: { ...state.touch, interact: false },
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`Entered ${activeInterior.title}`),
+        ],
+      }
+    }),
   leaveInterior: () => {
     const activeInterior = get().activeInterior
     if (!activeInterior) return undefined
-    set((state) => ({
-      activeInterior: undefined,
-      sleeping: false,
-      interactionPrompt: undefined,
-      touch: { ...state.touch, interact: false },
-      chat: [
-        ...state.chat.slice(-60),
-        systemMessage(`Left ${activeInterior.title}`),
-      ],
-    }))
+    set((state) => {
+      const teleportSequence = state.teleportSequence + 1
+      return {
+        activeInterior: undefined,
+        playerPosition: [...activeInterior.returnPosition],
+        playerYaw: activeInterior.returnYaw,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: [...activeInterior.returnPosition],
+          yaw: activeInterior.returnYaw,
+        },
+        sleeping: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
+        interactionPrompt: undefined,
+        worldActionRequest: undefined,
+        touch: { ...state.touch, interact: false },
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`Left ${activeInterior.title}`),
+        ],
+      }
+    })
     return activeInterior
   },
   setOpenPanel: (openPanel) => set({ openPanel }),
@@ -542,6 +594,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         ? state
         : {
             sleeping,
+            seatedSeatId: sleeping ? undefined : state.seatedSeatId,
+            activeVehicleId: sleeping ? undefined : state.activeVehicleId,
             playerEmote: sleeping ? 'none' : state.playerEmote,
             interactionPrompt: sleeping ? 'wake' : undefined,
             chat: [
@@ -550,10 +604,50 @@ export const useGameStore = create<GameState>((set, get) => ({
             ],
           },
     ),
+  setSeatedSeat: (seatedSeatId) =>
+    set((state) =>
+      state.seatedSeatId === seatedSeatId
+        ? state
+        : {
+            seatedSeatId,
+            sleeping: false,
+            activeVehicleId: seatedSeatId ? undefined : state.activeVehicleId,
+            playerEmote: seatedSeatId ? 'none' : state.playerEmote,
+            interactionPrompt: seatedSeatId ? 'stand' : undefined,
+            chat: [
+              ...state.chat.slice(-60),
+              systemMessage(seatedSeatId ? 'You sat down' : 'You stood up'),
+            ],
+          },
+    ),
+  setActiveVehicle: (activeVehicleId) =>
+    set((state) =>
+      state.activeVehicleId === activeVehicleId
+        ? state
+        : {
+            activeVehicleId,
+            sleeping: false,
+            seatedSeatId: undefined,
+            playerEmote: 'none',
+            interactionPrompt: activeVehicleId ? 'exit-vehicle' : undefined,
+            chat: [
+              ...state.chat.slice(-60),
+              systemMessage(activeVehicleId ? 'You started driving' : 'You left the car'),
+            ],
+          },
+    ),
   setInteractionPrompt: (interactionPrompt) =>
     set((state) =>
       state.interactionPrompt === interactionPrompt ? state : { interactionPrompt },
     ),
+  requestWorldAction: (type, id) =>
+    set((state) => ({
+      worldActionRequest: {
+        type,
+        id,
+        sequence: (state.worldActionRequest?.sequence ?? 0) + 1,
+      },
+    })),
 
   setBuildMode: (buildMode) =>
     set((state) =>
@@ -565,7 +659,12 @@ export const useGameStore = create<GameState>((set, get) => ({
               systemMessage('Leave the building before using build mode'),
             ],
           }
-        : { buildMode },
+        : {
+            buildMode,
+            seatedSeatId: buildMode ? undefined : state.seatedSeatId,
+            activeVehicleId: buildMode ? undefined : state.activeVehicleId,
+            interactionPrompt: buildMode ? undefined : state.interactionPrompt,
+          },
     ),
   setSelectedBuildPiece: (selectedBuildPiece) => set({ selectedBuildPiece }),
   setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
@@ -769,6 +868,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         playerPosition: obbyStart,
         teleportSequence,
         teleportTarget: { sequence: teleportSequence, position: obbyStart, yaw: 0 },
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
+        interactionPrompt: undefined,
+        worldActionRequest: undefined,
         chat: [...state.chat.slice(-60), systemMessage('Beginner obby started')],
       }
     }),
@@ -818,6 +921,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         teleportTarget: { sequence: teleportSequence, position: definition.startPosition, yaw: 0 },
         activeInterior: undefined,
         buildMode: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
+        interactionPrompt: undefined,
+        worldActionRequest: undefined,
         openPanel: undefined,
         chat: [
           ...state.chat.slice(-60),
@@ -947,7 +1054,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       buildMode: false,
       playerEmote: 'none',
       sleeping: false,
+      seatedSeatId: undefined,
+      activeVehicleId: undefined,
       interactionPrompt: undefined,
+      worldActionRequest: undefined,
       touch: { x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
       selectedBuildPiece: 'block',
       selectedBuildColor: '#38bdf8',
@@ -989,7 +1099,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         ),
         activeInterior: undefined,
         sleeping: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
         interactionPrompt: undefined,
+        worldActionRequest: undefined,
         loading: false,
       }
     }),

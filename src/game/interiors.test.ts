@@ -99,6 +99,8 @@ describe('interior entrances', () => {
     expect(boxes.some((box) => box.id === 'interior:front-left-wall')).toBe(true)
     expect(boxes.some((box) => box.id === 'interior:front-right-wall')).toBe(true)
     expect(boxes.some((box) => box.id === 'interior:teacher-desk')).toBe(true)
+    expect(boxes.filter((box) => box.id.startsWith('interior:chair-'))).toHaveLength(6)
+    expect(boxes.filter((box) => box.id.startsWith('interior:desk-'))).toHaveLength(6)
     expect(interiorExitRadius).toBeGreaterThan(0.9)
     expect(boxes.every((box) => Math.hypot(box.center[0] - interiorExitPosition[0], box.center[2] - interiorExitPosition[2]) > 0.8)).toBe(true)
   })

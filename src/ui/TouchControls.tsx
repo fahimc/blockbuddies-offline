@@ -1,4 +1,4 @@
-import { ArrowUp, BedDouble, Gauge, Hand, RotateCw, X } from 'lucide-react'
+import { Armchair, ArrowUp, BedDouble, CarFront, CircleStop, Gauge, Hand, RotateCw, X } from 'lucide-react'
 import type { PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
@@ -26,6 +26,7 @@ export function TouchControls() {
   const buildMode = useGameStore((state) => state.buildMode)
   const running = useGameStore((state) => state.touch.run)
   const interactionPrompt = useGameStore((state) => state.interactionPrompt)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const joystickRef = useRef<HTMLDivElement>(null)
   const lookDragRef = useRef<{ pointerId: number; x: number; y: number } | undefined>(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
@@ -93,6 +94,22 @@ export function TouchControls() {
     setTouch({ interact: true })
     window.setTimeout(() => useGameStore.getState().setTouch({ interact: false }), 100)
   }
+  const interactionLabel =
+    buildMode
+      ? 'Place'
+      : interactionPrompt === 'sleep'
+        ? 'Sleep'
+        : interactionPrompt === 'wake'
+          ? 'Wake up'
+          : interactionPrompt === 'sit'
+            ? 'Sit'
+            : interactionPrompt === 'stand'
+              ? 'Stand up'
+              : interactionPrompt === 'enter-vehicle'
+                ? 'Drive car'
+                : interactionPrompt === 'exit-vehicle'
+                  ? 'Exit car'
+                  : 'Interact'
 
   return (
     <>
@@ -171,7 +188,7 @@ export function TouchControls() {
             <button type="button" className="mobile-use-button" onClick={rotateBuildPiece} title="Rotate" aria-label="Rotate">
               <RotateCw size={22} aria-hidden />
             </button>
-          ) : (
+          ) : !activeVehicleId ? (
             <button
               type="button"
               className={`mobile-run-button ${running ? 'active' : ''}`}
@@ -186,26 +203,35 @@ export function TouchControls() {
               <Gauge size={20} aria-hidden />
               <span>Run</span>
             </button>
-          )}
+          ) : null}
           <button
             type="button"
             className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
             onClick={pulseInteract}
-            title={buildMode ? 'Place' : interactionPrompt === 'sleep' ? 'Sleep' : interactionPrompt === 'wake' ? 'Wake up' : 'Interact'}
-            aria-label={buildMode ? 'Place' : interactionPrompt === 'sleep' ? 'Sleep' : interactionPrompt === 'wake' ? 'Wake up' : 'Interact'}
+            title={interactionLabel}
+            aria-label={interactionLabel}
           >
-            {interactionPrompt ? <BedDouble size={22} aria-hidden /> : <Hand size={22} aria-hidden />}
+            {interactionPrompt === 'sleep' || interactionPrompt === 'wake' ? (
+              <BedDouble size={22} aria-hidden />
+            ) : interactionPrompt === 'sit' || interactionPrompt === 'stand' ? (
+              <Armchair size={22} aria-hidden />
+            ) : interactionPrompt === 'enter-vehicle' || interactionPrompt === 'exit-vehicle' ? (
+              <CarFront size={22} aria-hidden />
+            ) : (
+              <Hand size={22} aria-hidden />
+            )}
           </button>
         </div>
         <button
           type="button"
-          className="mobile-jump-button"
+          className={`mobile-jump-button ${activeVehicleId ? 'brake' : ''}`}
           onPointerDown={press({ jump: true })}
           onPointerUp={release({ jump: false })}
           onPointerCancel={release({ jump: false })}
-          title="Jump"
+          title={activeVehicleId ? 'Hold to brake' : 'Jump'}
+          aria-label={activeVehicleId ? 'Brake' : 'Jump'}
         >
-          <ArrowUp size={30} aria-hidden />
+          {activeVehicleId ? <CircleStop size={28} aria-hidden /> : <ArrowUp size={30} aria-hidden />}
         </button>
       </div>
       </div>

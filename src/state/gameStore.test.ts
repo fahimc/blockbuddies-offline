@@ -171,3 +171,77 @@ describe('map fast travel', () => {
     expect(useGameStore.getState().chat.at(-1)?.text).toContain('active game')
   })
 })
+
+describe('world interaction state', () => {
+  it('rejects stale controller writes during interior entry and exit', () => {
+    useGameStore.setState({
+      activeInterior: undefined,
+      playerPosition: [0, 0, 4],
+      playerYaw: 0,
+      teleportSequence: 20,
+      teleportTarget: undefined,
+      chat: [],
+    })
+    const visit = {
+      id: 'test-school',
+      title: 'Test School',
+      kind: 'school' as const,
+      returnPosition: [8, 0, -2] as [number, number, number],
+      returnYaw: 1.2,
+    }
+
+    useGameStore.getState().enterInterior(visit, [0, 0, -4.45], 0)
+    expect(useGameStore.getState().teleportSequence).toBe(21)
+    expect(useGameStore.getState().playerPosition).toEqual([0, 0, -4.45])
+
+    useGameStore.getState().setPlayer([99, 0, 99], 2, 20)
+    expect(useGameStore.getState().playerPosition).toEqual([0, 0, -4.45])
+    useGameStore.getState().setPlayer([0, 0, -4.45], 0, 21)
+    expect(useGameStore.getState().teleportTarget).toBeUndefined()
+
+    expect(useGameStore.getState().leaveInterior()).toEqual(visit)
+    expect(useGameStore.getState().teleportSequence).toBe(22)
+    expect(useGameStore.getState().playerPosition).toEqual(visit.returnPosition)
+
+    useGameStore.getState().setPlayer([55, 0, 55], 0, 21)
+    expect(useGameStore.getState().playerPosition).toEqual(visit.returnPosition)
+    useGameStore.getState().setPlayer(visit.returnPosition, visit.returnYaw, 22)
+    expect(useGameStore.getState().teleportTarget).toBeUndefined()
+  })
+
+  it('switches cleanly between sitting and driving states', () => {
+    useGameStore.setState({
+      seatedSeatId: undefined,
+      activeVehicleId: undefined,
+      sleeping: false,
+      interactionPrompt: undefined,
+      chat: [],
+    })
+
+    useGameStore.getState().setSeatedSeat('school-chair-front-left')
+    expect(useGameStore.getState().seatedSeatId).toBe('school-chair-front-left')
+    expect(useGameStore.getState().interactionPrompt).toBe('stand')
+
+    useGameStore.getState().setActiveVehicle('sunny-car')
+    expect(useGameStore.getState().seatedSeatId).toBeUndefined()
+    expect(useGameStore.getState().activeVehicleId).toBe('sunny-car')
+    expect(useGameStore.getState().interactionPrompt).toBe('exit-vehicle')
+
+    useGameStore.getState().setActiveVehicle(undefined)
+    expect(useGameStore.getState().activeVehicleId).toBeUndefined()
+    expect(useGameStore.getState().interactionPrompt).toBeUndefined()
+  })
+
+  it('creates ordered world-action requests for exact 3D icon taps', () => {
+    useGameStore.setState({ worldActionRequest: undefined })
+
+    useGameStore.getState().requestWorldAction('seat', 'seat-a')
+    const first = useGameStore.getState().worldActionRequest
+    useGameStore.getState().requestWorldAction('vehicle', 'car-a')
+    const second = useGameStore.getState().worldActionRequest
+
+    expect(first).toMatchObject({ type: 'seat', id: 'seat-a' })
+    expect(second).toMatchObject({ type: 'vehicle', id: 'car-a' })
+    expect(second!.sequence).toBeGreaterThan(first!.sequence)
+  })
+})

@@ -466,3 +466,18 @@
 - [x] Remove obsolete stationary red buses from procedural traffic lanes
 - [x] Add regression tests for physics, bed transitions, run speed, traffic height, and road clearance
 - [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests
+
+## Post-phase classroom, seating, and drivable parking
+
+- [x] Add a named teacher and readable lesson whiteboard to school classrooms
+- [x] Add a teacher desk and six student desk-and-chair stations
+- [x] Add visible chair actions to classroom chairs, indoor sofas, and outdoor benches
+- [x] Render a grounded seated pose and provide a contextual Stand action
+- [x] Add a marked parking lot with three enterable cars and a clear driveway
+- [x] Add acceleration, reverse, steering, hold-to-brake, chase-camera orbit, and safe exit controls
+- [x] Render the customized live avatar inside the active car
+- [x] Stop driven cars at scenery, buildings, other vehicles, AI buddies, and Local Party players
+- [x] Add deterministic unit tests for lesson data, seat selection, vehicle movement, collision, and exits
+- [x] Add desktop and mobile Playwright journeys with rendered-canvas pixel checks
+- [x] Guard interior arrival/return positions from stale controller frames
+- [x] Release remounted avatar-preview WebGL contexts for stable repeated customization

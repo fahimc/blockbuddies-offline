@@ -152,6 +152,12 @@ test.describe('landscape phone layout', () => {
     await page.getByRole('button', { name: 'Close map' }).click()
 
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
+    await expect
+      .poll(
+        () => page.evaluate(() => JSON.stringify(window.__blockBuddiesE2E!.getGameplaySnapshot())),
+        { timeout: 5000 },
+      )
+      .toContain('"interactionPrompt":"sleep"')
     const sleepAction = page.locator('.mobile-use-button[aria-label="Sleep"]')
     await expect(sleepAction).toBeVisible()
     await page.getByTestId('bed-action-button').click()

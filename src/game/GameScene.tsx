@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { BedDouble } from 'lucide-react'
+import { Armchair, BedDouble, CarFront } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
@@ -12,6 +12,12 @@ import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
 import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
+import {
+  classroomStations,
+  classroomTeacher,
+  classroomTeacherDesk,
+  classroomWhiteboard,
+} from './classroom'
 import {
   collisionBoxesBlockingPlayer,
   playerCollisionRadius,
@@ -43,7 +49,14 @@ import {
   staticBuildingEntrance,
   type InteriorEntrance,
 } from './interiors'
-import { avatarBodyBaseY, avatarGroundOffset, buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import { avatarBodyBaseY, avatarGroundOffset, avatarSitDrop, buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import {
+  nearestSeatTarget,
+  outdoorBenchFixtures,
+  seatDistance,
+  seatMarkerRadius,
+  seatsForContext,
+} from './seating'
 import { playerMovementSpeed } from './movement'
 import { avatarSleepRotation } from './sleepPose'
 import {
@@ -55,6 +68,21 @@ import {
   type TrafficLane,
   type TrafficVehicle,
 } from './traffic'
+import {
+  advanceDrivableVehicleWithCollisions,
+  createParkedVehicles,
+  collisionBoxOverlapsParkingClearance,
+  distanceToVehicle,
+  drivableVehicleCollisionBoxes,
+  nearestDrivableVehicle,
+  parkingLot,
+  parkingLotCollisionBoxes,
+  pedestrianCollisionBoxes,
+  proceduralPieceBlocksParking,
+  safeVehicleExitPosition,
+  vehicleRenderYaw,
+  type DrivableVehicle,
+} from './vehicles'
 import type {
   AvatarBottomStyle,
   AvatarFaceStyle,
@@ -96,19 +124,12 @@ function staticBuilding(id: string, title: string, interiorKind: InteriorKind, x
 const staticTreePositions: Vec3[] = [
   [-18, 0, -17],
   [-8, 0, -17],
-  [8, 0, -17],
-  [18, 0, -17],
+  [18, 0, -22],
+  [22, 0, -8],
   [-20, 0, -16],
   [-20, 0, -5],
   [-20, 0, 6],
   [-20, 0, 17],
-]
-
-const staticBenchPositions: { position: Vec3; rotation: number }[] = [
-  { position: [-6, 0.35, -4], rotation: 0 },
-  { position: [5.5, 0.35, -4], rotation: 0 },
-  { position: [-6, 0.35, 5.2], rotation: Math.PI },
-  { position: [5.5, 0.35, 5.2], rotation: Math.PI },
 ]
 
 const staticLampPositions: Vec3[] = [
@@ -116,7 +137,7 @@ const staticLampPositions: Vec3[] = [
   [4, 0, -7],
   [-4, 0, 8],
   [4, 0, 8],
-  [11, 0, -2],
+  [22, 0, -2],
   [-11, 0, 2],
 ]
 
@@ -131,7 +152,7 @@ const staticCollisionObstacles: CollisionBox[] = [
     center: [position[0], buildPieceDimensions.tree.height / 2, position[2]] as Vec3,
     half: [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2] as Vec3,
   })),
-  ...staticBenchPositions.map(({ position }, index) => ({
+  ...outdoorBenchFixtures.map(({ position }, index) => ({
     id: `static-bench:${index}`,
     center: position,
     half: [1.2, 0.55, 0.45] as Vec3,
@@ -184,17 +205,30 @@ function OutdoorWorld() {
     [trafficLanes, trafficVehicleCount],
   )
   const trafficRuntime = useRef<TrafficVehicle[]>(initialTrafficVehicles)
+  const parkedVehicles = useMemo(() => createParkedVehicles(), [])
+  const drivableRuntime = useRef<DrivableVehicle[]>(parkedVehicles)
 
   useEffect(() => {
     trafficRuntime.current = initialTrafficVehicles
   }, [initialTrafficVehicles])
 
+  useEffect(() => {
+    drivableRuntime.current = parkedVehicles
+  }, [parkedVehicles])
+
   return (
     <>
       <ProceduralBoroughWorld />
       <Town />
+      <SeatActionMarkers />
+      <ParkingLot vehicles={parkedVehicles} runtime={drivableRuntime} />
       <TrafficVehicles lanes={trafficLanes} vehicles={initialTrafficVehicles} runtime={trafficRuntime} />
-      <PlayerController key={`outdoor:${teleportSequence}`} trafficLanes={trafficLanes} trafficRuntime={trafficRuntime} />
+      <PlayerController
+        key={`outdoor:${teleportSequence}`}
+        trafficLanes={trafficLanes}
+        trafficRuntime={trafficRuntime}
+        drivableRuntime={drivableRuntime}
+      />
       <Bots />
       <LocalPartyPlayers />
       <ObbyCourse />
@@ -303,7 +337,7 @@ function ProceduralBoroughWorld() {
 
   return (
     <group>
-      {world.pieces.map((piece) => (
+      {world.pieces.filter((piece) => !proceduralPieceBlocksParking(piece)).map((piece) => (
         <ProceduralPieceMesh key={piece.id} piece={piece} />
       ))}
       <Html position={[0, 3.6, -31]} center zIndexRange={worldHtmlZIndexRange}>
@@ -418,6 +452,7 @@ function InteriorWorld({ interior }: { interior: InteriorVisit }) {
         </span>
       </Html>
       <InteriorProps kind={interior.kind} />
+      <SeatActionMarkers />
       <group position={[4.8, interiorStandingY, -1.8]} rotation={[0, -0.55, 0]}>
         <BlockAvatar
           bodyColor="#f2b07e"
@@ -457,14 +492,36 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
   if (kind === 'school') {
     return (
       <group>
-        <InteriorBox position={[0, 2.05, 5.95]} scale={[4.7, 1.3, 0.12]} color="#0f172a" />
-        <Html center position={[0, 2.08, 5.86]} zIndexRange={worldHtmlZIndexRange}>
-          <span className="text-xs font-black text-white">Build. Explore. Play.</span>
+        <InteriorBox position={classroomWhiteboard.position} scale={[classroomWhiteboard.size[0] + 0.24, classroomWhiteboard.size[1] + 0.24, 0.16]} color="#1e3a8a" />
+        <InteriorBox position={[classroomWhiteboard.position[0], classroomWhiteboard.position[1], classroomWhiteboard.position[2] - 0.09]} scale={classroomWhiteboard.size} color="#f8fafc" />
+        <Html center position={[0, classroomWhiteboard.position[1], classroomWhiteboard.position[2] - 0.18]} zIndexRange={worldHtmlZIndexRange}>
+          <span data-testid="classroom-whiteboard" className="pointer-events-none select-none whitespace-nowrap rounded bg-white/90 px-3 py-1 text-xs font-black text-blue-950">
+            {classroomWhiteboard.lesson}
+          </span>
         </Html>
-        <InteriorBox position={[0, 0.45, 4.25]} scale={[2.9, 0.9, 1.04]} color="#a16207" />
-        {[-2.4, 0, 2.4].map((x) => (
-          <InteriorBox key={x} position={[x, 0.38, 0.9]} scale={[1.44, 0.76, 1.04]} color="#facc15" />
+        <InteriorBox position={classroomTeacherDesk.position} scale={classroomTeacherDesk.size} color="#a16207" />
+        {classroomStations.map((station) => (
+          <group key={station.id}>
+            <InteriorBox position={station.deskPosition} scale={[1.44, 0.76, 1.04]} color="#facc15" />
+            <ClassroomChair position={station.chairPosition} />
+          </group>
         ))}
+        <group position={[classroomTeacher.position[0], interiorStandingY, classroomTeacher.position[2]]} rotation={[0, classroomTeacher.yaw, 0]}>
+          <BlockAvatar
+            bodyColor="#c9825a"
+            shirtColor="#1d4ed8"
+            hairColor="#3b1f12"
+            hairStyle="bob"
+            pantsColor="#172554"
+            outfitStyle="suit"
+            bottomStyle="jeans"
+            shoeStyle="sneakers"
+            accentColor="#facc15"
+            username={classroomTeacher.name}
+            emote="wave"
+            action="idle"
+          />
+        </group>
       </group>
     )
   }
@@ -472,18 +529,202 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
     return (
       <group>
         <InteriorBox position={[0, 0.5, 3.8]} scale={[3.6, 1, 0.96]} color="#334155" />
-        <InteriorBox position={[-4.1, 0.42, 0.6]} scale={[1.1, 0.84, 2.9]} color="#2563eb" />
-        <InteriorBox position={[4.1, 0.42, 0.6]} scale={[1.1, 0.84, 2.9]} color="#2563eb" />
+        <SofaModel position={[-4.1, 0, 0.6]} rotation={Math.PI / 2} color="#2563eb" />
+        <SofaModel position={[4.1, 0, 0.6]} rotation={-Math.PI / 2} color="#2563eb" />
         <InteriorBox position={[0, 2.1, 5.95]} scale={[3.7, 1, 0.12]} color="#bae6fd" emissive="#38bdf8" />
       </group>
     )
   }
   return (
     <group>
-      <InteriorBox position={[-4.1, 0.45, 1.3]} scale={[1.16, 0.9, 3.2]} color="#60a5fa" />
+      <SofaModel position={[-4.1, 0, 1.3]} rotation={Math.PI / 2} color="#60a5fa" />
       <HouseBed />
       <InteriorBox position={[0, 0.42, 1.15]} scale={[1.76, 0.84, 1.76]} color="#a16207" />
       <InteriorBox position={[0, 1.15, 1.15]} scale={[0.72, 0.16, 0.72]} color="#fde68a" />
+    </group>
+  )
+}
+
+function ClassroomChair({ position }: { position: Vec3 }) {
+  return (
+    <group position={position}>
+      <InteriorBox position={[0, 0.48, 0]} scale={[0.72, 0.16, 0.72]} color="#2563eb" />
+      <InteriorBox position={[0, 0.82, -0.31]} scale={[0.72, 0.62, 0.14]} color="#1d4ed8" />
+      {[-0.27, 0.27].flatMap((x) =>
+        [-0.27, 0.27].map((z) => (
+          <InteriorBox key={`${x}-${z}`} position={[x, 0.22, z]} scale={[0.1, 0.44, 0.1]} color="#334155" />
+        )),
+      )}
+    </group>
+  )
+}
+
+function SofaModel({ position, rotation, color }: { position: Vec3; rotation: number; color: string }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <InteriorBox position={[0, 0.38, 0]} scale={[3.2, 0.42, 1.08]} color={color} />
+      <InteriorBox position={[0, 0.82, -0.48]} scale={[3.2, 0.92, 0.2]} color={color} />
+      <InteriorBox position={[-1.5, 0.58, 0]} scale={[0.2, 0.72, 1.08]} color={color} />
+      <InteriorBox position={[1.5, 0.58, 0]} scale={[0.2, 0.72, 1.08]} color={color} />
+    </group>
+  )
+}
+
+function SeatActionMarkers() {
+  const activeInterior = useGameStore((state) => state.activeInterior)
+  const playerPosition = useGameStore((state) => state.playerPosition)
+  const seatedSeatId = useGameStore((state) => state.seatedSeatId)
+  const seats = useMemo(() => seatsForContext(activeInterior?.kind), [activeInterior?.kind])
+
+  return (
+    <group>
+      {seats.map((seat) => {
+        const occupied = seatedSeatId === seat.id
+        if (!occupied && seatDistance(playerPosition, seat) > seatMarkerRadius) return null
+        return (
+          <Html key={seat.id} center position={[seat.position[0], seat.position[1] + 1.2, seat.position[2]]} zIndexRange={worldActionZIndexRange}>
+            <button
+              type="button"
+              className="bb-world-action-button"
+              data-testid={`seat-action-${seat.id}`}
+              aria-label={occupied ? 'Stand up' : `Sit on ${seat.label}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation()
+                pulseWorldAction('seat', seat.id)
+              }}
+            >
+              <Armchair size={18} aria-hidden />
+              {occupied ? 'Stand' : 'Sit'}
+            </button>
+          </Html>
+        )
+      })}
+    </group>
+  )
+}
+
+function pulseWorldAction(type: 'seat' | 'vehicle', id: string) {
+  useGameStore.getState().requestWorldAction(type, id)
+}
+
+function ParkingLot({
+  vehicles,
+  runtime,
+}: {
+  vehicles: DrivableVehicle[]
+  runtime: MutableRefObject<DrivableVehicle[]>
+}) {
+  return (
+    <group data-testid="parking-lot">
+      <mesh receiveShadow position={parkingLot.center}>
+        <boxGeometry args={[parkingLot.width, parkingLot.center[1] * 2, parkingLot.depth]} />
+        <meshStandardMaterial color="#64748b" roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={parkingLot.drivewayCenter}>
+        <boxGeometry args={[parkingLot.drivewayWidth, parkingLot.drivewayCenter[1] * 2, parkingLot.drivewayDepth]} />
+        <meshStandardMaterial color="#64748b" roughness={0.9} />
+      </mesh>
+      {[-21.3, -17.8, -14.4, -10.7].map((z) => (
+        <mesh key={z} position={[parkingLot.center[0], 0.078, z]}>
+          <boxGeometry args={[parkingLot.width * 0.9, 0.02, 0.1]} />
+          <meshStandardMaterial color="#f8fafc" emissive="#f8fafc" emissiveIntensity={0.08} />
+        </mesh>
+      ))}
+      <group position={parkingLot.signPosition}>
+        <mesh castShadow position={[0, 1.05, 0]}>
+          <boxGeometry args={[0.12, 2.1, 0.12]} />
+          <meshStandardMaterial color="#334155" />
+        </mesh>
+        <mesh castShadow position={[0, 2.05, 0]}>
+          <boxGeometry args={[1.05, 0.85, 0.12]} />
+          <meshStandardMaterial color="#2563eb" />
+        </mesh>
+        <Html center position={[0, 2.05, 0.08]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="pointer-events-none select-none text-2xl font-black text-white">P</span>
+        </Html>
+      </group>
+      <Html center position={[parkingLot.center[0], 3.15, parkingLot.center[2] + 4.35]} zIndexRange={worldHtmlZIndexRange}>
+        <span data-testid="parking-lot-label" className="pointer-events-none select-none whitespace-nowrap rounded-lg bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
+          Buddy Parking
+        </span>
+      </Html>
+      {vehicles.map((vehicle) => (
+        <DrivableVehicleMesh key={vehicle.id} vehicle={vehicle} runtime={runtime} />
+      ))}
+    </group>
+  )
+}
+
+function DrivableVehicleMesh({
+  vehicle,
+  runtime,
+}: {
+  vehicle: DrivableVehicle
+  runtime: MutableRefObject<DrivableVehicle[]>
+}) {
+  const group = useRef<THREE.Group>(null)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const avatar = useGameStore((state) => state.avatar)
+  const [nearby, setNearby] = useState(false)
+  const occupied = activeVehicleId === vehicle.id
+
+  useFrame(() => {
+    const current = runtime.current.find((item) => item.id === vehicle.id) ?? vehicle
+    group.current?.position.set(current.position[0], current.position[1], current.position[2])
+    if (group.current) group.current.rotation.y = vehicleRenderYaw(current.yaw)
+    const state = useGameStore.getState()
+    const nextNearby =
+      (!state.activeVehicleId || state.activeVehicleId === vehicle.id) &&
+      !state.activeInterior &&
+      distanceToVehicle(state.playerPosition, current) <= 2.3
+    if (nextNearby !== nearby) setNearby(nextNearby)
+  })
+
+  return (
+    <group ref={group} position={vehicle.position} rotation={[0, vehicleRenderYaw(vehicle.yaw), 0]}>
+      <CarPiece color={vehicle.color} occupied={occupied} />
+      {occupied ? (
+        <group position={[-0.1, 1.15, 0]} rotation={[0, Math.PI / 2, 0]} scale={0.56}>
+          <BlockAvatar
+            bodyColor={avatar.bodyColor}
+            shirtColor={avatar.shirtColor}
+            hairColor={avatar.hairColor}
+            hairStyle={avatar.hairStyle}
+            pantsColor={avatar.pantsColor}
+            eyeColor={avatar.eyeColor}
+            accentColor={avatar.accentColor}
+            secondaryColor={avatar.secondaryColor}
+            outfitStyle={avatar.outfitStyle}
+            bottomStyle={avatar.bottomStyle}
+            shoeStyle={avatar.shoeStyle}
+            shoeColor={avatar.shoeColor}
+            accessory="none"
+            face={avatar.face}
+            username="Driver"
+            showName={false}
+            emote="sit"
+            action="idle"
+          />
+        </group>
+      ) : null}
+      {nearby ? (
+        <Html center position={[0, 2.85, 0]} zIndexRange={worldActionZIndexRange}>
+          <button
+            type="button"
+            className="bb-world-action-button"
+            data-testid={`vehicle-action-${vehicle.id}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              pulseWorldAction('vehicle', vehicle.id)
+            }}
+          >
+            <CarFront size={18} aria-hidden />
+            {occupied ? 'Exit car' : `Drive ${vehicle.label}`}
+          </button>
+        </Html>
+      ) : null}
     </group>
   )
 }
@@ -839,7 +1080,7 @@ function Billboard({ position }: { position: Vec3 }) {
 function Benches() {
   return (
     <group>
-      {staticBenchPositions.map(({ position, rotation }) => (
+      {outdoorBenchFixtures.map(({ position, rotation }) => (
         <group key={position.join(',')} position={position} rotation={[0, rotation, 0]}>
           <mesh castShadow position={[0, 0.15, 0]}>
             <boxGeometry args={[2.1, 0.22, 0.42]} />
@@ -900,9 +1141,11 @@ function Tree({ position }: { position: Vec3 }) {
 function PlayerController({
   trafficLanes = [],
   trafficRuntime,
+  drivableRuntime,
 }: {
   trafficLanes?: TrafficLane[]
   trafficRuntime?: MutableRefObject<TrafficVehicle[]>
+  drivableRuntime?: MutableRefObject<DrivableVehicle[]>
 }) {
   const initialPlayerState = useGameStore.getState()
   const initialPlayerPosition = initialPlayerState.teleportTarget?.position ?? initialPlayerState.playerPosition
@@ -912,11 +1155,13 @@ function PlayerController({
   const [, getKeys] = useKeyboardControls()
   const velocityY = useRef(0)
   const yaw = useRef(initialPlayerYaw)
+  const cameraOrbitYaw = useRef(0)
   const cameraPitch = useRef(0)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
   const lastInteriorTransitionAt = useRef(0)
   const interactionHeld = useRef(false)
+  const lastWorldActionSequence = useRef(0)
   const movingRef = useRef(false)
   const runningRef = useRef(false)
   const airborneRef = useRef(false)
@@ -938,6 +1183,10 @@ function PlayerController({
   const playerEmote = useGameStore((state) => state.playerEmote)
   const sleeping = useGameStore((state) => state.sleeping)
   const setSleeping = useGameStore((state) => state.setSleeping)
+  const seatedSeatId = useGameStore((state) => state.seatedSeatId)
+  const setSeatedSeat = useGameStore((state) => state.setSeatedSeat)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const setActiveVehicle = useGameStore((state) => state.setActiveVehicle)
   const setInteractionPrompt = useGameStore((state) => state.setInteractionPrompt)
   const settings = useGameStore((state) => state.settings)
   const activeInterior = useGameStore((state) => state.activeInterior)
@@ -989,9 +1238,18 @@ function PlayerController({
     })
     return [...staticInteriorEntrances, ...proceduralEntrances, ...buildEntrances]
   }, [activeInterior, placedBlocks, proceduralPieces])
+  const seatTargets = useMemo(() => seatsForContext(activeInterior?.kind), [activeInterior?.kind])
   const collisionObstacles = useMemo(() => {
     if (activeInterior) return interiorCollisionBoxes(activeInterior.kind)
-    const outsideObstacles = [...staticCollisionObstacles, ...proceduralPiecesToCollisionBoxes(proceduralPieces), ...buildBlocksToCollisionBoxes(placedBlocks)]
+    const proceduralObstacles = proceduralPiecesToCollisionBoxes(proceduralPieces).filter(
+      (box) => !collisionBoxOverlapsParkingClearance(box),
+    )
+    const outsideObstacles = [
+      ...staticCollisionObstacles,
+      ...parkingLotCollisionBoxes(),
+      ...proceduralObstacles,
+      ...buildBlocksToCollisionBoxes(placedBlocks),
+    ]
     return filterEntranceSafeZoneCollisions(outsideObstacles, interiorEntrances)
   }, [activeInterior, interiorEntrances, placedBlocks, proceduralPieces])
 
@@ -1005,77 +1263,197 @@ function PlayerController({
     const keys = getKeys()
     const forward = Number(keys.forward) - Number(keys.back) + -touch.y
     const strafe = Number(keys.right) - Number(keys.left) + touch.x
-    const isMoving = Math.abs(forward) > 0.05 || Math.abs(strafe) > 0.05
-    const isRunning = isMoving && (Boolean(keys.run) || touch.run)
-    if (isMoving !== movingRef.current) {
-      movingRef.current = isMoving
-      setMoving(isMoving)
-    }
-    if (isRunning !== runningRef.current) {
-      runningRef.current = isRunning
-      setRunning(isRunning)
-    }
+    const inputMoving = Math.abs(forward) > 0.05 || Math.abs(strafe) > 0.05
+    const inputRunning = inputMoving && (Boolean(keys.run) || touch.run)
     const interacting = Boolean(keys.interact) || touch.interact
     const justInteracted = interacting && !interactionHeld.current
     interactionHeld.current = interacting
-    const turning = strafe * 1.8 * delta
-    yaw.current -= turning
-    if (Math.abs(touch.lookX) > 0.01 || Math.abs(touch.lookY) > 0.01) {
-      yaw.current = yawFromLookDrag(yaw.current, touch.lookX)
-      cameraPitch.current = pitchFromLookDrag(cameraPitch.current, touch.lookY)
-      setTouch({ lookX: 0, lookY: 0 })
-    }
-
-    const direction = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
-    const side = new THREE.Vector3(direction.z, 0, -direction.x)
     const standY = activeInterior ? interiorStandingY : avatarGroundOffset
     let sleepingThisFrame = sleeping && activeInterior?.kind === 'house'
+    let seatedThisFrame = seatedSeatId
+    let activeVehicleThisFrame = activeVehicleId
+    let currentSeat = seatedThisFrame ? seatTargets.find((seat) => seat.id === seatedThisFrame) : undefined
+    let currentVehicle = activeVehicleThisFrame
+      ? drivableRuntime?.current.find((vehicle) => vehicle.id === activeVehicleThisFrame)
+      : undefined
     const nearBed = activeInterior?.kind === 'house' && isNearHouseBed([position.current.x, 0, position.current.z])
+    const trafficObstacles = activeInterior || !trafficRuntime ? [] : trafficCollisionBoxes(trafficLanes, trafficRuntime.current)
+    const parkedVehicleObstacles = activeInterior || !drivableRuntime
+      ? []
+      : drivableVehicleCollisionBoxes(drivableRuntime.current, activeVehicleThisFrame)
+    const solidObstacles = [...collisionObstacles, ...trafficObstacles, ...parkedVehicleObstacles]
+    const request = useGameStore.getState().worldActionRequest
+    const hasWorldRequest = Boolean(request && request.sequence !== lastWorldActionSequence.current)
+    if (hasWorldRequest && request) lastWorldActionSequence.current = request.sequence
+    const requestedSeat =
+      hasWorldRequest && request?.type === 'seat'
+        ? seatTargets.find((seat) => seat.id === request.id && seatDistance([position.current.x, 0, position.current.z], seat) <= seatMarkerRadius)
+        : undefined
+    const requestedVehicle =
+      hasWorldRequest && request?.type === 'vehicle' && drivableRuntime
+        ? drivableRuntime.current.find(
+            (vehicle) => vehicle.id === request.id && distanceToVehicle([position.current.x, 0, position.current.z], vehicle) <= 2.3,
+          )
+        : undefined
+    const nearestSeat = nearestSeatTarget([position.current.x, 0, position.current.z], seatTargets)
+    const nearestVehicle = !activeInterior && drivableRuntime
+      ? nearestDrivableVehicle([position.current.x, 0, position.current.z], drivableRuntime.current)
+      : undefined
+    const wantsWorldAction = justInteracted || hasWorldRequest
+    const worldActionsEnabled = !buildMode && !obby.active && useGameStore.getState().miniGame.status !== 'running'
+    let exitedWorldPose = false
 
     if (sleeping && activeInterior?.kind !== 'house') {
       sleepingThisFrame = false
       setSleeping(false)
     }
-    if (justInteracted && activeInterior?.kind === 'house' && (nearBed || sleepingThisFrame)) {
-      sleepingThisFrame = !sleepingThisFrame
-      setSleeping(sleepingThisFrame)
-      const target = sleepingThisFrame ? houseBedSleepPosition : houseBedWakePosition
-      position.current.set(target[0], target[1], target[2])
-      velocityY.current = 0
+    if (seatedThisFrame && !currentSeat) {
+      seatedThisFrame = undefined
+      setSeatedSeat(undefined)
     }
-    if (sleepingThisFrame && (isMoving || keys.jump || touch.jump)) {
+    if (activeVehicleThisFrame && !currentVehicle) {
+      activeVehicleThisFrame = undefined
+      setActiveVehicle(undefined)
+    }
+
+    if (activeVehicleThisFrame && currentVehicle && wantsWorldAction) {
+      const partyPlayers = Object.values(useLocalPartyStore.getState().remotePlayers)
+        .filter((player) => !player.interiorId)
+        .map((player) => player.position)
+      const exitObstacles = collisionBoxesBlockingPlayer(
+        [
+          ...collisionObstacles,
+          ...trafficObstacles,
+          ...drivableVehicleCollisionBoxes(drivableRuntime?.current ?? [], activeVehicleThisFrame),
+          ...pedestrianCollisionBoxes([...bots.map((bot) => bot.position), ...partyPlayers]),
+        ],
+        avatarGroundOffset,
+      )
+      const exitPosition = safeVehicleExitPosition(currentVehicle, exitObstacles)
+      if (exitPosition) {
+        position.current.set(exitPosition[0], avatarGroundOffset, exitPosition[2])
+        yaw.current = currentVehicle.yaw
+        cameraOrbitYaw.current = 0
+        currentVehicle.speed = 0
+        setActiveVehicle(undefined)
+        activeVehicleThisFrame = undefined
+        currentVehicle = undefined
+        exitedWorldPose = true
+      }
+    }
+
+    if (seatedThisFrame && currentSeat && (wantsWorldAction || inputMoving || keys.jump || touch.jump)) {
+      position.current.set(currentSeat.exitPosition[0], standY, currentSeat.exitPosition[2])
+      yaw.current = currentSeat.yaw
+      cameraOrbitYaw.current = 0
+      velocityY.current = 0
+      setSeatedSeat(undefined)
+      seatedThisFrame = undefined
+      currentSeat = undefined
+      exitedWorldPose = true
+    }
+
+    if (sleepingThisFrame && wantsWorldAction) {
+      sleepingThisFrame = false
+      setSleeping(false)
+      position.current.set(houseBedWakePosition[0], houseBedWakePosition[1], houseBedWakePosition[2])
+      velocityY.current = 0
+      exitedWorldPose = true
+    } else if (sleepingThisFrame && (inputMoving || keys.jump || touch.jump)) {
       sleepingThisFrame = false
       setSleeping(false)
       position.current.set(houseBedWakePosition[0], houseBedWakePosition[1], houseBedWakePosition[2])
       velocityY.current = 0
     }
-    setInteractionPrompt(
-      activeInterior?.kind === 'house' && (nearBed || sleepingThisFrame)
-        ? sleepingThisFrame
-          ? 'wake'
-          : 'sleep'
-        : undefined,
-    )
 
-    if (sleepingThisFrame) {
+    if (!activeVehicleThisFrame && !seatedThisFrame && !sleepingThisFrame && !exitedWorldPose && wantsWorldAction && worldActionsEnabled) {
+      const seatToUse = requestedSeat ?? (!hasWorldRequest ? nearestSeat : undefined)
+      const vehicleToUse = requestedVehicle ?? (!hasWorldRequest ? nearestVehicle : undefined)
+      if (requestedSeat || (!hasWorldRequest && seatToUse && !nearBed)) {
+        currentSeat = seatToUse
+        if (currentSeat) {
+          seatedThisFrame = currentSeat.id
+          position.current.set(currentSeat.position[0], currentSeat.position[1], currentSeat.position[2])
+          yaw.current = currentSeat.yaw
+          cameraOrbitYaw.current = 0
+          velocityY.current = 0
+          setSeatedSeat(currentSeat.id)
+        }
+      } else if (requestedVehicle || (!hasWorldRequest && vehicleToUse && !nearBed)) {
+        currentVehicle = vehicleToUse
+        if (currentVehicle) {
+          activeVehicleThisFrame = currentVehicle.id
+          position.current.set(currentVehicle.position[0], avatarGroundOffset, currentVehicle.position[2])
+          yaw.current = currentVehicle.yaw
+          cameraOrbitYaw.current = 0
+          velocityY.current = 0
+          setActiveVehicle(currentVehicle.id)
+        }
+      } else if (activeInterior?.kind === 'house' && nearBed) {
+        sleepingThisFrame = true
+        setSleeping(true)
+        position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
+        velocityY.current = 0
+      }
+    }
+
+    const poseLocked = Boolean(activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame)
+    if (Math.abs(touch.lookX) > 0.01 || Math.abs(touch.lookY) > 0.01) {
+      if (poseLocked) cameraOrbitYaw.current = yawFromLookDrag(cameraOrbitYaw.current, touch.lookX)
+      else yaw.current = yawFromLookDrag(yaw.current, touch.lookX)
+      cameraPitch.current = pitchFromLookDrag(cameraPitch.current, touch.lookY)
+      setTouch({ lookX: 0, lookY: 0 })
+    }
+
+    let isAirborne = false
+    let effectiveMoving = false
+    let effectiveRunning = false
+
+    if (activeVehicleThisFrame && currentVehicle && drivableRuntime) {
+      const remotePedestrians = Object.values(useLocalPartyStore.getState().remotePlayers)
+        .filter((player) => !player.interiorId)
+        .map((player) => player.position)
+      const vehicleObstacles = [
+        ...collisionObstacles,
+        ...trafficObstacles,
+        ...drivableVehicleCollisionBoxes(drivableRuntime.current, activeVehicleThisFrame),
+        ...pedestrianCollisionBoxes([...bots.map((bot) => bot.position), ...remotePedestrians]),
+      ]
+      const nextVehicle = advanceDrivableVehicleWithCollisions(
+        currentVehicle,
+        { throttle: forward, steer: strafe, brake: Boolean(keys.jump) || touch.jump },
+        delta,
+        vehicleObstacles,
+      )
+      const vehicleIndex = drivableRuntime.current.findIndex((vehicle) => vehicle.id === nextVehicle.id)
+      if (vehicleIndex >= 0) drivableRuntime.current[vehicleIndex] = nextVehicle
+      yaw.current = nextVehicle.yaw
+      position.current.set(nextVehicle.position[0], avatarGroundOffset, nextVehicle.position[2])
+      velocityY.current = 0
+    } else if (seatedThisFrame && currentSeat) {
+      position.current.set(currentSeat.position[0], currentSeat.position[1], currentSeat.position[2])
+      yaw.current = currentSeat.yaw
+      velocityY.current = 0
+    } else if (sleepingThisFrame) {
       position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
       velocityY.current = 0
     } else {
-      const speed = playerMovementSpeed(isRunning)
+      yaw.current -= strafe * 1.8 * delta
+      const direction = new THREE.Vector3(Math.sin(yaw.current), 0, Math.cos(yaw.current))
+      const side = new THREE.Vector3(direction.z, 0, -direction.x)
+      const speed = playerMovementSpeed(inputRunning)
       const desiredPosition = position.current.clone()
       desiredPosition.addScaledVector(direction, forward * speed * delta)
       desiredPosition.addScaledVector(side, strafe * speed * 0.7 * delta)
-      const trafficObstacles = activeInterior || !trafficRuntime ? [] : trafficCollisionBoxes(trafficLanes, trafficRuntime.current)
-      const solidObstacles = [...collisionObstacles, ...trafficObstacles]
       const blockingObstacles = collisionBoxesBlockingPlayer(solidObstacles, position.current.y)
-      const blockingTraffic = collisionBoxesBlockingPlayer(trafficObstacles, position.current.y)
+      const blockingVehicles = collisionBoxesBlockingPlayer([...trafficObstacles, ...parkedVehicleObstacles], position.current.y)
       const resolvedPosition = resolveHorizontalCollision(
         [position.current.x, position.current.y, position.current.z],
         [desiredPosition.x, desiredPosition.y, desiredPosition.z],
         blockingObstacles,
         playerCollisionRadius,
       )
-      const separatedPosition = separateCircleFromBoxes(resolvedPosition, blockingTraffic, playerCollisionRadius + 0.05)
+      const separatedPosition = separateCircleFromBoxes(resolvedPosition, blockingVehicles, playerCollisionRadius + 0.05)
       position.current.x = separatedPosition[0]
       position.current.z = separatedPosition[2]
       const groundY = standY - avatarGroundOffset
@@ -1094,15 +1472,43 @@ function PlayerController({
       })
       position.current.y = vertical.y
       if (vertical.surfaceId) velocityY.current = 0
-    }
-    const trafficObstaclesForGrounding = activeInterior || !trafficRuntime ? [] : trafficCollisionBoxes(trafficLanes, trafficRuntime.current)
-    const isAirborne =
-      !sleepingThisFrame &&
-      !playerIsGrounded(
+      isAirborne = !playerIsGrounded(
         [position.current.x, position.current.y, position.current.z],
-        [...collisionObstacles, ...trafficObstaclesForGrounding],
-        standY - avatarGroundOffset,
+        solidObstacles,
+        groundY,
       )
+      effectiveMoving = inputMoving
+      effectiveRunning = inputRunning
+    }
+
+    const promptSeat = nearestSeatTarget([position.current.x, 0, position.current.z], seatTargets)
+    const promptVehicle = !activeInterior && drivableRuntime
+      ? nearestDrivableVehicle([position.current.x, 0, position.current.z], drivableRuntime.current)
+      : undefined
+    setInteractionPrompt(
+      activeVehicleThisFrame
+        ? 'exit-vehicle'
+        : seatedThisFrame
+          ? 'stand'
+          : sleepingThisFrame
+            ? 'wake'
+            : worldActionsEnabled && activeInterior?.kind === 'house' && isNearHouseBed([position.current.x, 0, position.current.z])
+              ? 'sleep'
+              : worldActionsEnabled && promptSeat
+                ? 'sit'
+                : worldActionsEnabled && promptVehicle
+                  ? 'enter-vehicle'
+                  : undefined,
+    )
+
+    if (effectiveMoving !== movingRef.current) {
+      movingRef.current = effectiveMoving
+      setMoving(effectiveMoving)
+    }
+    if (effectiveRunning !== runningRef.current) {
+      runningRef.current = effectiveRunning
+      setRunning(effectiveRunning)
+    }
     if (isAirborne !== airborneRef.current) {
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
@@ -1113,14 +1519,39 @@ function PlayerController({
     }
 
     group.current?.position.copy(position.current)
-    if (group.current) group.current.rotation.y = sleepingThisFrame ? 0 : yaw.current
+    if (group.current) {
+      group.current.visible = !activeVehicleThisFrame
+      group.current.rotation.y = sleepingThisFrame ? 0 : yaw.current
+    }
     const mobile = state.size.width < 640
-    const cameraDistance = mobile ? -13 : -8
-    const cameraHeight = (mobile ? 7.4 : 5) + cameraPitch.current * 3.2
-    const lookHeight = 1.4 + cameraPitch.current * 1.1
+    const cameraDistance = activeVehicleThisFrame
+      ? mobile
+        ? -15
+        : -10.5
+      : activeInterior
+        ? mobile
+          ? -14
+          : -11
+        : mobile
+          ? -13
+          : -8
+    const baseCameraHeight = activeVehicleThisFrame
+      ? mobile
+        ? 8.4
+        : 6.2
+      : activeInterior
+        ? mobile
+          ? 7
+          : 5.5
+        : mobile
+          ? 7.4
+          : 5
+    const cameraHeight = baseCameraHeight + cameraPitch.current * 3.2
+    const lookHeight = (activeVehicleThisFrame ? 1.8 : 1.4) + cameraPitch.current * 1.1
+    const cameraYaw = yaw.current + (activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame ? cameraOrbitYaw.current : 0)
     const cameraTarget = position.current
       .clone()
-      .add(new THREE.Vector3(Math.sin(yaw.current) * cameraDistance, cameraHeight, Math.cos(yaw.current) * cameraDistance))
+      .add(new THREE.Vector3(Math.sin(cameraYaw) * cameraDistance, cameraHeight, Math.cos(cameraYaw) * cameraDistance))
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
     setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current, controllerTeleportSequence)
@@ -1132,7 +1563,7 @@ function PlayerController({
           position: [position.current.x, position.current.y - standY, position.current.z],
           yaw: yaw.current,
           avatar,
-          action: isAirborne ? 'jump' : isMoving ? (isRunning ? 'run' : 'walk') : 'idle',
+          action: isAirborne ? 'jump' : effectiveMoving ? (effectiveRunning ? 'run' : 'walk') : 'idle',
           interiorId: activeInterior?.id,
         }),
       )
@@ -1141,17 +1572,15 @@ function PlayerController({
 
     const groundPosition: Vec3 = [position.current.x, 0, position.current.z]
     const transitionReady = performance.now() - lastInteriorTransitionAt.current > 850
+    if (activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame) {
+      setNearbyLocation(undefined)
+      return
+    }
     if (activeInterior) {
       setNearbyLocation(undefined)
-      if (transitionReady && (isMoving || keys.interact || touch.interact) && distance2d(groundPosition, interiorExitPosition) < interiorExitRadius) {
+      if (transitionReady && (effectiveMoving || keys.interact || touch.interact) && distance2d(groundPosition, interiorExitPosition) < interiorExitRadius) {
         const previousInterior = leaveInterior()
         if (previousInterior) {
-          position.current.set(previousInterior.returnPosition[0], avatarGroundOffset, previousInterior.returnPosition[2])
-          yaw.current = previousInterior.returnYaw
-          velocityY.current = 0
-          group.current?.position.copy(position.current)
-          if (group.current) group.current.rotation.y = yaw.current
-          setPlayer([position.current.x, 0, position.current.z], yaw.current, controllerTeleportSequence)
           lastInteriorTransitionAt.current = performance.now()
           return
         }
@@ -1159,17 +1588,11 @@ function PlayerController({
       return
     }
 
-    const doorway = transitionReady && (isMoving || keys.interact || touch.interact)
+    const doorway = transitionReady && (effectiveMoving || keys.interact || touch.interact)
       ? nearestInteriorEntrance(groundPosition, interiorEntrances)
       : undefined
     if (doorway) {
-      enterInterior(makeInteriorVisit(doorway))
-      position.current.set(interiorSpawnPosition[0], interiorStandingY, interiorSpawnPosition[2])
-      yaw.current = 0
-      velocityY.current = 0
-      group.current?.position.copy(position.current)
-      if (group.current) group.current.rotation.y = yaw.current
-      setPlayer([position.current.x, 0, position.current.z], yaw.current, controllerTeleportSequence)
+      enterInterior(makeInteriorVisit(doorway), interiorSpawnPosition, 0)
       lastInteriorTransitionAt.current = performance.now()
       return
     }
@@ -1224,8 +1647,8 @@ function PlayerController({
         face={avatar.face}
         username={playerName}
         hat={avatar.hat !== 'none'}
-        emote={sleeping ? 'sleep' : playerEmote}
-        action={airborne ? 'jump' : moving ? (running ? 'run' : 'walk') : 'idle'}
+        emote={sleeping ? 'sleep' : seatedSeatId ? 'sit' : playerEmote}
+        action={seatedSeatId || activeVehicleId ? 'idle' : airborne ? 'jump' : moving ? (running ? 'run' : 'walk') : 'idle'}
       />
     </group>
   )
@@ -1393,6 +1816,7 @@ export function BlockAvatar({
     const currentAction = actionRef.current
     const currentEmote = emoteRef.current
     const sleeping = currentEmote === 'sleep'
+    const sitting = currentEmote === 'sit'
     const walking = currentAction === 'walk' || currentAction === 'run'
     const strideSpeed = currentAction === 'run' ? 11 : 7.5
     const stride = walking ? Math.sin(clock.elapsedTime * strideSpeed) * 0.72 : 0
@@ -1409,24 +1833,24 @@ export function BlockAvatar({
       body.current.position.y = avatarBodyBaseY + (sleeping ? 0.08 : currentAction === 'jump' ? 0.1 : Math.abs(stride) * 0.025 + idle)
     }
     if (leftLeg.current) {
-      leftLeg.current.rotation.x = sleeping ? 0 : stride
-      leftLeg.current.rotation.z = sleeping ? 0 : sideStride
+      leftLeg.current.rotation.x = sleeping ? 0 : sitting ? -1.35 : stride
+      leftLeg.current.rotation.z = sleeping || sitting ? 0 : sideStride
     }
     if (rightLeg.current) {
-      rightLeg.current.rotation.x = sleeping ? 0 : -stride
-      rightLeg.current.rotation.z = sleeping ? 0 : -sideStride
+      rightLeg.current.rotation.x = sleeping ? 0 : sitting ? -1.35 : -stride
+      rightLeg.current.rotation.z = sleeping || sitting ? 0 : -sideStride
     }
     if (leftArm.current) {
-      leftArm.current.rotation.x = sleeping ? -0.12 : wave || -stride * 0.72
+      leftArm.current.rotation.x = sleeping ? -0.12 : sitting ? -0.18 : wave || -stride * 0.72
       leftArm.current.rotation.z = sleeping ? -0.08 : walking ? -sideStride * 0.7 : 0
     }
     if (rightArm.current) {
-      rightArm.current.rotation.x = sleeping ? 0.12 : cheer || stride * 0.72
+      rightArm.current.rotation.x = sleeping ? 0.12 : sitting ? -0.18 : cheer || stride * 0.72
       rightArm.current.rotation.z = sleeping ? 0.08 : walking ? sideStride * 0.7 : 0
     }
   })
 
-  const sitDrop = emote === 'sit' ? -0.35 : 0
+  const sitDrop = emote === 'sit' ? -avatarSitDrop : 0
   const faceStyle = face === 'wow' ? 'surprised' : face
   return (
     <group position={[0, sitDrop, 0]}>
@@ -2127,7 +2551,7 @@ function ShopPiece({ color }: { color: string }) {
   )
 }
 
-function CarPiece({ color }: { color: string }) {
+function CarPiece({ color, occupied = false }: { color: string; occupied?: boolean }) {
   const bodyY = realScale.wheelRadius + realScale.carBodyHeight / 2
   const cabinY = realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight / 2
 
@@ -2139,7 +2563,7 @@ function CarPiece({ color }: { color: string }) {
       </mesh>
       <mesh castShadow position={[0.08, cabinY, -0.02]}>
         <boxGeometry args={[realScale.carLength * 0.46, realScale.carCabinHeight, realScale.carWidth * 0.78]} />
-        <meshStandardMaterial color="#bfdbfe" roughness={0.58} />
+        <meshStandardMaterial color="#bfdbfe" roughness={0.58} transparent={occupied} opacity={occupied ? 0.56 : 1} />
       </mesh>
       {[-realScale.carLength * 0.32, realScale.carLength * 0.32].map((x) =>
         [-realScale.carWidth * 0.48, realScale.carWidth * 0.48].map((z) => (

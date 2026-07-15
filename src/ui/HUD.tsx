@@ -1,7 +1,8 @@
-import { Backpack, Coins, Gamepad2, Sparkles, Trophy } from 'lucide-react'
+import { Armchair, Backpack, CarFront, Coins, Gamepad2, Sparkles, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { miniGameDefinition } from '../ai/miniGames'
 import { getLocation } from '../data/world'
+import { getDrivableVehicle } from '../game/vehicles'
 import { useGameStore } from '../state/gameStore'
 
 export function HUD() {
@@ -11,12 +12,19 @@ export function HUD() {
   const obby = useGameStore((state) => state.obby)
   const miniGame = useGameStore((state) => state.miniGame)
   const saveStatus = useGameStore((state) => state.saveStatus)
+  const seatedSeatId = useGameStore((state) => state.seatedSeatId)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const activeVehicle = activeVehicleId ? getDrivableVehicle(activeVehicleId) : undefined
 
-  const locationLabel = activeInterior
-    ? `Inside ${activeInterior.title}`
-    : nearbyLocation
-      ? getLocation(nearbyLocation).label
-      : undefined
+  const locationLabel = activeVehicle
+    ? `Driving ${activeVehicle.label}`
+    : seatedSeatId
+      ? 'Taking a seat'
+      : activeInterior
+        ? `Inside ${activeInterior.title}`
+        : nearbyLocation
+          ? getLocation(nearbyLocation).label
+          : undefined
   const activeMiniGame =
     miniGame.status === 'running' && miniGame.activeId
       ? miniGameDefinition(miniGame.activeId)
@@ -48,8 +56,8 @@ export function HUD() {
           ) : null}
           {locationLabel ? (
             <Badge
-              icon={<Backpack size={18} />}
-              text={activeInterior ? locationLabel : `Near ${locationLabel}`}
+              icon={activeVehicle ? <CarFront size={18} /> : seatedSeatId ? <Armchair size={18} /> : <Backpack size={18} />}
+              text={activeVehicle || seatedSeatId || activeInterior ? locationLabel : `Near ${locationLabel}`}
               tone="bg-sky-200"
             />
           ) : null}
@@ -82,7 +90,7 @@ export function HUD() {
             />
           ) : null}
           <MobilePill
-            icon={<Sparkles size={14} />}
+            icon={activeVehicle ? <CarFront size={14} /> : seatedSeatId ? <Armchair size={14} /> : <Sparkles size={14} />}
             text={locationLabel ?? saveStatus}
             tone="bg-emerald-500 text-white"
           />

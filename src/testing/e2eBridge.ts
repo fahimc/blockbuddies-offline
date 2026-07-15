@@ -1,7 +1,9 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import type { MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
 import { houseBedWakePosition } from '../game/interiors'
-import { useGameStore } from '../state/gameStore'
+import { seatsForContext } from '../game/seating'
+import { createParkedVehicles, drivableVehicleCollisionBoxes, safeVehicleExitPosition } from '../game/vehicles'
+import { useGameStore, type InteractionPrompt } from '../state/gameStore'
 import {
   makePartySnapshot,
   useLocalPartyStore,
@@ -24,14 +26,23 @@ export type BlockBuddiesE2EBridge = {
   getGameplaySnapshot: () => GameplayE2ESnapshot
   getSnapshot: () => MiniGameE2ESnapshot
   prepareHouseBedInteraction: () => GameplayE2ESnapshot
+  prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
+  prepareParkingInteraction: () => GameplayE2ESnapshot
+  setDriveInput: (throttle: number, steer?: number, brake?: boolean) => GameplayE2ESnapshot
 }
 
 export type GameplayE2ESnapshot = {
   sleeping: boolean
-  interactionPrompt?: 'sleep' | 'wake'
+  interactionPrompt?: InteractionPrompt
   run: boolean
+  seatedSeatId?: string
+  activeVehicleId?: string
   playerPosition: Vec3
   teleportSequence: number
+  interiorKind?: string
+  buildMode: boolean
+  obbyActive: boolean
+  miniGameStatus: string
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -64,20 +75,78 @@ export function installE2EBridge() {
     getGameplaySnapshot,
     getSnapshot,
     prepareHouseBedInteraction,
+    prepareClassroomSeatInteraction,
+    prepareParkingInteraction,
+    setDriveInput,
   }
 }
 
-function prepareHouseBedInteraction() {
+function prepareClassroomSeatInteraction() {
   const game = useGameStore.getState()
-  game.setSleeping(false)
-  game.setPlayer([houseBedWakePosition[0], 0, houseBedWakePosition[2]], 0, game.teleportSequence)
-  game.enterInterior({
-    id: 'e2e-house',
-    title: 'Test House',
-    kind: 'house',
-    returnPosition: [0, 0, 4],
-    returnYaw: 0,
+  const seat = seatsForContext('school').find((target) => target.id.includes('back-centre')) ?? seatsForContext('school')[0]
+  useGameStore.setState({
+    activeInterior: {
+      id: 'e2e-school',
+      title: 'Test Classroom',
+      kind: 'school',
+      returnPosition: [0, 0, 4],
+      returnYaw: 0,
+    },
+    playerPosition: [seat.exitPosition[0], 0, seat.exitPosition[2]],
+    playerYaw: seat.yaw,
+    sleeping: false,
+    seatedSeatId: undefined,
+    activeVehicleId: undefined,
+    interactionPrompt: undefined,
+    worldActionRequest: undefined,
+    touch: { ...game.touch, x: 0, y: 0, jump: false, interact: false, run: false },
   })
+  return getGameplaySnapshot()
+}
+
+function prepareParkingInteraction() {
+  const game = useGameStore.getState()
+  const vehicles = createParkedVehicles()
+  const vehicle = vehicles[0]
+  const arrival = safeVehicleExitPosition(vehicle, drivableVehicleCollisionBoxes(vehicles, vehicle.id))!
+  const teleportSequence = game.teleportSequence + 1
+  useGameStore.setState({
+    activeInterior: undefined,
+    playerPosition: arrival,
+    playerYaw: vehicle.yaw,
+    teleportSequence,
+    teleportTarget: { sequence: teleportSequence, position: arrival, yaw: vehicle.yaw },
+    sleeping: false,
+    seatedSeatId: undefined,
+    activeVehicleId: undefined,
+    interactionPrompt: undefined,
+    worldActionRequest: undefined,
+    touch: { ...game.touch, x: 0, y: 0, jump: false, interact: false, run: false },
+  })
+  return getGameplaySnapshot()
+}
+
+function setDriveInput(throttle: number, steer = 0, brake = false) {
+  useGameStore.getState().setTouch({
+    y: -Math.max(-1, Math.min(1, throttle)),
+    x: Math.max(-1, Math.min(1, steer)),
+    jump: brake,
+  })
+  return getGameplaySnapshot()
+}
+
+function prepareHouseBedInteraction() {
+  useGameStore.getState().enterInterior(
+    {
+      id: 'e2e-house',
+      title: 'Test House',
+      kind: 'house',
+      returnPosition: [0, 0, 4],
+      returnYaw: 0,
+    },
+    [houseBedWakePosition[0], 0, houseBedWakePosition[2]],
+    0,
+  )
   return getGameplaySnapshot()
 }
 
@@ -87,8 +156,14 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     sleeping: game.sleeping,
     interactionPrompt: game.interactionPrompt,
     run: game.touch.run,
+    seatedSeatId: game.seatedSeatId,
+    activeVehicleId: game.activeVehicleId,
     playerPosition: game.playerPosition,
     teleportSequence: game.teleportSequence,
+    interiorKind: game.activeInterior?.kind,
+    buildMode: game.buildMode,
+    obbyActive: game.obby.active,
+    miniGameStatus: game.miniGame.status,
   }
 }
 
