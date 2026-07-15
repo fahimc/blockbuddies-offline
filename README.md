@@ -381,6 +381,11 @@ The `v1.5.22` APK adds broader local sound cues for coins, panels, travel, cars,
 and mini games. It also fixes the minimap coordinate conversion so markers and
 the player arrow track the same screen direction as the character.
 
+The `v1.5.23` APK tightens movement and driving. Players and cars now use swept
+collision checks to avoid tunneling through thin objects, Buddy Parking keeps a
+wider clear zone around cars and the driveway, moving traffic stops behind cars
+ahead, and the Music setting now plays a local procedural background loop.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

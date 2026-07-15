@@ -125,15 +125,27 @@ export function resolvePlayerVerticalCollision({
 }
 
 export function resolveHorizontalCollision(current: Vec3, desired: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius): Vec3 {
-  if (!pointHitsAnyBox(desired, boxes, radius)) return desired
+  if (!pathHitsAnyBox(current, desired, boxes, radius)) return desired
 
   const xOnly: Vec3 = [desired[0], desired[1], current[2]]
-  if (!pointHitsAnyBox(xOnly, boxes, radius)) return xOnly
+  if (!pathHitsAnyBox(current, xOnly, boxes, radius)) return xOnly
 
   const zOnly: Vec3 = [current[0], desired[1], desired[2]]
-  if (!pointHitsAnyBox(zOnly, boxes, radius)) return zOnly
+  if (!pathHitsAnyBox(current, zOnly, boxes, radius)) return zOnly
 
   return current
+}
+
+export function pathHitsAnyBox(current: Vec3, desired: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius) {
+  const distance = Math.hypot(desired[0] - current[0], desired[2] - current[2])
+  const steps = Math.max(1, Math.ceil(distance / Math.max(0.12, radius * 0.55)))
+  for (let step = 1; step <= steps; step += 1) {
+    const t = step / steps
+    const x = current[0] + (desired[0] - current[0]) * t
+    const z = current[2] + (desired[2] - current[2]) * t
+    if (boxes.some((box) => collidesCircleWithBox(x, z, radius, box))) return true
+  }
+  return false
 }
 
 export function separateCircleFromBoxes(point: Vec3, boxes: CollisionBox[], radius = playerCollisionRadius): Vec3 {

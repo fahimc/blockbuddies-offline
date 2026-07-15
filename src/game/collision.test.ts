@@ -3,6 +3,7 @@ import {
   collisionBoxesBlockingPlayer,
   collidesCircleWithBox,
   playerIsGrounded,
+  pathHitsAnyBox,
   resolveHorizontalCollision,
   resolvePlayerVerticalCollision,
   separateCircleFromBoxes,
@@ -37,6 +38,21 @@ describe('collision resolver', () => {
     }
 
     expect(resolveHorizontalCollision([1.2, 0.9, -1], [1.7, 0.9, -0.2], [wall, corner], 0.42)).toEqual([1.2, 0.9, -1])
+  })
+
+  it('blocks swept movement through thin objects even when the endpoint is clear', () => {
+    const thinPost: CollisionBox = {
+      id: 'post',
+      center: [0, 1, 0],
+      half: [0.08, 1, 0.08],
+    }
+
+    expect(pathHitsAnyBox([-1, avatarGroundOffset, 0], [1, avatarGroundOffset, 0], [thinPost], 0.42)).toBe(true)
+    expect(resolveHorizontalCollision([-1, avatarGroundOffset, 0], [1, avatarGroundOffset, 0], [thinPost], 0.42)).toEqual([
+      -1,
+      avatarGroundOffset,
+      0,
+    ])
   })
 
   it('separates the player from moving obstacle boxes that overlap them', () => {

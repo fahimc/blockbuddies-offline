@@ -1,9 +1,5 @@
 import type { ProceduralPiece } from '../data/proceduralWorld'
-import {
-  playerCollisionRadius,
-  pointHitsAnyBox,
-  type CollisionBox,
-} from './collision'
+import { playerCollisionRadius, pointHitsAnyBox, type CollisionBox } from './collision'
 import { realScale } from './scale'
 import type { Vec3 } from './types'
 
@@ -27,9 +23,9 @@ export const parkingLot = {
   width: 9,
   depth: 11,
   drivewayCenter: [5.4, 0.03, -16] as Vec3,
-  drivewayWidth: 0.4,
-  drivewayDepth: 4.4,
-  signPosition: [13.65, 0, -20.45] as Vec3,
+  drivewayWidth: 2.6,
+  drivewayDepth: 5.4,
+  signPosition: [15.9, 0, -21.2] as Vec3,
 }
 
 export const parkedVehicleDefinitions: DrivableVehicle[] = [
@@ -39,6 +35,7 @@ export const parkedVehicleDefinitions: DrivableVehicle[] = [
 ]
 
 export const vehicleInteractionRadius = 1.35
+export const parkingClearancePadding = 2.8
 export const vehicleDriveSpeed = 11
 export const vehicleReverseSpeed = 5.5
 export const vehicleAcceleration = 9
@@ -111,7 +108,7 @@ export function advanceDrivableVehicleWithCollisions(
   obstacles: CollisionBox[],
 ) {
   const candidate = clampVehicleToTown(advanceDrivableVehicle(vehicle, input, deltaSeconds))
-  if (!vehicleOverlapsAnyBox(candidate, obstacles)) return candidate
+  if (!vehicleSweptOverlapsAnyBox(vehicle, candidate, obstacles)) return candidate
 
   const turnOnly = { ...candidate, position: vehicle.position, speed: 0 }
   return vehicleOverlapsAnyBox(turnOnly, obstacles)
@@ -166,11 +163,6 @@ export function parkingLotCollisionBoxes(): CollisionBox[] {
       center: parkingLot.drivewayCenter,
       half: [parkingLot.drivewayWidth / 2, parkingLot.drivewayCenter[1], parkingLot.drivewayDepth / 2],
     },
-    {
-      id: 'parking:sign',
-      center: [parkingLot.signPosition[0], 1.1, parkingLot.signPosition[2]],
-      half: [0.55, 1.1, 0.2],
-    },
   ]
 }
 
@@ -207,6 +199,25 @@ function vehicleOverlapsAnyBox(vehicle: DrivableVehicle, boxes: CollisionBox[]) 
   return boxes.some((box) => boxesOverlap(vehicleBox, box))
 }
 
+function vehicleSweptOverlapsAnyBox(from: DrivableVehicle, to: DrivableVehicle, boxes: CollisionBox[]) {
+  const distance = Math.hypot(to.position[0] - from.position[0], to.position[2] - from.position[2])
+  const steps = Math.max(1, Math.ceil(distance / 0.28))
+  for (let step = 1; step <= steps; step += 1) {
+    const t = step / steps
+    const sample: DrivableVehicle = {
+      ...to,
+      position: [
+        from.position[0] + (to.position[0] - from.position[0]) * t,
+        to.position[1],
+        from.position[2] + (to.position[2] - from.position[2]) * t,
+      ],
+      yaw: from.yaw + (to.yaw - from.yaw) * t,
+    }
+    if (vehicleOverlapsAnyBox(sample, boxes)) return true
+  }
+  return false
+}
+
 function boxesOverlap(a: CollisionBox, b: CollisionBox) {
   return (
     Math.abs(a.center[0] - b.center[0]) < a.half[0] + b.half[0] &&
@@ -217,7 +228,7 @@ function boxesOverlap(a: CollisionBox, b: CollisionBox) {
 }
 
 function overlapsParkingRectangle(center: Vec3, half: Vec3) {
-  const padding = 0.45
+  const padding = parkingClearancePadding
   const lotHalfX = parkingLot.width / 2 + padding
   const lotHalfZ = parkingLot.depth / 2 + padding
   const inLot =

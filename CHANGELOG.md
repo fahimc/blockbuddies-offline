@@ -10,6 +10,30 @@
 
 ### Known Issues
 
+## [v1.5.23-vehicle-clearance-music] - 2026-07-15
+
+### Added
+
+- Added a low-volume procedural background music loop controlled by the existing Music setting.
+- Added regression tests for swept player collision, swept car collision, parking clearance, and traffic stopping behind cars.
+
+### Changed
+
+- Expanded the protected Buddy Parking clearance zone so trees, lamps, and procedural scenery are removed from car bay and driveway space.
+- Moved the parking sign out of the car bay and removed it from blocking vehicle collision.
+- Traffic now stops behind cars ahead in the same lane as well as for pedestrians.
+- Updated Android and package version metadata to `1.5.23` / `10523`.
+
+### Fixed
+
+- Fixed cars and characters being able to tunnel through thin objects during larger frame steps.
+- Fixed parked cars getting stuck on nearby signs, trees, and lamp posts around Buddy Parking.
+- Fixed invisible blockers caused by hiding parking scenery without removing matching static collision.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.22-map-sounds] - 2026-07-15
 
 ### Added

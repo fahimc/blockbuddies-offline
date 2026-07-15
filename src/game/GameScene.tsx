@@ -68,7 +68,7 @@ import {
   staticTreePositions,
 } from './townPlacement'
 import {
-  advanceTrafficForPedestrians,
+  advanceTrafficForObstacles,
   createTrafficVehicles,
   makeTrafficLanes,
   trafficCollisionBoxes,
@@ -115,7 +115,7 @@ const staticCollisionObstacles: CollisionBox[] = [
     center: position,
     half: [scale[0] / 2 + 0.18, scale[1] / 2, scale[2] / 2 + 0.18] as Vec3,
   })),
-  ...staticTreePositions.map((position, index) => ({
+  ...staticTreePositions.filter((position) => !staticTreeBlocksParking(position)).map((position, index) => ({
     id: `static-tree:${index}`,
     center: [position[0], buildPieceDimensions.tree.height / 2, position[2]] as Vec3,
     half: [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2] as Vec3,
@@ -125,7 +125,7 @@ const staticCollisionObstacles: CollisionBox[] = [
     center: position,
     half: [1.2, 0.55, 0.45] as Vec3,
   })),
-  ...staticLampPositions.map((position, index) => ({
+  ...staticLampPositions.filter((position) => !staticLampBlocksParking(position)).map((position, index) => ({
     id: `static-lamp:${index}`,
     center: [position[0], buildPieceDimensions.lamp.height / 2, position[2]] as Vec3,
     half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2] as Vec3,
@@ -232,7 +232,7 @@ function TrafficVehicles({
     runtime.current = runtime.current.map((vehicle) => {
       const vehicleLane = laneById.get(vehicle.laneId)
       return vehicleLane
-        ? advanceTrafficForPedestrians(vehicle, vehicleLane, Math.min(delta, 0.1), pedestrians)
+        ? advanceTrafficForObstacles(vehicle, vehicleLane, Math.min(delta, 0.1), pedestrians, runtime.current)
         : vehicle
     })
   })
@@ -940,7 +940,7 @@ function Town() {
       <Benches />
       <StreetLamps />
 
-      {staticTreePositions.map((position) => (
+      {staticTreePositions.filter((position) => !staticTreeBlocksParking(position)).map((position) => (
         <Tree key={position.join(',')} position={position} />
       ))}
     </group>
@@ -1103,7 +1103,7 @@ function Benches() {
 function StreetLamps() {
   return (
     <group>
-      {staticLampPositions.map((position) => (
+      {staticLampPositions.filter((position) => !staticLampBlocksParking(position)).map((position) => (
         <group key={position.join(',')} position={position}>
           <mesh castShadow position={[0, realScale.lampHeight / 2, 0]}>
             <cylinderGeometry args={[0.08, 0.1, realScale.lampHeight, 10]} />
@@ -2399,6 +2399,22 @@ function MiniGameWorld() {
       ))}
     </group>
   )
+}
+
+function staticTreeBlocksParking(position: Vec3) {
+  return collisionBoxOverlapsParkingClearance({
+    id: 'static-tree-visual',
+    center: [position[0], buildPieceDimensions.tree.height / 2, position[2]],
+    half: [buildPieceDimensions.tree.footprint / 2, buildPieceDimensions.tree.height / 2, buildPieceDimensions.tree.footprint / 2],
+  })
+}
+
+function staticLampBlocksParking(position: Vec3) {
+  return collisionBoxOverlapsParkingClearance({
+    id: 'static-lamp-visual',
+    center: [position[0], buildPieceDimensions.lamp.height / 2, position[2]],
+    half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2],
+  })
 }
 
 function DeliveryDashTarget({

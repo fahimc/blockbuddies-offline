@@ -3,11 +3,13 @@ import { realScale } from './scale'
 import {
   advanceDrivableVehicle,
   advanceDrivableVehicleWithCollisions,
+  collisionBoxOverlapsParkingClearance,
   createParkedVehicles,
   distanceToVehicle,
   drivingSteerFromStrafe,
   drivableVehicleCollisionBox,
   parkingLot,
+  parkingClearancePadding,
   safeVehicleExitPosition,
   vehicleRenderYaw,
 } from './vehicles'
@@ -75,6 +77,30 @@ describe('parking and drivable vehicles', () => {
 
     expect(stopped.position).toEqual(vehicle.position)
     expect(stopped.speed).toBe(0)
+  })
+
+  it('uses swept collision so cars cannot tunnel through thin posts', () => {
+    const vehicle = { ...createParkedVehicles()[0], speed: 11 }
+    const thinPost = {
+      id: 'lamp-post',
+      center: [vehicle.position[0] - realScale.carLength / 2 - 0.8, 1.2, vehicle.position[2]] as [number, number, number],
+      half: [0.08, 1.2, 0.08] as [number, number, number],
+    }
+    const stopped = advanceDrivableVehicleWithCollisions(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1, [thinPost])
+
+    expect(stopped.position).toEqual(vehicle.position)
+    expect(stopped.speed).toBe(0)
+  })
+
+  it('reserves a wider clearance area around the parking bays and driveway', () => {
+    expect(parkingClearancePadding).toBeGreaterThanOrEqual(2.5)
+    const treeNearCarExit = {
+      id: 'tree',
+      center: [parkingLot.center[0] + parkingLot.width / 2 + 1.7, 2, parkingLot.center[2]] as [number, number, number],
+      half: [realScale.treeCanopySize / 2, 2, realScale.treeCanopySize / 2] as [number, number, number],
+    }
+
+    expect(collisionBoxOverlapsParkingClearance(treeNearCarExit)).toBe(true)
   })
 
   it('measures interaction from the car body and finds a clear side exit', () => {

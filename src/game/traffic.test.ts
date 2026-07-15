@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { realScale } from './scale'
 import {
   advanceTraffic,
+  advanceTrafficForObstacles,
   advanceTrafficForPedestrians,
   createTrafficVehicles,
   makeTrafficLanes,
@@ -90,5 +91,15 @@ describe('traffic paths', () => {
 
     expect(advanceTrafficForPedestrians(vehicle, lane, 1, [behind]).offset).toBeGreaterThan(vehicle.offset)
     expect(advanceTrafficForPedestrians(vehicle, lane, 1, [onPavement]).offset).toBeGreaterThan(vehicle.offset)
+  })
+
+  it('stops behind another traffic car in the same lane', () => {
+    const lane = makeTrafficLanes().find((item) => item.id.includes('east'))!
+    const vehicle = { id: 'behind', laneId: lane.id, offset: 30, speed: 5, color: '#fff' }
+    const ahead = { id: 'ahead', laneId: lane.id, offset: 33, speed: 3, color: '#000' }
+    const clearLane = { id: 'other', laneId: `${lane.id}:other`, offset: 31, speed: 3, color: '#000' }
+
+    expect(advanceTrafficForObstacles(vehicle, lane, 1, [], [vehicle, ahead]).stopped).toBe(true)
+    expect(advanceTrafficForObstacles(vehicle, lane, 1, [], [vehicle, clearLane]).stopped).toBe(false)
   })
 })

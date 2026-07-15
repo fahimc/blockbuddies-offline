@@ -74,6 +74,22 @@ export function advanceTrafficForPedestrians(
   return advanceTraffic(vehicle, lane, deltaSeconds)
 }
 
+export function advanceTrafficForObstacles(
+  vehicle: TrafficVehicle,
+  lane: TrafficLane,
+  deltaSeconds: number,
+  pedestrianPositions: Vec3[],
+  trafficVehicles: TrafficVehicle[],
+): TrafficVehicle {
+  if (
+    hasPedestrianAhead(vehicle, lane, pedestrianPositions) ||
+    hasTrafficVehicleAhead(vehicle, lane, trafficVehicles)
+  ) {
+    return { ...vehicle, stopped: true }
+  }
+  return advanceTraffic(vehicle, lane, deltaSeconds)
+}
+
 export function hasPedestrianAhead(vehicle: TrafficVehicle, lane: TrafficLane, pedestrianPositions: Vec3[]) {
   const pose = trafficPositionAt(lane, vehicle.offset)
   const sideX = -lane.direction[2]
@@ -85,6 +101,14 @@ export function hasPedestrianAhead(vehicle: TrafficVehicle, lane: TrafficLane, p
     const ahead = relativeX * lane.direction[0] + relativeZ * lane.direction[2]
     const lateral = Math.abs(relativeX * sideX + relativeZ * sideZ)
     return ahead >= -0.1 && ahead <= trafficPedestrianLookAhead && lateral <= trafficPedestrianHalfWidth
+  })
+}
+
+export function hasTrafficVehicleAhead(vehicle: TrafficVehicle, lane: TrafficLane, trafficVehicles: TrafficVehicle[]) {
+  return trafficVehicles.some((other) => {
+    if (other.id === vehicle.id || other.laneId !== vehicle.laneId) return false
+    const gap = wrapDistance(other.offset - vehicle.offset, lane.length)
+    return gap > 0.05 && gap <= realScale.carLength + 1.2
   })
 }
 

@@ -4,6 +4,7 @@ import { selectAudioCues, type AudioCue, type AudioSnapshot } from './audioCues'
 
 export function GameAudio() {
   const audioEnabled = useGameStore((state) => state.settings.audio)
+  const musicEnabled = useGameStore((state) => state.settings.music)
   const coins = useGameStore((state) => state.coins)
   const openPanel = useGameStore((state) => state.openPanel)
   const activeInteriorId = useGameStore((state) => state.activeInterior?.id)
@@ -38,6 +39,21 @@ export function GameAudio() {
     previous.current = snapshot
     cues.forEach(playCue)
   }, [snapshot])
+
+  useEffect(() => {
+    if (!musicEnabled) return undefined
+    let disposed = false
+    const play = () => {
+      if (!disposed) playMusicBar()
+    }
+    const timeout = window.setTimeout(play, 500)
+    const interval = window.setInterval(play, 4200)
+    return () => {
+      disposed = true
+      window.clearTimeout(timeout)
+      window.clearInterval(interval)
+    }
+  }, [musicEnabled])
 
   return null
 }
@@ -101,6 +117,32 @@ function playTone(
     })
   } catch {
     // Some mobile WebViews block audio until after a direct user gesture.
+  }
+}
+
+function playMusicBar() {
+  try {
+    const context = getAudioContext()
+    if (!context) return
+    if (context.state === 'suspended') void context.resume()
+    const start = context.currentTime
+    const notes = [261.63, 329.63, 392, 523.25, 392, 329.63]
+    notes.forEach((frequency, index) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = 'sine'
+      oscillator.frequency.value = frequency
+      const at = start + index * 0.38
+      gain.gain.setValueAtTime(0.0001, at)
+      gain.gain.exponentialRampToValueAtTime(0.026, at + 0.05)
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.34)
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start(at)
+      oscillator.stop(at + 0.38)
+    })
+  } catch {
+    // Mobile browsers can block music until after the first direct user gesture.
   }
 }
 

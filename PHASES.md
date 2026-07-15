@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase vehicle clearance, collision, and music
+
+- [x] Add swept collision checks for player and drivable cars.
+- [x] Expand Buddy Parking safe zones and remove blocking trees, lamps, signs, and invisible collision from car clearance space.
+- [x] Make moving traffic stop behind cars ahead in the same lane.
+- [x] Add procedural background music controlled by the Music setting.
+- [x] Package and release Android debug APK for the vehicle clearance and music build.
+
 ## Post-phase map and sound polish
 
 - [x] Add shared local sound effects for coins, panels, travel, cars, and mini games.
