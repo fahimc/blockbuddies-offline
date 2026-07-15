@@ -43,6 +43,7 @@ export const vehicleBrakeStrength = 18
 export const vehicleSteeringRate = 1.55
 export const roadDriveClearancePadding = realScale.carWidth / 2 + 0.5
 export const drivableWorldHalfExtent = 104
+export const vehicleTraversableSurfaceTop = 0.2
 
 export function createParkedVehicles() {
   return parkedVehicleDefinitions.map((vehicle) => ({
@@ -127,11 +128,12 @@ export function advanceDrivableVehicleWithCollisions(
   deltaSeconds: number,
   obstacles: CollisionBox[],
 ) {
+  const blockingObstacles = vehicleBlockingObstacles(obstacles)
   const candidate = clampVehicleToTown(advanceDrivableVehicle(vehicle, input, deltaSeconds))
-  if (!vehicleSweptOverlapsAnyBox(vehicle, candidate, obstacles)) return candidate
+  if (!vehicleSweptOverlapsAnyBox(vehicle, candidate, blockingObstacles)) return candidate
 
   const turnOnly = { ...candidate, position: vehicle.position, speed: 0 }
-  return vehicleOverlapsAnyBox(turnOnly, obstacles)
+  return vehicleOverlapsAnyBox(turnOnly, blockingObstacles)
     ? { ...vehicle, speed: 0 }
     : turnOnly
 }
@@ -203,6 +205,10 @@ export function pedestrianCollisionBoxes(positions: Vec3[]) {
   }))
 }
 
+export function vehicleBlockingObstacles(obstacles: CollisionBox[]) {
+  return obstacles.filter((box) => !isLowTraversableVehicleSurface(box))
+}
+
 function parkedVehicle(id: string, label: string, color: string, z: number): DrivableVehicle {
   return {
     id,
@@ -236,6 +242,11 @@ function vehicleSweptOverlapsAnyBox(from: DrivableVehicle, to: DrivableVehicle, 
     if (vehicleOverlapsAnyBox(sample, boxes)) return true
   }
   return false
+}
+
+function isLowTraversableVehicleSurface(box: CollisionBox) {
+  if (box.center[1] + box.half[1] > vehicleTraversableSurfaceTop) return false
+  return /(^|:|-)(ground|road|surface|driveway|parking|pavement|sidewalk|park)(:|-|$)/.test(box.id)
 }
 
 function boxesOverlap(a: CollisionBox, b: CollisionBox) {

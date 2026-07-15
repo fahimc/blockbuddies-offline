@@ -135,7 +135,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   travel destination. Players can drive, steer, brake, orbit the chase camera,
   and exit at a collision-safe position. Cars collide with scenery, parked and
   moving vehicles, buildings, buddies, and local-party players instead of
-  passing through them.
+  passing through them, while low road, driveway, pavement, and parking surface
+  boxes remain driveable instead of acting like invisible walls.
 - Doorway safe zones clear blocking collision from trees, lamp posts, phone
   boxes, traffic props, and user-built props near supported doors.
 - Height-aware visible-object collision prevents the player from walking through
@@ -415,6 +416,11 @@ does not keep an outside camera angle that points movement back toward the exit.
 The `v1.5.29` APK fixes invisible road driving blockers. Drivable cars now use
 the full generated road-network bounds instead of the original small central
 town clamp, so they do not get stuck or pushed backward on open roads.
+
+The `v1.5.30` APK fixes a second open-road driving blocker. Vehicle collision
+now filters low traversable road, driveway, pavement, and parking surface boxes
+so a car can move forward across floor-like road geometry while still stopping
+at posts, buildings, pedestrians, parked cars, and traffic.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase road surface driving
+
+- [x] Reproduce the open-road forward driving block with a vehicle regression test.
+- [x] Ignore low traversable road, pavement, parking, and driveway surface boxes in vehicle collision.
+- [x] Keep walls, posts, pedestrians, traffic, and parked cars as vehicle blockers.
+- [x] Package and release Android debug APK for the road surface driving build.
+
 ## Post-phase road driving bounds
 
 - [x] Reproduce the car road-blocking bug with a vehicle regression test.

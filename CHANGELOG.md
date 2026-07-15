@@ -10,6 +10,25 @@
 
 ### Known Issues
 
+## [v1.5.30-road-surface-driving] - 2026-07-15
+
+### Added
+
+- Added a vehicle regression test for driving forward across low road and driveway surface boxes without invisible blocking.
+
+### Changed
+
+- Vehicle collision now ignores low traversable surface boxes such as roads, pavements, parking slabs, and driveways while preserving collision against real blockers.
+- Updated Android and package version metadata to `1.5.30` / `10530`.
+
+### Fixed
+
+- Fixed cars being unable to move forward on open road or driveway areas when a low surface box was included in the driving obstacle list.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.29-road-driving-bounds] - 2026-07-15
 
 ### Added

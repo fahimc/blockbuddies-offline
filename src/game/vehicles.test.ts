@@ -109,6 +109,30 @@ describe('parking and drivable vehicles', () => {
     expect(stopped.speed).toBe(0)
   })
 
+  it('drives forward across low road and driveway surface boxes without invisible blocking', () => {
+    const vehicle = {
+      ...createParkedVehicles()[0],
+      position: [10, 0.07, -16] as [number, number, number],
+      yaw: Math.PI / 2,
+      speed: 8,
+    }
+    const roadSurface = {
+      id: 'road:surface-at-intersection',
+      center: [vehicle.position[0] + 0.85, 0.04, vehicle.position[2]] as [number, number, number],
+      half: [4, 0.06, 4] as [number, number, number],
+    }
+
+    const moved = advanceDrivableVehicleWithCollisions(
+      vehicle,
+      drivingInputFromControls(1, 0, false),
+      0.1,
+      [roadSurface],
+    )
+
+    expect(moved.position[0]).toBeGreaterThan(vehicle.position[0] + 0.2)
+    expect(moved.speed).toBeGreaterThan(0)
+  })
+
   it('does not stop at the old invisible central-town road boundary', () => {
     const vehicle = {
       ...createParkedVehicles()[0],
