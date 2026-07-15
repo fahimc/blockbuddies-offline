@@ -516,3 +516,11 @@
 - [x] Add deterministic movement-direction and camera-heading tests
 - [x] Add a phone Playwright regression for forward movement after a 180-degree orbit
 - [x] Bump Android debug APK version metadata to 1.5.11 / 10511
+
+## Post-phase visible-camera forward repair
+
+- [x] Derive walking direction from the actual visible camera position instead of only the target orbit yaw
+- [x] Keep avatar turning and orbit preservation compatible with eased chase-camera movement
+- [x] Add deterministic left-orbit and right-orbit camera-view movement tests
+- [x] Update the phone smoke path to validate post-orbit movement without assuming a fixed world axis
+- [x] Bump Android debug APK version metadata to 1.5.12 / 10512

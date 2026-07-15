@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cameraRelativeMovement,
+  cameraViewHeading,
   orbitYawForCameraHeading,
   playerMovementSpeed,
   playerRunMultiplier,
@@ -33,6 +34,25 @@ describe('player movement speed', () => {
     expect(right.z).toBeCloseTo(0)
     expect(Math.hypot(diagonal.x, diagonal.z)).toBeCloseTo(1)
     expect(diagonal.yaw).toBeCloseTo(Math.PI / 4)
+  })
+
+  it('derives forward from the visible camera position after left and right orbit', () => {
+    const player = { x: 0, z: 0 }
+    const cameraOnLeft = { x: -8, z: 0 }
+    const cameraOnRight = { x: 8, z: 0 }
+
+    const leftOrbitForward = cameraRelativeMovement(1, 0, cameraViewHeading(player, cameraOnLeft, 0))
+    const rightOrbitForward = cameraRelativeMovement(1, 0, cameraViewHeading(player, cameraOnRight, 0))
+
+    expect(leftOrbitForward.x).toBeCloseTo(1)
+    expect(leftOrbitForward.z).toBeCloseTo(0)
+    expect(rightOrbitForward.x).toBeCloseTo(-1)
+    expect(rightOrbitForward.z).toBeCloseTo(0)
+  })
+
+  it('falls back to the target orbit heading if the camera is vertically above the player', () => {
+    const fallbackYaw = -0.6
+    expect(cameraViewHeading({ x: 2, z: 4 }, { x: 2, z: 4 }, fallbackYaw)).toBe(fallbackYaw)
   })
 
   it('keeps the camera heading fixed when the avatar turns toward travel', () => {

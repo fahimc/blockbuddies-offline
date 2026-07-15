@@ -10,6 +10,24 @@
 
 ### Known Issues
 
+## [v1.5.12-visible-camera-forward] - 2026-07-15
+
+### Added
+
+- Added deterministic tests for deriving movement heading from the visible camera position after left and right orbit.
+
+### Changed
+
+- Forward movement now uses the current on-screen camera-to-player direction instead of only the target orbit yaw, so joystick and keyboard input follow the view while the chase camera eases into place.
+- Updated the phone smoke test so it no longer assumes forward movement is tied to a fixed world axis after orbiting.
+- Updated Android and package version metadata to `1.5.12` / `10512`.
+
+### Fixed
+
+- Fixed forward input feeling sideways or backward immediately after orbiting the camera left or right.
+
+### Known Issues
+
 ## [v1.5.11-camera-relative-movement] - 2026-07-15
 
 ### Added

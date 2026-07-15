@@ -9,6 +9,11 @@ export type PlanarMovement = {
   magnitude: number
 }
 
+export type PlanarPoint = {
+  x: number
+  z: number
+}
+
 export function playerMovementSpeed(running: boolean) {
   return running ? playerRunSpeed : playerWalkSpeed
 }
@@ -33,6 +38,13 @@ export function cameraRelativeMovement(forward: number, strafe: number, cameraYa
     yaw: Math.atan2(x, z),
     magnitude: Math.min(1, inputMagnitude),
   }
+}
+
+export function cameraViewHeading(player: PlanarPoint, camera: PlanarPoint, fallbackYaw: number) {
+  const x = player.x - camera.x
+  const z = player.z - camera.z
+  if (Math.hypot(x, z) < 0.0001) return fallbackYaw
+  return Math.atan2(x, z)
 }
 
 export function orbitYawForCameraHeading(cameraYaw: number, avatarYaw: number) {

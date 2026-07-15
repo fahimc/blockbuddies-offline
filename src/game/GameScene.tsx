@@ -57,7 +57,7 @@ import {
   seatMarkerRadius,
   seatsForContext,
 } from './seating'
-import { cameraRelativeMovement, orbitYawForCameraHeading, playerMovementSpeed } from './movement'
+import { cameraRelativeMovement, cameraViewHeading, orbitYawForCameraHeading, playerMovementSpeed } from './movement'
 import { avatarSleepRotation } from './sleepPose'
 import {
   coreActivityPositions,
@@ -1436,7 +1436,12 @@ function PlayerController({
       position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
       velocityY.current = 0
     } else {
-      const cameraHeading = yaw.current + cameraOrbitYaw.current
+      const fallbackCameraHeading = yaw.current + cameraOrbitYaw.current
+      const cameraHeading = cameraViewHeading(
+        { x: position.current.x, z: position.current.z },
+        { x: state.camera.position.x, z: state.camera.position.z },
+        fallbackCameraHeading,
+      )
       const movement = cameraRelativeMovement(forward, strafe, cameraHeading)
       if (movement.magnitude > 0) {
         yaw.current = movement.yaw

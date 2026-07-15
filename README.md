@@ -323,6 +323,11 @@ forward now always moves away from the camera after orbiting, while the avatar
 turns toward travel without changing the chosen camera angle. Combined diagonal
 input is normalised to the same maximum speed as straight movement.
 
+The `v1.5.12` APK refines camera-relative movement to use the currently visible
+camera-to-player direction. Forward now follows the view immediately after
+drag-orbiting left or right, even while the chase camera is still easing toward
+its new position.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

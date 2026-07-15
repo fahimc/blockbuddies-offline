@@ -161,7 +161,7 @@ test.describe('landscape phone layout', () => {
     await page.waitForTimeout(450)
     await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0))
     const afterForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
-    expect(afterForward[2]).toBeLessThan(beforeForward[2] - 0.5)
+    expect(Math.hypot(afterForward[0] - beforeForward[0], afterForward[2] - beforeForward[2])).toBeGreaterThan(0.5)
 
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
     await expect
