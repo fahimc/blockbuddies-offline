@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase doorway transition clearance
+
+- [x] Move interior arrival deeper into rooms so the player is clear of exit triggers.
+- [x] Move exterior room return points outside doorway re-entry radius.
+- [x] Clear active touch movement when entering or leaving rooms.
+- [x] Add tests for doorway clearance and transition input reset.
+- [x] Package and release Android debug APK for the doorway clearance build.
+
 ## Post-phase vehicle clearance, collision, and music
 
 - [x] Add swept collision checks for player and drivable cars.

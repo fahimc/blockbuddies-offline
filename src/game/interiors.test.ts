@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { avatarGroundOffset, buildPieceDimensions, buildingCenterPosition, buildingScale } from './scale'
 import {
   buildBlockInteriorEntrance,
+  exteriorDoorClearanceDistance,
   filterEntranceSafeZoneCollisions,
   interiorCollisionBoxes,
   interiorExitPosition,
   interiorExitRadius,
+  interiorSpawnPosition,
   interiorStandingY,
   houseBedCenter,
   houseBedSleepPosition,
@@ -35,6 +37,8 @@ describe('interior entrances', () => {
     expect(entrance.position[0]).toBeCloseTo(12)
     expect(entrance.position[2]).toBeGreaterThan(-7 + scale[2] / 2)
     expect(entrance.returnPosition[2]).toBeGreaterThan(entrance.position[2])
+    expect(entrance.returnPosition[2] - entrance.position[2]).toBeCloseTo(exteriorDoorClearanceDistance)
+    expect(nearestInteriorEntrance(entrance.returnPosition, [entrance])).toBeUndefined()
     expect(makeInteriorVisit(entrance)).toMatchObject({ id: 'coin-shop', title: 'Coin Shop', kind: 'shop' })
   })
 
@@ -53,6 +57,8 @@ describe('interior entrances', () => {
     expect(entrance?.kind).toBe('house')
     expect(entrance?.position[0]).toBeGreaterThan(4 + buildPieceDimensions.house.depth / 2)
     expect(entrance?.position[2]).toBeCloseTo(8)
+    expect((entrance?.returnPosition[0] ?? 0) - (entrance?.position[0] ?? 0)).toBeCloseTo(exteriorDoorClearanceDistance)
+    expect(entrance ? nearestInteriorEntrance(entrance.returnPosition, [entrance]) : undefined).toBeUndefined()
     expect(entrance?.returnYaw).toBeCloseTo(Math.PI / 2)
   })
 
@@ -70,6 +76,8 @@ describe('interior entrances', () => {
     expect(entrance).toMatchObject({ id: 'procedural:building:1:2:0:door', kind: 'house', title: 'Borough House' })
     expect(entrance?.position[2]).toBeGreaterThan(23)
     expect(entrance?.returnPosition[2]).toBeGreaterThan(entrance?.position[2] ?? 0)
+    expect((entrance?.returnPosition[2] ?? 0) - (entrance?.position[2] ?? 0)).toBeCloseTo(exteriorDoorClearanceDistance)
+    expect(entrance ? nearestInteriorEntrance(entrance.returnPosition, [entrance]) : undefined).toBeUndefined()
   })
 
   it('selects only doorways that the player has actually walked into', () => {
@@ -102,6 +110,9 @@ describe('interior entrances', () => {
     expect(boxes.filter((box) => box.id.startsWith('interior:chair-'))).toHaveLength(6)
     expect(boxes.filter((box) => box.id.startsWith('interior:desk-'))).toHaveLength(6)
     expect(interiorExitRadius).toBeGreaterThan(0.9)
+    expect(Math.hypot(interiorSpawnPosition[0] - interiorExitPosition[0], interiorSpawnPosition[2] - interiorExitPosition[2])).toBeGreaterThan(
+      interiorExitRadius + playerCollisionRadius + 0.75,
+    )
     expect(boxes.every((box) => Math.hypot(box.center[0] - interiorExitPosition[0], box.center[2] - interiorExitPosition[2]) > 0.8)).toBe(true)
   })
 

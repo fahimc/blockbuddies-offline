@@ -125,7 +125,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   schools, procedural borough buildings, and player-built houses/shops/towers.
 - Indoor prototype rooms include house, shop, school, and tower-lobby layouts
   with walls, furniture, exit pads, indoor minimap context, coarse collision, and
-  a contextual sleep/wake interaction on house beds.
+  a contextual sleep/wake interaction on house beds. Room arrival and exit points
+  keep the player clear of doorway triggers so transitions do not loop.
 - School classrooms include Ms Maple, a lesson whiteboard, a teacher desk, and
   six student stations. Chair icons appear near usable classroom chairs, house
   and lobby sofas, and outdoor benches; selecting one seats the live avatar and
@@ -401,6 +402,11 @@ The `v1.5.26` APK adds a room camera zoom slider. When the player is inside a
 house, classroom, shop, or other interior, a compact slider appears so the room
 camera can be pulled back or zoomed in. The setting is saved and also adjusts
 interior camera FOV for tight rooms.
+
+The `v1.5.27` APK fixes doorway transition clearance. Entering a room places the
+player deeper inside, leaving a room returns the player outside the doorway
+trigger radius, and active touch movement is cleared during transitions so held
+joystick input cannot bounce the player in and out.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

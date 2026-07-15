@@ -7,6 +7,7 @@ import {
 } from '../ai/miniGames'
 import { clothingItems } from '../data/avatarCustomization'
 import { getLocation } from '../data/world'
+import { interiorSpawnPosition } from '../game/interiors'
 import {
   defaultAvatar,
   defaultPlayerName,
@@ -335,6 +336,15 @@ describe('world interaction state', () => {
       playerYaw: 0,
       teleportSequence: 20,
       teleportTarget: undefined,
+      touch: {
+        x: 1,
+        y: -1,
+        lookX: 0.4,
+        lookY: -0.2,
+        jump: true,
+        interact: true,
+        run: true,
+      },
       chat: [],
     })
     const visit = {
@@ -345,18 +355,36 @@ describe('world interaction state', () => {
       returnYaw: 1.2,
     }
 
-    useGameStore.getState().enterInterior(visit, [0, 0, -4.45], 0)
+    useGameStore.getState().enterInterior(visit, interiorSpawnPosition, 0)
     expect(useGameStore.getState().teleportSequence).toBe(21)
-    expect(useGameStore.getState().playerPosition).toEqual([0, 0, -4.45])
+    expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
+    expect(useGameStore.getState().touch).toEqual({
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    })
 
     useGameStore.getState().setPlayer([99, 0, 99], 2, 20)
-    expect(useGameStore.getState().playerPosition).toEqual([0, 0, -4.45])
-    useGameStore.getState().setPlayer([0, 0, -4.45], 0, 21)
+    expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
+    useGameStore.getState().setPlayer(interiorSpawnPosition, 0, 21)
     expect(useGameStore.getState().teleportTarget).toBeUndefined()
 
     expect(useGameStore.getState().leaveInterior()).toEqual(visit)
     expect(useGameStore.getState().teleportSequence).toBe(22)
     expect(useGameStore.getState().playerPosition).toEqual(visit.returnPosition)
+    expect(useGameStore.getState().touch).toEqual({
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    })
 
     useGameStore.getState().setPlayer([55, 0, 55], 0, 21)
     expect(useGameStore.getState().playerPosition).toEqual(visit.returnPosition)

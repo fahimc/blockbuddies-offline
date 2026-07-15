@@ -513,7 +513,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         activeVehicleId: undefined,
         interactionPrompt: undefined,
         worldActionRequest: undefined,
-        touch: { ...state.touch, interact: false },
+        touch: {
+          x: 0,
+          y: 0,
+          lookX: 0,
+          lookY: 0,
+          jump: false,
+          interact: false,
+          run: false,
+        },
         chat: [
           ...state.chat.slice(-60),
           systemMessage(`Entered ${activeInterior.title}`),
@@ -540,7 +548,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         activeVehicleId: undefined,
         interactionPrompt: undefined,
         worldActionRequest: undefined,
-        touch: { ...state.touch, interact: false },
+        touch: {
+          x: 0,
+          y: 0,
+          lookX: 0,
+          lookY: 0,
+          jump: false,
+          interact: false,
+          run: false,
+        },
         chat: [
           ...state.chat.slice(-60),
           systemMessage(`Left ${activeInterior.title}`),

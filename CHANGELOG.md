@@ -10,6 +10,26 @@
 
 ### Known Issues
 
+## [v1.5.27-doorway-clearance] - 2026-07-15
+
+### Added
+
+- Added regression coverage for clear interior spawn and exterior doorway return positions.
+
+### Changed
+
+- Moved interior arrival deeper into rooms and moved exterior return points farther away from doors.
+- Cleared active touch movement on room entry and exit so held joystick input cannot immediately re-trigger the doorway.
+- Updated Android and package version metadata to `1.5.27` / `10527`.
+
+### Fixed
+
+- Fixed players getting stuck in enter/exit loops when leaving and re-entering rooms near a doorway.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.26-room-camera-zoom] - 2026-07-15
 
 ### Added

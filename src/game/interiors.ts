@@ -14,11 +14,12 @@ export type InteriorEntrance = {
   returnYaw: number
 }
 
-export const interiorSpawnPosition: Vec3 = [0, 0, -4.45]
+export const interiorSpawnPosition: Vec3 = [0, 0, -3.35]
 export const interiorExitPosition: Vec3 = [0, 0, -5.95]
 export const interiorExitRadius = 1.05
 export const interiorStandingY = avatarGroundOffset
 export const entranceSafeZoneRadius = 1.85
+export const exteriorDoorClearanceDistance = 2.45
 export const houseBedCenter: Vec3 = [3.8, 0.38, 2.8]
 export const houseBedHalfSize: Vec3 = [1.3, 0.38, 1.75]
 export const houseBedHeadboardZ = 4.2
@@ -122,7 +123,7 @@ export function proceduralDoorEntrance(piece: ProceduralPiece): InteriorEntrance
     kind: title.includes('Shop') ? 'shop' : title === 'Town Hall' ? 'school' : 'house',
     position: [piece.position[0], 0, piece.position[2] + 0.34],
     radius: 1.05,
-    returnPosition: [piece.position[0], 0, piece.position[2] + 1.35],
+    returnPosition: [piece.position[0], 0, piece.position[2] + 0.34 + exteriorDoorClearanceDistance],
     returnYaw: 0,
   }
 }
@@ -226,7 +227,7 @@ function buildingEntrance({
     kind,
     position: doorPosition,
     radius: 1.15,
-    returnPosition: [doorPosition[0] + outward[0] * 1.15, 0, doorPosition[2] + outward[1] * 1.15],
+    returnPosition: [doorPosition[0] + outward[0] * exteriorDoorClearanceDistance, 0, doorPosition[2] + outward[1] * exteriorDoorClearanceDistance],
     returnYaw: yaw,
   }
 }
