@@ -5,6 +5,7 @@ import {
   advanceDrivableVehicleWithCollisions,
   createParkedVehicles,
   distanceToVehicle,
+  drivingSteerFromStrafe,
   drivableVehicleCollisionBox,
   parkingLot,
   safeVehicleExitPosition,
@@ -35,15 +36,32 @@ describe('parking and drivable vehicles', () => {
 
   it('steers, reverses, and brakes without exceeding configured motion', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 5 }
-    const steeredRight = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 1, brake: false }, 0.1)
-    const steeredLeft = advanceDrivableVehicle(vehicle, { throttle: 1, steer: -1, brake: false }, 0.1)
+    const positiveSteer = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 1, brake: false }, 0.1)
+    const negativeSteer = advanceDrivableVehicle(vehicle, { throttle: 1, steer: -1, brake: false }, 0.1)
     const reversed = advanceDrivableVehicle({ ...vehicle, speed: -2 }, { throttle: -1, steer: 0, brake: false }, 0.1)
     const braked = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 0, brake: true }, 0.1)
 
-    expect(steeredRight.yaw).toBeGreaterThan(vehicle.yaw)
-    expect(steeredLeft.yaw).toBeLessThan(vehicle.yaw)
+    expect(positiveSteer.yaw).toBeGreaterThan(vehicle.yaw)
+    expect(negativeSteer.yaw).toBeLessThan(vehicle.yaw)
     expect(reversed.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(Math.abs(braked.speed)).toBeLessThan(Math.abs(vehicle.speed))
+  })
+
+  it('maps screen left and right controls to the expected car turn direction', () => {
+    const vehicle = { ...createParkedVehicles()[0], speed: 5 }
+    const fromLeftControl = advanceDrivableVehicle(vehicle, {
+      throttle: 1,
+      steer: drivingSteerFromStrafe(-1),
+      brake: false,
+    }, 0.1)
+    const fromRightControl = advanceDrivableVehicle(vehicle, {
+      throttle: 1,
+      steer: drivingSteerFromStrafe(1),
+      brake: false,
+    }, 0.1)
+
+    expect(fromLeftControl.yaw).toBeGreaterThan(vehicle.yaw)
+    expect(fromRightControl.yaw).toBeLessThan(vehicle.yaw)
   })
 
   it('stops against solid objects instead of passing through them', () => {

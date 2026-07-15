@@ -157,7 +157,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Landscape mobile game HUD with chat icon, status pills, virtual joystick,
   circular jump, hold-to-run, contextual interact, and reset/remove controls.
   Running is 2x walking speed; desktop players hold Shift to run. While driving,
-  the same movement input steers and accelerates, the jump control becomes a
+  left/right screen input is mapped through the car steering adapter so it turns
+  in the pressed direction, the same movement input accelerates, and jump becomes a
   hold-to-brake button, and the contextual action exits the car.
 - Touch and mouse dragging on the world view rotates and tilts the third-person
   camera independently from the movement joystick.
@@ -340,6 +341,9 @@ prompt is hidden on phone layouts.
 
 The `v1.5.15` APK fixes car steering direction so left and right drive input
 turn the vehicle the same way the player is pressing.
+
+The `v1.5.16` APK fixes the remaining driving control mapping issue where left
+screen input could still turn the car right.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

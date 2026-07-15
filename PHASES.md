@@ -551,3 +551,10 @@
 - [x] Add unit coverage for both right and left steering directions
 - [x] Re-run vehicle Playwright coverage for car entry, driving, braking, and exit
 - [x] Bump Android debug APK version metadata to 1.5.15 / 10515
+
+## Post-phase driving control mapping fix
+
+- [x] Invert only the driving strafe-to-steer adapter so walking controls stay unchanged
+- [x] Add regression coverage for left screen input turning the car left instead of right
+- [x] Re-run focused vehicle and touch-control tests
+- [x] Bump Android debug APK version metadata to 1.5.16 / 10516

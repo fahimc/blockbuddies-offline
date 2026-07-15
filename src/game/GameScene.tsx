@@ -81,6 +81,7 @@ import {
   createParkedVehicles,
   collisionBoxOverlapsParkingClearance,
   distanceToVehicle,
+  drivingSteerFromStrafe,
   drivableVehicleCollisionBoxes,
   nearestDrivableVehicle,
   parkingLot,
@@ -1420,7 +1421,7 @@ function PlayerController({
       ]
       const nextVehicle = advanceDrivableVehicleWithCollisions(
         currentVehicle,
-        { throttle: forward, steer: strafe, brake: Boolean(keys.jump) || touch.jump },
+        { throttle: forward, steer: drivingSteerFromStrafe(strafe), brake: Boolean(keys.jump) || touch.jump },
         delta,
         vehicleObstacles,
       )

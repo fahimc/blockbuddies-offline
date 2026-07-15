@@ -100,6 +100,10 @@ export function advanceDrivableVehicle(vehicle: DrivableVehicle, input: DriveInp
   return { ...vehicle, position, yaw, speed }
 }
 
+export function drivingSteerFromStrafe(strafe: number) {
+  return -clamp(strafe, -1, 1)
+}
+
 export function advanceDrivableVehicleWithCollisions(
   vehicle: DrivableVehicle,
   input: DriveInput,

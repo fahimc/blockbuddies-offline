@@ -10,6 +10,24 @@
 
 ### Known Issues
 
+## [v1.5.16-driving-control-mapping] - 2026-07-15
+
+### Added
+
+- Added regression coverage for the screen left/right driving control mapping.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.16` / `10516`.
+
+### Fixed
+
+- Fixed left driving input turning the car right by adapting screen strafe input to the car steering direction.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.15-driving-steering-direction] - 2026-07-15
 
 ### Added
