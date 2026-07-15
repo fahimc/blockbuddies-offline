@@ -98,8 +98,11 @@ test.describe('mobile vehicle controls', () => {
     await page.getByRole('button', { name: 'Drive Sunny Car' }).click()
 
     await expect(page.getByRole('button', { name: 'Run' })).toBeHidden()
+    await expect(page.getByLabel('Driving joystick')).toBeVisible()
+    await expect(page.locator('.joystick-mode-label')).toHaveText('Drive')
     await expect(page.getByRole('button', { name: 'Brake' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Exit car' }).last()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Exit car' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Toggle emotes' })).toBeHidden()
     const pixels = await canvasPixelStats(page)
     expect(pixels.visibleSamples).toBeGreaterThan(500)
     expect(pixels.colourBuckets).toBeGreaterThan(8)

@@ -87,4 +87,19 @@ describe('TouchControls', () => {
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Toggle emotes' })).not.toBeInTheDocument()
   })
+
+  it('switches to driving controls with a dedicated exit button in a car', () => {
+    useGameStore.setState({
+      activeVehicleId: 'sunny-car',
+      interactionPrompt: 'exit-vehicle',
+    })
+    render(<TouchControls />)
+
+    expect(screen.getByLabelText('Driving joystick')).toBeInTheDocument()
+    expect(screen.getByText('Drive')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Brake' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Exit car' })).toHaveTextContent('Exit')
+    expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Toggle emotes' })).not.toBeInTheDocument()
+  })
 })

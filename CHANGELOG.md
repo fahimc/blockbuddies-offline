@@ -10,6 +10,26 @@
 
 ### Known Issues
 
+## [v1.5.14-driving-controls] - 2026-07-15
+
+### Added
+
+- Added an explicit mobile driving joystick state when the player enters a car.
+- Added a dedicated mobile Exit car button while driving.
+- Added unit and Playwright coverage for car entry, driving controls, braking, and exit controls.
+
+### Changed
+
+- Mobile controls now switch from normal Run/Emote/Jump controls to Drive/Exit/Brake controls while in a car.
+- The old floating in-world Exit car prompt is hidden on mobile so the dedicated exit button is the only phone exit action.
+- Updated Android and package version metadata to `1.5.14` / `10514`.
+
+### Fixed
+
+- Fixed vehicle mode still looking too much like the normal walking control layout on mobile.
+
+### Known Issues
+
 ## [v1.5.13-menu-reset-emotes] - 2026-07-15
 
 ### Added

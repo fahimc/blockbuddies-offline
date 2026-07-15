@@ -685,7 +685,7 @@ function DrivableVehicleMesh({
         <Html center position={[0, 2.85, 0]} zIndexRange={worldActionZIndexRange}>
           <button
             type="button"
-            className="bb-world-action-button"
+            className={`bb-world-action-button ${occupied ? 'vehicle-exit-world' : ''}`}
             data-testid={`vehicle-action-${vehicle.id}`}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {

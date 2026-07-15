@@ -534,3 +534,13 @@
 - [x] Preserve contextual build remove and active mini-game cancel controls
 - [x] Add unit and mobile smoke coverage for menu reset and emote cycling
 - [x] Bump Android debug APK version metadata to 1.5.13 / 10513
+
+## Post-phase vehicle driving controls
+
+- [x] Keep nearby car entry through visible Drive car prompts
+- [x] Switch mobile controls to a Drive joystick while a car is active
+- [x] Replace normal mobile emotes with a dedicated Exit car button while driving
+- [x] Keep the right action as Brake while driving
+- [x] Hide the duplicate floating Exit car prompt on phone layouts
+- [x] Add unit and Playwright coverage for driving controls and exit behavior
+- [x] Bump Android debug APK version metadata to 1.5.14 / 10514

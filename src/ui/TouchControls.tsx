@@ -156,7 +156,7 @@ export function TouchControls() {
       <div className="touch-control-layer pointer-events-none absolute inset-x-0 bottom-3 z-20 hidden items-end justify-between px-5">
       <div
         ref={joystickRef}
-        className="virtual-joystick pointer-events-auto relative grid place-items-center rounded-full"
+        className={`virtual-joystick pointer-events-auto relative grid place-items-center rounded-full ${activeVehicleId ? 'driving' : ''}`}
         onPointerDown={(event) => {
           event.preventDefault()
           event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -167,15 +167,31 @@ export function TouchControls() {
         }}
         onPointerUp={resetJoystick}
         onPointerCancel={resetJoystick}
-        title="Move"
+        title={activeVehicleId ? 'Drive' : 'Move'}
+        aria-label={activeVehicleId ? 'Driving joystick' : 'Move joystick'}
       >
         <div
           className="joystick-thumb absolute rounded-full"
           style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)` }}
         />
+        {activeVehicleId ? <span className="joystick-mode-label">Drive</span> : null}
       </div>
 
-      {buildMode || miniGame.status === 'running' ? (
+      {activeVehicleId ? (
+        <button
+          type="button"
+          className="mobile-drive-exit-button pointer-events-auto"
+          onClick={(event) => {
+            event.preventDefault()
+            pulseInteract()
+          }}
+          title="Exit car"
+          aria-label="Exit car"
+        >
+          <CarFront size={21} aria-hidden />
+          <span>Exit</span>
+        </button>
+      ) : buildMode || miniGame.status === 'running' ? (
         <button
           type="button"
           className="mobile-remove-button pointer-events-auto"
@@ -231,23 +247,25 @@ export function TouchControls() {
               <span>Run</span>
             </button>
           ) : null}
-          <button
-            type="button"
-            className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
-            onClick={pulseInteract}
-            title={interactionLabel}
-            aria-label={interactionLabel}
-          >
-            {interactionPrompt === 'sleep' || interactionPrompt === 'wake' ? (
-              <BedDouble size={22} aria-hidden />
-            ) : interactionPrompt === 'sit' || interactionPrompt === 'stand' ? (
-              <Armchair size={22} aria-hidden />
-            ) : interactionPrompt === 'enter-vehicle' || interactionPrompt === 'exit-vehicle' ? (
-              <CarFront size={22} aria-hidden />
-            ) : (
-              <Hand size={22} aria-hidden />
-            )}
-          </button>
+          {!activeVehicleId ? (
+            <button
+              type="button"
+              className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
+              onClick={pulseInteract}
+              title={interactionLabel}
+              aria-label={interactionLabel}
+            >
+              {interactionPrompt === 'sleep' || interactionPrompt === 'wake' ? (
+                <BedDouble size={22} aria-hidden />
+              ) : interactionPrompt === 'sit' || interactionPrompt === 'stand' ? (
+                <Armchair size={22} aria-hidden />
+              ) : interactionPrompt === 'enter-vehicle' ? (
+                <CarFront size={22} aria-hidden />
+              ) : (
+                <Hand size={22} aria-hidden />
+              )}
+            </button>
+          ) : null}
         </div>
         <button
           type="button"
