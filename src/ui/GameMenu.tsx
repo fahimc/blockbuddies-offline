@@ -8,6 +8,7 @@ import {
   Medal,
   Menu,
   Palette,
+  RotateCcw,
   Server,
   Settings,
   ShoppingBag,
@@ -43,6 +44,7 @@ export function GameMenu() {
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const setScreen = useGameStore((state) => state.setScreen)
   const openPanel = useGameStore((state) => state.openPanel)
+  const resetToSquare = useGameStore((state) => state.resetToSquare)
 
   const openMenuPanel = (panel: GamePanel) => {
     setOpen(false)
@@ -83,6 +85,17 @@ export function GameMenu() {
               </button>
             ))}
           </nav>
+          <button
+            type="button"
+            className="bb-game-menu-main"
+            onClick={() => {
+              setOpen(false)
+              resetToSquare()
+            }}
+          >
+            <RotateCcw size={21} aria-hidden />
+            Reset to Square
+          </button>
           <button
             type="button"
             className="bb-game-menu-main"

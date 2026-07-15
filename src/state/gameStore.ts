@@ -88,6 +88,7 @@ type TeleportTarget = {
   sequence: number
   position: Vec3
   yaw: number
+  resetView?: boolean
 }
 
 type CustomizationSelection = {
@@ -145,6 +146,7 @@ type GameState = GameSave & {
   completePlayerProfile: (name: string) => void
   setPlayer: (position: Vec3, yaw: number, controllerSequence?: number) => void
   travelToLocation: (id: LocationId) => boolean
+  resetToSquare: () => void
   setTouch: (input: Partial<TouchInput>) => void
   setNearbyLocation: (location?: LocationId) => void
   enterInterior: (
@@ -441,6 +443,51 @@ export const useGameStore = create<GameState>((set, get) => ({
     })
     return true
   },
+  resetToSquare: () =>
+    set((state) => {
+      const destination = getLocation('spawn')
+      const teleportSequence = state.teleportSequence + 1
+      return {
+        playerPosition: [...destination.travelPosition],
+        playerYaw: destination.travelYaw,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: [...destination.travelPosition],
+          yaw: destination.travelYaw,
+          resetView: true,
+        },
+        activeInterior: undefined,
+        nearbyLocation: destination.id,
+        openPanel: undefined,
+        buildMode: false,
+        sleeping: false,
+        seatedSeatId: undefined,
+        activeVehicleId: undefined,
+        interactionPrompt: undefined,
+        worldActionRequest: undefined,
+        playerEmote: 'none',
+        obby: { ...state.obby, active: false },
+        miniGame: {
+          ...state.miniGame,
+          activeId: undefined,
+          status: 'idle',
+          score: 0,
+          target: 0,
+          collected: [],
+        },
+        touch: {
+          x: 0,
+          y: 0,
+          lookX: 0,
+          lookY: 0,
+          jump: false,
+          interact: false,
+          run: false,
+        },
+        chat: [...state.chat.slice(-60), systemMessage('Reset to Spawn Plaza')],
+      }
+    }),
   setTouch: (input) =>
     set((state) => ({ touch: { ...state.touch, ...input } })),
   setNearbyLocation: (nearbyLocation) => set({ nearbyLocation }),

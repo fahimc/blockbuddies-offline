@@ -524,3 +524,13 @@
 - [x] Add deterministic left-orbit and right-orbit camera-view movement tests
 - [x] Update the phone smoke path to validate post-orbit movement without assuming a fixed world axis
 - [x] Bump Android debug APK version metadata to 1.5.12 / 10512
+
+## Post-phase menu reset and mobile emotes
+
+- [x] Move normal-play reset from the bottom controls into the hamburger menu
+- [x] Reset the player to Spawn Plaza and clear active seats, vehicles, sleep, emotes, obby, mini-games, and touch input
+- [x] Snap reset camera orbit and pitch back to the default plaza view
+- [x] Replace the normal-play bottom reset slot with a compact emote cycle button for Wave, Dance, Cheer, and off
+- [x] Preserve contextual build remove and active mini-game cancel controls
+- [x] Add unit and mobile smoke coverage for menu reset and emote cycling
+- [x] Bump Android debug APK version metadata to 1.5.13 / 10513

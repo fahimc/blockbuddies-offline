@@ -45,6 +45,7 @@ export type GameplayE2ESnapshot = {
   buildMode: boolean
   obbyActive: boolean
   miniGameStatus: string
+  playerEmote: string
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -193,6 +194,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     buildMode: game.buildMode,
     obbyActive: game.obby.active,
     miniGameStatus: game.miniGame.status,
+    playerEmote: game.playerEmote,
   }
 }
 

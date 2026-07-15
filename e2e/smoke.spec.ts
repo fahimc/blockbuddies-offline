@@ -141,6 +141,13 @@ test.describe('landscape phone layout', () => {
     await runButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true })
     await expect(runButton).toHaveAttribute('aria-pressed', 'false')
     expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().run)).toBe(false)
+    const emoteButton = page.getByRole('button', { name: 'Toggle emotes' })
+    await expect(emoteButton).toBeVisible()
+    await expect(emoteButton).toContainText('Emote')
+    await emoteButton.click()
+    await expect(emoteButton).toHaveAttribute('aria-pressed', 'true')
+    await expect(emoteButton).toContainText('Wave')
+    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerEmote)).toBe('wave')
     await expect(page.getByTestId('world-drag-control')).toBeVisible()
     await expect(page.getByTestId('mini-map')).toBeVisible()
 
@@ -162,6 +169,18 @@ test.describe('landscape phone layout', () => {
     await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0))
     const afterForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
     expect(Math.hypot(afterForward[0] - beforeForward[0], afterForward[2] - beforeForward[2])).toBeGreaterThan(0.5)
+
+    await page.getByRole('button', { name: 'Menu', exact: true }).click()
+    await page.getByRole('button', { name: 'Reset to Square' }).click()
+    await expect.poll(async () => {
+      const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+      return JSON.stringify({
+        position: snapshot.playerPosition.map((value) => Math.round(value * 10) / 10),
+        emote: snapshot.playerEmote,
+        interior: snapshot.interiorKind,
+        miniGame: snapshot.miniGameStatus,
+      })
+    }).toBe(JSON.stringify({ position: [0, 0, 4], emote: 'none', miniGame: 'idle' }))
 
     await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
     await expect

@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.13-menu-reset-emotes] - 2026-07-15
+
+### Added
+
+- Added a hamburger menu Reset to Square command that returns the player to Spawn Plaza.
+- Added a compact mobile emote button in the old normal-play reset slot to cycle Wave, Dance, Cheer, and off.
+- Added unit and Playwright coverage for menu reset and the mobile emote toggle.
+
+### Changed
+
+- Reset now clears seats, vehicles, sleep, active emotes, active obby state, active mini-games, touch input, and camera orbit by remounting and snapping the player camera.
+- The center mobile control remains contextual for build remove and active mini-game cancel, but no longer shows normal-play Reset.
+- Updated Android and package version metadata to `1.5.13` / `10513`.
+
+### Fixed
+
+- Fixed reset being exposed as an always-visible gameplay control instead of a menu action.
+- Fixed reset returning location without explicitly restoring the default plaza camera view.
+
+### Known Issues
+
 ## [v1.5.12-visible-camera-forward] - 2026-07-15
 
 ### Added

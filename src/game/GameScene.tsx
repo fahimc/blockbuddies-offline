@@ -1138,6 +1138,7 @@ function PlayerController({
   const yaw = useRef(initialPlayerYaw)
   const cameraOrbitYaw = useRef(0)
   const cameraPitch = useRef(0)
+  const snapCameraOnNextFrame = useRef(Boolean(initialPlayerState.teleportTarget?.resetView))
   const sleepCameraPose = useRef<{ yaw: number; orbitYaw: number; pitch: number } | undefined>(undefined)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
@@ -1563,7 +1564,12 @@ function PlayerController({
       cameraTarget.x = THREE.MathUtils.clamp(cameraTarget.x, -room.width + 0.55, room.width - 0.55)
       cameraTarget.z = THREE.MathUtils.clamp(cameraTarget.z, -room.depth + 0.55, room.depth - 0.55)
     }
-    state.camera.position.lerp(cameraTarget, 0.12)
+    if (snapCameraOnNextFrame.current) {
+      state.camera.position.copy(cameraTarget)
+      snapCameraOnNextFrame.current = false
+    } else {
+      state.camera.position.lerp(cameraTarget, 0.12)
+    }
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
     setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current, controllerTeleportSequence)
     if (performance.now() - lastPartyBroadcastAt.current > 120) {

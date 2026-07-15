@@ -1,6 +1,7 @@
-import { Armchair, ArrowUp, BedDouble, CarFront, CircleStop, Gauge, Hand, RotateCw, X } from 'lucide-react'
+import { Armchair, ArrowUp, BedDouble, CarFront, CircleStop, Gauge, Hand, Music2, RotateCw, X } from 'lucide-react'
 import type { PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import type { PlayerEmote } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 
 type TouchPatch = Partial<{
@@ -15,16 +16,18 @@ type TouchPatch = Partial<{
 
 const joystickRadius = 42
 const maxQueuedLookDelta = 80
+const mobileEmoteCycle: PlayerEmote[] = ['none', 'wave', 'dance', 'cheer']
 
 export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
-  const beginObby = useGameStore((state) => state.beginObby)
   const miniGame = useGameStore((state) => state.miniGame)
   const cancelMiniGame = useGameStore((state) => state.cancelMiniGame)
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
   const running = useGameStore((state) => state.touch.run)
+  const playerEmote = useGameStore((state) => state.playerEmote)
+  const setPlayerEmote = useGameStore((state) => state.setPlayerEmote)
   const interactionPrompt = useGameStore((state) => state.interactionPrompt)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const joystickRef = useRef<HTMLDivElement>(null)
@@ -94,6 +97,15 @@ export function TouchControls() {
     setTouch({ interact: true })
     window.setTimeout(() => useGameStore.getState().setTouch({ interact: false }), 100)
   }
+  const cycleEmote = () => {
+    const currentIndex = mobileEmoteCycle.indexOf(playerEmote)
+    const next = mobileEmoteCycle[(currentIndex + 1) % mobileEmoteCycle.length]
+    setPlayerEmote(next)
+  }
+  const emoteLabel =
+    playerEmote === 'none'
+      ? 'Emote'
+      : playerEmote.charAt(0).toUpperCase() + playerEmote.slice(1)
   const interactionLabel =
     buildMode
       ? 'Place'
@@ -163,24 +175,39 @@ export function TouchControls() {
         />
       </div>
 
-      <button
-        type="button"
-        className="mobile-remove-button pointer-events-auto"
-        onClick={(event) => {
-          event.preventDefault()
-          if (buildMode) {
-            removeLastBlock()
-          } else if (miniGame.status === 'running') {
-            cancelMiniGame()
-          } else {
-            beginObby(performance.now())
-          }
-        }}
-        title={buildMode ? 'Remove block' : miniGame.status === 'running' ? 'Cancel mini game' : 'Restart obby'}
-      >
-        <X size={28} aria-hidden />
-        <span>{buildMode ? 'Remove' : miniGame.status === 'running' ? 'Cancel' : 'Reset'}</span>
-      </button>
+      {buildMode || miniGame.status === 'running' ? (
+        <button
+          type="button"
+          className="mobile-remove-button pointer-events-auto"
+          onClick={(event) => {
+            event.preventDefault()
+            if (buildMode) {
+              removeLastBlock()
+            } else {
+              cancelMiniGame()
+            }
+          }}
+          title={buildMode ? 'Remove block' : 'Cancel mini game'}
+        >
+          <X size={28} aria-hidden />
+          <span>{buildMode ? 'Remove' : 'Cancel'}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={`mobile-emote-button pointer-events-auto ${playerEmote !== 'none' ? 'active' : ''}`}
+          onClick={(event) => {
+            event.preventDefault()
+            cycleEmote()
+          }}
+          title="Toggle emotes"
+          aria-label="Toggle emotes"
+          aria-pressed={playerEmote !== 'none'}
+        >
+          <Music2 size={20} aria-hidden />
+          <span>{emoteLabel}</span>
+        </button>
+      )}
 
       <div className="mobile-action-cluster pointer-events-auto flex items-end gap-2">
         <div className="flex flex-col gap-2">

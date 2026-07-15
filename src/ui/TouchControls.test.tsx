@@ -9,6 +9,9 @@ describe('TouchControls', () => {
       touch: { ...state.touch, run: false, interact: false, lookX: 0, lookY: 0 },
       interactionPrompt: undefined,
       buildMode: false,
+      activeVehicleId: undefined,
+      playerEmote: 'none',
+      miniGame: { ...state.miniGame, status: 'idle', activeId: undefined },
     }))
   })
 
@@ -48,5 +51,40 @@ describe('TouchControls', () => {
 
     expect(useGameStore.getState().touch.lookX).toBe(35)
     expect(useGameStore.getState().touch.lookY).toBe(-20)
+  })
+
+  it('uses the old reset slot as a compact emote toggle in normal play', () => {
+    render(<TouchControls />)
+    const emoteButton = screen.getByRole('button', { name: 'Toggle emotes' })
+
+    expect(emoteButton).toHaveTextContent('Emote')
+    expect(emoteButton).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(emoteButton)
+    expect(useGameStore.getState().playerEmote).toBe('wave')
+    expect(emoteButton).toHaveTextContent('Wave')
+    expect(emoteButton).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(emoteButton)
+    expect(useGameStore.getState().playerEmote).toBe('dance')
+    expect(emoteButton).toHaveTextContent('Dance')
+
+    fireEvent.click(emoteButton)
+    expect(useGameStore.getState().playerEmote).toBe('cheer')
+    expect(emoteButton).toHaveTextContent('Cheer')
+
+    fireEvent.click(emoteButton)
+    expect(useGameStore.getState().playerEmote).toBe('none')
+    expect(emoteButton).toHaveTextContent('Emote')
+  })
+
+  it('keeps the center control as cancel during active mini games', () => {
+    useGameStore.setState((state) => ({
+      miniGame: { ...state.miniGame, activeId: 'coin-rush', status: 'running' },
+    }))
+    render(<TouchControls />)
+
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Toggle emotes' })).not.toBeInTheDocument()
   })
 })
