@@ -1,5 +1,6 @@
 import {
   Flag,
+  CarFront,
   GraduationCap,
   House,
   Map as MapIcon,
@@ -27,6 +28,7 @@ const locationIcons: Record<LocationId, LucideIcon> = {
   school: GraduationCap,
   obby: Flag,
   houses: House,
+  parking: CarFront,
 }
 
 const shortLabels: Record<LocationId, string> = {
@@ -36,6 +38,7 @@ const shortLabels: Record<LocationId, string> = {
   school: 'School',
   obby: 'Obby',
   houses: 'Homes',
+  parking: 'Parking',
 }
 
 export function MapPanel() {

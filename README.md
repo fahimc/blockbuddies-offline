@@ -130,10 +130,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   six student stations. Chair icons appear near usable classroom chairs, house
   and lobby sofas, and outdoor benches; selecting one seats the live avatar and
   exposes a Stand action.
-- Buddy Parking contains three enterable cars. Players can drive, steer, brake,
-  orbit the chase camera, and exit at a collision-safe position. Cars collide
-  with scenery, parked and moving vehicles, buildings, buddies, and local-party
-  players instead of passing through them.
+- Buddy Parking contains three enterable cars and is available as a town-map
+  travel destination. Players can drive, steer, brake, orbit the chase camera,
+  and exit at a collision-safe position. Cars collide with scenery, parked and
+  moving vehicles, buildings, buddies, and local-party players instead of
+  passing through them.
 - Doorway safe zones clear blocking collision from trees, lamp posts, phone
   boxes, traffic props, and user-built props near supported doors.
 - Height-aware visible-object collision prevents the player from walking through
@@ -370,6 +371,11 @@ The `v1.5.20` APK rebuilds Delivery Dash into a clearer pickup-and-drop-off
 route. The HUD, minimap, and town map all point to the active delivery target,
 drop-offs award immediate coins and time bonuses, and the route no longer
 starts on top of the first objective.
+
+The `v1.5.21` APK makes driving discoverable from normal play. Buddy Parking is
+now a teleport destination on the town map, the arrival point lands beside a
+drivable car, parked cars show Drive labels, and tapping/clicking a nearby car
+or its Drive button starts driving.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

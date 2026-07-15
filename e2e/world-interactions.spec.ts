@@ -61,7 +61,11 @@ test('uses classroom seats and drives a parked car end to end', async ({ page },
     .poll(async () => (await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())).seatedSeatId)
     .toBeUndefined()
 
-  await page.evaluate(() => window.__blockBuddiesE2E!.prepareParkingInteraction())
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await page.getByRole('button', { name: 'Town Map', exact: true }).click()
+  await page.getByTestId('map-marker-parking').click()
+  await page.getByRole('button', { name: 'Travel to Buddy Parking' }).click()
+  await expect(page.getByText('Travelled to Buddy Parking')).toBeVisible()
   const driveAction = page.getByRole('button', { name: 'Drive Sunny Car' })
   await expect(driveAction).toBeVisible()
   await driveAction.click()

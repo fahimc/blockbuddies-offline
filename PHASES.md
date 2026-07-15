@@ -591,3 +591,12 @@
 - [x] Award immediate drop-off coins and time bonuses before the completion reward
 - [x] Add unit and end-to-end coverage for route order, map markers, rewards, and completion
 - [x] Bump Android debug APK version metadata to 1.5.20 / 10520
+
+## Post-phase parking map and driving discoverability
+
+- [x] Add Buddy Parking as a town map destination
+- [x] Teleport players beside a drivable parked car
+- [x] Add parking-lot guidance and visible Drive labels above parked cars
+- [x] Allow tapping/clicking a nearby car to request driving
+- [x] Add unit and Playwright coverage for map-to-parking-to-driving flow
+- [x] Bump Android debug APK version metadata to 1.5.21 / 10521

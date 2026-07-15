@@ -10,6 +10,28 @@
 
 ### Known Issues
 
+## [v1.5.21-parking-map-driving] - 2026-07-15
+
+### Added
+
+- Added Buddy Parking as a town map destination with a teleport arrival beside a drivable car.
+- Added visible parking-lot guidance and always-visible Drive labels over parked cars.
+- Added click/tap handling directly on parked cars in addition to the nearby Drive button.
+- Added unit and Playwright coverage for parking travel and immediate car driving discoverability.
+
+### Changed
+
+- Updated the parking lot label to tell players to tap a car to drive.
+- Updated Android and package version metadata to `1.5.21` / `10521`.
+
+### Fixed
+
+- Fixed the driving feature being hard to discover because cars were not represented as a map destination and the Drive prompt only appeared after finding the parking lot manually.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.20-delivery-dash-route-map] - 2026-07-15
 
 ### Added

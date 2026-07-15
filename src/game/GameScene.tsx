@@ -620,7 +620,7 @@ function ParkingLot({
       </group>
       <Html center position={[parkingLot.center[0], 3.15, parkingLot.center[2] + 4.35]} zIndexRange={worldHtmlZIndexRange}>
         <span data-testid="parking-lot-label" className="pointer-events-none select-none whitespace-nowrap rounded-lg bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
-          Buddy Parking
+          Buddy Parking - tap a car to drive
         </span>
       </Html>
       {vehicles.map((vehicle) => (
@@ -656,7 +656,15 @@ function DrivableVehicleMesh({
   })
 
   return (
-    <group ref={group} position={vehicle.position} rotation={[0, vehicleRenderYaw(vehicle.yaw), 0]}>
+    <group
+      ref={group}
+      position={vehicle.position}
+      rotation={[0, vehicleRenderYaw(vehicle.yaw), 0]}
+      onClick={(event) => {
+        event.stopPropagation()
+        pulseWorldAction('vehicle', vehicle.id)
+      }}
+    >
       <CarPiece color={vehicle.color} occupied={occupied} />
       {occupied ? (
         <group position={[-0.1, 1.15, 0]} rotation={[0, Math.PI / 2, 0]} scale={0.56}>
@@ -697,6 +705,12 @@ function DrivableVehicleMesh({
             <CarFront size={18} aria-hidden />
             {occupied ? 'Exit car' : `Drive ${vehicle.label}`}
           </button>
+        </Html>
+      ) : !occupied ? (
+        <Html center position={[0, 2.65, 0]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="pointer-events-none select-none whitespace-nowrap rounded-full bg-slate-950/90 px-3 py-1 text-xs font-black text-white shadow">
+            Drive
+          </span>
         </Html>
       ) : null}
     </group>

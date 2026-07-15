@@ -1,6 +1,6 @@
 export type Vec3 = [number, number, number]
 
-export type LocationId = 'spawn' | 'park' | 'shop' | 'school' | 'obby' | 'houses'
+export type LocationId = 'spawn' | 'park' | 'shop' | 'school' | 'obby' | 'houses' | 'parking'
 
 export type InteriorKind = 'house' | 'shop' | 'school' | 'building'
 

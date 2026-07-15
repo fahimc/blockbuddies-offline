@@ -65,6 +65,15 @@ export const worldLocations: WorldLocation[] = [
     travelYaw: Math.PI,
     color: '#facc15',
   },
+  {
+    id: 'parking',
+    label: 'Buddy Parking',
+    description: 'Pick a parked car and drive around town.',
+    position: [10, 0, -16],
+    travelPosition: [12.8, 0, -16.1],
+    travelYaw: -Math.PI / 2,
+    color: '#2563eb',
+  },
 ]
 
 export function getLocation(id: LocationId) {
