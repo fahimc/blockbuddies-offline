@@ -42,6 +42,7 @@ export const vehicleAcceleration = 9
 export const vehicleBrakeStrength = 18
 export const vehicleSteeringRate = 1.55
 export const roadDriveClearancePadding = realScale.carWidth / 2 + 0.5
+export const drivableWorldHalfExtent = 104
 
 export function createParkedVehicles() {
   return parkedVehicleDefinitions.map((vehicle) => ({
@@ -264,15 +265,15 @@ function clampVehicleToTown(vehicle: DrivableVehicle) {
   return {
     ...vehicle,
     position: [
-      clamp(vehicle.position[0], -24 + margin, 24 - margin),
+      clamp(vehicle.position[0], -drivableWorldHalfExtent + margin, drivableWorldHalfExtent - margin),
       vehicle.position[1],
-      clamp(vehicle.position[2], -24 + margin, 24 - margin),
+      clamp(vehicle.position[2], -drivableWorldHalfExtent + margin, drivableWorldHalfExtent - margin),
     ] as Vec3,
   }
 }
 
 function withinTown(position: Vec3) {
-  return Math.abs(position[0]) <= 23.5 && Math.abs(position[2]) <= 23.5
+  return Math.abs(position[0]) <= drivableWorldHalfExtent && Math.abs(position[2]) <= drivableWorldHalfExtent
 }
 
 function moveTowards(value: number, target: number, amount: number) {

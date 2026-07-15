@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase road driving bounds
+
+- [x] Reproduce the car road-blocking bug with a vehicle regression test.
+- [x] Expand vehicle driving bounds to cover generated roads and traffic lanes.
+- [x] Add tests for safe exits on generated roads outside the old central town box.
+- [x] Package and release Android debug APK for the road driving bounds build.
+
 ## Post-phase room entry facing
 
 - [x] Add an explicit inward-facing room entry yaw.

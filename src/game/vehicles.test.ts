@@ -109,6 +109,25 @@ describe('parking and drivable vehicles', () => {
     expect(stopped.speed).toBe(0)
   })
 
+  it('does not stop at the old invisible central-town road boundary', () => {
+    const vehicle = {
+      ...createParkedVehicles()[0],
+      position: [21.1, 0.07, 18] as [number, number, number],
+      yaw: Math.PI / 2,
+      speed: 8,
+    }
+
+    const moved = advanceDrivableVehicleWithCollisions(
+      vehicle,
+      drivingInputFromControls(1, 0, false),
+      0.1,
+      [],
+    )
+
+    expect(moved.position[0]).toBeGreaterThan(vehicle.position[0])
+    expect(moved.speed).toBeGreaterThan(0)
+  })
+
   it('reserves a wider clearance area around the parking bays and driveway', () => {
     expect(parkingClearancePadding).toBeGreaterThanOrEqual(2.5)
     const treeNearCarExit = {
@@ -129,5 +148,18 @@ describe('parking and drivable vehicles', () => {
     expect(distanceToVehicle(besideCar, vehicle)).toBeCloseTo(0.5)
     expect(exit).toBeDefined()
     expect(distanceToVehicle(exit!, vehicle)).toBeGreaterThan(0.4)
+  })
+
+  it('allows safe vehicle exits on generated roads outside the old central town box', () => {
+    const vehicle = {
+      ...createParkedVehicles()[0],
+      position: [42, 0.07, 18] as [number, number, number],
+      yaw: Math.PI / 2,
+    }
+
+    const exit = safeVehicleExitPosition(vehicle, [])
+
+    expect(exit).toBeDefined()
+    expect(exit?.[0]).toBeGreaterThan(40)
   })
 })

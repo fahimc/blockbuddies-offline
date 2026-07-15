@@ -10,6 +10,26 @@
 
 ### Known Issues
 
+## [v1.5.29-road-driving-bounds] - 2026-07-15
+
+### Added
+
+- Added vehicle regression tests that reproduce cars being blocked by the old invisible central-town boundary.
+- Added coverage for exiting cars on generated roads beyond the original small town box.
+
+### Changed
+
+- Expanded drivable vehicle movement and exit bounds to match the generated road and traffic network.
+- Updated Android and package version metadata to `1.5.29` / `10529`.
+
+### Fixed
+
+- Fixed cars getting stuck or pushed backward by an invisible road boundary while driving along generated roads.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.28-room-entry-facing] - 2026-07-15
 
 ### Added

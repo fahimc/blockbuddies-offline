@@ -412,6 +412,10 @@ The `v1.5.28` APK fixes room-entry facing. Entering a room now uses an explicit
 inward-facing yaw and resets the camera orbit for the transition, so the player
 does not keep an outside camera angle that points movement back toward the exit.
 
+The `v1.5.29` APK fixes invisible road driving blockers. Drivable cars now use
+the full generated road-network bounds instead of the original small central
+town clamp, so they do not get stuck or pushed backward on open roads.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.
