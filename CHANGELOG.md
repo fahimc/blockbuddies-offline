@@ -4,9 +4,21 @@
 
 ### Added
 
+- Added a deterministic one-unit invisible world grid with terrain compatibility rules and exclusive object footprint occupancy.
+- Added regression coverage for avatar drag rotation, screen orbit input, core coin cells, procedural object occupancy, park clearance, and sidewalk-only lamps.
+
 ### Changed
 
+- Character customisation now rotates the real in-game avatar directly by dragging the preview, with a larger mobile preview and no decorative turntable.
+- Gameplay screen dragging now provides independent full horizontal and vertical camera orbit in every player pose.
+- Indoor cameras stay inside room walls, and waking restores the exact camera yaw, orbit, and pitch used before sleeping.
+- Procedural parks, trees, lamps, phone boxes, buildings, and core-town coins now snap to validated terrain cells; sidewalks are wider and lamps sit on their outer edges.
+
 ### Fixed
+
+- Prevented the avatar preview floor and rotate control from overlapping customisation options.
+- Prevented sleep/wake transitions from replacing the player's camera angle or leaving the camera behind an interior wall.
+- Prevented independent world objects, coins, park scenery, and street furniture from sharing cells or spawning on roads.
 
 ### Known Issues
 

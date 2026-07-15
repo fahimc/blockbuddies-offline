@@ -141,6 +141,56 @@ describe('procedural borough world', () => {
     expect(doorZones.length).toBeGreaterThan(0)
     expect(blockers.every((blocker) => doorZones.every((zone) => !overlapsTopDown(blocker, zone, 0.04)))).toBe(true)
   })
+
+  it('snaps independent scenery to grid cells and prevents occupied-cell overlap', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [54, 0, 54],
+      viewDistance: 2,
+      night: true,
+    })
+    const anchors = world.pieces.filter((piece) =>
+      piece.kind === 'building' || piece.kind === 'tree-trunk' || piece.kind === 'lamp-post' || piece.kind === 'phone-box',
+    )
+    const footprints = anchors.map((piece) => ({
+      ...piece,
+      scale:
+        piece.kind === 'tree-trunk'
+          ? [realScale.treeCanopySize, piece.scale[1], realScale.treeCanopySize] as [number, number, number]
+          : piece.kind === 'lamp-post'
+            ? [0.8, piece.scale[1], 0.8] as [number, number, number]
+            : piece.scale,
+    }))
+
+    expect(anchors.length).toBeGreaterThan(0)
+    expect(anchors.every((piece) => Number.isInteger(piece.position[0]) && Number.isInteger(piece.position[2]))).toBe(true)
+    expect(
+      footprints.every((piece, index) =>
+        footprints.slice(index + 1).every((other) => !overlapsTopDown(piece, other)),
+      ),
+    ).toBe(true)
+  })
+
+  it('keeps parks clear of transport surfaces and lamps on sidewalk cells only', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [54, 0, 54],
+      viewDistance: 2,
+      night: true,
+    })
+    const roads = world.pieces.filter((piece) => piece.kind === 'road')
+    const pavements = world.pieces.filter((piece) => piece.kind === 'pavement')
+    const parks = world.pieces.filter((piece) => piece.kind === 'park')
+    const lamps = world.pieces.filter((piece) => piece.kind === 'lamp-post')
+
+    expect(realScale.pavementWidth).toBeGreaterThan(realScale.avatarHeight)
+    expect(parks.length).toBeGreaterThan(0)
+    expect(parks.every((park) => roads.every((road) => !overlapsTopDown(park, road)))).toBe(true)
+    expect(parks.every((park) => pavements.every((pavement) => !overlapsTopDown(park, pavement)))).toBe(true)
+    expect(lamps.length).toBeGreaterThan(0)
+    expect(lamps.every((lamp) => roads.every((road) => !overlapsTopDown(lamp, road)))).toBe(true)
+    expect(lamps.every((lamp) => pavements.some((pavement) => overlapsTopDown(lamp, pavement)))).toBe(true)
+  })
 })
 
 function overlapsTopDown(

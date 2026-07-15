@@ -12,7 +12,6 @@ import {
   Laugh,
   Music,
   Palette,
-  RotateCw,
   Save,
   Shirt,
   Sparkles,
@@ -20,7 +19,7 @@ import {
   Upload,
   UserRound,
 } from 'lucide-react'
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, PointerEvent, ReactNode } from 'react'
 import { useMemo, useRef, useState } from 'react'
 import {
   accentColors,
@@ -853,16 +852,43 @@ function AvatarStage({
   pose?: 'idle' | 'wave' | 'dance' | 'cheer' | 'sit'
   showTrail?: boolean
 }) {
+  const [previewYaw, setPreviewYaw] = useState(-0.2)
+  const dragRef = useRef<{ pointerId: number; x: number } | undefined>(undefined)
+
+  const stopDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = undefined
+  }
+
   return (
     <div className={`bb-avatar-stage ${size}`}>
-      <div className="bb-stage-glow" />
-      <div className="bb-avatar-turntable">
+      <div
+        className="bb-avatar-turntable"
+        role="img"
+        aria-label="Character preview. Drag left or right to turn."
+        data-preview-yaw={previewYaw.toFixed(3)}
+        onPointerDown={(event) => {
+          if (event.pointerType === 'mouse' && event.button !== 0) return
+          event.preventDefault()
+          if (event.nativeEvent.isTrusted) event.currentTarget.setPointerCapture?.(event.pointerId)
+          dragRef.current = { pointerId: event.pointerId, x: event.clientX }
+        }}
+        onPointerMove={(event) => {
+          const drag = dragRef.current
+          if (!drag || drag.pointerId !== event.pointerId) return
+          event.preventDefault()
+          const dx = event.clientX - drag.x
+          dragRef.current = { pointerId: event.pointerId, x: event.clientX }
+          setPreviewYaw((current) => current + dx * 0.012)
+        }}
+        onPointerUp={stopDrag}
+        onPointerCancel={stopDrag}
+      >
         {showTrail ? <span className="bb-avatar-trail" /> : null}
-        <GameAvatarPreview avatar={avatar} pose={pose === 'idle' ? 'none' : pose} />
+        <GameAvatarPreview avatar={avatar} pose={pose === 'idle' ? 'none' : pose} yaw={previewYaw} />
       </div>
-      <button type="button" className="bb-avatar-rotate" aria-label="Rotate avatar">
-        <RotateCw size={30} aria-hidden />
-      </button>
     </div>
   )
 }

@@ -49,7 +49,7 @@ import {
   staticBuildingEntrance,
   type InteriorEntrance,
 } from './interiors'
-import { avatarBodyBaseY, avatarGroundOffset, avatarSitDrop, buildPieceDimensions, buildingCenterPosition, buildingScale, floorCountFromHeight, realScale } from './scale'
+import { avatarBodyBaseY, avatarGroundOffset, avatarSitDrop, buildPieceDimensions, floorCountFromHeight, realScale } from './scale'
 import {
   nearestSeatTarget,
   outdoorBenchFixtures,
@@ -59,6 +59,14 @@ import {
 } from './seating'
 import { playerMovementSpeed } from './movement'
 import { avatarSleepRotation } from './sleepPose'
+import {
+  coreActivityPositions,
+  coreCoinPositions,
+  coreTerrainZones,
+  staticLampPositions,
+  staticTownBuildings,
+  staticTreePositions,
+} from './townPlacement'
 import {
   advanceTrafficForPedestrians,
   createTrafficVehicles,
@@ -99,47 +107,6 @@ import type {
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 const worldActionZIndexRange: [number, number] = [26, 25]
-
-const staticTownBuildings: { id: string; title: string; interiorKind: InteriorKind; position: Vec3; color: string; scale: Vec3; floors: number }[] = [
-  staticBuilding('park-clubhouse', 'Park Clubhouse', 'house', -12, -8, 2, 4.2, 3.6, '#22c55e'),
-  staticBuilding('coin-shop', 'Coin Shop', 'shop', 12, -7, 2, 4.6, 3.8, '#fb923c'),
-  staticBuilding('skill-school', 'Skill School', 'school', -14, 10, 3, 5.4, 4.2, '#a78bfa'),
-  staticBuilding('buddy-house-a', 'Buddy House', 'house', 2, 18, 2, 4.4, 3.8, '#facc15'),
-  staticBuilding('buddy-house-b', 'Pink Buddy House', 'house', -4, 18, 2, 3.8, 3.4, '#f9a8d4'),
-  staticBuilding('buddy-house-c', 'Blue Buddy House', 'house', 8, 18, 2, 3.8, 3.4, '#93c5fd'),
-]
-
-function staticBuilding(id: string, title: string, interiorKind: InteriorKind, x: number, z: number, floors: number, widthMeters: number, depthMeters: number, color: string) {
-  return {
-    id,
-    title,
-    interiorKind,
-    position: buildingCenterPosition(x, z, floors),
-    scale: buildingScale(floors, widthMeters, depthMeters),
-    floors,
-    color,
-  }
-}
-
-const staticTreePositions: Vec3[] = [
-  [-18, 0, -17],
-  [-8, 0, -17],
-  [18, 0, -22],
-  [22, 0, -8],
-  [-20, 0, -16],
-  [-20, 0, -5],
-  [-20, 0, 6],
-  [-20, 0, 17],
-]
-
-const staticLampPositions: Vec3[] = [
-  [-4, 0, -7],
-  [4, 0, -7],
-  [-4, 0, 8],
-  [4, 0, 8],
-  [22, 0, -2],
-  [-11, 0, 2],
-]
 
 const staticCollisionObstacles: CollisionBox[] = [
   ...staticTownBuildings.map(({ position, scale }, index) => ({
@@ -337,7 +304,7 @@ function ProceduralBoroughWorld() {
 
   return (
     <group>
-      {world.pieces.filter((piece) => !proceduralPieceBlocksParking(piece)).map((piece) => (
+      {world.pieces.filter((piece) => !proceduralPieceBlocksParking(piece) && !proceduralObjectInsideCoreTown(piece)).map((piece) => (
         <ProceduralPieceMesh key={piece.id} piece={piece} />
       ))}
       <Html position={[0, 3.6, -31]} center zIndexRange={worldHtmlZIndexRange}>
@@ -543,6 +510,12 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
       <InteriorBox position={[0, 1.15, 1.15]} scale={[0.72, 0.16, 0.72]} color="#fde68a" />
     </group>
   )
+}
+
+function proceduralObjectInsideCoreTown(piece: ProceduralPiece) {
+  if (piece.kind === 'ground' || piece.kind === 'water' || piece.kind === 'road' || piece.kind === 'pavement' || piece.kind === 'line' || piece.kind === 'park') return false
+  if (piece.id.startsWith('landmark:')) return false
+  return Math.abs(piece.position[0]) < 25 && Math.abs(piece.position[2]) < 25
 }
 
 function ClassroomChair({ position }: { position: Vec3 }) {
@@ -994,6 +967,14 @@ function Roads() {
         <planeGeometry args={[realScale.roadTile, 32]} />
         <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
       </mesh>
+      {coreTerrainZones
+        .filter((zone) => zone.terrain === 'sidewalk')
+        .map((zone) => (
+          <mesh key={zone.id} receiveShadow position={[zone.center[0], 0.065, zone.center[2]]}>
+            <boxGeometry args={[zone.size[0], 0.08, zone.size[2]]} />
+            <meshStandardMaterial color="#e5e7eb" roughness={0.92} />
+          </mesh>
+        ))}
     </group>
   )
 }
@@ -1157,6 +1138,7 @@ function PlayerController({
   const yaw = useRef(initialPlayerYaw)
   const cameraOrbitYaw = useRef(0)
   const cameraPitch = useRef(0)
+  const sleepCameraPose = useRef<{ yaw: number; orbitYaw: number; pitch: number } | undefined>(undefined)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
   const lastInteriorTransitionAt = useRef(0)
@@ -1306,6 +1288,7 @@ function PlayerController({
     if (sleeping && activeInterior?.kind !== 'house') {
       sleepingThisFrame = false
       setSleeping(false)
+      sleepCameraPose.current = undefined
     }
     if (seatedThisFrame && !currentSeat) {
       seatedThisFrame = undefined
@@ -1357,12 +1340,24 @@ function PlayerController({
       sleepingThisFrame = false
       setSleeping(false)
       position.current.set(houseBedWakePosition[0], houseBedWakePosition[1], houseBedWakePosition[2])
+      if (sleepCameraPose.current) {
+        yaw.current = sleepCameraPose.current.yaw
+        cameraOrbitYaw.current = sleepCameraPose.current.orbitYaw
+        cameraPitch.current = sleepCameraPose.current.pitch
+        sleepCameraPose.current = undefined
+      }
       velocityY.current = 0
       exitedWorldPose = true
     } else if (sleepingThisFrame && (inputMoving || keys.jump || touch.jump)) {
       sleepingThisFrame = false
       setSleeping(false)
       position.current.set(houseBedWakePosition[0], houseBedWakePosition[1], houseBedWakePosition[2])
+      if (sleepCameraPose.current) {
+        yaw.current = sleepCameraPose.current.yaw
+        cameraOrbitYaw.current = sleepCameraPose.current.orbitYaw
+        cameraPitch.current = sleepCameraPose.current.pitch
+        sleepCameraPose.current = undefined
+      }
       velocityY.current = 0
     }
 
@@ -1390,6 +1385,11 @@ function PlayerController({
           setActiveVehicle(currentVehicle.id)
         }
       } else if (activeInterior?.kind === 'house' && nearBed) {
+        sleepCameraPose.current = {
+          yaw: yaw.current,
+          orbitYaw: cameraOrbitYaw.current,
+          pitch: cameraPitch.current,
+        }
         sleepingThisFrame = true
         setSleeping(true)
         position.current.set(houseBedSleepPosition[0], houseBedSleepPosition[1], houseBedSleepPosition[2])
@@ -1397,10 +1397,8 @@ function PlayerController({
       }
     }
 
-    const poseLocked = Boolean(activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame)
     if (Math.abs(touch.lookX) > 0.01 || Math.abs(touch.lookY) > 0.01) {
-      if (poseLocked) cameraOrbitYaw.current = yawFromLookDrag(cameraOrbitYaw.current, touch.lookX)
-      else yaw.current = yawFromLookDrag(yaw.current, touch.lookX)
+      cameraOrbitYaw.current = yawFromLookDrag(cameraOrbitYaw.current, touch.lookX)
       cameraPitch.current = pitchFromLookDrag(cameraPitch.current, touch.lookY)
       setTouch({ lookX: 0, lookY: 0 })
     }
@@ -1530,8 +1528,8 @@ function PlayerController({
         : -10.5
       : activeInterior
         ? mobile
-          ? -14
-          : -11
+          ? -5.6
+          : -6.2
         : mobile
           ? -13
           : -8
@@ -1548,10 +1546,15 @@ function PlayerController({
           : 5
     const cameraHeight = baseCameraHeight + cameraPitch.current * 3.2
     const lookHeight = (activeVehicleThisFrame ? 1.8 : 1.4) + cameraPitch.current * 1.1
-    const cameraYaw = yaw.current + (activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame ? cameraOrbitYaw.current : 0)
+    const cameraYaw = yaw.current + cameraOrbitYaw.current
     const cameraTarget = position.current
       .clone()
       .add(new THREE.Vector3(Math.sin(cameraYaw) * cameraDistance, cameraHeight, Math.cos(cameraYaw) * cameraDistance))
+    if (activeInterior) {
+      const room = interiorRoomHalfSize()
+      cameraTarget.x = THREE.MathUtils.clamp(cameraTarget.x, -room.width + 0.55, room.width - 0.55)
+      cameraTarget.z = THREE.MathUtils.clamp(cameraTarget.z, -room.depth + 0.55, room.depth - 0.55)
+    }
     state.camera.position.lerp(cameraTarget, 0.12)
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
     setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current, controllerTeleportSequence)
@@ -2302,10 +2305,9 @@ function ObbyCourse() {
 
 function CoinField() {
   const addCoins = useGameStore((state) => state.addCoins)
-  const coins = useMemo<Vec3[]>(() => [[-6, 0.8, -5], [-9, 0.8, -10], [6, 0.8, -4], [10, 0.8, 4], [3, 0.8, 13], [-10, 0.8, 9], [14, 0.8, 10], [18, 2.6, 14], [20, 4, 16], [22, 5.4, 18]], [])
   return (
     <>
-      {coins.map((position, index) => (
+      {coreCoinPositions.map((position, index) => (
         <mesh key={index} position={position} onClick={() => addCoins(1)}>
           <cylinderGeometry args={[0.28, 0.28, 0.08, 18]} />
           <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.25} />
@@ -2374,9 +2376,9 @@ function MiniGameWorld() {
 function MiniGamePortals() {
   const startMiniGame = useGameStore((state) => state.startMiniGame)
   const portals = [
-    { id: 'coin-rush' as const, label: 'Coin Rush', position: [9, 0, -2] as Vec3, color: '#facc15' },
-    { id: 'delivery-dash' as const, label: 'Delivery Dash', position: [12, 0, -5] as Vec3, color: '#22c55e' },
-    { id: 'hide-and-seek' as const, label: 'Hide & Seek', position: [0, 0, 12] as Vec3, color: '#a78bfa' },
+    { id: 'coin-rush' as const, label: 'Coin Rush', position: coreActivityPositions['coin-rush'], color: '#facc15' },
+    { id: 'delivery-dash' as const, label: 'Delivery Dash', position: coreActivityPositions['delivery-dash'], color: '#22c55e' },
+    { id: 'hide-and-seek' as const, label: 'Hide & Seek', position: coreActivityPositions['hide-and-seek'], color: '#a78bfa' },
   ]
   return (
     <group>

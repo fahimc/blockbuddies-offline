@@ -8,15 +8,16 @@ type GameAvatarPreviewProps = {
   avatar: AvatarSettings
   pose?: PlayerEmote
   className?: string
+  yaw?: number
 }
 
-export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvatarPreviewProps) {
+export function GameAvatarPreview({ avatar, pose = 'none', className, yaw = -0.2 }: GameAvatarPreviewProps) {
   const emote = pose === 'none' ? 'none' : pose
 
   return (
     <Canvas
       className={className ?? 'bb-game-avatar-preview'}
-      camera={{ position: [0, 1.4, 7.2], fov: 34 }}
+      camera={{ position: [0, 1.4, 6.2], fov: 34 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: true }}
       shadows={false}
@@ -26,7 +27,7 @@ export function GameAvatarPreview({ avatar, pose = 'none', className }: GameAvat
       <directionalLight position={[-3, 3, 2]} intensity={0.45} />
       <PreviewCamera />
       <PreviewRendererCleanup />
-      <group position={[0, avatarGroundOffset, 0]} rotation={[0, -0.2, 0]} scale={0.86}>
+      <group position={[0, avatarGroundOffset, 0]} rotation={[0, yaw, 0]} scale={1.08}>
         <BlockAvatar
           bodyColor={avatar.bodyColor}
           shirtColor={avatar.shirtColor}

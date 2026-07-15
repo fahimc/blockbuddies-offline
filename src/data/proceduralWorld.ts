@@ -1,5 +1,11 @@
 import type { Vec3 } from '../game/types'
 import { buildingHeightForFloors, floorCountFromHeight, meters, realScale } from '../game/scale'
+import {
+  WorldOccupancyGrid,
+  placeOnWorldGrid,
+  type TerrainZone,
+  type WorldObjectKind,
+} from '../game/worldGrid'
 
 export type ProceduralPieceKind =
   | 'ground'
@@ -48,7 +54,7 @@ const riverWidth = 9
 const treeRoadClearance = realScale.roadTile * 0.66 + realScale.pavementWidth * 0.7 + 0.72
 const buildingRoadClearance = realScale.roadTile * 0.5 + realScale.pavementWidth + meters(1.35)
 const doorSafeZoneRadius = 1.85
-const plotInset = 6.45
+const plotInset = 3.8
 const buildingPalette = ['#f97316', '#facc15', '#93c5fd', '#a78bfa', '#fb7185', '#22c55e', '#f9a8d4']
 const roofPalette = ['#ef4444', '#1d4ed8', '#7c3aed', '#0f172a', '#92400e']
 type RandomSource = () => number
@@ -65,19 +71,23 @@ type ChunkRoadLayout = {
 export function generateProceduralWorld({ seed, center, viewDistance, night }: ProceduralWorldInput): ProceduralWorld {
   const chunks = chunkRange(center, viewDistance)
   const pieces: ProceduralPiece[] = []
-  let buildingCount = 0
 
   for (const [cx, cz] of chunks) {
     const chunk = generateChunk(seed, cx, cz, night)
-    buildingCount += chunk.buildingCount
     pieces.push(...chunk.pieces)
   }
 
   pieces.push(...buildLandmarks(night))
 
+  const placedPieces = applyProceduralPlacementRules(
+    removeDoorBlockerOverlaps(removeSurfaceBlockerOverlaps(pieces)),
+  )
+
   return {
-    pieces: removeDoorBlockerOverlaps(removeSurfaceBlockerOverlaps(pieces)),
-    buildingCount,
+    pieces: placedPieces,
+    buildingCount: placedPieces.filter(
+      (placedPiece) => placedPiece.kind === 'building' && placedPiece.id.startsWith('building:'),
+    ).length,
     district: districtFor(center),
   }
 }
@@ -124,9 +134,20 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
 
   const parkChance = random()
   if (parkChance > 0.62 || (Math.abs(cx) === 1 && Math.abs(cz) === 1)) {
-    pieces.push(piece(`park:${cx}:${cz}`, 'park', [centerX + 7, 0.02, centerZ - 7], [12, 0.07, 10], '#34d399'))
+    const park = parkZoneForChunk(roadLayout)
+    pieces.push(piece(`park:${cx}:${cz}`, 'park', park.position, park.scale, '#34d399'))
+    const insetX = Math.max(1.25, park.scale[0] / 2 - realScale.treeCanopySize / 2 - 0.5)
+    const insetZ = Math.max(1.25, park.scale[2] / 2 - realScale.treeCanopySize / 2 - 0.5)
     for (let i = 0; i < 5; i += 1) {
-      addTree(pieces, `park-tree:${cx}:${cz}:${i}`, findClearSceneryPoint(random, roadLayout, x0 + 7, x0 + 29, z0 + 7, z0 + 29))
+      addTree(
+        pieces,
+        `park-tree:${cx}:${cz}:${i}`,
+        [
+          park.position[0] - insetX + random() * insetX * 2,
+          0,
+          park.position[2] - insetZ + random() * insetZ * 2,
+        ],
+      )
     }
   } else {
     const plots = shuffledPlots(random, [
@@ -156,16 +177,47 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): { 
     addTree(pieces, `street-tree:${cx}:${cz}:${i}`, findStreetTreePoint(random, roadLayout, i))
   }
 
-  if (random() > 0.76) {
-    const phonePosition = findClearSceneryPoint(random, roadLayout, x0 + 4, x0 + 32, z0 + 4, z0 + 32)
+  const sidewalkPoints = sidewalkFurniturePoints(roadLayout)
+  if (random() > 0.76 && sidewalkPoints.length > 0) {
+    const phonePosition = sidewalkPoints[Math.floor(random() * sidewalkPoints.length)]
     pieces.push(piece(`phone:${cx}:${cz}`, 'phone-box', [phonePosition[0], realScale.phoneBoxHeight / 2, phonePosition[2]], [realScale.phoneBoxWidth, realScale.phoneBoxHeight, realScale.phoneBoxWidth], '#dc2626'))
   }
-  if (night || random() > 0.58) {
-    addLamp(pieces, `lamp:${cx}:${cz}:a`, [x0 + 5, 0, z0 + 5], night)
-    addLamp(pieces, `lamp:${cx}:${cz}:b`, [x0 + 31, 0, z0 + 31], night)
+  if ((night || random() > 0.58) && sidewalkPoints.length > 0) {
+    addLamp(pieces, `lamp:${cx}:${cz}:a`, sidewalkPoints[0], night)
+    if (sidewalkPoints[1]) addLamp(pieces, `lamp:${cx}:${cz}:b`, sidewalkPoints[1], night)
   }
 
   return { pieces, buildingCount }
+}
+
+function parkZoneForChunk(layout: ChunkRoadLayout) {
+  const sideOffset = 13
+  const centerX = layout.hasVerticalRoad ? layout.centerX + sideOffset : layout.centerX + 6
+  const centerZ = layout.hasHorizontalRoad ? layout.centerZ - sideOffset : layout.centerZ - 6
+  const width = layout.hasVerticalRoad ? 7 : 12
+  const depth = layout.hasHorizontalRoad ? 7 : 10
+  return {
+    position: [centerX, 0.02, centerZ] as Vec3,
+    scale: [width, 0.07, depth] as Vec3,
+  }
+}
+
+function sidewalkFurniturePoints(layout: ChunkRoadLayout): Vec3[] {
+  const points: Vec3[] = []
+  const sidewalkOuterOffset = realScale.roadTile * 0.66 + realScale.pavementWidth * 0.34
+  if (layout.hasHorizontalRoad) {
+    points.push(
+      [layout.x0 + 7, 0, layout.centerZ - sidewalkOuterOffset],
+      [layout.x0 + chunkSize - 7, 0, layout.centerZ + sidewalkOuterOffset],
+    )
+  }
+  if (layout.hasVerticalRoad) {
+    points.push(
+      [layout.centerX - sidewalkOuterOffset, 0, layout.z0 + chunkSize - 7],
+      [layout.centerX + sidewalkOuterOffset, 0, layout.z0 + 7],
+    )
+  }
+  return points
 }
 
 function buildingBudgetForChunk(random: RandomSource, layout: ChunkRoadLayout) {
@@ -274,6 +326,97 @@ function isBuildingPlotClear(x: number, z: number, layout: ChunkRoadLayout) {
   if (layout.hasHorizontalRoad && Math.abs(z - layout.centerZ) < buildingRoadClearance) return false
   if (layout.hasVerticalRoad && Math.abs(x - layout.centerX) < buildingRoadClearance) return false
   return true
+}
+
+export function applyProceduralPlacementRules(pieces: ProceduralPiece[]) {
+  const surfaceKinds = new Set<ProceduralPieceKind>(['ground', 'water', 'road', 'pavement', 'line', 'park'])
+  const surfaces = pieces.filter((candidate) => surfaceKinds.has(candidate.kind))
+  const zones: TerrainZone[] = []
+  pieces.forEach((candidate) => {
+    if (candidate.kind === 'road') {
+      zones.push({ id: candidate.id, terrain: 'road', center: candidate.position, size: candidate.scale })
+    }
+    if (candidate.kind === 'pavement') {
+      zones.push({ id: candidate.id, terrain: 'sidewalk', center: candidate.position, size: candidate.scale })
+    }
+    if (candidate.kind === 'park') {
+      zones.push({ id: candidate.id, terrain: 'park', center: candidate.position, size: candidate.scale })
+    }
+  })
+  const occupancy = new WorldOccupancyGrid()
+  const placed = [...surfaces]
+  const consumed = new Set<string>(surfaces.map((surface) => surface.id))
+
+  const placeGroup = (
+    anchor: ProceduralPiece,
+    kind: WorldObjectKind,
+    members: ProceduralPiece[],
+    footprintScale = anchor.scale,
+  ) => {
+    members.forEach((member) => consumed.add(member.id))
+    const snapped = placeOnWorldGrid(
+      kind,
+      { id: anchor.id, center: anchor.position, size: footprintScale },
+      zones,
+      occupancy,
+    )
+    if (!snapped) return
+    const dx = snapped.center[0] - anchor.position[0]
+    const dz = snapped.center[2] - anchor.position[2]
+    members.forEach((member) => {
+      placed.push({
+        ...member,
+        position: [member.position[0] + dx, member.position[1], member.position[2] + dz],
+      })
+    })
+  }
+
+  pieces
+    .filter((candidate) => candidate.kind === 'landmark')
+    .forEach((landmark) => {
+      occupancy.reserve({ id: landmark.id, center: landmark.position, size: landmark.scale })
+      placed.push(landmark)
+      consumed.add(landmark.id)
+    })
+
+  pieces
+    .filter((candidate) => candidate.kind === 'building')
+    .forEach((building) => {
+      const members = pieces.filter(
+        (candidate) => candidate.id === building.id || candidate.id.startsWith(`${building.id}:`),
+      )
+      placeGroup(building, 'building', members)
+    })
+
+  pieces
+    .filter((candidate) => candidate.kind === 'tree-trunk')
+    .forEach((trunk) => {
+      const baseId = trunk.id.replace(/:trunk$/, '')
+      const members = pieces.filter((candidate) => candidate.id === `${baseId}:trunk` || candidate.id === `${baseId}:top`)
+      placeGroup(trunk, 'tree', members, [realScale.treeCanopySize, trunk.scale[1], realScale.treeCanopySize])
+    })
+
+  pieces
+    .filter((candidate) => candidate.kind === 'lamp-post')
+    .forEach((post) => {
+      const baseId = post.id.replace(/:post$/, '')
+      const members = pieces.filter((candidate) => candidate.id === `${baseId}:post` || candidate.id === `${baseId}:light`)
+      placeGroup(post, 'lamp', members, [Math.max(0.8, post.scale[0]), post.scale[1], Math.max(0.8, post.scale[2])])
+    })
+
+  pieces
+    .filter((candidate) => candidate.kind === 'phone-box')
+    .forEach((phone) => placeGroup(phone, 'phone-box', [phone]))
+
+  pieces.forEach((candidate) => {
+    if (consumed.has(candidate.id)) return
+    if (candidate.kind === 'roof' || candidate.kind === 'window' || candidate.kind === 'door') {
+      placed.push(candidate)
+      consumed.add(candidate.id)
+    }
+  })
+
+  return placed
 }
 
 function removeSurfaceBlockerOverlaps(pieces: ProceduralPiece[]) {

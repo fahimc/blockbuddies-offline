@@ -31,7 +31,7 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     durationMs: 45_000,
     target: 8,
     reward: 35,
-    startPosition: [9, 0, -2],
+    startPosition: [12, 0, -2],
   },
   {
     id: 'delivery-dash',
@@ -41,7 +41,7 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     durationMs: 75_000,
     target: 3,
     reward: 45,
-    startPosition: [12, 0, -5],
+    startPosition: [19, 0, -2],
   },
   {
     id: 'hide-and-seek',
@@ -51,7 +51,7 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     durationMs: 90_000,
     target: 3,
     reward: 50,
-    startPosition: [0, 0, 12],
+    startPosition: [-20, 0, 23],
   },
 ]
 

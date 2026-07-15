@@ -248,7 +248,10 @@ test.describe('portrait splash layout', () => {
     const rail = bodyCustomizer.locator('.bb-body-section-rail')
     const stage = bodyCustomizer.locator('.bb-body-stage')
     const controls = bodyCustomizer.locator('.bb-body-controls')
+    const avatarTurn = stage.locator('.bb-avatar-turntable')
     await expect(stage.locator('.bb-game-avatar-preview')).toBeVisible()
+    await expect(stage.locator('.bb-stage-glow')).toHaveCount(0)
+    await expect(stage.locator('.bb-avatar-rotate')).toHaveCount(0)
     await expect(bodyCustomizer.getByText('Skin Tone')).toBeVisible()
     await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
 
@@ -276,6 +279,12 @@ test.describe('portrait splash layout', () => {
     expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(720)
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
     expect(scrollWidth).toBeLessThanOrEqual(720)
+
+    const initialPreviewYaw = await avatarTurn.getAttribute('data-preview-yaw')
+    await avatarTurn.dispatchEvent('pointerdown', { pointerId: 9, pointerType: 'touch', clientX: 220, clientY: 260, isPrimary: true })
+    await avatarTurn.dispatchEvent('pointermove', { pointerId: 9, pointerType: 'touch', clientX: 300, clientY: 260, isPrimary: true })
+    await avatarTurn.dispatchEvent('pointerup', { pointerId: 9, pointerType: 'touch', clientX: 300, clientY: 260, isPrimary: true })
+    await expect.poll(() => avatarTurn.getAttribute('data-preview-yaw')).not.toBe(initialPreviewYaw)
 
     await bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }).click()
     await expect(bodyCustomizer.getByText('Hair Colour')).toBeVisible()

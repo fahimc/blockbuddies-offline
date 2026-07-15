@@ -491,3 +491,18 @@
 - [x] Add unit coverage for save snapshots, profile restoration, startup routing, and autosave load ordering
 - [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests
 - [x] Bump Android debug APK version metadata to 1.5.9 / 10509
+
+## Post-phase camera orbit and rule-based world grid
+
+- [x] Remove the customisation preview turntable, floor glow, and rotate button
+- [x] Rotate the real in-game avatar by direct horizontal preview drag
+- [x] Add independent full screen-drag camera orbit across walking, sitting, sleeping, and driving
+- [x] Preserve and restore the pre-sleep camera pose on wake
+- [x] Keep indoor chase cameras inside room walls
+- [x] Add a deterministic one-unit placement grid with exclusive footprint occupancy
+- [x] Enforce terrain rules for roads, sidewalks, parks, buildings, scenery, activities, and collectibles
+- [x] Widen sidewalks and place procedural and static lamps only along sidewalk edges
+- [x] Keep procedural parks clear of roads and sidewalks
+- [x] Snap core-town coins to unique, collision-free ground cells
+- [x] Add unit and Playwright regression coverage for customisation drag, orbit input, placement cells, and terrain rules
+- [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests

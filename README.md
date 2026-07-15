@@ -135,8 +135,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Shared real-world scale rules keep the block avatar, doors, floor heights,
   buildings, cars, roads, trees, and lamps in proportion to a nominal 1.78 m
   person.
-- Road-aware procedural placement keeps trees and phone boxes off roads and
-  pavements so scenery no longer blocks driving lanes.
+- A deterministic invisible placement grid gives buildings, scenery, activity
+  pads, and collectibles exclusive cells with terrain-specific rules. Roads
+  stay clear, parks contain park scenery, sidewalks are wider, and lamps are
+  restricted to sidewalk edges while entrances remain accessible.
 - Landmark roads are included in the final scenery cleanup, so generated trees
   and phone boxes are removed if a later road or pavement overlaps them.
 - Moving traffic cars follow deterministic procedural road-grid lanes with
