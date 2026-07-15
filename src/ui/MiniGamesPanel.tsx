@@ -54,7 +54,7 @@ export function MiniGamesPanel() {
                   {activeDefinition.title}
                 </span>
                 <span>
-                  {miniGame.score}/{miniGame.target}
+                  {miniGame.score}/{miniGame.target} · {miniGame.points} pts
                 </span>
               </div>
               {miniGame.status === 'running' ? (
@@ -76,10 +76,11 @@ export function MiniGamesPanel() {
             const record = miniGame.records[game.id]
             const isActive =
               miniGame.activeId === game.id && miniGame.status === 'running'
+            const isCoinRush = game.id === 'coin-rush'
             return (
               <article
                 key={game.id}
-                className="overflow-hidden rounded-2xl bg-white shadow"
+                className={`overflow-hidden rounded-2xl bg-white shadow ${isCoinRush ? 'ring-4 ring-amber-300' : ''}`}
               >
                 <div className={`h-2 bg-gradient-to-r ${gameTones[game.id]}`} />
                 <div className="p-3">
@@ -91,6 +92,11 @@ export function MiniGamesPanel() {
                       <p className="text-sm font-bold text-slate-600">
                         {game.description}
                       </p>
+                      {isCoinRush ? (
+                        <p className="mt-1 text-xs font-black uppercase text-amber-600">
+                          Featured: collect coins, stack points, beat the clock.
+                        </p>
+                      ) : null}
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-300 px-2.5 py-1 text-sm font-black text-slate-950 shadow">
                       <Coins size={15} aria-hidden />
@@ -105,7 +111,10 @@ export function MiniGamesPanel() {
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1">
                       <Clock3 size={14} aria-hidden />
-                      {Math.round(game.durationMs / 1000)} seconds
+                      <strong className="text-slate-950">{Math.round(game.durationMs / 1000)}s</strong>
+                    </span>
+                    <span className="rounded-lg bg-amber-50 px-2 py-1 text-amber-800">
+                      Points {game.pointsPerTarget} each + {game.completionBonus}
                     </span>
                     <span className="rounded-lg bg-blue-50 px-2 py-1 text-blue-800">
                       Plays {record?.plays ?? 0}
@@ -113,6 +122,9 @@ export function MiniGamesPanel() {
                     <span className="rounded-lg bg-emerald-50 px-2 py-1 text-emerald-800">
                       Best {record?.bestScore ?? 0}/{game.target}
                       {record?.bestTime ? ` in ${record.bestTime}s` : ''}
+                    </span>
+                    <span className="rounded-lg bg-fuchsia-50 px-2 py-1 text-fuchsia-800">
+                      Best points {record?.bestPoints ?? 0}
                     </span>
                   </div>
 

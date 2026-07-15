@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   coinRushTargets,
   deliveryDashTargets,
+  miniGameDefinition,
   startMiniGameSession,
   tickMiniGameSession,
 } from './miniGames'
@@ -13,10 +14,15 @@ describe('mini game sessions', () => {
     expect(session.activeId).toBe('coin-rush')
     expect(session.status).toBe('running')
     expect(session.target).toBe(8)
+    expect(session.points).toBe(0)
     expect(session.endsAt).toBe(45_100)
+    expect(session.announcement).toMatchObject({
+      title: 'Coin Rush',
+      objective: 'Collect 8 event coins',
+    })
   })
 
-  it('collects coin rush targets once and completes with a reward record', () => {
+  it('collects coin rush targets once and completes with points and a reward record', () => {
     let session = startMiniGameSession('coin-rush', 1_000, {})
     const first = tickMiniGameSession(session, 2_000, coinRushTargets[0].position)
     session = first.state
@@ -24,8 +30,10 @@ describe('mini game sessions', () => {
     session = repeated.state
 
     expect(first.collected).toHaveLength(1)
+    expect(first.pointsAwarded).toBe(miniGameDefinition('coin-rush').pointsPerTarget)
     expect(repeated.collected).toHaveLength(0)
     expect(session.score).toBe(1)
+    expect(session.points).toBe(10)
 
     for (let index = 1; index < coinRushTargets.length; index += 1) {
       session = tickMiniGameSession(session, 2_000 + index * 100, coinRushTargets[index].position).state
@@ -33,7 +41,8 @@ describe('mini game sessions', () => {
 
     expect(session.status).toBe('completed')
     expect(session.activeId).toBeUndefined()
-    expect(session.records['coin-rush']).toMatchObject({ plays: 1, bestScore: 8 })
+    expect(session.points).toBe(130)
+    expect(session.records['coin-rush']).toMatchObject({ plays: 1, bestScore: 8, bestPoints: 130 })
   })
 
   it('requires delivery dash targets in route order', () => {

@@ -1,5 +1,6 @@
 import { Armchair, Backpack, CarFront, Coins, Gamepad2, Sparkles, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { miniGameDefinition } from '../ai/miniGames'
 import { getLocation } from '../data/world'
 import { getDrivableVehicle } from '../game/vehicles'
@@ -29,6 +30,17 @@ export function HUD() {
     miniGame.status === 'running' && miniGame.activeId
       ? miniGameDefinition(miniGame.activeId)
       : undefined
+  const [now, setNow] = useState(() => performance.now())
+
+  useEffect(() => {
+    if (!activeMiniGame) return undefined
+    const interval = window.setInterval(() => setNow(performance.now()), 250)
+    return () => window.clearInterval(interval)
+  }, [activeMiniGame])
+
+  const miniGameSecondsLeft = activeMiniGame
+    ? Math.max(0, Math.ceil((miniGame.endsAt - now) / 1000))
+    : 0
 
   return (
     <>
@@ -47,12 +59,16 @@ export function HUD() {
             />
           ) : null}
           {activeMiniGame ? (
-            <Badge
-              icon={<Gamepad2 size={18} />}
-              text={`${activeMiniGame.title} ${miniGame.score}/${miniGame.target}`}
-              tone="bg-blue-200"
-              testId="mini-game-hud"
-            />
+            <span
+              data-testid="mini-game-hud"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-black text-white shadow"
+            >
+              <Gamepad2 size={18} aria-hidden />
+              <span>{activeMiniGame.title}</span>
+              <span className="rounded-md bg-blue-500 px-2 py-1">{miniGame.score}/{miniGame.target}</span>
+              <span className="rounded-md bg-amber-300 px-2 py-1 text-slate-950">{miniGame.points} pts</span>
+              <strong className="rounded-md bg-rose-500 px-2 py-1 text-lg leading-none">{miniGameSecondsLeft}s</strong>
+            </span>
           ) : null}
           {locationLabel ? (
             <Badge
@@ -82,12 +98,15 @@ export function HUD() {
             />
           ) : null}
           {activeMiniGame ? (
-            <MobilePill
-              icon={<Gamepad2 size={14} />}
-              text={`${miniGame.score}/${miniGame.target}`}
-              tone="bg-blue-500 text-white"
-              testId="mini-game-hud-mobile"
-            />
+            <span
+              data-testid="mini-game-hud-mobile"
+              className="inline-flex min-h-7 items-center gap-1 rounded-full bg-slate-950 px-2.5 text-[11px] font-black text-white shadow"
+            >
+              <Gamepad2 size={14} aria-hidden />
+              <span>{miniGame.score}/{miniGame.target}</span>
+              <span>{miniGame.points}p</span>
+              <strong className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[13px] leading-none">{miniGameSecondsLeft}s</strong>
+            </span>
           ) : null}
           <MobilePill
             icon={activeVehicle ? <CarFront size={14} /> : seatedSeatId ? <Armchair size={14} /> : <Sparkles size={14} />}

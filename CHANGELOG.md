@@ -10,6 +10,29 @@
 
 ### Known Issues
 
+## [v1.5.18-mini-game-engine-coin-rush] - 2026-07-15
+
+### Added
+
+- Added a reusable mini-game engine for collection and ordered-route game modes.
+- Added server-style mini-game start announcements with all-player language and a bold countdown timer.
+- Added Coin Rush point scoring, best-points records, glowing point-labelled pickups, and sound effects for starts, pickups, completion, and failure.
+- Added end-to-end coverage for Coin Rush popup, points accumulation, rewards, records, mobile HUD, and cancellation.
+
+### Changed
+
+- Updated Coin Rush to start clear of the first pickup so every run begins at `0/8`.
+- Updated the mini-game HUD and panel to show progress, points, reward, best points, and timer information.
+- Updated Android and package version metadata to `1.5.18` / `10518`.
+
+### Fixed
+
+- Fixed Coin Rush being able to auto-collect a nearby coin immediately after starting.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.17-character-control-mapping] - 2026-07-15
 
 ### Added

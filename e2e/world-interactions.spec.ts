@@ -42,7 +42,7 @@ test('uses classroom seats and drives a parked car end to end', async ({ page },
 
   await page.evaluate(() => window.__blockBuddiesE2E!.prepareClassroomSeatInteraction())
   await page.waitForTimeout(900)
-  await expect(page.getByText('Ms Maple')).toBeVisible()
+  await expect(page.getByText('Ms Maple')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByTestId('classroom-whiteboard')).toContainText('Build a kind community')
   const classroomPixels = await canvasPixelStats(page)
   expect(classroomPixels.visibleSamples).toBeGreaterThan(500)

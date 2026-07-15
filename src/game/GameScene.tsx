@@ -2349,10 +2349,7 @@ function MiniGameWorld() {
       {activeTargets.map((target, index) => (
         <group key={target.id} position={target.position}>
           {miniGame.activeId === 'coin-rush' ? (
-            <mesh position={[0, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.34, 0.08, 8, 24]} />
-              <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.5} />
-            </mesh>
+            <CoinRushPickup points={target.points ?? definition.pointsPerTarget} index={index} />
           ) : null}
           {miniGame.activeId === 'delivery-dash' ? (
             <mesh receiveShadow position={[0, 0.08, 0]}>
@@ -2384,6 +2381,34 @@ function MiniGameWorld() {
           </Html>
         </group>
       ))}
+    </group>
+  )
+}
+
+function CoinRushPickup({ points, index }: { points: number; index: number }) {
+  const group = useRef<THREE.Group>(null)
+  useFrame((state) => {
+    if (!group.current) return
+    group.current.rotation.y = state.clock.elapsedTime * 2.4 + index * 0.32
+    group.current.position.y = 0.96 + Math.sin(state.clock.elapsedTime * 3 + index) * 0.08
+  })
+
+  return (
+    <group ref={group}>
+      <pointLight position={[0, 0.35, 0]} intensity={0.75} distance={3.4} color="#fde047" />
+      <mesh position={[0, 0.82, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.43, 0.11, 10, 32]} />
+        <meshStandardMaterial color="#facc15" emissive="#f59e0b" emissiveIntensity={0.75} metalness={0.2} roughness={0.35} />
+      </mesh>
+      <mesh position={[0, 0.82, 0]}>
+        <cylinderGeometry args={[0.32, 0.32, 0.1, 28]} />
+        <meshStandardMaterial color="#fef3c7" emissive="#facc15" emissiveIntensity={0.55} />
+      </mesh>
+      <Html center position={[0, 1.65, 0]} zIndexRange={worldHtmlZIndexRange}>
+        <span className="whitespace-nowrap rounded-full bg-amber-300 px-2.5 py-1 text-xs font-black text-slate-950 shadow">
+          +{points} pts
+        </span>
+      </Html>
     </group>
   )
 }

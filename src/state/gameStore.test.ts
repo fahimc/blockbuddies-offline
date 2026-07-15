@@ -185,6 +185,10 @@ describe('mini game store flow', () => {
     )
     expect(useGameStore.getState().openPanel).toBeUndefined()
     expect(useGameStore.getState().buildMode).toBe(false)
+    expect(useGameStore.getState().miniGame.announcement?.title).toBe('Coin Rush')
+    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
+      'Mini game started for all players: Coin Rush',
+    )
 
     coinRushTargets.forEach((target, index) => {
       useGameStore.getState().tickMiniGame(2_000 + index * 100, target.position)
@@ -192,10 +196,14 @@ describe('mini game store flow', () => {
 
     expect(useGameStore.getState().miniGame.status).toBe('completed')
     expect(useGameStore.getState().coins).toBe(35)
+    expect(useGameStore.getState().miniGame.points).toBe(130)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
     expect(
       useGameStore.getState().miniGame.records['coin-rush']?.bestScore,
     ).toBe(8)
+    expect(
+      useGameStore.getState().miniGame.records['coin-rush']?.bestPoints,
+    ).toBe(130)
   })
 })
 

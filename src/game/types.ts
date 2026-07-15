@@ -230,7 +230,17 @@ export type MiniGameStatus = 'idle' | 'running' | 'completed' | 'failed'
 export type MiniGameRecord = {
   plays: number
   bestScore: number
+  bestPoints?: number
   bestTime?: number
+}
+
+export type MiniGameAnnouncement = {
+  sequence: number
+  title: string
+  objective: string
+  message: string
+  startedAt: number
+  endsAt: number
 }
 
 export type MiniGameRuntime = {
@@ -239,9 +249,12 @@ export type MiniGameRuntime = {
   startedAt: number
   endsAt: number
   score: number
+  points: number
   target: number
   collected: string[]
   records: Partial<Record<MiniGameId, MiniGameRecord>>
+  eventSequence: number
+  announcement?: MiniGameAnnouncement
 }
 
 export type BadgeId =

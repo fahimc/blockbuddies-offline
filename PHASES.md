@@ -565,3 +565,12 @@
 - [x] Keep the driving steer adapter separate from walking movement
 - [x] Add regression coverage for screen-relative character left and right movement
 - [x] Bump Android debug APK version metadata to 1.5.17 / 10517
+
+## Post-phase mini-game engine and Coin Rush polish
+
+- [x] Add reusable mini-game engine support for collection and ordered-route modes
+- [x] Add all-player mini-game start popup with bold countdown timer
+- [x] Add Coin Rush point accumulation, best-point records, and polished pickup visuals
+- [x] Add local sound effects for mini-game start, pickups, completion, and failure
+- [x] Add unit and end-to-end coverage for Coin Rush start, scoring, rewards, and cancellation
+- [x] Bump Android debug APK version metadata to 1.5.18 / 10518

@@ -5,10 +5,11 @@ type MiniGameSnapshot = {
     activeId?: 'coin-rush' | 'delivery-dash' | 'hide-and-seek'
     status: 'idle' | 'running' | 'completed' | 'failed'
     score: number
+    points: number
     target: number
     records: Record<
       string,
-      { plays: number; bestScore: number; bestTime?: number }
+      { plays: number; bestScore: number; bestPoints?: number; bestTime?: number }
     >
   }
   coins: number
@@ -78,15 +79,28 @@ test.describe('mini games end-to-end flow', () => {
     await page.goto('/')
     await completeStartFlow(page, 'CoinRunner')
 
-    await startMiniGame(page, 'Play Coin Rush', /Coin Rush 0\/8/)
+    await startMiniGame(page, 'Play Coin Rush', /Coin Rush.*0\/8/)
     await expect(
-      page.getByText('Coin Rush started: Collect 8 event coins'),
+      page.getByTestId('mini-game-announcement'),
+    ).toContainText('Coin Rush')
+    await expect(
+      page.getByTestId('mini-game-announcement'),
+    ).toContainText('All players')
+    await expect(page.getByTestId('mini-game-announcement').locator('strong')).toContainText(/\d+s/)
+    await expect(
+      page.getByText('Mini game started for all players: Coin Rush'),
     ).toBeVisible()
     const started = await page.evaluate(() =>
       window.__blockBuddiesE2E!.getSnapshot(),
     )
     expect(started.miniGame.activeId).toBe('coin-rush')
     expect(started.miniGame.score).toBe(0)
+    expect(started.miniGame.points).toBe(0)
+
+    const firstCoin = await collectNextTarget(page)
+    expect(firstCoin.miniGame.score).toBe(1)
+    expect(firstCoin.miniGame.points).toBe(10)
+    await expect(page.getByTestId('mini-game-hud')).toContainText('10 pts')
 
     const snapshot = await completeMiniGameRoute(page)
 
@@ -94,10 +108,12 @@ test.describe('mini games end-to-end flow', () => {
     expect(snapshot.miniGame.records['coin-rush']).toMatchObject({
       plays: 1,
       bestScore: 8,
+      bestPoints: 130,
     })
     expect(snapshot.coins).toBe(35)
+    expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
-    await expect(page.getByText('Coin Rush complete! +35 coins')).toBeVisible()
+    await expect(page.getByText('Coin Rush complete! 130 pts, +35 coins')).toBeVisible()
     await expect(page.getByText('Badge earned: Mini Game Star')).toBeVisible()
     await expect(page.getByText('Nice run in Coin Rush!')).toBeVisible()
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
@@ -112,25 +128,21 @@ test.describe('mini games end-to-end flow', () => {
     await page.goto('/')
     await completeStartFlow(page, 'DashRunner')
 
-    await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash 0\/3/)
+    await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash.*0\/3/)
     await expect(page.getByText('Delivery Dash: Park drop-off')).toHaveCount(1, { timeout: 15_000 })
 
     const first = await collectNextTarget(page)
     expect(first.miniGame.status).toBe('running')
     expect(first.miniGame.score).toBe(1)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(
-      'Delivery Dash 1/3',
-    )
+    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*1\/3/)
     await expect(page.getByText('Delivery Dash: School drop-off')).toHaveCount(
       1,
     )
-    await expect(page.getByText('Park drop-off tagged! 1/3')).toBeVisible()
+    await expect(page.getByText('Park drop-off collected! +15 pts (1/3)')).toBeVisible()
 
     const second = await collectNextTarget(page)
     expect(second.miniGame.score).toBe(2)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(
-      'Delivery Dash 2/3',
-    )
+    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*2\/3/)
     await expect(page.getByText('Delivery Dash: House drop-off')).toHaveCount(1)
 
     const finished = await collectNextTarget(page)
@@ -138,10 +150,11 @@ test.describe('mini games end-to-end flow', () => {
     expect(finished.miniGame.records['delivery-dash']).toMatchObject({
       plays: 1,
       bestScore: 3,
+      bestPoints: 85,
     })
     expect(finished.coins).toBe(45)
     await expect(
-      page.getByText('Delivery Dash complete! +45 coins'),
+      page.getByText('Delivery Dash complete! 85 pts, +45 coins'),
     ).toBeVisible()
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
@@ -152,7 +165,7 @@ test.describe('mini games end-to-end flow', () => {
     await page.goto('/')
     await completeStartFlow(page, 'Seeker')
 
-    await startMiniGame(page, 'Play Hide & Seek', /Hide & Seek 0\/3/)
+    await startMiniGame(page, 'Play Hide & Seek', /Hide & Seek.*0\/3/)
     await expect(page.getByText('Hide & Seek: LunaBlocks')).toHaveCount(1, { timeout: 15_000 })
     await expect(page.getByText('Hide & Seek: MaxJumps')).toHaveCount(1, { timeout: 15_000 })
     await expect(page.getByText('Hide & Seek: PipPop')).toHaveCount(1, { timeout: 15_000 })
@@ -163,10 +176,11 @@ test.describe('mini games end-to-end flow', () => {
     expect(finished.miniGame.records['hide-and-seek']).toMatchObject({
       plays: 1,
       bestScore: 3,
+      bestPoints: 100,
     })
     expect(finished.coins).toBe(50)
     await expect(
-      page.getByText('Hide & Seek complete! +50 coins'),
+      page.getByText('Hide & Seek complete! 100 pts, +50 coins'),
     ).toBeVisible()
 
     await openMiniGamesPanel(page)
@@ -180,7 +194,7 @@ test.describe('mini games end-to-end flow', () => {
     await page.goto('/')
     await completeStartFlow(page, 'CancelTester')
 
-    await startMiniGame(page, 'Play Coin Rush', /Coin Rush 0\/8/)
+    await startMiniGame(page, 'Play Coin Rush', /Coin Rush.*0\/8/)
     await openMiniGamesPanel(page)
     await page.getByRole('button', { name: 'Cancel Mini Game' }).click()
 
@@ -189,6 +203,7 @@ test.describe('mini games end-to-end flow', () => {
     )
     expect(snapshot.miniGame.status).toBe('idle')
     expect(snapshot.miniGame.records['coin-rush']).toBeUndefined()
+    expect(snapshot.miniGame.points).toBe(0)
     expect(snapshot.coins).toBe(0)
     await expect(page.getByText('Mini game cancelled')).toBeVisible()
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
@@ -212,6 +227,8 @@ test.describe('mobile mini game controls', () => {
 
     await startMiniGame(page, 'Play Coin Rush', /0\/8/)
     await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0/8')
+    await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0p')
+    await expect(page.getByTestId('mini-game-announcement')).toContainText('Coin Rush')
     await expect(
       page.getByRole('button', { name: 'Cancel', exact: true }),
     ).toBeVisible()

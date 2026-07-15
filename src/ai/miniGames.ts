@@ -4,23 +4,9 @@ import type {
   MiniGameRuntime,
   Vec3,
 } from '../game/types'
+import { createMiniGameEngine, type MiniGameDefinition, type MiniGameTarget } from './miniGameEngine'
 
-export type MiniGameDefinition = {
-  id: MiniGameId
-  title: string
-  description: string
-  objective: string
-  durationMs: number
-  target: number
-  reward: number
-  startPosition: Vec3
-}
-
-export type MiniGameTarget = {
-  id: string
-  label: string
-  position: Vec3
-}
+export type { MiniGameDefinition, MiniGameTarget }
 
 export const miniGameDefinitions: MiniGameDefinition[] = [
   {
@@ -31,7 +17,12 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     durationMs: 45_000,
     target: 8,
     reward: 35,
-    startPosition: [12, 0, -2],
+    startPosition: [10, 0, 2],
+    mode: 'collect_any',
+    collectRadius: 1.55,
+    pointsPerTarget: 10,
+    completionBonus: 50,
+    startMessage: 'Coin Rush has started! Grab every glowing coin before time runs out.',
   },
   {
     id: 'delivery-dash',
@@ -42,6 +33,11 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     target: 3,
     reward: 45,
     startPosition: [19, 0, -2],
+    mode: 'ordered_route',
+    collectRadius: 1.7,
+    pointsPerTarget: 15,
+    completionBonus: 40,
+    startMessage: 'Delivery Dash has started! Run the route in order.',
   },
   {
     id: 'hide-and-seek',
@@ -52,6 +48,11 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
     target: 3,
     reward: 50,
     startPosition: [-20, 0, 23],
+    mode: 'collect_any',
+    collectRadius: 1.35,
+    pointsPerTarget: 20,
+    completionBonus: 40,
+    startMessage: 'Hide & Seek has started! Find every hidden buddy.',
   },
 ]
 
@@ -78,154 +79,44 @@ export const hideAndSeekTargets: MiniGameTarget[] = [
   { id: 'hide-pip', label: 'PipPop', position: [-7, 0, 7] },
 ]
 
+const miniGameEngine = createMiniGameEngine({
+  definitions: miniGameDefinitions,
+  targets: {
+    'coin-rush': coinRushTargets,
+    'delivery-dash': deliveryDashTargets,
+    'hide-and-seek': hideAndSeekTargets,
+  },
+})
+
 export function miniGameDefinition(id: MiniGameId) {
-  return (
-    miniGameDefinitions.find((game) => game.id === id) ?? miniGameDefinitions[0]
-  )
+  return miniGameEngine.definition(id)
 }
 
 export function miniGameTargets(id: MiniGameId): MiniGameTarget[] {
-  if (id === 'coin-rush') return coinRushTargets
-  if (id === 'delivery-dash') return deliveryDashTargets
-  return hideAndSeekTargets
+  return miniGameEngine.targets(id)
 }
 
 export function createInitialMiniGame(
   records: Partial<Record<MiniGameId, MiniGameRecord>> = {},
 ): MiniGameRuntime {
-  return {
-    status: 'idle',
-    startedAt: 0,
-    endsAt: 0,
-    score: 0,
-    target: 0,
-    collected: [],
-    records,
-  }
+  return miniGameEngine.createInitial(records)
 }
 
 export function startMiniGameSession(
   id: MiniGameId,
   now: number,
   records: Partial<Record<MiniGameId, MiniGameRecord>>,
+  eventSequence = 0,
 ): MiniGameRuntime {
-  const definition = miniGameDefinition(id)
-  return {
-    activeId: id,
-    status: 'running',
-    startedAt: now,
-    endsAt: now + definition.durationMs,
-    score: 0,
-    target: definition.target,
-    collected: [],
-    records,
-  }
+  return miniGameEngine.start(id, now, records, eventSequence)
 }
 
-export type MiniGameTickResult = {
-  state: MiniGameRuntime
-  collected: MiniGameTarget[]
-  completedNow: boolean
-  failedNow: boolean
-  reward: number
-}
+export type { MiniGameTickResult } from './miniGameEngine'
 
 export function tickMiniGameSession(
   state: MiniGameRuntime,
   now: number,
   playerPosition: Vec3,
-): MiniGameTickResult {
-  if (state.status !== 'running' || !state.activeId) {
-    return {
-      state,
-      collected: [],
-      completedNow: false,
-      failedNow: false,
-      reward: 0,
-    }
-  }
-
-  const definition = miniGameDefinition(state.activeId)
-  const targets = miniGameTargets(state.activeId)
-  const collected: MiniGameTarget[] = []
-  let nextState = state
-
-  if (state.activeId === 'delivery-dash') {
-    const target = targets[state.score]
-    if (target && distance2d(playerPosition, target.position) <= 1.7)
-      collected.push(target)
-  } else {
-    for (const target of targets) {
-      if (
-        !state.collected.includes(target.id) &&
-        distance2d(playerPosition, target.position) <= 1.35
-      ) {
-        collected.push(target)
-      }
-    }
-  }
-
-  if (collected.length > 0) {
-    const collectedIds = collected.map((target) => target.id)
-    nextState = {
-      ...nextState,
-      score: Math.min(definition.target, nextState.score + collected.length),
-      collected: [...nextState.collected, ...collectedIds],
-    }
-  }
-
-  if (nextState.score >= definition.target) {
-    const elapsed = Math.max(1, Math.round((now - nextState.startedAt) / 1000))
-    const record = nextState.records[definition.id]
-    const nextRecord: MiniGameRecord = {
-      plays: (record?.plays ?? 0) + 1,
-      bestScore: Math.max(record?.bestScore ?? 0, nextState.score),
-      bestTime: record?.bestTime ? Math.min(record.bestTime, elapsed) : elapsed,
-    }
-    return {
-      state: {
-        ...nextState,
-        status: 'completed',
-        activeId: undefined,
-        records: { ...nextState.records, [definition.id]: nextRecord },
-      },
-      collected,
-      completedNow: true,
-      failedNow: false,
-      reward: definition.reward,
-    }
-  }
-
-  if (now >= nextState.endsAt) {
-    const record = nextState.records[definition.id]
-    const nextRecord: MiniGameRecord = {
-      plays: (record?.plays ?? 0) + 1,
-      bestScore: Math.max(record?.bestScore ?? 0, nextState.score),
-      bestTime: record?.bestTime,
-    }
-    return {
-      state: {
-        ...nextState,
-        status: 'failed',
-        activeId: undefined,
-        records: { ...nextState.records, [definition.id]: nextRecord },
-      },
-      collected,
-      completedNow: false,
-      failedNow: true,
-      reward: 0,
-    }
-  }
-
-  return {
-    state: nextState,
-    collected,
-    completedNow: false,
-    failedNow: false,
-    reward: 0,
-  }
-}
-
-function distance2d(a: Vec3, b: Vec3) {
-  return Math.hypot(a[0] - b[0], a[2] - b[2])
+) {
+  return miniGameEngine.tick(state, now, playerPosition)
 }

@@ -18,6 +18,8 @@ import { BuildPanel } from '../ui/BuildPanel'
 import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
 import { MiniGamesPanel } from '../ui/MiniGamesPanel'
+import { MiniGameAnnouncement } from '../ui/MiniGameAnnouncement'
+import { MiniGameAudio } from '../ui/MiniGameAudio'
 import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
 import { useGameStore } from '../state/gameStore'
@@ -73,6 +75,8 @@ export function GameScreen() {
 
         <GameMenu />
         <HUD />
+        <MiniGameAnnouncement />
+        <MiniGameAudio />
         <MiniMap />
         <ChatPanel />
         <TouchControls />

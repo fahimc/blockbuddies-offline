@@ -1020,8 +1020,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       const definition = miniGameDefinition(id)
       const teleportSequence = state.teleportSequence + 1
+      const eventSequence = state.miniGame.eventSequence + 1
       return {
-        miniGame: startMiniGameSession(id, now, state.miniGame.records),
+        miniGame: startMiniGameSession(id, now, state.miniGame.records, eventSequence),
         playerPosition: definition.startPosition,
         teleportSequence,
         teleportTarget: {
@@ -1038,7 +1039,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         openPanel: undefined,
         chat: [
           ...state.chat.slice(-60),
-          systemMessage(`${definition.title} started: ${definition.objective}`),
+          systemMessage(`Mini game started for all players: ${definition.title}`),
+          systemMessage(`${definition.title}: ${definition.objective}`),
         ],
       }
     }),
@@ -1052,14 +1054,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       const definition = activeId ? miniGameDefinition(activeId) : undefined
       const collectedMessages = result.collected.map((target) =>
         systemMessage(
-          `${target.label} tagged! ${result.state.score}/${result.state.target}`,
+          `${target.label} collected! +${target.points ?? definition?.pointsPerTarget ?? 0} pts (${result.state.score}/${result.state.target})`,
         ),
       )
       const completedMessages =
         result.completedNow && definition
           ? [
               systemMessage(
-                `${definition.title} complete! +${result.reward} coins`,
+                `${definition.title} complete! ${result.state.points} pts, +${result.reward} coins`,
               ),
               ...(!state.earnedBadges.includes('mini-game-star')
                 ? [systemMessage('Badge earned: Mini Game Star')]
@@ -1098,8 +1100,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         activeId: undefined,
         status: 'idle',
         score: 0,
+        points: 0,
         target: 0,
         collected: [],
+        announcement: undefined,
       },
       chat:
         state.miniGame.status === 'running'
