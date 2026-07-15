@@ -312,6 +312,12 @@ chosen avatar and character name. Returning players now go straight from Start
 into the game after the local save loads, and startup autosave waits for
 IndexedDB/localForage so defaults cannot overwrite an existing character.
 
+The `v1.5.10` APK removes the customisation turntable, rotates the live avatar
+by direct drag, restores the pre-sleep camera pose, and adds full gameplay orbit
+control. Its rule-based world grid keeps roads clear, widens sidewalks, places
+street furniture at sidewalk edges, and prevents scenery, activities, and coins
+from sharing occupied cells.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

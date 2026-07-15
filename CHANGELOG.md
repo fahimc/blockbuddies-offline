@@ -4,6 +4,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Known Issues
+
+## [v1.5.10-world-grid-camera] - 2026-07-15
+
+### Added
+
 - Added a deterministic one-unit invisible world grid with terrain compatibility rules and exclusive object footprint occupancy.
 - Added regression coverage for avatar drag rotation, screen orbit input, core coin cells, procedural object occupancy, park clearance, and sidewalk-only lamps.
 
@@ -13,6 +23,7 @@
 - Gameplay screen dragging now provides independent full horizontal and vertical camera orbit in every player pose.
 - Indoor cameras stay inside room walls, and waking restores the exact camera yaw, orbit, and pitch used before sleeping.
 - Procedural parks, trees, lamps, phone boxes, buildings, and core-town coins now snap to validated terrain cells; sidewalks are wider and lamps sit on their outer edges.
+- Updated Android and package version metadata to `1.5.10` / `10510`.
 
 ### Fixed
 

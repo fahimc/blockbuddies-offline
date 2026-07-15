@@ -506,3 +506,4 @@
 - [x] Snap core-town coins to unique, collision-free ground cells
 - [x] Add unit and Playwright regression coverage for customisation drag, orbit input, placement cells, and terrain rules
 - [x] Run lint, typecheck, full unit tests, production build, and full Playwright tests
+- [x] Bump Android debug APK version metadata to 1.5.10 / 10510
