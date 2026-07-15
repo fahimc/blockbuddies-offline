@@ -213,6 +213,7 @@ export type GameSettings = {
   worldSeed: string
   worldViewDistance: 1 | 2 | 3
   nightMode: boolean
+  interiorCameraZoom: number
 }
 
 export type ObbyState = {

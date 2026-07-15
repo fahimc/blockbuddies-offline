@@ -1617,14 +1617,15 @@ function PlayerController({
       group.current.rotation.y = sleepingThisFrame ? 0 : yaw.current
     }
     const mobile = state.size.width < 640
+    const interiorZoom = THREE.MathUtils.clamp(settings.interiorCameraZoom ?? 1.3, 0.85, 1.85)
     const cameraDistance = activeVehicleThisFrame
       ? mobile
         ? -15
         : -10.5
       : activeInterior
         ? mobile
-          ? -5.6
-          : -6.2
+          ? -5.6 * interiorZoom
+          : -6.2 * interiorZoom
         : mobile
           ? -13
           : -8
@@ -1634,8 +1635,8 @@ function PlayerController({
         : 6.2
       : activeInterior
         ? mobile
-          ? 7
-          : 5.5
+          ? 7 + (interiorZoom - 1) * 2.2
+          : 5.5 + (interiorZoom - 1) * 1.6
         : mobile
           ? 7.4
           : 5
@@ -1655,6 +1656,11 @@ function PlayerController({
       snapCameraOnNextFrame.current = false
     } else {
       state.camera.position.lerp(cameraTarget, 0.12)
+    }
+    const targetFov = activeInterior ? THREE.MathUtils.lerp(42, 64, (interiorZoom - 0.85) / 1) : 48
+    if ('fov' in state.camera && Math.abs(state.camera.fov - targetFov) > 0.1) {
+      state.camera.fov = targetFov
+      state.camera.updateProjectionMatrix()
     }
     state.camera.lookAt(position.current.x, position.current.y + lookHeight, position.current.z)
     setPlayer([position.current.x, position.current.y - standY, position.current.z], yaw.current, controllerTeleportSequence)

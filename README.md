@@ -397,6 +397,11 @@ traffic cars show Drive Traffic Car prompts, selected traffic cars become
 player-drivable without leaving invisible collision copies, and roads/sidewalks
 are treated as traversal surfaces rather than blockers.
 
+The `v1.5.26` APK adds a room camera zoom slider. When the player is inside a
+house, classroom, shop, or other interior, a compact slider appears so the room
+camera can be pulled back or zoomed in. The setting is saved and also adjusts
+interior camera FOV for tight rooms.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

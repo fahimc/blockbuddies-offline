@@ -632,3 +632,11 @@
 - [x] Make roads, sidewalks, parks, and built roads non-solid traversal surfaces
 - [x] Add unit coverage for traffic takeover heading and traffic-car HUD labels
 - [x] Bump Android debug APK version metadata to 1.5.25 / 10525
+
+## Post-phase room camera zoom
+
+- [x] Add a room-only zoom slider for interior camera distance
+- [x] Apply the slider to interior camera distance, height, and FOV
+- [x] Save interior camera zoom in settings
+- [x] Add unit and Playwright coverage for the room zoom control
+- [x] Bump Android debug APK version metadata to 1.5.26 / 10526

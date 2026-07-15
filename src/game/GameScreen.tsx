@@ -22,6 +22,7 @@ import { MiniGameAnnouncement } from '../ui/MiniGameAnnouncement'
 import { GameAudio } from '../ui/GameAudio'
 import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
+import { RoomCameraZoom } from '../ui/RoomCameraZoom'
 import { useGameStore } from '../state/gameStore'
 
 const keyboardMap = [
@@ -80,6 +81,7 @@ export function GameScreen() {
         <MiniMap />
         <ChatPanel />
         <TouchControls />
+        <RoomCameraZoom />
         {openPanel === 'quests' ? <QuestPanel /> : null}
         {openPanel === 'shop' ? <ShopPanel /> : null}
         {openPanel === 'avatar' ? <AvatarPanel /> : null}

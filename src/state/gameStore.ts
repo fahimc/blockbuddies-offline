@@ -247,6 +247,7 @@ export const defaultSettings: GameSettings = {
   worldSeed: 'LONDON-2026',
   worldViewDistance: 1,
   nightMode: false,
+  interiorCameraZoom: 1.3,
 }
 
 export const defaultPlayerName = 'BlockBuddy'

@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.26-room-camera-zoom] - 2026-07-15
+
+### Added
+
+- Added a room-only camera zoom slider so players can zoom out or in while inside houses, classrooms, shops, and other interiors.
+- Added unit and Playwright coverage for the room camera zoom control.
+
+### Changed
+
+- Increased the default interior camera pullback and widened interior FOV as the slider zooms out.
+- Saved the interior camera zoom preference with the existing settings data.
+- Updated Android and package version metadata to `1.5.26` / `10526`.
+
+### Fixed
+
+- Fixed interior rooms feeling too close to the player, especially when sitting or near classroom furniture.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.25-traffic-hijack-driving] - 2026-07-15
 
 ### Added
