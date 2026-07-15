@@ -1,5 +1,11 @@
 # Build Phases
 
+## Post-phase map and sound polish
+
+- [x] Add shared local sound effects for coins, panels, travel, cars, and mini games.
+- [x] Fix minimap movement and player arrow direction with tested screen-space math.
+- [x] Package and release Android debug APK for the map and sound polish build.
+
 ## Phase 0 - Repo, tooling, and skeleton
 
 - [x] Create Vite React TypeScript app

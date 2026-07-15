@@ -78,7 +78,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   rewards, and a Mini Game Star badge.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
-  local sound effects. Coin Rush is the first polished flow with spendable
+  local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
   pickup coins, glowing mesh pickups, and completion scoring.
 - Delivery Dash is a mapped delivery route with a parcel pickup, ordered
   drop-offs, active minimap/town-map markers, per-stop coin rewards, and time
@@ -376,6 +376,10 @@ The `v1.5.21` APK makes driving discoverable from normal play. Buddy Parking is
 now a teleport destination on the town map, the arrival point lands beside a
 drivable car, parked cars show Drive labels, and tapping/clicking a nearby car
 or its Drive button starts driving.
+
+The `v1.5.22` APK adds broader local sound cues for coins, panels, travel, cars,
+and mini games. It also fixes the minimap coordinate conversion so markers and
+the player arrow track the same screen direction as the character.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

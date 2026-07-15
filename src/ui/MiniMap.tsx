@@ -6,7 +6,7 @@ import { useGameStore } from '../state/gameStore'
 import { createTrafficVehicles, makeTrafficLanes, trafficPositionAtTime, type TrafficLane } from '../game/traffic'
 import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
-import { miniMapPlayerRotation } from './miniMapMath'
+import { miniMapPlayerRotation, miniMapPointPercent, miniMapRoadPercent } from './miniMapMath'
 
 const mapRange = 82
 const roadRepeat = 72
@@ -116,7 +116,7 @@ function roadLinesFor(center: Vec3) {
       id: `x:${roadX}`,
       orientation: 'vertical',
       style: {
-        left: `${percentFor(roadX, center[0])}%`,
+        left: `${miniMapRoadPercent(roadX, center[0], mapRange)}%`,
         width: `${roadWidthPercent}%`,
       },
     })
@@ -127,7 +127,7 @@ function roadLinesFor(center: Vec3) {
       id: `z:${roadZ}`,
       orientation: 'horizontal',
       style: {
-        top: `${topPercentForZ(roadZ, center[2])}%`,
+        top: `${miniMapRoadPercent(roadZ, center[2], mapRange)}%`,
         height: `${roadWidthPercent}%`,
       },
     })
@@ -152,20 +152,9 @@ function isOnMap(position: Vec3, center: Vec3) {
 }
 
 function pointStyle(position: Vec3, center: Vec3) {
+  const percent = miniMapPointPercent(position, center, mapRange)
   return {
-    left: `${percentFor(position[0], center[0])}%`,
-    top: `${topPercentForZ(position[2], center[2])}%`,
+    left: `${percent.left}%`,
+    top: `${percent.top}%`,
   }
-}
-
-function percentFor(value: number, center: number) {
-  return clamp(((value - center + mapRange / 2) / mapRange) * 100, 0, 100)
-}
-
-function topPercentForZ(value: number, center: number) {
-  return clamp(((center - value + mapRange / 2) / mapRange) * 100, 0, 100)
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value))
 }

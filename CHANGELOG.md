@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.22-map-sounds] - 2026-07-15
+
+### Added
+
+- Added WebAudio sound cues for coin gains, menu panels, map/interior travel, vehicle entry/exit, and mini-game start, pickup, completion, and failure events.
+- Added unit coverage for sound cue selection and minimap screen-space movement.
+
+### Changed
+
+- Replaced the mini-game-only audio component with a shared game audio cue component.
+- Updated Android and package version metadata to `1.5.22` / `10522`.
+
+### Fixed
+
+- Fixed the minimap screen-space coordinate conversion so markers move in the same direction as the player instead of appearing inverted.
+- Fixed the minimap player arrow rotation to match the corrected screen-space map direction.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.21-parking-map-driving] - 2026-07-15
 
 ### Added
