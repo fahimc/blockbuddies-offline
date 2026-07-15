@@ -41,6 +41,7 @@ export const vehicleReverseSpeed = 5.5
 export const vehicleAcceleration = 9
 export const vehicleBrakeStrength = 18
 export const vehicleSteeringRate = 1.55
+export const roadDriveClearancePadding = realScale.carWidth / 2 + 0.5
 
 export function createParkedVehicles() {
   return parkedVehicleDefinitions.map((vehicle) => ({
@@ -99,6 +100,14 @@ export function advanceDrivableVehicle(vehicle: DrivableVehicle, input: DriveInp
 
 export function drivingSteerFromStrafe(strafe: number) {
   return -clamp(strafe, -1, 1)
+}
+
+export function drivingInputFromControls(forward: number, strafe: number, brake: boolean): DriveInput {
+  return {
+    throttle: clamp(forward, -1, 1),
+    steer: drivingSteerFromStrafe(strafe),
+    brake,
+  }
 }
 
 export function advanceDrivableVehicleWithCollisions(

@@ -10,6 +10,29 @@
 
 ### Known Issues
 
+## [v1.5.24-gta-driving-roads] - 2026-07-15
+
+### Added
+
+- Added a tested player-drive input adapter so forward, reverse, steer, and brake controls have one gameplay contract.
+- Added Playwright coverage that verifies a parked car drives forward toward the Buddy Parking driveway.
+- Added brighter low-poly headlights, front grille, and rear lights so car direction is visually readable.
+
+### Changed
+
+- Tightened procedural road placement rules around a wider drivable corridor so trees, phone boxes, and lamp groups cannot block lanes.
+- Kept valid lamps on sidewalks while removing only the lamp groups that enter the car corridor.
+- Updated Android and package version metadata to `1.5.24` / `10524`.
+
+### Fixed
+
+- Fixed the player-driven car direction regression by routing scene controls through the tested driving input helper.
+- Fixed scenery that could be technically outside the road mesh but still close enough to block GTA-style driving lanes.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.23-vehicle-clearance-music] - 2026-07-15
 
 ### Added

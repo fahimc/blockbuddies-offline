@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildingHeightForFloors, realScale } from '../game/scale'
-import { districtFor, generateProceduralWorld, hashSeed } from './proceduralWorld'
+import { districtFor, generateProceduralWorld, hashSeed, roadDriveCorridorPadding } from './proceduralWorld'
 
 describe('procedural borough world', () => {
   it('generates deterministic chunks for the same seed and center', () => {
@@ -91,6 +91,37 @@ describe('procedural borough world', () => {
     expect(blockers.length).toBeGreaterThan(0)
     expect(roadsAndPavements.length).toBeGreaterThan(0)
     expect(blockers.every((blocker) => roadsAndPavements.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
+  })
+
+  it('keeps traffic lanes clear of scenery inside the drivable road corridor', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 2,
+      night: true,
+    })
+
+    const driveCorridors = world.pieces
+      .filter((piece) => piece.kind === 'road')
+      .map((road) => ({
+        position: road.position,
+        scale: [
+          road.scale[0] + roadDriveCorridorPadding * 2,
+          road.scale[1],
+          road.scale[2] + roadDriveCorridorPadding * 2,
+        ] as [number, number, number],
+      }))
+    const blockers = world.pieces.filter((piece) =>
+      piece.kind === 'tree-trunk' ||
+      piece.kind === 'tree-top' ||
+      piece.kind === 'lamp-post' ||
+      piece.kind === 'lamp-light' ||
+      piece.kind === 'phone-box',
+    )
+
+    expect(driveCorridors.length).toBeGreaterThan(0)
+    expect(blockers.length).toBeGreaterThan(0)
+    expect(blockers.every((blocker) => driveCorridors.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
   })
 
   it('does not generate obsolete stationary buses in traffic lanes', () => {

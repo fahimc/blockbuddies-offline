@@ -81,7 +81,7 @@ import {
   createParkedVehicles,
   collisionBoxOverlapsParkingClearance,
   distanceToVehicle,
-  drivingSteerFromStrafe,
+  drivingInputFromControls,
   drivableVehicleCollisionBoxes,
   nearestDrivableVehicle,
   parkingLot,
@@ -1435,7 +1435,7 @@ function PlayerController({
       ]
       const nextVehicle = advanceDrivableVehicleWithCollisions(
         currentVehicle,
-        { throttle: forward, steer: drivingSteerFromStrafe(strafe), brake: Boolean(keys.jump) || touch.jump },
+        drivingInputFromControls(forward, strafe, Boolean(keys.jump) || touch.jump),
         delta,
         vehicleObstacles,
       )
@@ -2681,6 +2681,22 @@ function CarPiece({ color, occupied = false }: { color: string; occupied?: boole
         <boxGeometry args={[realScale.carLength * 0.46, realScale.carCabinHeight, realScale.carWidth * 0.78]} />
         <meshStandardMaterial color="#bfdbfe" roughness={0.58} transparent={occupied} opacity={occupied ? 0.56 : 1} />
       </mesh>
+      <mesh castShadow position={[realScale.carLength / 2 + 0.025, bodyY + 0.08, 0]}>
+        <boxGeometry args={[0.05, realScale.carBodyHeight * 0.45, realScale.carWidth * 0.72]} />
+        <meshStandardMaterial color="#f8fafc" emissive="#fde68a" emissiveIntensity={0.2} roughness={0.5} />
+      </mesh>
+      {[-realScale.carWidth * 0.27, realScale.carWidth * 0.27].map((z) => (
+        <mesh key={`headlight-${z}`} castShadow position={[realScale.carLength / 2 + 0.055, bodyY + 0.16, z]}>
+          <boxGeometry args={[0.07, 0.14, 0.26]} />
+          <meshStandardMaterial color="#fef9c3" emissive="#fde047" emissiveIntensity={0.55} roughness={0.42} />
+        </mesh>
+      ))}
+      {[-realScale.carWidth * 0.32, realScale.carWidth * 0.32].map((z) => (
+        <mesh key={`taillight-${z}`} castShadow position={[-realScale.carLength / 2 - 0.055, bodyY + 0.12, z]}>
+          <boxGeometry args={[0.07, 0.16, 0.22]} />
+          <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.25} roughness={0.48} />
+        </mesh>
+      ))}
       {[-realScale.carLength * 0.32, realScale.carLength * 0.32].map((x) =>
         [-realScale.carWidth * 0.48, realScale.carWidth * 0.48].map((z) => (
           <mesh key={`${x}-${z}`} castShadow position={[x, realScale.wheelRadius, z]} rotation={[Math.PI / 2, 0, 0]}>

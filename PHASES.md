@@ -614,3 +614,12 @@
 - [x] Allow tapping/clicking a nearby car to request driving
 - [x] Add unit and Playwright coverage for map-to-parking-to-driving flow
 - [x] Bump Android debug APK version metadata to 1.5.21 / 10521
+
+## Post-phase GTA-style driving roads
+
+- [x] Route forward, reverse, steering, and brake through a tested drive-input adapter
+- [x] Add visual car front and rear details so direction is readable while driving
+- [x] Keep procedural scenery outside a wider drivable road corridor
+- [x] Preserve sidewalk lamps unless they block vehicle lanes
+- [x] Add unit and Playwright coverage for drive direction and road clearance
+- [x] Bump Android debug APK version metadata to 1.5.24 / 10524

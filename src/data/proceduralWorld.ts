@@ -53,6 +53,7 @@ const chunkSize = 36
 const riverWidth = 9
 const treeRoadClearance = realScale.roadTile * 0.66 + realScale.pavementWidth * 0.7 + 0.72
 const buildingRoadClearance = realScale.roadTile * 0.5 + realScale.pavementWidth + meters(1.35)
+export const roadDriveCorridorPadding = realScale.carWidth / 2 + 0.5
 const doorSafeZoneRadius = 1.85
 const plotInset = 3.8
 const buildingPalette = ['#f97316', '#facc15', '#93c5fd', '#a78bfa', '#fb7185', '#22c55e', '#f9a8d4']
@@ -420,21 +421,49 @@ export function applyProceduralPlacementRules(pieces: ProceduralPiece[]) {
 }
 
 function removeSurfaceBlockerOverlaps(pieces: ProceduralPiece[]) {
-  const surfaces = pieces.filter((piece) => piece.kind === 'road' || piece.kind === 'pavement')
+  const driveCorridors = pieces
+    .filter((piece) => piece.kind === 'road')
+    .map((road) => ({
+      position: road.position,
+      scale: [
+        road.scale[0] + roadDriveCorridorPadding * 2,
+        road.scale[1],
+        road.scale[2] + roadDriveCorridorPadding * 2,
+      ] as Vec3,
+    }))
+  const pavements = pieces.filter((piece) => piece.kind === 'pavement')
   const blockedTreePrefixes = new Set<string>()
+  const blockedLampPrefixes = new Set<string>()
   const blockedPieceIds = new Set<string>()
 
   pieces.forEach((piece) => {
-    if ((piece.kind !== 'tree-trunk' && piece.kind !== 'phone-box') || !surfaces.some((surface) => overlapsTopDown(piece, surface, 0.04))) return
-    if (piece.kind === 'tree-trunk') blockedTreePrefixes.add(piece.id.replace(/:trunk$/, ''))
+    if (!isDriveCorridorBlocker(piece)) return
+    const blocksRoad = driveCorridors.some((surface) => overlapsTopDown(piece, surface, 0.04))
+    const blocksPavement =
+      (piece.kind === 'tree-trunk' || piece.kind === 'tree-top' || piece.kind === 'phone-box') &&
+      pavements.some((surface) => overlapsTopDown(piece, surface, 0.04))
+    if (!blocksRoad && !blocksPavement) return
+    if (piece.kind === 'tree-trunk' || piece.kind === 'tree-top') blockedTreePrefixes.add(piece.id.replace(/:(trunk|top)$/, ''))
+    else if (piece.kind === 'lamp-post' || piece.kind === 'lamp-light') blockedLampPrefixes.add(piece.id.replace(/:(post|light)$/, ''))
     else blockedPieceIds.add(piece.id)
   })
 
   return pieces.filter((piece) => {
     if (blockedPieceIds.has(piece.id)) return false
     if ((piece.kind === 'tree-trunk' || piece.kind === 'tree-top') && blockedTreePrefixes.has(piece.id.replace(/:(trunk|top)$/, ''))) return false
+    if ((piece.kind === 'lamp-post' || piece.kind === 'lamp-light') && blockedLampPrefixes.has(piece.id.replace(/:(post|light)$/, ''))) return false
     return true
   })
+}
+
+function isDriveCorridorBlocker(piece: ProceduralPiece) {
+  return (
+    piece.kind === 'tree-trunk' ||
+    piece.kind === 'tree-top' ||
+    piece.kind === 'lamp-post' ||
+    piece.kind === 'lamp-light' ||
+    piece.kind === 'phone-box'
+  )
 }
 
 function removeDoorBlockerOverlaps(pieces: ProceduralPiece[]) {

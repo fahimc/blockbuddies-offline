@@ -386,6 +386,11 @@ collision checks to avoid tunneling through thin objects, Buddy Parking keeps a
 wider clear zone around cars and the driveway, moving traffic stops behind cars
 ahead, and the Music setting now plays a local procedural background loop.
 
+The `v1.5.24` APK focuses the driving engine. Player car controls now pass
+through a tested drive-input adapter, cars have clear front/rear lights, and the
+procedural borough keeps trees, phones, and lamps outside a wider drivable road
+corridor while preserving sidewalk furniture.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

@@ -81,6 +81,7 @@ test('uses classroom seats and drives a parked car end to end', async ({ page },
   await page.evaluate(() => window.__blockBuddiesE2E!.setDriveInput(0))
   const afterDrive = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
   expect(Math.hypot(afterDrive[0] - beforeDrive[0], afterDrive[2] - beforeDrive[2])).toBeGreaterThan(0.25)
+  expect(afterDrive[0]).toBeLessThan(beforeDrive[0])
   const drivingPixels = await canvasPixelStats(page)
   expect(drivingPixels.visibleSamples).toBeGreaterThan(500)
   expect(drivingPixels.colourBuckets).toBeGreaterThan(8)

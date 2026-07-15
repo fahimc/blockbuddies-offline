@@ -6,6 +6,7 @@ import {
   collisionBoxOverlapsParkingClearance,
   createParkedVehicles,
   distanceToVehicle,
+  drivingInputFromControls,
   drivingSteerFromStrafe,
   drivableVehicleCollisionBox,
   parkingLot,
@@ -64,6 +65,17 @@ describe('parking and drivable vehicles', () => {
 
     expect(fromLeftControl.yaw).toBeGreaterThan(vehicle.yaw)
     expect(fromRightControl.yaw).toBeLessThan(vehicle.yaw)
+  })
+
+  it('maps player drive controls so forward drives through the car front and back reverses', () => {
+    const vehicle = createParkedVehicles()[0]
+    const forward = advanceDrivableVehicle(vehicle, drivingInputFromControls(1, 0, false), 0.1)
+    const reverse = advanceDrivableVehicle(vehicle, drivingInputFromControls(-1, 0, false), 0.1)
+
+    expect(forward.position[0]).toBeLessThan(vehicle.position[0])
+    expect(forward.speed).toBeGreaterThan(0)
+    expect(reverse.position[0]).toBeGreaterThan(vehicle.position[0])
+    expect(reverse.speed).toBeLessThan(0)
   })
 
   it('stops against solid objects instead of passing through them', () => {
