@@ -544,3 +544,10 @@
 - [x] Hide the duplicate floating Exit car prompt on phone layouts
 - [x] Add unit and Playwright coverage for driving controls and exit behavior
 - [x] Bump Android debug APK version metadata to 1.5.14 / 10514
+
+## Post-phase vehicle steering direction fix
+
+- [x] Correct car left/right steering sign so input matches the pressed direction
+- [x] Add unit coverage for both right and left steering directions
+- [x] Re-run vehicle Playwright coverage for car entry, driving, braking, and exit
+- [x] Bump Android debug APK version metadata to 1.5.15 / 10515

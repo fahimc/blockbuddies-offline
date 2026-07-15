@@ -338,6 +338,9 @@ the joystick switches to a Drive control, the right action becomes Brake, and a
 dedicated Exit car button replaces normal emotes. The duplicate floating exit
 prompt is hidden on phone layouts.
 
+The `v1.5.15` APK fixes car steering direction so left and right drive input
+turn the vehicle the same way the player is pressing.
+
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through
 WebRTC when the device WebView supports peer connections.

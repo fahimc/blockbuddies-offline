@@ -10,6 +10,22 @@
 
 ### Known Issues
 
+## [v1.5.15-driving-steering-direction] - 2026-07-15
+
+### Added
+
+- Added steering regression coverage for both right and left car input directions.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.15` / `10515`.
+
+### Fixed
+
+- Fixed car left/right driving input being reversed.
+
+### Known Issues
+
 ## [v1.5.14-driving-controls] - 2026-07-15
 
 ### Added

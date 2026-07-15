@@ -35,11 +35,13 @@ describe('parking and drivable vehicles', () => {
 
   it('steers, reverses, and brakes without exceeding configured motion', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 5 }
-    const steered = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 1, brake: false }, 0.1)
+    const steeredRight = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 1, brake: false }, 0.1)
+    const steeredLeft = advanceDrivableVehicle(vehicle, { throttle: 1, steer: -1, brake: false }, 0.1)
     const reversed = advanceDrivableVehicle({ ...vehicle, speed: -2 }, { throttle: -1, steer: 0, brake: false }, 0.1)
     const braked = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 0, brake: true }, 0.1)
 
-    expect(steered.yaw).toBeLessThan(vehicle.yaw)
+    expect(steeredRight.yaw).toBeGreaterThan(vehicle.yaw)
+    expect(steeredLeft.yaw).toBeLessThan(vehicle.yaw)
     expect(reversed.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(Math.abs(braked.speed)).toBeLessThan(Math.abs(vehicle.speed))
   })

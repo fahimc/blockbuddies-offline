@@ -91,7 +91,7 @@ export function advanceDrivableVehicle(vehicle: DrivableVehicle, input: DriveInp
 
   const steeringScale = Math.min(1, Math.abs(speed) / 2.2)
   const direction = speed < 0 ? -1 : 1
-  const yaw = vehicle.yaw - clamp(input.steer, -1, 1) * vehicleSteeringRate * steeringScale * direction * delta
+  const yaw = vehicle.yaw + clamp(input.steer, -1, 1) * vehicleSteeringRate * steeringScale * direction * delta
   const position: Vec3 = [
     vehicle.position[0] + Math.sin(yaw) * speed * delta,
     vehicle.position[1],
