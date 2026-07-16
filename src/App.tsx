@@ -3,6 +3,7 @@ import { SaveManager } from './save/SaveManager'
 import { MainMenu } from './ui/MainMenu'
 import { AvatarPanel } from './ui/AvatarPanel'
 import { NameSetupScreen } from './ui/NameSetupScreen'
+import { GameAudio } from './ui/GameAudio'
 import { useGameStore } from './state/gameStore'
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
   return (
     <main className="min-h-screen bg-sky-100 text-slate-950">
       <SaveManager />
+      <GameAudio />
       {screen === 'menu' ? (
         <MainMenu
           ready={saveLoaded}

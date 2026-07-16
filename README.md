@@ -80,6 +80,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
   pickup coins, glowing mesh pickups, and completion scoring.
+- Game-wide procedural music and WebAudio sound effects cover menu transitions,
+  customization, quick chat, quests, badges, shop unlocks, emotes, seats, beds,
+  build mode, obby, vehicles, and mini-games while respecting the audio/music
+  settings toggles.
 - Delivery Dash is a mapped delivery route with a parcel pickup, ordered
   drop-offs, active minimap/town-map markers, per-stop coin rewards, and time
   bonuses.
@@ -426,6 +430,11 @@ The `v1.5.31` APK fixes the Body & Style customization layout on narrower
 phones. The character preview is capped inside a grid row so it no longer
 overlaps the category buttons or colour controls, and all five section buttons
 remain visible.
+
+The `v1.5.32` APK adds a wider audio pass. Menu, customization, chat, quests,
+badges, shop unlocks, emotes, seating, sleeping, build actions, obby, vehicles,
+and mini-games now have local WebAudio cues, and procedural music changes by
+context across menu, customizer, town, interiors, driving, and mini-games.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

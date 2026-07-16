@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.32-audio-pass] - 2026-07-16
+
+### Added
+
+- Added richer WebAudio sound cues for screen transitions, avatar customization, quick chat, quest completion, badge unlocks, shop unlocks, emotes, sitting, standing, sleeping, waking, build mode, build placement, build removal, obby start, and obby completion.
+- Added context-aware procedural music modes for menu, customizer, town, interiors, driving, and mini-games.
+- Added unit tests for the expanded audio cue selector and music mode selection.
+
+### Changed
+
+- Moved the shared audio manager to the app root so menu, setup, customization, and gameplay screens can all play audio through the existing settings toggles.
+- Updated Android and package version metadata to `1.5.32` / `10532`.
+
+### Fixed
+
+- Fixed menu and customization screens being silent because audio was only mounted inside the gameplay screen.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.31-customizer-grid-fit] - 2026-07-15
 
 ### Added

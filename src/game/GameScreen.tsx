@@ -19,7 +19,6 @@ import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
 import { MiniGamesPanel } from '../ui/MiniGamesPanel'
 import { MiniGameAnnouncement } from '../ui/MiniGameAnnouncement'
-import { GameAudio } from '../ui/GameAudio'
 import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
@@ -77,7 +76,6 @@ export function GameScreen() {
         <GameMenu />
         <HUD />
         <MiniGameAnnouncement />
-        <GameAudio />
         <MiniMap />
         <ChatPanel />
         <TouchControls />

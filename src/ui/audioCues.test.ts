@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { selectAudioCues, type AudioSnapshot } from './audioCues'
+import { selectAudioCues, selectMusicMode, type AudioSnapshot } from './audioCues'
 
 const base: AudioSnapshot = {
   audioEnabled: true,
+  screen: 'game',
   coins: 0,
+  buildMode: false,
+  placedBlockCount: 0,
+  playerEmote: 'none',
+  sleeping: false,
+  completedQuestCount: 0,
+  earnedBadgeCount: 0,
+  unlockedItemCount: 0,
+  avatarSignature: 'default',
+  obbyActive: false,
+  obbyFinished: false,
   miniGameEventSequence: 0,
   miniGameScore: 0,
   miniGameStatus: 'idle',
@@ -27,5 +38,33 @@ describe('audio cue selection', () => {
       }),
     ).toEqual(['mini-game-start'])
     expect(selectAudioCues(base, { ...base, audioEnabled: false, coins: 1 })).toEqual([])
+  })
+
+  it('plays richer cues for avatar, social, quest, and build actions', () => {
+    expect(selectAudioCues(base, { ...base, screen: 'setup-avatar' })).toContain('screen-start')
+    expect(selectAudioCues(base, { ...base, avatarSignature: 'changed' })).toContain('customizer-change')
+    expect(selectAudioCues(base, { ...base, playerEmote: 'wave' })).toContain('emote')
+    expect(selectAudioCues(base, { ...base, lastChatId: 'chat-1', lastChatKind: 'player' })).toContain('chat')
+    expect(selectAudioCues(base, { ...base, completedQuestCount: 1 })).toContain('quest-complete')
+    expect(selectAudioCues(base, { ...base, earnedBadgeCount: 2 })).toContain('badge')
+    expect(selectAudioCues(base, { ...base, unlockedItemCount: 1 })).toContain('unlock')
+    expect(selectAudioCues(base, { ...base, buildMode: true })).toContain('build-toggle')
+    expect(selectAudioCues(base, { ...base, placedBlockCount: 1 })).toContain('build-place')
+    expect(selectAudioCues({ ...base, placedBlockCount: 1 }, base)).toContain('build-remove')
+  })
+
+  it('plays posture, obby, and context music cues', () => {
+    expect(selectAudioCues(base, { ...base, sleeping: true })).toContain('sleep')
+    expect(selectAudioCues({ ...base, sleeping: true }, base)).toContain('wake')
+    expect(selectAudioCues(base, { ...base, seatedSeatId: 'chair-1' })).toContain('sit')
+    expect(selectAudioCues({ ...base, seatedSeatId: 'chair-1' }, base)).toContain('stand')
+    expect(selectAudioCues(base, { ...base, obbyActive: true })).toContain('obby-start')
+    expect(selectAudioCues(base, { ...base, obbyFinished: true })).toContain('obby-complete')
+
+    expect(selectMusicMode({ ...base, screen: 'menu' })).toBe('menu')
+    expect(selectMusicMode({ ...base, screen: 'setup-avatar' })).toBe('customizer')
+    expect(selectMusicMode({ ...base, activeInteriorId: 'shop' })).toBe('interior')
+    expect(selectMusicMode({ ...base, activeVehicleId: 'sunny-car' })).toBe('driving')
+    expect(selectMusicMode({ ...base, miniGameStatus: 'running' })).toBe('mini-game')
   })
 })

@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase audio pass
+
+- [x] Add richer WebAudio sound effects across menu, customization, chat, quests, badges, shop, emotes, seating, sleep, build mode, obby, vehicles, and mini-games.
+- [x] Add context-aware procedural music modes for menu, customizer, town, interiors, driving, and mini-games.
+- [x] Keep audio and music controlled by the existing settings toggles.
+- [x] Add unit coverage for expanded audio cue and music mode selection.
+- [x] Package and release Android debug APK for the audio pass build.
+
 ## Post-phase customizer grid fit
 
 - [x] Add narrow portrait regression coverage for the Body & Style customizer.
