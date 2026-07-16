@@ -1810,6 +1810,7 @@ function LocalPartyPlayers() {
 function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
   const group = useRef<THREE.Group>(null)
   const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const openPlayerMessages = () => openMessageThread(player.id, player.name)
   const targetPosition = useMemo(
     () => new THREE.Vector3(player.position[0], player.position[1] + avatarGroundOffset, player.position[2]),
     [player.position],
@@ -1834,9 +1835,19 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation()
-        openMessageThread(player.id, player.name)
+        openPlayerMessages()
       }}
     >
+      <mesh
+        position={[0, realScale.avatarHeight * 0.5, 0]}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          openPlayerMessages()
+        }}
+      >
+        <boxGeometry args={[playerCollisionRadius * 3, realScale.avatarHeight * 1.25, playerCollisionRadius * 3]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
       <BlockAvatar
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}

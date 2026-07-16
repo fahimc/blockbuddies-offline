@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   coinRushTargets,
   createInitialMiniGame,
@@ -15,6 +15,7 @@ import {
   normalizeSavedAvatar,
   useGameStore,
 } from './gameStore'
+import { useLocalPartyStore } from './localPartyStore'
 
 describe('avatar save migration', () => {
   it('upgrades the legacy yellow and blue default avatar', () => {
@@ -301,6 +302,21 @@ describe('direct message inbox', () => {
   })
 
   it('creates local party player inbox threads and sends predefined messages', () => {
+    const sendDirectMessage = vi.fn()
+    useLocalPartyStore.setState({
+      remotePlayers: {
+        'local-guest': {
+          id: 'local-guest',
+          name: 'GuestBuddy',
+          position: [1, 0, 1],
+          yaw: 0,
+          avatar: defaultAvatar,
+          action: 'idle',
+          updatedAt: Date.now(),
+        },
+      },
+      sendDirectMessage,
+    })
     useGameStore.setState({
       playerName: 'HostBuddy',
       chat: [],
@@ -335,10 +351,33 @@ describe('direct message inbox', () => {
     expect(useGameStore.getState().openPanel).toBe('messages')
     expect(useGameStore.getState().selectedMessageThreadId).toBe('local-guest')
     expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
+    expect(sendDirectMessage).toHaveBeenCalledWith('local-guest', 'greeting-001', 'Hi!')
   })
 })
 
 describe('local party shared build persistence', () => {
+  it('places a selected build piece from the playable build panel action', () => {
+    const builder = getLocation('builder')
+    useGameStore.setState({
+      activeInterior: undefined,
+      playerPosition: builder.travelPosition,
+      playerYaw: builder.travelYaw,
+      selectedBuildPiece: 'house',
+      selectedBuildColor: '#60a5fa',
+      placedBlocks: [],
+      earnedBadges: [],
+      chat: [],
+      settings: { ...useGameStore.getState().settings, worldSeed: 'LONDON-2026' },
+    })
+
+    useGameStore.getState().placeBlock()
+
+    const placed = useGameStore.getState().placedBlocks[0]
+    expect(placed).toMatchObject({ kind: 'house', color: '#60a5fa' })
+    expect(useGameStore.getState().chat.at(-1)?.text).toBe('World piece placed')
+    expect(useGameStore.getState().earnedBadges).toContain('builder')
+  })
+
   it('merges remote player build pieces into the saved custom world', () => {
     const builder = getLocation('builder')
     useGameStore.setState({

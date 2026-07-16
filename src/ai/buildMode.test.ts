@@ -7,6 +7,7 @@ import {
   canPlacePiece,
   createBuildMapStamp,
   createBuildPiece,
+  findBuildPlacementPosition,
   mergeBuildPieces,
   nextBuildPosition,
   rotateBuildYaw,
@@ -90,5 +91,36 @@ describe('build mode', () => {
     expect(empty).toBeDefined()
     if (empty) expect(worldBuildPlacementIssue(empty.center, 'block')).toBeUndefined()
     expect(worldBuildPlacementIssue([7, 0, -8], 'lamp')).toBeUndefined()
+  })
+
+  it('finds a nearby legal cell when the first build target is blocked', () => {
+    const empty = createProceduralChunkPlan('LONDON-2026', 2, 1).parcels.find((parcel) => parcel.use === 'buildable')
+    expect(empty).toBeDefined()
+    if (!empty) return
+
+    const playerPosition: [number, number, number] = [
+      empty.center[0],
+      0,
+      empty.center[2] - getBuildPiece('block').placeDistance,
+    ]
+    const firstPosition = nextBuildPosition(playerPosition, 0, 'block')
+    const blocked = createBuildPiece({
+      id: 'occupied-cell',
+      kind: 'block',
+      position: firstPosition,
+    })
+
+    const placement = findBuildPlacementPosition({
+      blocks: [blocked],
+      playerPosition,
+      yaw: 0,
+      pieceId: 'block',
+    })
+
+    expect(placement.issue).toBeUndefined()
+    expect(placement.position).toBeDefined()
+    expect(placement.position).not.toEqual(firstPosition)
+    expect(canPlacePiece([blocked], placement.position!, 'block')).toBe(true)
+    expect(worldBuildPlacementIssue(placement.position!, 'block')).toBeUndefined()
   })
 })

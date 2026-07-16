@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase name, messaging, and build fixes
+
+- [x] Remove `Offline` from the app/game name surfaces while keeping offline-play feature copy.
+- [x] Add a reliable local-player tap target for predefined-message inbox threads.
+- [x] Make build placement search for a nearby legal grid cell instead of failing silently.
+- [x] Add unit regression coverage for local-player messages and build placement recovery.
+- [x] Package and release Android debug APK for the fix build.
+
 ## Post-phase buddy message inbox
 
 - [x] Replace the always-open chat feed with a buddy inbox icon and unread badge.

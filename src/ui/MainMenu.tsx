@@ -19,9 +19,9 @@ export function MainMenu({ onStart, ready = true }: MainMenuProps) {
     >
       <div className="bb-splash-art" aria-hidden />
       <div className="bb-splash-vignette" aria-hidden />
-      <h1 className="sr-only">BlockBuddies Offline</h1>
+      <h1 className="sr-only">BlockBuddies</h1>
 
-      <header className="bb-splash-brand" aria-label="BlockBuddies Offline">
+      <header className="bb-splash-brand" aria-label="BlockBuddies">
         <BrandLogo compact />
       </header>
 

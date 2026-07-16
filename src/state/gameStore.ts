@@ -22,9 +22,9 @@ import {
 } from '../ai/miniGames'
 import { sanitizePartyName, useLocalPartyStore, type LocalPartyDirectMessage } from './localPartyStore'
 import {
-  canPlacePiece,
   createBuildMapStamp,
   createBuildPiece,
+  findBuildPlacementPosition,
   maxBuildPieces,
   mergeBuildPieces,
   nextBuildPosition,
@@ -1051,30 +1051,26 @@ export const useGameStore = create<GameState>((set, get) => ({
           ],
         }
       }
-      const position = nextBuildPosition(
-        state.playerPosition,
-        state.playerYaw,
-        state.selectedBuildPiece,
-      )
-      if (
-        !canPlacePiece(state.placedBlocks, position, state.selectedBuildPiece)
-      )
-        return state
-      const placementIssue = worldBuildPlacementIssue(
-        position,
-        state.selectedBuildPiece,
-        state.settings.worldSeed,
-      )
-      if (placementIssue) {
+      const placement = findBuildPlacementPosition({
+        blocks: state.placedBlocks,
+        playerPosition: state.playerPosition,
+        yaw: state.playerYaw,
+        pieceId: state.selectedBuildPiece,
+        worldSeed: state.settings.worldSeed,
+      })
+      if (!placement.position) {
         return {
-          chat: [...state.chat.slice(-60), systemMessage(placementIssue)],
+          chat: [
+            ...state.chat.slice(-60),
+            systemMessage(placement.issue ?? 'No clear build cell nearby'),
+          ],
         }
       }
       const block: BuildBlock = {
         ...createBuildPiece({
           id: crypto.randomUUID(),
           kind: state.selectedBuildPiece,
-          position,
+          position: placement.position,
           color: state.selectedBuildColor,
           rotation: state.buildRotation,
         }),

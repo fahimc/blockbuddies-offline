@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.41-name-messaging-build-fixes] - 2026-07-16
+
+### Added
+
+- Added regression coverage for nearest-cell build placement when the first forward build cell is blocked.
+- Added regression coverage that local-player predefined messages call the Local Party direct-message channel.
+
+### Changed
+
+- Renamed the app/game label from `BlockBuddies Offline` to `BlockBuddies` across web, PWA, Capacitor, Android labels, storage metadata, and brand accessibility labels.
+- Build placement now searches nearby legal grid cells before failing, so the Place action can recover from a blocked forward cell.
+
+### Fixed
+
+- Fixed local-party avatar taps being unreliable by adding a dedicated invisible tap target around connected local players.
+- Fixed build placement failing silently when the first target cell was occupied or invalid.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.40-app-icon] - 2026-07-16
 
 ### Added

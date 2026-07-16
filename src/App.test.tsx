@@ -33,7 +33,7 @@ describe('App shell', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { name: 'BlockBuddies Offline' }),
+      screen.getByRole('heading', { name: 'BlockBuddies' }),
     ).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Start' }))
 

@@ -1,6 +1,6 @@
-# BlockBuddies Offline
+# BlockBuddies
 
-BlockBuddies Offline is a colourful web-first 3D sandbox town where local AI
+BlockBuddies is a colourful web-first 3D sandbox town where local AI
 buddies make the world feel like a small multiplayer server without using the
 internet. It is inspired by blocky sandbox play, but it uses original procedural
 shapes, UI, names, and dialogue.
@@ -466,6 +466,10 @@ message thread that can deliver unread inbox messages to the other device.
 The `v1.5.40` APK replaces the app icon with the supplied BlockBuddies
 character-and-robot artwork across Android launcher densities, PWA install
 icons, and the browser favicon.
+
+The `v1.5.41` APK removes `Offline` from the app/game name, adds a reliable
+tap target for messaging connected local players, and fixes Build mode so the
+Place action searches nearby legal grid cells instead of failing silently.
 
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while

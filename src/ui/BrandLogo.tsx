@@ -4,7 +4,7 @@ type BrandLogoProps = {
 
 export function BrandLogo({ compact = false }: BrandLogoProps) {
   return (
-    <div className={`bb-brand ${compact ? 'bb-brand-compact' : ''}`} aria-label="BlockBuddies Offline">
+    <div className={`bb-brand ${compact ? 'bb-brand-compact' : ''}`} aria-label="BlockBuddies">
       <div className="bb-brand-mascot" aria-hidden>
         <span className="bb-mascot-head">
           <span className="bb-mascot-eye left" />
@@ -19,7 +19,6 @@ export function BrandLogo({ compact = false }: BrandLogoProps) {
           <span className="bb-logo-white">Block</span>
           <span className="bb-logo-gold">Buddies</span>
         </div>
-        <span className="bb-offline-badge">Offline</span>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'BlockBuddies Offline',
+        name: 'BlockBuddies',
         short_name: 'BlockBuddies',
         description: 'Offline blocky sandbox town with simulated buddies.',
         theme_color: '#22c55e',

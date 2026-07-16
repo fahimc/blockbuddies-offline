@@ -4,9 +4,9 @@ import type { GameSave } from '../state/gameStore'
 const saveKey = 'blockbuddies-offline-save-v1'
 
 localforage.config({
-  name: 'BlockBuddies Offline',
+  name: 'BlockBuddies',
   storeName: 'game_saves',
-  description: 'Offline save data for BlockBuddies Offline',
+  description: 'Offline save data for BlockBuddies',
 })
 
 export async function loadGameSave(): Promise<Partial<GameSave> | undefined> {

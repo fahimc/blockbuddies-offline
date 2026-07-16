@@ -20,7 +20,7 @@ async function completeStartFlow(page: import('@playwright/test').Page, name = '
 
 test('opens menu and navigates to game shell', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'BlockBuddies' })).toBeVisible()
   await completeStartFlow(page, 'FlowTester')
   await expect(page.getByTestId('game-canvas')).toBeVisible()
   await expect(page.getByTestId('mini-map')).toBeVisible()
@@ -323,7 +323,7 @@ test.describe('portrait splash layout', () => {
   test('keeps the splash art and play button inside a portrait phone viewport', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('.bb-splash-poster')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'BlockBuddies Offline' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'BlockBuddies' })).toBeVisible()
     await expect(page.getByText('Your world.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Start' })).toBeInViewport()
     await expect(page.locator('.bb-splash-feature-strip')).toBeInViewport()

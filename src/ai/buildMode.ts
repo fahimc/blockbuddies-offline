@@ -62,6 +62,53 @@ export function nextBuildPosition(playerPosition: Vec3, yaw: number, pieceId: Bu
   return [snapBuildValue(playerPosition[0] + forwardX), piece.y, snapBuildValue(playerPosition[2] + forwardZ)]
 }
 
+export function findBuildPlacementPosition({
+  blocks,
+  playerPosition,
+  yaw,
+  pieceId = 'block',
+  worldSeed = 'LONDON-2026',
+  searchRadius = 8,
+}: {
+  blocks: BuildBlock[]
+  playerPosition: Vec3
+  yaw: number
+  pieceId?: BuildPieceId
+  worldSeed?: string
+  searchRadius?: number
+}): { position?: Vec3; issue?: string } {
+  const firstPosition = nextBuildPosition(playerPosition, yaw, pieceId)
+  let firstIssue: string | undefined
+  const seen = new Set<string>()
+
+  const candidatePositions = [firstPosition]
+  for (let radius = 1; radius <= searchRadius; radius += 1) {
+    const samples = Math.max(8, radius * 8)
+    for (let sample = 0; sample < samples; sample += 1) {
+      const angle = (sample / samples) * halfTurn
+      candidatePositions.push([
+        snapBuildValue(firstPosition[0] + Math.sin(angle) * radius),
+        getBuildPiece(pieceId).y,
+        snapBuildValue(firstPosition[2] + Math.cos(angle) * radius),
+      ])
+    }
+  }
+
+  for (const candidate of candidatePositions) {
+    const key = `${candidate[0]}:${candidate[2]}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const overlapIssue = canPlacePiece(blocks, candidate, pieceId)
+      ? undefined
+      : 'That build cell is already occupied'
+    const terrainIssue = overlapIssue ?? worldBuildPlacementIssue(candidate, pieceId, worldSeed)
+    firstIssue ??= terrainIssue
+    if (!terrainIssue) return { position: candidate }
+  }
+
+  return { issue: firstIssue ?? 'No clear build cell nearby' }
+}
+
 export function buildCollisionRadius(block: Pick<BuildBlock, 'kind'>) {
   return getBuildPiece(block.kind ?? 'block').footprint / 2
 }
