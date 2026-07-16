@@ -463,6 +463,10 @@ by another local player are merged into the saved custom world when they pass
 the same placement rules, and tapping/clicking a local player opens a predefined
 message thread that can deliver unread inbox messages to the other device.
 
+The `v1.5.40` APK replaces the app icon with the supplied BlockBuddies
+character-and-robot artwork across Android launcher densities, PWA install
+icons, and the browser favicon.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

@@ -749,3 +749,11 @@
 - [x] Let remote local-player avatars open an inbox message thread when tapped
 - [x] Add unit and Playwright coverage for shared builds and local-player inbox delivery
 - [x] Bump Android debug APK version metadata to 1.5.39 / 10539
+
+## Post-phase app icon update
+
+- [x] Generate PWA install icons from the supplied BlockBuddies artwork
+- [x] Generate browser favicon from the supplied BlockBuddies artwork
+- [x] Replace Android launcher icons across all density buckets
+- [x] Point the PWA manifest and HTML metadata at the new PNG icons
+- [x] Bump Android debug APK version metadata to 1.5.40 / 10540

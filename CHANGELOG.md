@@ -10,6 +10,27 @@
 
 ### Known Issues
 
+## [v1.5.40-app-icon] - 2026-07-16
+
+### Added
+
+- Added the supplied BlockBuddies character-and-robot artwork as the app icon source for PWA and Android launcher assets.
+- Added PNG PWA icons at 192px and 512px plus a PNG browser favicon.
+
+### Changed
+
+- Replaced Android launcher icon PNGs across mdpi, hdpi, xhdpi, xxhdpi, and xxxhdpi densities.
+- Updated the PWA manifest and HTML metadata to use the new PNG icon assets.
+- Updated Android and package version metadata to `1.5.40` / `10540`.
+
+### Fixed
+
+- Fixed the app still using the older generated vector icon instead of the provided production-style icon artwork.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.39-local-party-build-mode] - 2026-07-16
 
 ### Added
