@@ -4,6 +4,7 @@ import type { InteriorKind, Vec3 } from './types'
 import {
   WorldOccupancyGrid,
   placeOnWorldGrid,
+  terrainAt,
   type TerrainZone,
   type WorldFootprint,
 } from './worldGrid'
@@ -21,7 +22,7 @@ export type StaticTownBuilding = {
 export const staticTownBuildings: StaticTownBuilding[] = [
   staticBuilding('park-clubhouse', 'Park Clubhouse', 'house', -12, -8, 2, 4.2, 3.6, '#22c55e'),
   staticBuilding('coin-shop', 'Coin Shop', 'shop', 12, -7, 2, 4.6, 3.8, '#fb923c'),
-  staticBuilding('skill-school', 'Skill School', 'school', -14, 10, 3, 5.4, 4.2, '#a78bfa'),
+  staticBuilding('skill-school', 'Skill School', 'school', -22, 10, 3, 5.4, 4.2, '#a78bfa'),
   staticBuilding('buddy-house-a', 'Buddy House', 'house', 2, 18, 2, 4.4, 3.8, '#facc15'),
   staticBuilding('buddy-house-b', 'Pink Buddy House', 'house', -4, 18, 2, 3.8, 3.4, '#f9a8d4'),
   staticBuilding('buddy-house-c', 'Blue Buddy House', 'house', 8, 18, 2, 3.8, 3.4, '#93c5fd'),
@@ -33,7 +34,7 @@ export const staticTreePositions: Vec3[] = [
   [18, 0, -18],
   [22, 0, -8],
   [-20, 0, -5],
-  [-20, 0, 6],
+  [-24, 0, 3],
   [-20, 0, 17],
 ]
 
@@ -50,6 +51,26 @@ export const coreRoadZones: TerrainZone[] = [
   { id: 'core-road-vertical', terrain: 'road', center: [0, 0, -7.5], size: [realScale.roadTile, 0.08, 22] },
   { id: 'core-road-horizontal', terrain: 'road', center: [0, 0, 9], size: [32, 0.08, realScale.roadTile] },
 ]
+
+export const authoredCoreBounds = {
+  minX: -27,
+  maxX: 27,
+  minZ: -27,
+  maxZ: 27,
+}
+
+export function footprintOverlapsAuthoredCore(center: Vec3, size: Vec3, padding = 0) {
+  const minX = center[0] - size[0] / 2 - padding
+  const maxX = center[0] + size[0] / 2 + padding
+  const minZ = center[2] - size[2] / 2 - padding
+  const maxZ = center[2] + size[2] / 2 + padding
+  return (
+    maxX > authoredCoreBounds.minX &&
+    minX < authoredCoreBounds.maxX &&
+    maxZ > authoredCoreBounds.minZ &&
+    minZ < authoredCoreBounds.maxZ
+  )
+}
 
 const coreSidewalkOffset = realScale.roadTile / 2 + realScale.pavementWidth / 2
 
@@ -71,7 +92,7 @@ export const coreReservedFootprints: WorldFootprint[] = [
   })),
   ...staticLampPositions.map((position, index) => ({ id: `lamp:${index}`, center: position, size: [1, 1, 1] as Vec3 })),
   ...outdoorBenchFixtures.map((fixture, index) => ({ id: `bench:${index}`, center: fixture.position, size: [2.2, 1, 1] as Vec3 })),
-  { id: 'billboard', center: [-6, 0, 2], size: [4.2, 1, 1] },
+  { id: 'billboard', center: [-11, 0, 2], size: [4.2, 1, 1] },
 ]
 
 const coreItemLayout = placeCoreItems()
@@ -105,8 +126,8 @@ function placeCoreItems() {
   const occupancy = new WorldOccupancyGrid()
   coreReservedFootprints.forEach((footprint) => occupancy.reserve(footprint))
   const activityCandidates = {
-    'coin-rush': [12, 0, -2] as Vec3,
-    'delivery-dash': [19, 0, -2] as Vec3,
+    'coin-rush': [15, 0, -2] as Vec3,
+    'delivery-dash': [21, 0, -12] as Vec3,
     'hide-and-seek': [-20, 0, 23] as Vec3,
   }
   const activities = Object.fromEntries(
@@ -126,9 +147,9 @@ function placeCoreItems() {
     [-18, 0.8, -11],
     [-16, 0.8, -2],
     [-10, 0.8, -1],
-    [10, 0.8, -1],
-    [17, 0.8, -2],
-    [19, 0.8, 5],
+    [9, 0.8, -2],
+    [15, 0.8, -11],
+    [22, 0.8, -14],
     [18, 0.8, 17],
     [-18, 0.8, 18],
     [10, 0.8, 23],
@@ -143,5 +164,7 @@ function placeCoreItems() {
     )
     return placed ? [placed.center] : []
   })
+  const roadCoins = coins.filter(([x, , z]) => terrainAt(x, z, coreTerrainZones) === 'road')
+  if (roadCoins.length > 0) throw new Error(`Core coins placed on roads: ${roadCoins.map((position) => position.join(',')).join('; ')}`)
   return { activities, coins }
 }

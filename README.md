@@ -94,6 +94,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Layered grid-based town generation with planned roads, sidewalks, zoning,
   parks, clear entrances, and player-buildable parcels. The generation and
   placement rules are documented in [`docs/WORLD_GENERATION.md`](docs/WORLD_GENERATION.md).
+- The handcrafted central town is protected from overlapping procedural roads,
+  pavements, lane markings, parks, and props, so authored buildings, benches,
+  activity pads, collectibles, parking, and obby pieces stay out of road lanes.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses a responsive phone grid for the character
@@ -440,6 +443,12 @@ The `v1.5.32` APK adds a wider audio pass. Menu, customization, chat, quests,
 badges, shop unlocks, emotes, seating, sleeping, build actions, obby, vehicles,
 and mini-games now have local WebAudio cues, and procedural music changes by
 context across menu, customizer, town, interiors, driving, and mini-games.
+
+The `v1.5.35` APK protects the handcrafted central town from overlapping
+procedural roads and moves the school, obby, benches, billboard, Coin Rush
+targets, and Delivery Dash targets onto clear non-road cells. New unit and E2E
+coverage keeps authored gameplay markers and procedural road suppression from
+regressing.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

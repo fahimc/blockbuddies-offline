@@ -18,10 +18,10 @@ export const seatInteractionRadius = 1.45
 export const seatMarkerRadius = 3.1
 
 export const outdoorBenchFixtures: { position: Vec3; rotation: number }[] = [
-  { position: [-6, 0.35, -4], rotation: 0 },
-  { position: [5.5, 0.35, -4], rotation: 0 },
-  { position: [-6, 0.35, 5.2], rotation: Math.PI },
-  { position: [5.5, 0.35, 5.2], rotation: Math.PI },
+  { position: [-19, 0.35, -12], rotation: 0 },
+  { position: [-7.5, 0.35, -12], rotation: 0 },
+  { position: [-19, 0.35, -1], rotation: Math.PI },
+  { position: [-7.5, 0.35, -1], rotation: Math.PI },
 ]
 
 const classroomSeats: SeatTarget[] = classroomStations.map((station) =>

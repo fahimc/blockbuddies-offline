@@ -63,6 +63,7 @@ import { avatarSleepRotation } from './sleepPose'
 import {
   coreActivityPositions,
   coreCoinPositions,
+  footprintOverlapsAuthoredCore,
   coreTerrainZones,
   staticLampPositions,
   staticTownBuildings,
@@ -132,7 +133,7 @@ const staticCollisionObstacles: CollisionBox[] = [
     center: [position[0], buildPieceDimensions.lamp.height / 2, position[2]] as Vec3,
     half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2] as Vec3,
   })),
-  { id: 'static-billboard', center: [-6, 1.1, 2], half: [2, 1.3, 0.35] },
+  { id: 'static-billboard', center: [-11, 1.1, 2], half: [2, 1.3, 0.35] },
   ...obbyPlatforms.map(({ position, scale }, index) => ({
     id: `obby-platform:${index}`,
     center: position,
@@ -578,9 +579,9 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
 }
 
 function proceduralObjectInsideCoreTown(piece: ProceduralPiece) {
-  if (piece.kind === 'ground' || piece.kind === 'water' || piece.kind === 'road' || piece.kind === 'pavement' || piece.kind === 'line' || piece.kind === 'park') return false
   if (piece.id.startsWith('landmark:')) return false
-  return Math.abs(piece.position[0]) < 25 && Math.abs(piece.position[2]) < 25
+  if (piece.kind === 'ground' || piece.kind === 'water') return false
+  return footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08)
 }
 
 function ClassroomChair({ position }: { position: Vec3 }) {
@@ -1006,9 +1007,9 @@ function Town() {
         <Building key={building.position.join(',')} position={building.position} color={building.color} scale={building.scale} />
       ))}
       <Storefront position={[12, 0, -7]} label="SHOP" color="#f97316" />
-      <Storefront position={[-14, 0, 10]} label="SCHOOL" color="#a78bfa" />
-      <Storefront position={[16, 0, 12]} label="OBBY" color="#ef4444" />
-      <Billboard position={[-6, 0, 2]} />
+      <Storefront position={[-22, 0, 10]} label="SCHOOL" color="#a78bfa" />
+      <Storefront position={[21, 0, 11]} label="OBBY" color="#ef4444" />
+      <Billboard position={[-11, 0, 2]} />
       <Benches />
       <StreetLamps />
 

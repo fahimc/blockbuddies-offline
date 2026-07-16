@@ -11,6 +11,7 @@ import {
   type TerrainZone,
   type WorldObjectKind,
 } from '../game/worldGrid'
+import { footprintOverlapsAuthoredCore } from '../game/townPlacement'
 
 export type ProceduralPieceKind =
   | 'ground'
@@ -75,7 +76,7 @@ export function generateProceduralWorld({ seed, center, viewDistance, night }: P
   pieces.push(...buildLandmarks(night))
 
   const placedPieces = applyProceduralPlacementRules(
-    removeDoorBlockerOverlaps(removeSurfaceBlockerOverlaps(pieces)),
+    removeDoorBlockerOverlaps(removeSurfaceBlockerOverlaps(removeAuthoredCoreConflicts(pieces))),
   )
   const permanentStructures = placedPieces.filter(
     (placedPiece) => placedPiece.kind === 'building' || placedPiece.kind === 'landmark',
@@ -310,6 +311,14 @@ function isDriveCorridorBlocker(piece: ProceduralPiece) {
     piece.kind === 'lamp-light' ||
     piece.kind === 'phone-box'
   )
+}
+
+function removeAuthoredCoreConflicts(pieces: ProceduralPiece[]) {
+  return pieces.filter((piece) => {
+    if (piece.id.startsWith('landmark:')) return true
+    if (piece.kind === 'ground' || piece.kind === 'water') return true
+    return !footprintOverlapsAuthoredCore(piece.position, orientedFootprintScale(piece), 0.08)
+  })
 }
 
 function removeDoorBlockerOverlaps(pieces: ProceduralPiece[]) {

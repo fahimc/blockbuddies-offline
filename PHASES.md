@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase core road cleanup
+
+- [x] Protect the handcrafted central town from overlapping procedural roads, pavements, lane markings, parks, and props.
+- [x] Move the school, obby, benches, billboard, Coin Rush targets, and Delivery Dash targets onto clear non-road cells.
+- [x] Add regression coverage for authored core road clearance and procedural core suppression.
+- [x] Package and release Android debug APK for the core road cleanup build.
+
 ## Post-phase hero skins
 
 - [x] Add original superhero-style avatar skins without copied branded characters or assets.

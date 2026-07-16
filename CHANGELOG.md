@@ -10,6 +10,28 @@
 
 ### Known Issues
 
+## [v1.5.35-core-road-cleanup] - 2026-07-16
+
+### Added
+
+- Added regression coverage for authored core road clearance, including activity pads, coins, obby platforms, parking, benches, static buildings, and procedural core suppression.
+
+### Changed
+
+- Protected the handcrafted central town from overlapping procedural roads, pavements, lane markings, parks, and props.
+- Moved the school, obby course, benches, billboard, Coin Rush targets, and Delivery Dash pickup/drop-off points onto clear pedestrian/building cells.
+- Updated Android and package version metadata to `1.5.35` / `10535`.
+
+### Fixed
+
+- Fixed procedural roads rendering through the central town and making cars, pads, coins, trees, and labels appear to sit in road lanes.
+- Fixed the school and obby authored footprints overlapping the central road layout.
+- Fixed Delivery Dash starting directly on the pickup target after the route was moved.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.34-layered-world-generation] - 2026-07-16
 
 ### Added

@@ -83,7 +83,15 @@ describe('mini game sessions', () => {
     expect(result.state.records['hide-and-seek']).toMatchObject({ plays: 1, bestScore: 0 })
   })
 
-  it('keeps event coins off roads and delivery targets outside building footprints', () => {
+  it('keeps event coins and delivery targets off authored roads', () => {
+    const targets = [...coinRushTargets, ...deliveryDashTargets]
+
+    expect(targets.every((target) =>
+      terrainAt(target.position[0], target.position[2], coreTerrainZones) !== 'road',
+    )).toBe(true)
+  })
+
+  it('keeps event targets outside building footprints', () => {
     expect(coinRushTargets.every((target) =>
       terrainAt(target.position[0], target.position[2], coreTerrainZones) !== 'road',
     )).toBe(true)

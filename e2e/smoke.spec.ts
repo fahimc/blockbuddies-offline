@@ -271,7 +271,7 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
       grounded: Math.abs(snapshot.playerPosition[1]) <= 0.15,
       teleported: snapshot.teleportSequence > before.teleportSequence,
     }
-  }).toEqual({ x: -14, z: 14.9, grounded: true, teleported: true })
+  }).toEqual({ x: -22, z: 14.9, grounded: true, teleported: true })
 })
 
 test('travels to the planned build and civic districts', async ({ page }) => {

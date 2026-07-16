@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildingHeightForFloors, realScale } from '../game/scale'
+import { footprintOverlapsAuthoredCore } from '../game/townPlacement'
 import { districtFor, generateProceduralWorld, hashSeed, roadDriveCorridorPadding } from './proceduralWorld'
 
 describe('procedural borough world', () => {
@@ -254,6 +255,23 @@ describe('procedural borough world', () => {
     expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-tower')).toBe(true)
     expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-face')).toBe(true)
     expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:door')).toBe(true)
+  })
+
+  it('does not draw procedural transport or props through the authored central town', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 1,
+      night: true,
+    })
+    const coreConflicts = world.pieces.filter((piece) =>
+      piece.kind !== 'ground' &&
+      piece.kind !== 'water' &&
+      !piece.id.startsWith('landmark:') &&
+      footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08),
+    )
+
+    expect(coreConflicts.map((piece) => `${piece.kind}:${piece.id}`)).toEqual([])
   })
 })
 

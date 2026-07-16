@@ -5,7 +5,7 @@ describe('obby state', () => {
   it('starts with an active checkpoint', () => {
     const state = startObby(1000)
     expect(state.active).toBe(true)
-    expect(state.checkpoint[0]).toBe(16)
+    expect(state.checkpoint).toEqual(obbyStart)
     expect(obbyStart[1]).toBe(obbyPlatforms[0].position[1] + obbyPlatforms[0].scale[1] / 2)
   })
 
