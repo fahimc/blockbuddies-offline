@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase hero skins
+
+- [x] Add original superhero-style avatar skins without copied branded characters or assets.
+- [x] Add a Hero Skins catalog tab with live previews.
+- [x] Render capes, chest emblems, suit trim, gloves, and armour panels on the in-game avatar.
+- [x] Add unit coverage for hero skin data and application.
+- [x] Package and release Android debug APK for the hero skins build.
+
 ## Post-phase audio pass
 
 - [x] Add richer WebAudio sound effects across menu, customization, chat, quests, badges, shop, emotes, seating, sleep, build mode, obby, vehicles, and mini-games.

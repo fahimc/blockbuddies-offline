@@ -5,7 +5,7 @@ import {
   deliveryDashTargets,
   miniGameDefinition,
 } from '../ai/miniGames'
-import { clothingItems } from '../data/avatarCustomization'
+import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
 import { getLocation } from '../data/world'
 import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
 import {
@@ -44,6 +44,38 @@ describe('avatar save migration', () => {
 })
 
 describe('avatar customization selection', () => {
+  it('includes original superhero-style skins with valid avatar patches', () => {
+    expect(heroSkinItems).toHaveLength(5)
+    expect(heroSkinItems.map((item) => item.name)).toEqual([
+      'Sky Guardian',
+      'Solar Sprinter',
+      'Neon Knight',
+      'Forest Defender',
+      'Moon Rescuer',
+    ])
+    expect(heroSkinItems.every((item) => item.kind === 'skin')).toBe(true)
+    expect(heroSkinItems.every((item) => item.cost === 0)).toBe(true)
+    expect(heroSkinItems.every((item) => String(item.patch.outfitStyle).startsWith('hero-'))).toBe(true)
+    expect(heroSkinItems.every((item) => String(item.patch.accessory).startsWith('hero-cape-'))).toBe(true)
+  })
+
+  it('applies free superhero-style skins without spending coins', () => {
+    const item = heroSkinItems[2]
+    useGameStore.setState({
+      coins: 25,
+      unlockedItems: [],
+      avatar: defaultAvatar,
+      chat: [],
+    })
+
+    useGameStore.getState().selectCustomizationItem(item)
+
+    expect(useGameStore.getState().coins).toBe(25)
+    expect(useGameStore.getState().avatar.avatarSource).toBe('Neon Knight Skin')
+    expect(useGameStore.getState().avatar.outfitStyle).toBe('hero-armour')
+    expect(useGameStore.getState().avatar.accessory).toBe('hero-cape-neon')
+  })
+
   it('unlocks and applies paid customization items', () => {
     const item = clothingItems[2]
     useGameStore.setState({

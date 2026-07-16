@@ -32,6 +32,8 @@ import {
   faceStyles,
   hairColors,
   hairStyles,
+  heroSkinItems,
+  pantsItems,
   skinTones,
   trailItems,
   type CustomizationItem,
@@ -50,7 +52,7 @@ import { useGameStore } from '../state/gameStore'
 import { GameAvatarPreview } from './GameAvatarPreview'
 
 const stepOrder: CustomizationStepId[] = ['hub', 'body', 'clothing', 'accessories', 'emotes', 'trails']
-const clothingTabs = ['Tops', 'Hoodies', 'Shirts', 'Pants', 'Overalls', 'Shoes']
+const clothingTabs = ['Hero Skins', 'Tops', 'Hoodies', 'Shirts', 'Pants', 'Shoes']
 const accessoryTabs = ['All', 'Hats', 'Glasses', 'Headphones', 'Backpacks', 'Pets', 'Effects']
 const emoteTabs = ['All', 'Dances', 'Gestures', 'Sits', 'Actions']
 type BodySectionId = 'body' | 'hair' | 'face' | 'colours' | 'wardrobe'
@@ -591,7 +593,7 @@ function ClothingStep({
       <div className="bb-clothing-stage">
         <AvatarStage avatar={avatar} size="medium" />
       </div>
-      <CatalogPanel tabs={clothingTabs} items={clothingItems} avatar={avatar} onSelect={onSelect} />
+      <CatalogPanel tabs={clothingTabs} items={[...heroSkinItems, ...clothingItems, ...pantsItems]} avatar={avatar} onSelect={onSelect} />
     </>
   )
 }
@@ -774,17 +776,24 @@ function CatalogPanel({
   dense?: boolean
   className?: string
 }) {
+  const [activeTab, setActiveTab] = useState(tabs[0] ?? 'All')
+  const resolvedTab = tabs.includes(activeTab) ? activeTab : tabs[0] ?? 'All'
+  const visibleItems = useMemo(
+    () => items.filter((item) => catalogItemMatchesTab(item, resolvedTab)),
+    [items, resolvedTab],
+  )
+
   return (
     <section className={`bb-custom-catalog ${dense ? 'dense' : ''} ${className}`}>
       <div className="bb-custom-tabs">
-        {tabs.map((tab, index) => (
-          <button type="button" key={tab} className={index === 0 ? 'active' : ''}>
+        {tabs.map((tab) => (
+          <button type="button" key={tab} className={tab === resolvedTab ? 'active' : ''} onClick={() => setActiveTab(tab)}>
             {tab}
           </button>
         ))}
       </div>
       <div className="bb-custom-grid">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <ItemCard
             key={item.id}
             item={item}
@@ -797,6 +806,31 @@ function CatalogPanel({
       </div>
     </section>
   )
+}
+
+function catalogItemMatchesTab(item: CustomizationItem, tab: string) {
+  if (tab === 'All') return true
+  if (tab === 'Hero Skins') return item.kind === 'skin'
+  if (tab === 'Tops') return item.kind === 'top'
+  if (tab === 'Hoodies') return item.kind === 'top' && item.patch.outfitStyle === 'hoodie'
+  if (tab === 'Shirts') return item.kind === 'top' && item.patch.outfitStyle !== 'hoodie'
+  if (tab === 'Pants') return item.kind === 'pants' && item.patch.bottomStyle !== undefined
+  if (tab === 'Shoes') return item.kind === 'pants' && item.patch.shoeStyle !== undefined
+  if (tab === 'Hats') return item.kind === 'hat'
+  if (tab === 'Glasses') return item.patch.accessory === 'glasses-star' || item.patch.accessory === 'visor-neon'
+  if (tab === 'Headphones') return String(item.patch.accessory ?? '').includes('headphones')
+  if (tab === 'Backpacks') return String(item.patch.accessory ?? '').includes('backpack') || String(item.patch.accessory ?? '').includes('pack')
+  if (tab === 'Pets') return String(item.patch.accessory ?? '').includes('pet')
+  if (tab === 'Effects') return item.kind === 'accessory' && !['glasses-star', 'visor-neon'].includes(String(item.patch.accessory ?? ''))
+  if (tab === 'Dances') return item.name.toLowerCase().includes('dance')
+  if (tab === 'Gestures') return ['wave', 'cheer', 'thumbs-up', 'point', 'salute', 'laugh'].includes(item.id)
+  if (tab === 'Sits') return item.id === 'sit'
+  if (tab === 'Actions') return !['wave', 'dance', 'cheer', 'sit'].includes(item.id)
+  if (tab === 'Rainbow') return item.id.includes('rainbow')
+  if (tab === 'Neon') return item.id.includes('neon')
+  if (tab === 'Galaxy') return item.id.includes('galaxy')
+  if (tab === 'Stars') return item.id.includes('star')
+  return true
 }
 
 function ItemCard({
@@ -830,6 +864,7 @@ function ItemCard({
 }
 
 function ItemPreview({ item, avatar }: { item: CustomizationItem; avatar: AvatarSettings }) {
+  if (item.kind === 'skin') return <MiniAvatar avatar={{ ...avatar, ...item.patch }} />
   if (item.kind === 'emote') return <MiniAvatar avatar={avatar} pose={item.emote ?? 'wave'} />
   if (item.kind === 'top') return <span className="bb-item-top" style={{ '--item-color': item.color, '--item-accent': item.accent ?? '#ffffff' } as CSSProperties} />
   if (item.kind === 'pants') return <span className="bb-item-pants" style={{ '--item-color': item.color } as CSSProperties} />
@@ -922,6 +957,7 @@ function MiniAvatar({ avatar, pose = 'idle' }: { avatar: AvatarSettings; pose?: 
       <span className="arm right" />
       <span className="leg left" />
       <span className="leg right" />
+      {String(avatar.accessory ?? '').includes('hero-cape') ? <span className="cape" /> : null}
       {avatar.hat !== 'none' ? <span className="hat" /> : null}
       {avatar.accessory && avatar.accessory !== 'none' ? <span className="glasses" /> : null}
     </span>

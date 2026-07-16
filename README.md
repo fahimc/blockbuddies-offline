@@ -89,6 +89,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   bonuses.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
   trail placeholder.
+- Original superhero-style avatar skins with capes, chest emblems, suit trim,
+  gloves, armour panels, and a dedicated Hero Skins tab in Clothing.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses a responsive phone grid for the character

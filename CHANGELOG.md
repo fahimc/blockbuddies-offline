@@ -10,6 +10,28 @@
 
 ### Known Issues
 
+## [v1.5.33-hero-skins] - 2026-07-16
+
+### Added
+
+- Added five original superhero-style avatar skins: Sky Guardian, Solar Sprinter, Neon Knight, Forest Defender, and Moon Rescuer.
+- Added a Hero Skins tab to the Clothing customizer with live mini-avatar previews.
+- Added in-game hero suit rendering with capes, chest emblems, suit trim, gloves, and armour panels.
+- Added unit coverage for hero skin catalog data and store application.
+
+### Changed
+
+- Clothing, accessory, emote, and trail catalog tabs now filter their item grids instead of acting as static labels.
+- Updated Android and package version metadata to `1.5.33` / `10533`.
+
+### Fixed
+
+- Fixed hero-style full avatar skins not having a dedicated selection path in the existing customizer.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.32-audio-pass] - 2026-07-16
 
 ### Added

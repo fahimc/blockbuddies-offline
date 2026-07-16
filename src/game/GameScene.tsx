@@ -2143,6 +2143,42 @@ function AvatarTorso({
           <meshStandardMaterial color={accentColor} metalness={0.15} roughness={0.55} />
         </mesh>
       ) : null}
+      {outfitStyle === 'hero-suit' || outfitStyle === 'hero-cape' ? (
+        <>
+          <mesh castShadow position={[0, 1.12, 0.238]}>
+            <boxGeometry args={[0.62, 0.08, 0.055]} />
+            <meshStandardMaterial color={secondaryColor} roughness={0.58} />
+          </mesh>
+          <mesh castShadow position={[0, 0.76, 0.24]}>
+            <boxGeometry args={[0.66, 0.12, 0.055]} />
+            <meshStandardMaterial color={accentColor} roughness={0.54} />
+          </mesh>
+          <mesh castShadow position={[0, 1.12, 0.27]} rotation={[0, 0, Math.PI / 4]}>
+            <boxGeometry args={[0.26, 0.26, 0.055]} />
+            <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={0.12} roughness={0.46} />
+          </mesh>
+        </>
+      ) : null}
+      {outfitStyle === 'hero-armour' ? (
+        <>
+          <mesh castShadow position={[0, 1.08, 0.242]}>
+            <boxGeometry args={[0.68, 0.58, 0.07]} />
+            <meshStandardMaterial color={accentColor} metalness={0.22} roughness={0.42} />
+          </mesh>
+          <mesh castShadow position={[0, 1.16, 0.285]} rotation={[0, 0, Math.PI / 4]}>
+            <boxGeometry args={[0.25, 0.25, 0.055]} />
+            <meshStandardMaterial color={secondaryColor} emissive={secondaryColor} emissiveIntensity={0.2} roughness={0.35} />
+          </mesh>
+          <mesh castShadow position={[-0.38, 1.38, 0]}>
+            <boxGeometry args={[0.18, 0.18, 0.44]} />
+            <meshStandardMaterial color={accentColor} metalness={0.16} roughness={0.48} />
+          </mesh>
+          <mesh castShadow position={[0.38, 1.38, 0]}>
+            <boxGeometry args={[0.18, 0.18, 0.44]} />
+            <meshStandardMaterial color={accentColor} metalness={0.16} roughness={0.48} />
+          </mesh>
+        </>
+      ) : null}
       {outfitStyle === 'pajamas'
         ? [0, 1, 2].map((index) => (
             <mesh key={index} castShadow position={[-0.22 + index * 0.22, 1.06, 0.22]}>
@@ -2178,6 +2214,10 @@ function AvatarArm({
 }) {
   const sleeveColor = outfitStyle === 'tank' || outfitStyle === 'none' ? bodyColor : shirtColor
   const sleeveHeight = outfitStyle === 'tee' || outfitStyle === 'sport' ? 0.36 : 0.48
+  const hasHeroGlove =
+    outfitStyle === 'hero-suit' ||
+    outfitStyle === 'hero-cape' ||
+    outfitStyle === 'hero-armour'
 
   return (
     <>
@@ -2189,6 +2229,12 @@ function AvatarArm({
         <boxGeometry args={[0.24, 0.3, 0.24]} />
         <meshStandardMaterial color={bodyColor} roughness={0.7} />
       </mesh>
+      {hasHeroGlove ? (
+        <mesh castShadow position={[0, -0.67, 0.01]}>
+          <boxGeometry args={[0.25, 0.14, 0.25]} />
+          <meshStandardMaterial color={shirtColor} roughness={0.6} />
+        </mesh>
+      ) : null}
     </>
   )
 }
@@ -2313,6 +2359,30 @@ function AvatarAccessory({
 }) {
   if (!accessory || accessory === 'none') return null
   const value = String(accessory)
+
+  if (value.includes('hero-cape')) {
+    const capeColor = value.includes('solar')
+      ? '#dc2626'
+      : value.includes('forest')
+        ? '#15803d'
+        : value.includes('moon')
+          ? '#6d28d9'
+          : value.includes('neon')
+            ? '#111827'
+            : accentColor
+    return (
+      <group>
+        <mesh castShadow position={[0, 1.04, -0.31]} rotation={[0.12, 0, 0]}>
+          <boxGeometry args={[0.86, 1.05, 0.08]} />
+          <meshStandardMaterial color={capeColor} roughness={0.74} />
+        </mesh>
+        <mesh castShadow position={[0, 1.58, -0.28]}>
+          <boxGeometry args={[0.74, 0.16, 0.09]} />
+          <meshStandardMaterial color={secondaryColor} roughness={0.55} />
+        </mesh>
+      </group>
+    )
+  }
 
   if (value.includes('headphones')) {
     return (

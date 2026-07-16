@@ -113,6 +113,16 @@ export type ShopItemId =
   | 'trail-neon'
   | 'trail-galaxy'
   | 'trail-stars'
+  | 'hero-skin-sky-guardian'
+  | 'hero-skin-solar-sprinter'
+  | 'hero-skin-neon-knight'
+  | 'hero-skin-forest-defender'
+  | 'hero-skin-moon-rescuer'
+  | 'hero-cape-sky'
+  | 'hero-cape-solar'
+  | 'hero-cape-neon'
+  | 'hero-cape-forest'
+  | 'hero-cape-moon'
 
 export type ShopItem = {
   id: ShopItemId
@@ -153,6 +163,9 @@ export type AvatarOutfitStyle =
   | 'suit'
   | 'sport'
   | 'armour'
+  | 'hero-suit'
+  | 'hero-armour'
+  | 'hero-cape'
   | 'pajamas'
   | 'tank'
   | 'none'
