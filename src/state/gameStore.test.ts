@@ -299,6 +299,69 @@ describe('direct message inbox', () => {
         messages: [{ text: 'Meet me at the obby.', read: false }],
       })
   })
+
+  it('creates local party player inbox threads and sends predefined messages', () => {
+    useGameStore.setState({
+      playerName: 'HostBuddy',
+      chat: [],
+      earnedBadges: [],
+      openPanel: undefined,
+      selectedMessageThreadId: undefined,
+      messageThreads: [],
+    })
+
+    useGameStore.getState().openMessageThread('local-guest', 'GuestBuddy')
+    useGameStore.getState().sendPredefinedMessage('local-guest', 'greeting-001')
+    useGameStore.getState().receiveLocalPartyMessage({
+      id: 'party-dm-test',
+      fromId: 'local-guest',
+      fromName: 'GuestBuddy',
+      toId: 'local-host',
+      presetId: 'game-001',
+      text: 'Want to play a mini game?',
+      createdAt: 500,
+    })
+
+    const thread = useGameStore
+      .getState()
+      .messageThreads.find((entry) => entry.botId === 'local-guest')
+    expect(thread?.botName).toBe('GuestBuddy')
+    expect(thread?.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ from: 'player', text: 'Hi!' }),
+        expect.objectContaining({ from: 'bot', text: 'Want to play a mini game?', read: false }),
+      ]),
+    )
+    expect(useGameStore.getState().openPanel).toBe('messages')
+    expect(useGameStore.getState().selectedMessageThreadId).toBe('local-guest')
+    expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
+  })
+})
+
+describe('local party shared build persistence', () => {
+  it('merges remote player build pieces into the saved custom world', () => {
+    const builder = getLocation('builder')
+    useGameStore.setState({
+      placedBlocks: [],
+      earnedBadges: [],
+      chat: [],
+      settings: { ...useGameStore.getState().settings, worldSeed: 'LONDON-2026' },
+    })
+
+    useGameStore.getState().mergeSharedBuildBlocks([
+      {
+        id: 'party-house-1',
+        kind: 'house',
+        position: [builder.travelPosition[0], 0, builder.travelPosition[2]],
+        color: '#60a5fa',
+        rotation: 0,
+      },
+    ])
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+    expect(snapshot.placedBlocks?.map((block) => block.id)).toContain('party-house-1')
+    expect(useGameStore.getState().earnedBadges).toContain('builder')
+  })
 })
 
 describe('mini game store flow', () => {

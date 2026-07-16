@@ -1,5 +1,5 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
-import type { BuildBlock, MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
+import type { BuildBlock, MessageThread, MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
 import { createParkedVehicles, drivableVehicleCollisionBoxes, safeVehicleExitPosition } from '../game/vehicles'
@@ -23,6 +23,8 @@ export type BlockBuddiesE2EBridge = {
   collectNextMiniGameTarget: () => MiniGameE2ESnapshot
   completeMiniGameRoute: () => MiniGameE2ESnapshot
   broadcastLocalPartySnapshot: (position?: Vec3, placedBlocks?: BuildBlock[]) => LocalPartyE2ESnapshot
+  openLocalPartyMessageThread: (playerId: string, playerName: string) => GameplayE2ESnapshot
+  sendSelectedPredefinedMessage: (presetId: string) => GameplayE2ESnapshot
   getLocalPartySnapshot: () => LocalPartyE2ESnapshot
   getGameplaySnapshot: () => GameplayE2ESnapshot
   getSnapshot: () => MiniGameE2ESnapshot
@@ -48,6 +50,8 @@ export type GameplayE2ESnapshot = {
   miniGameStatus: string
   playerEmote: string
   chatTexts: string[]
+  placedBlocks: BuildBlock[]
+  messageThreads: MessageThread[]
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -76,6 +80,8 @@ export function installE2EBridge() {
     collectNextMiniGameTarget,
     completeMiniGameRoute,
     broadcastLocalPartySnapshot,
+    openLocalPartyMessageThread,
+    sendSelectedPredefinedMessage,
     getLocalPartySnapshot,
     getGameplaySnapshot,
     getSnapshot,
@@ -198,6 +204,8 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     miniGameStatus: game.miniGame.status,
     playerEmote: game.playerEmote,
     chatTexts: game.chat.map((message) => message.text),
+    placedBlocks: game.placedBlocks,
+    messageThreads: game.messageThreads,
   }
 }
 
@@ -272,6 +280,17 @@ function broadcastLocalPartySnapshot(position?: Vec3, placedBlocks?: BuildBlock[
     }),
   )
   return getLocalPartySnapshot()
+}
+
+function openLocalPartyMessageThread(playerId: string, playerName: string): GameplayE2ESnapshot {
+  useGameStore.getState().openMessageThread(playerId, playerName)
+  return getGameplaySnapshot()
+}
+
+function sendSelectedPredefinedMessage(presetId: string): GameplayE2ESnapshot {
+  const selectedThreadId = useGameStore.getState().selectedMessageThreadId
+  if (selectedThreadId) useGameStore.getState().sendPredefinedMessage(selectedThreadId, presetId)
+  return getGameplaySnapshot()
 }
 
 function getLocalPartySnapshot(): LocalPartyE2ESnapshot {

@@ -1809,6 +1809,7 @@ function LocalPartyPlayers() {
 
 function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
   const group = useRef<THREE.Group>(null)
+  const openMessageThread = useGameStore((state) => state.openMessageThread)
   const targetPosition = useMemo(
     () => new THREE.Vector3(player.position[0], player.position[1] + avatarGroundOffset, player.position[2]),
     [player.position],
@@ -1826,7 +1827,16 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
   })
 
   return (
-    <group ref={group} position={[player.position[0], player.position[1] + avatarGroundOffset, player.position[2]]} rotation={[0, player.yaw, 0]}>
+    <group
+      ref={group}
+      position={[player.position[0], player.position[1] + avatarGroundOffset, player.position[2]]}
+      rotation={[0, player.yaw, 0]}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation()
+        openMessageThread(player.id, player.name)
+      }}
+    >
       <BlockAvatar
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}
@@ -2729,16 +2739,19 @@ function PlacedBlocks() {
 
 function RemotePlacedBlocks() {
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
+  const localBlocks = useGameStore((state) => state.placedBlocks)
   const blocks = useMemo(() => {
+    const localIds = new Set(localBlocks.map((block) => block.id))
     const synced = new Map<string, { key: string; block: BuildBlock }>()
     Object.values(remotePlayerRecord).forEach((player) => {
       player.placedBlocks?.forEach((block) => {
+        if (localIds.has(block.id)) return
         const key = `${player.id}:${block.id}`
         synced.set(key, { key, block })
       })
     })
     return [...synced.values()]
-  }, [remotePlayerRecord])
+  }, [localBlocks, remotePlayerRecord])
 
   return (
     <>

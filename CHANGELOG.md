@@ -10,6 +10,29 @@
 
 ### Known Issues
 
+## [v1.5.39-local-party-build-mode] - 2026-07-16
+
+### Added
+
+- Added local-party direct messages so predefined player-to-player messages land in the recipient's inbox with unread state.
+- Added runtime sync that merges valid remote build-mode pieces into the saved local custom world.
+- Added unit and Playwright coverage for local-party shared build persistence and player inbox messaging.
+
+### Changed
+
+- Local player message threads now preserve non-bot contacts alongside buddy bot threads.
+- Remote local-party avatars can be tapped/clicked to open that player's message thread.
+- Updated Android and package version metadata to `1.5.39` / `10539`.
+
+### Fixed
+
+- Fixed local-party builds only appearing as temporary remote decorations instead of persisting as saved objects and houses.
+- Fixed local-party player contacts not being addressable through the predefined-message inbox.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.38-local-party-sync] - 2026-07-16
 
 ### Added

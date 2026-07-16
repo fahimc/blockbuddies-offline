@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Html, KeyboardControls, Sky } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { GameScene } from './GameScene'
 import { HUD } from '../ui/HUD'
 import { GameMenu } from '../ui/GameMenu'
@@ -23,6 +23,7 @@ import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
 import { useGameStore } from '../state/gameStore'
+import { useLocalPartyStore } from '../state/localPartyStore'
 
 const keyboardMap = [
   { name: 'forward', keys: ['KeyW', 'ArrowUp'] },
@@ -80,6 +81,7 @@ export function GameScreen() {
         <ChatPanel />
         <TouchControls />
         <RoomCameraZoom />
+        <LocalPartyRuntimeBridge />
         {openPanel === 'quests' ? <QuestPanel /> : null}
         {openPanel === 'shop' ? <ShopPanel /> : null}
         {openPanel === 'avatar' ? <AvatarPanel /> : null}
@@ -95,6 +97,29 @@ export function GameScreen() {
       </section>
     </KeyboardControls>
   )
+}
+
+function LocalPartyRuntimeBridge() {
+  const processedMessageIds = useRef(new Set<string>())
+  const incomingMessages = useLocalPartyStore((state) => state.incomingDirectMessages)
+  const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
+  const receiveLocalPartyMessage = useGameStore((state) => state.receiveLocalPartyMessage)
+  const mergeSharedBuildBlocks = useGameStore((state) => state.mergeSharedBuildBlocks)
+
+  useEffect(() => {
+    incomingMessages.forEach((message) => {
+      if (processedMessageIds.current.has(message.id)) return
+      processedMessageIds.current.add(message.id)
+      receiveLocalPartyMessage(message)
+    })
+  }, [incomingMessages, receiveLocalPartyMessage])
+
+  useEffect(() => {
+    const blocks = Object.values(remotePlayers).flatMap((player) => player.placedBlocks ?? [])
+    if (blocks.length > 0) mergeSharedBuildBlocks(blocks)
+  }, [mergeSharedBuildBlocks, remotePlayers])
+
+  return null
 }
 
 function CanvasLoading() {

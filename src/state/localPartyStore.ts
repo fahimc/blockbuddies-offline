@@ -41,9 +41,20 @@ export type LocalPartySnapshot = {
   updatedAt: number
 }
 
+export type LocalPartyDirectMessage = {
+  id: string
+  fromId: string
+  fromName: string
+  toId: string
+  presetId: string
+  text: string
+  createdAt: number
+}
+
 type LocalPartyMessage =
   | { type: 'hello'; id: string; name: string }
   | { type: 'snapshot'; snapshot: LocalPartySnapshot }
+  | { type: 'direct_message'; message: LocalPartyDirectMessage }
   | { type: 'bye'; id: string; name: string }
 
 type LocalPartyState = {
@@ -62,6 +73,7 @@ type LocalPartyState = {
   pendingLanAnswerName?: string
   error?: string
   remotePlayers: Record<string, LocalPartySnapshot>
+  incomingDirectMessages: LocalPartyDirectMessage[]
   lastEvent: string
   setPlayerName: (name: string) => void
   setRoomName: (name: string) => void
@@ -75,6 +87,7 @@ type LocalPartyState = {
   acceptAnswer: () => Promise<void>
   disconnect: () => void
   broadcastSnapshot: (snapshot: LocalPartySnapshot) => void
+  sendDirectMessage: (toId: string, presetId: string, text: string) => void
   pruneRemotePlayers: (now?: number) => void
 }
 
@@ -235,6 +248,31 @@ function parsePartyMessage(data: unknown): LocalPartyMessage | undefined {
         typeof snapshot.action === 'string'
       ) {
         return { type: 'snapshot', snapshot: snapshot as LocalPartySnapshot }
+      }
+    }
+    if (message.type === 'direct_message' && isRecord(message.message)) {
+      const localMessage = message.message
+      if (
+        typeof localMessage.id === 'string' &&
+        typeof localMessage.fromId === 'string' &&
+        typeof localMessage.fromName === 'string' &&
+        typeof localMessage.toId === 'string' &&
+        typeof localMessage.presetId === 'string' &&
+        typeof localMessage.text === 'string' &&
+        typeof localMessage.createdAt === 'number'
+      ) {
+        return {
+          type: 'direct_message',
+          message: {
+            id: localMessage.id,
+            fromId: localMessage.fromId,
+            fromName: sanitizePartyName(localMessage.fromName),
+            toId: localMessage.toId,
+            presetId: localMessage.presetId,
+            text: localMessage.text.slice(0, 160),
+            createdAt: localMessage.createdAt,
+          },
+        }
       }
     }
   } catch {
@@ -405,13 +443,26 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
       })
       return
     }
-    if (message.snapshot.id === get().playerId) return
-    set((state) => ({
-      remotePlayers: {
-        ...state.remotePlayers,
-        [message.snapshot.id]: makePartySnapshot({ ...message.snapshot, updatedAt: Date.now() }),
-      },
-    }))
+    if (message.type === 'snapshot') {
+      if (message.snapshot.id === get().playerId) return
+      set((state) => ({
+        remotePlayers: {
+          ...state.remotePlayers,
+          [message.snapshot.id]: makePartySnapshot({ ...message.snapshot, updatedAt: Date.now() }),
+        },
+      }))
+      return
+    }
+    if (message.type === 'direct_message') {
+      if (message.message.toId !== get().playerId) return
+      set((state) => ({
+        incomingDirectMessages: state.incomingDirectMessages.some((item) => item.id === message.message.id)
+          ? state.incomingDirectMessages
+          : [...state.incomingDirectMessages.slice(-40), message.message],
+        lastEvent: `${sanitizePartyName(message.message.fromName)} sent you a message.`,
+      }))
+      return
+    }
   }
 }
 
@@ -427,6 +478,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   lanRooms: [],
   lanSearching: false,
   remotePlayers: {},
+  incomingDirectMessages: [],
   lastEvent: 'Local party is offline.',
   setPlayerName: (name) => set({ playerName: sanitizePartyName(name) }),
   setRoomName: (name) => set({ roomName: sanitizeRoomName(name) }),
@@ -657,6 +709,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       lanHost: undefined,
       pendingLanAnswerName: undefined,
       remotePlayers: {},
+      incomingDirectMessages: [],
       error: undefined,
       lastEvent: 'Local party ended.',
     })
@@ -672,6 +725,19 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         hostId,
       }),
     })
+  },
+  sendDirectMessage: (toId, presetId, text) => {
+    const state = get()
+    const message: LocalPartyDirectMessage = {
+      id: `party-dm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      fromId: state.playerId,
+      fromName: state.playerName,
+      toId,
+      presetId,
+      text: text.slice(0, 160),
+      createdAt: Date.now(),
+    }
+    sendPartyMessage({ type: 'direct_message', message })
   },
   pruneRemotePlayers: (now = Date.now()) =>
     set((state) => {

@@ -20,7 +20,7 @@ import {
   startMiniGameSession,
   tickMiniGameSession,
 } from '../ai/miniGames'
-import { sanitizePartyName, useLocalPartyStore } from './localPartyStore'
+import { sanitizePartyName, useLocalPartyStore, type LocalPartyDirectMessage } from './localPartyStore'
 import {
   canPlacePiece,
   createBuildMapStamp,
@@ -169,9 +169,10 @@ type GameState = GameSave & {
   tickBots: (now: number) => void
   botReact: (botId: string, context: DialogueContext) => void
   sendQuickReply: (text: string, context: DialogueContext) => void
-  openMessageThread: (botId: string) => void
+  openMessageThread: (botId: string, contactName?: string) => void
   closeMessageThread: () => void
   sendPredefinedMessage: (botId: string, presetId: string) => void
+  receiveLocalPartyMessage: (message: LocalPartyDirectMessage) => void
   startQuest: (id: QuestId) => void
   advanceQuest: (id: QuestId, amount: number) => void
   addCoins: (amount: number) => void
@@ -196,6 +197,7 @@ type GameState = GameSave & {
   placeBlock: () => void
   placeMapStamp: () => void
   removeLastBlock: () => void
+  mergeSharedBuildBlocks: (blocks: BuildBlock[]) => void
   beginObby: (now: number) => void
   updateObby: (now: number, checkpoints: Vec3[]) => void
   completeObby: (now: number) => void
@@ -373,7 +375,7 @@ function createInitialMessageThreads(): MessageThread[] {
 
 function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
   const now = Date.now()
-  return botProfiles.map((bot) => {
+  const botThreads = botProfiles.map((bot) => {
     const existing = threads?.find((thread) => thread.botId === bot.id)
     return {
       id: bot.id,
@@ -383,14 +385,37 @@ function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
       updatedAt: existing?.updatedAt ?? now,
     }
   })
+  const extraThreads =
+    threads?.filter((thread) => !botProfiles.some((bot) => bot.id === thread.botId)) ?? []
+  return [...botThreads, ...extraThreads]
+}
+
+function ensureMessageThread(
+  threads: MessageThread[],
+  contactId: string,
+  contactName = 'LocalBuddy',
+): MessageThread[] {
+  const ensured = ensureMessageThreads(threads)
+  if (ensured.some((thread) => thread.botId === contactId)) return ensured
+  return [
+    ...ensured,
+    {
+      id: contactId,
+      botId: contactId,
+      botName: sanitizePartyName(contactName),
+      messages: [],
+      updatedAt: Date.now(),
+    },
+  ]
 }
 
 function addDirectMessage(
   threads: MessageThread[],
   botId: string,
   message: DirectMessage,
+  contactName?: string,
 ): MessageThread[] {
-  return ensureMessageThreads(threads).map((thread) =>
+  return ensureMessageThread(threads, botId, contactName).map((thread) =>
     thread.botId === botId
       ? {
           ...thread,
@@ -412,6 +437,17 @@ function markThreadRead(threads: MessageThread[], botId: string): MessageThread[
         }
       : thread,
   )
+}
+
+function localPartyDirectMessage(message: LocalPartyDirectMessage): DirectMessage {
+  return {
+    id: message.id,
+    presetId: message.presetId,
+    text: message.text,
+    from: 'bot',
+    read: false,
+    createdAt: message.createdAt,
+  }
 }
 
 function initialQuestProgress() {
@@ -731,11 +767,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (nearest) get().botReact(nearest.id, context)
   },
 
-  openMessageThread: (botId) =>
+  openMessageThread: (botId, contactName) =>
     set((state) => ({
       openPanel: 'messages',
       selectedMessageThreadId: botId,
-      messageThreads: markThreadRead(state.messageThreads, botId),
+      messageThreads: markThreadRead(
+        ensureMessageThread(state.messageThreads, botId, contactName),
+        botId,
+      ),
     })),
 
   closeMessageThread: () => set({ selectedMessageThreadId: undefined }),
@@ -743,7 +782,29 @@ export const useGameStore = create<GameState>((set, get) => ({
   sendPredefinedMessage: (botId, presetId) => {
     const preset = findPredefinedMessage(presetId)
     const profile = botProfiles.find((bot) => bot.id === botId)
-    if (!preset || !profile) return
+    if (!preset) return
+    if (!profile) {
+      const contactName =
+        get().messageThreads.find((thread) => thread.botId === botId)?.botName ??
+        useLocalPartyStore.getState().remotePlayers[botId]?.name ??
+        'LocalBuddy'
+      const outgoing = directMessage(preset.id, preset.text, 'player', true)
+      useLocalPartyStore.getState().sendDirectMessage(botId, preset.id, preset.text)
+      set((state) => ({
+        messageThreads: addDirectMessage(
+          ensureMessageThread(state.messageThreads, botId, contactName),
+          botId,
+          outgoing,
+          contactName,
+        ),
+        chat: [
+          ...state.chat.slice(-60),
+          playerMessage(state.playerName, preset.text),
+        ],
+      }))
+      get().awardBadge('social-buddy')
+      return
+    }
     const reply = botReplyForPreset(preset.id)
     const outgoing = directMessage(preset.id, preset.text, 'player', true)
     const replyMessage = reply
@@ -788,6 +849,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     }))
     get().awardBadge('social-buddy')
   },
+
+  receiveLocalPartyMessage: (message) =>
+    set((state) => ({
+      messageThreads: addDirectMessage(
+        ensureMessageThread(state.messageThreads, message.fromId, message.fromName),
+        message.fromId,
+        localPartyDirectMessage(message),
+        message.fromName,
+      ),
+      chat: [...state.chat.slice(-60), botMessage(message.fromName, message.text)],
+    })),
 
   startQuest: (id) =>
     set((state) => ({
@@ -1077,6 +1149,35 @@ export const useGameStore = create<GameState>((set, get) => ({
       placedBlocks: state.placedBlocks.slice(0, -1),
       chat: [...state.chat.slice(-60), systemMessage('Last block removed')],
     })),
+  mergeSharedBuildBlocks: (blocks) =>
+    set((state) => {
+      const incoming = blocks.filter(
+        (block) => !state.placedBlocks.some((existing) => existing.id === block.id),
+      )
+      if (incoming.length === 0) return state
+      const accepted = mergeBuildPieces(
+        state.placedBlocks,
+        incoming,
+        maxBuildPieces,
+        (piece) =>
+          !worldBuildPlacementIssue(
+            piece.position,
+            piece.kind ?? 'block',
+            state.settings.worldSeed,
+          ),
+      )
+      if (accepted.length === 0) return state
+      return {
+        placedBlocks: [...state.placedBlocks, ...accepted],
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`Local party build synced: ${accepted.length} piece${accepted.length === 1 ? '' : 's'}`),
+        ],
+        earnedBadges: state.earnedBadges.includes('builder')
+          ? state.earnedBadges
+          : [...state.earnedBadges, 'builder'],
+      }
+    }),
 
   applyOwnedItem: (id) =>
     set((state) => {

@@ -740,3 +740,12 @@
 - [x] Smooth remote local-player movement with frame interpolation
 - [x] Add unit and Playwright coverage for host election and build-object sync
 - [x] Bump Android debug APK version metadata to 1.5.38 / 10538
+
+## Post-phase local party build mode and inbox
+
+- [x] Merge valid remote local-party build pieces into saved placed blocks
+- [x] Persist shared houses and custom world objects through the normal save snapshot
+- [x] Add predefined local-player direct messages over the party data channel
+- [x] Let remote local-player avatars open an inbox message thread when tapped
+- [x] Add unit and Playwright coverage for shared builds and local-player inbox delivery
+- [x] Bump Android debug APK version metadata to 1.5.39 / 10539

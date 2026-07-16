@@ -1,6 +1,8 @@
 import { expect, type Page, test } from '@playwright/test'
 
 type LocalPartySnapshot = {
+  playerId: string
+  playerName: string
   status: 'idle' | 'hosting' | 'joining' | 'connecting' | 'connected' | 'error'
   inviteCode: string
   answerCode: string
@@ -118,7 +120,7 @@ test.describe('local party multiplayer', () => {
         {
           id: 'e2e-party-house',
           kind: 'house',
-          position: [8, 0, 8],
+          position: [67, 0, 54],
           color: '#60a5fa',
           rotation: 0,
         },
@@ -145,6 +147,32 @@ test.describe('local party multiplayer', () => {
         timeout: 15_000,
       })
       .toContain('e2e-party-house')
+    await expect
+      .poll(async () => {
+        const snapshot = await guest.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+        return snapshot.placedBlocks.map((block) => block.id)
+      }, {
+        timeout: 15_000,
+      })
+      .toContain('e2e-party-house')
+
+    const guestParty = await partySnapshot(guest)
+    await host.evaluate(
+      ({ playerId, playerName }) => {
+        window.__blockBuddiesE2E!.openLocalPartyMessageThread(playerId, playerName)
+        window.__blockBuddiesE2E!.sendSelectedPredefinedMessage('greeting-001')
+      },
+      { playerId: guestParty.playerId, playerName: guestParty.playerName },
+    )
+    await expect
+      .poll(async () => {
+        const snapshot = await guest.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+        const hostThread = snapshot.messageThreads.find((thread) => thread.botName === 'HostBuddy')
+        return hostThread?.messages.map((message) => `${message.from}:${message.text}:${message.read}`) ?? []
+      }, {
+        timeout: 15_000,
+      })
+      .toContain('bot:Hi!:false')
 
     await guest.close()
   })
