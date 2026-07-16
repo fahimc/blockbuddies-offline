@@ -5,7 +5,12 @@ type LocalPartySnapshot = {
   inviteCode: string
   answerCode: string
   answerCodeInput: string
-  remotePlayers: { id: string; name: string; position: [number, number, number] }[]
+  remotePlayers: {
+    id: string
+    name: string
+    position: [number, number, number]
+    placedBlocks?: { id: string; kind?: string; position: [number, number, number]; color: string; rotation?: number }[]
+  }[]
   lastEvent: string
   error?: string
 }
@@ -108,7 +113,17 @@ test.describe('local party multiplayer', () => {
     await expect(host.getByText('Local players connected: 1')).toBeVisible()
     await expect(host.locator('.bb-party-card').locator('span', { hasText: 'GuestBuddy' })).toBeVisible()
 
-    await host.evaluate(() => window.__blockBuddiesE2E!.broadcastLocalPartySnapshot([-3, 0, 5]))
+    await host.evaluate(() =>
+      window.__blockBuddiesE2E!.broadcastLocalPartySnapshot([-3, 0, 5], [
+        {
+          id: 'e2e-party-house',
+          kind: 'house',
+          position: [8, 0, 8],
+          color: '#60a5fa',
+          rotation: 0,
+        },
+      ]),
+    )
     await expect
       .poll(async () => (await partySnapshot(guest)).remotePlayers.map((player) => player.name), {
         timeout: 15_000,
@@ -121,6 +136,15 @@ test.describe('local party multiplayer', () => {
     expect(hostRemote.name).toBe('GuestBuddy')
     expect(hostRemote.position).toHaveLength(3)
     expect(hostRemote.position.every((value) => Number.isFinite(value))).toBe(true)
+
+    await expect
+      .poll(async () => {
+        const guestRemote = (await partySnapshot(guest)).remotePlayers.find((player) => player.name === 'HostBuddy')
+        return guestRemote?.placedBlocks?.map((block) => block.id) ?? []
+      }, {
+        timeout: 15_000,
+      })
+      .toContain('e2e-party-house')
 
     await guest.close()
   })

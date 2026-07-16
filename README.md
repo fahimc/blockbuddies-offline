@@ -452,6 +452,12 @@ badges, shop unlocks, emotes, seating, sleeping, build actions, obby, vehicles,
 and mini-games now have local WebAudio cues, and procedural music changes by
 context across menu, customizer, town, interiors, driving, and mini-games.
 
+The `v1.5.38` APK improves Local Party resilience and world sync. Local player
+snapshots now carry host-election metadata and shared build pieces, so a
+surviving player is promoted when the host drops and connected players can see
+each other's build-mode objects. Remote avatars now interpolate between updates
+for smoother movement.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

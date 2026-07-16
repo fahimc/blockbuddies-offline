@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   decodePartySignal,
+  electLocalPartyHost,
   encodeLegacyPartySignal,
   encodePartySignal,
   extractPartyCode,
@@ -90,6 +91,61 @@ describe('local party helpers', () => {
       action: 'run',
       updatedAt: 100,
     })
+  })
+
+  it('syncs a bounded sanitized set of built world objects', () => {
+    const snapshot = makePartySnapshot({
+      id: 'local-builder',
+      name: 'Builder',
+      position: [1, 0, 2],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      placedBlocks: Array.from({ length: 110 }, (_, index) => ({
+        id: `piece-${index}`,
+        kind: index % 2 === 0 ? 'house' : 'tree',
+        position: [index, 0, index + 1],
+        color: index === 109 ? 'orange' : '#22c55e',
+        rotation: Number.NaN,
+      })),
+      updatedAt: 100,
+    })
+
+    expect(snapshot.placedBlocks).toHaveLength(96)
+    expect(snapshot.placedBlocks?.[0].id).toBe('piece-14')
+    expect(snapshot.placedBlocks?.at(-1)).toMatchObject({
+      id: 'piece-109',
+      color: '#60a5fa',
+      rotation: 0,
+    })
+  })
+
+  it('elects a live explicit host before falling back to deterministic failover', () => {
+    const host = makePartySnapshot({
+      id: 'local-host',
+      name: 'Host',
+      position: [0, 0, 0],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      role: 'host',
+      hostId: 'local-host',
+      updatedAt: 1000,
+    })
+    const guest = makePartySnapshot({
+      id: 'local-aaa',
+      name: 'Guest',
+      position: [1, 0, 1],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      role: 'guest',
+      hostId: 'local-host',
+      updatedAt: 1000,
+    })
+
+    expect(electLocalPartyHost('local-zzz', { [host.id]: host, [guest.id]: guest }, 1100)).toBe('local-host')
+    expect(electLocalPartyHost('local-zzz', { [host.id]: host, [guest.id]: guest }, 7001)).toBe('local-zzz')
   })
 
   it('marks remote players stale after the local party ttl', () => {

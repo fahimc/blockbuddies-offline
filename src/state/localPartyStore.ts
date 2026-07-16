@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate'
-import type { AvatarSettings, BotRuntime, Vec3 } from '../game/types'
+import type { AvatarSettings, BotRuntime, Vec3, BuildBlock } from '../game/types'
 import {
   discoverSignalRooms,
   getSignalAnswers,
@@ -35,6 +35,9 @@ export type LocalPartySnapshot = {
   avatar: AvatarSettings
   action: BotRuntime['action']
   interiorId?: string
+  role?: LocalPartyRole
+  hostId?: string
+  placedBlocks?: BuildBlock[]
   updatedAt: number
 }
 
@@ -90,6 +93,7 @@ let lanAnswerPoll: number | undefined
 const compactPartyCodePrefix = 'BBP1.'
 const signalBusName = 'blockbuddies-local-party-signal'
 const signalStorageKey = 'blockbuddies-local-party-signal'
+const maxSyncedBuildBlocks = 96
 
 export function sanitizePartyName(input: string) {
   const cleaned = input.replace(/[^\w -]/g, '').replace(/\s+/g, ' ').trim().slice(0, 18)
@@ -176,12 +180,35 @@ export function makePartySnapshot(snapshot: Omit<LocalPartySnapshot, 'updatedAt'
     name: sanitizePartyName(snapshot.name),
     position: [snapshot.position[0], snapshot.position[1], snapshot.position[2]],
     interiorId: snapshot.interiorId,
+    placedBlocks: sanitizeBuildBlocks(snapshot.placedBlocks),
     updatedAt: snapshot.updatedAt ?? Date.now(),
   }
 }
 
 export function isRemoteFresh(snapshot: LocalPartySnapshot, now = Date.now(), ttlMs = 5000) {
   return now - snapshot.updatedAt <= ttlMs
+}
+
+export function electLocalPartyHost(localId: string, remotePlayers: Record<string, LocalPartySnapshot>, now = Date.now()) {
+  const freshRemotePlayers = Object.values(remotePlayers).filter((player) => isRemoteFresh(player, now))
+  const explicitRemoteHosts = freshRemotePlayers
+    .filter((player) => player.role === 'host')
+    .map((player) => player.hostId ?? player.id)
+  if (explicitRemoteHosts.length > 0) return explicitRemoteHosts.sort((left, right) => left.localeCompare(right))[0]
+
+  return [localId, ...freshRemotePlayers.map((player) => player.id)]
+    .sort((left, right) => left.localeCompare(right))[0] ?? localId
+}
+
+function sanitizeBuildBlocks(blocks: BuildBlock[] | undefined): BuildBlock[] | undefined {
+  if (!blocks?.length) return undefined
+  return blocks.slice(-maxSyncedBuildBlocks).map((block) => ({
+    id: String(block.id).slice(0, 64),
+    kind: block.kind,
+    position: [Number(block.position[0]) || 0, Number(block.position[1]) || 0, Number(block.position[2]) || 0],
+    color: /^#[0-9a-f]{3,8}$/i.test(block.color) ? block.color : '#60a5fa',
+    rotation: Number.isFinite(block.rotation) ? block.rotation : 0,
+  }))
 }
 
 function sendPartyMessage(message: LocalPartyMessage) {
@@ -331,9 +358,25 @@ function createPeerConnection(set: LocalPartySetter, attachChannel: (nextChannel
   connection.onconnectionstatechange = () => {
     if (connection.connectionState === 'connected') set({ status: 'connected', error: undefined })
     if (connection.connectionState === 'failed') set({ status: 'error', error: 'Local party connection failed.' })
-    if (connection.connectionState === 'disconnected') set({ status: 'idle', lastEvent: 'Local player disconnected.' })
+    if (connection.connectionState === 'disconnected') promoteLocalHost(set)
   }
   return connection
+}
+
+function promoteLocalHost(set: LocalPartySetter) {
+  set((state) => {
+    if (state.status !== 'connected' && state.status !== 'connecting') {
+      return { status: 'idle', lastEvent: 'Local player disconnected.' }
+    }
+    return {
+      status: 'hosting',
+      role: 'host',
+      lanHost: undefined,
+      pendingLanAnswerName: undefined,
+      error: undefined,
+      lastEvent: 'Host left. You are now hosting the local party.',
+    }
+  })
 }
 
 function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, get: () => LocalPartyState) {
@@ -345,7 +388,7 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
     set({ status: 'connected', lanHost: undefined, pendingLanAnswerName: undefined, error: undefined, lastEvent: 'Local player connected.' })
     sendPartyMessage({ type: 'hello', id: state.playerId, name: state.playerName })
   }
-  channel.onclose = () => set({ status: 'idle', lanHost: undefined, pendingLanAnswerName: undefined, remotePlayers: {}, lastEvent: 'Local player disconnected.' })
+  channel.onclose = () => promoteLocalHost(set)
   channel.onerror = () => set({ status: 'error', error: 'Local party data channel failed.' })
   channel.onmessage = (event) => {
     const message = parsePartyMessage(event.data)
@@ -618,9 +661,29 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       lastEvent: 'Local party ended.',
     })
   },
-  broadcastSnapshot: (snapshot) => sendPartyMessage({ type: 'snapshot', snapshot: makePartySnapshot(snapshot) }),
+  broadcastSnapshot: (snapshot) => {
+    const state = get()
+    const hostId = state.role === 'host' ? state.playerId : electLocalPartyHost(state.playerId, state.remotePlayers)
+    sendPartyMessage({
+      type: 'snapshot',
+      snapshot: makePartySnapshot({
+        ...snapshot,
+        role: hostId === state.playerId ? 'host' : state.role,
+        hostId,
+      }),
+    })
+  },
   pruneRemotePlayers: (now = Date.now()) =>
-    set((state) => ({
-      remotePlayers: Object.fromEntries(Object.entries(state.remotePlayers).filter(([, player]) => isRemoteFresh(player, now))),
-    })),
+    set((state) => {
+      const remotePlayers = Object.fromEntries(Object.entries(state.remotePlayers).filter(([, player]) => isRemoteFresh(player, now)))
+      const hostId = state.role === 'host' ? state.playerId : electLocalPartyHost(state.playerId, remotePlayers, now)
+      const role = hostId === state.playerId && state.status !== 'idle' ? 'host' : state.role === 'host' ? 'guest' : state.role
+      const promoted = state.status === 'connected' && role === 'host' && state.role !== 'host'
+      return {
+        remotePlayers,
+        status: promoted ? 'hosting' : state.status,
+        role,
+        lastEvent: promoted ? 'Host left. You are now hosting the local party.' : state.lastEvent,
+      }
+    }),
 }))

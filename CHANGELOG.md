@@ -10,6 +10,29 @@
 
 ### Known Issues
 
+## [v1.5.38-local-party-sync] - 2026-07-16
+
+### Added
+
+- Added local party host-election metadata so connected players can promote themselves when the current host drops.
+- Added synced build-piece payloads to local party snapshots so player-built world objects appear for connected local players.
+- Added unit and Playwright coverage for host election and build-object snapshot sharing.
+
+### Changed
+
+- Smoothed remote local-party avatars with frame interpolation instead of snapping directly to each received snapshot.
+- Shared local-party build pieces now contribute to doorway and collision checks when they are received from another player.
+- Updated Android and package version metadata to `1.5.38` / `10538`.
+
+### Fixed
+
+- Fixed local party clients losing authority when the host disconnects by promoting the surviving client into host state.
+- Fixed local party worlds diverging when one player placed build-mode objects.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.37-buddy-message-inbox] - 2026-07-16
 
 ### Added

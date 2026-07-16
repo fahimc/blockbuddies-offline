@@ -730,3 +730,13 @@
 - [x] Add unit coverage for zoning, occupancy, terrain rules, clear roads, and buildable lots
 - [x] Add browser coverage for Builder Meadows and Clocktower Hall travel
 - [x] Bump Android debug APK version metadata to 1.5.34 / 10534
+
+## Post-phase local party sync and failover
+
+- [x] Add host-election metadata to local party snapshots
+- [x] Promote a surviving connected player when the current host disconnects
+- [x] Sync player-built world objects through local party snapshots
+- [x] Render and collide remote build-mode objects for connected local players
+- [x] Smooth remote local-player movement with frame interpolation
+- [x] Add unit and Playwright coverage for host election and build-object sync
+- [x] Bump Android debug APK version metadata to 1.5.38 / 10538

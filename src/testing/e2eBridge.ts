@@ -1,5 +1,5 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
-import type { MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
+import type { BuildBlock, MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
 import { createParkedVehicles, drivableVehicleCollisionBoxes, safeVehicleExitPosition } from '../game/vehicles'
@@ -22,7 +22,7 @@ export type MiniGameE2ESnapshot = {
 export type BlockBuddiesE2EBridge = {
   collectNextMiniGameTarget: () => MiniGameE2ESnapshot
   completeMiniGameRoute: () => MiniGameE2ESnapshot
-  broadcastLocalPartySnapshot: (position?: Vec3) => LocalPartyE2ESnapshot
+  broadcastLocalPartySnapshot: (position?: Vec3, placedBlocks?: BuildBlock[]) => LocalPartyE2ESnapshot
   getLocalPartySnapshot: () => LocalPartyE2ESnapshot
   getGameplaySnapshot: () => GameplayE2ESnapshot
   getSnapshot: () => MiniGameE2ESnapshot
@@ -255,7 +255,8 @@ function getSnapshot(): MiniGameE2ESnapshot {
   }
 }
 
-function broadcastLocalPartySnapshot(position?: Vec3): LocalPartyE2ESnapshot {
+function broadcastLocalPartySnapshot(position?: Vec3, placedBlocks?: BuildBlock[]): LocalPartyE2ESnapshot {
+  if (placedBlocks) useGameStore.setState({ placedBlocks })
   const game = useGameStore.getState()
   const party = useLocalPartyStore.getState()
   party.broadcastSnapshot(
@@ -267,6 +268,7 @@ function broadcastLocalPartySnapshot(position?: Vec3): LocalPartyE2ESnapshot {
       avatar: game.avatar,
       action: 'run',
       interiorId: game.activeInterior?.id,
+      placedBlocks: placedBlocks ?? game.placedBlocks,
     }),
   )
   return getLocalPartySnapshot()

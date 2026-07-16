@@ -207,6 +207,7 @@ function OutdoorWorld() {
       <MiniGameWorld />
       <ToyPickup />
       <PlacedBlocks />
+      <RemotePlacedBlocks />
     </>
   )
 }
@@ -1268,6 +1269,11 @@ function PlayerController({
   const settings = useGameStore((state) => state.settings)
   const activeInterior = useGameStore((state) => state.activeInterior)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
+  const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
+  const remotePlacedBlocks = useMemo(
+    () => Object.values(remotePlayerRecord).flatMap((player) => player.placedBlocks ?? []),
+    [remotePlayerRecord],
+  )
   const buildMode = useGameStore((state) => state.buildMode)
   const placeBlock = useGameStore((state) => state.placeBlock)
   const playerPosition = useGameStore((state) => state.playerPosition)
@@ -1309,12 +1315,12 @@ function PlayerController({
       const entrance = proceduralDoorEntrance(piece)
       return entrance ? [entrance] : []
     })
-    const buildEntrances = placedBlocks.flatMap((block) => {
+    const buildEntrances = [...placedBlocks, ...remotePlacedBlocks].flatMap((block) => {
       const entrance = buildBlockInteriorEntrance(block)
       return entrance ? [entrance] : []
     })
     return [...staticInteriorEntrances, ...proceduralEntrances, ...buildEntrances]
-  }, [activeInterior, placedBlocks, proceduralPieces])
+  }, [activeInterior, placedBlocks, proceduralPieces, remotePlacedBlocks])
   const seatTargets = useMemo(() => seatsForContext(activeInterior?.kind), [activeInterior?.kind])
   const collisionObstacles = useMemo(() => {
     if (activeInterior) return interiorCollisionBoxes(activeInterior.kind)
@@ -1326,9 +1332,10 @@ function PlayerController({
       ...parkingLotCollisionBoxes(),
       ...proceduralObstacles,
       ...buildBlocksToCollisionBoxes(placedBlocks),
+      ...buildBlocksToCollisionBoxes(remotePlacedBlocks),
     ]
     return filterEntranceSafeZoneCollisions(outsideObstacles, interiorEntrances)
-  }, [activeInterior, interiorEntrances, placedBlocks, proceduralPieces])
+  }, [activeInterior, interiorEntrances, placedBlocks, proceduralPieces, remotePlacedBlocks])
 
   useFrame((state, delta) => {
     const nextCollisionChunk = {
@@ -1682,6 +1689,7 @@ function PlayerController({
           avatar,
           action: isAirborne ? 'jump' : effectiveMoving ? (effectiveRunning ? 'run' : 'walk') : 'idle',
           interiorId: activeInterior?.id,
+          placedBlocks,
         }),
       )
       lastPartyBroadcastAt.current = performance.now()
@@ -1800,8 +1808,25 @@ function LocalPartyPlayers() {
 }
 
 function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
+  const group = useRef<THREE.Group>(null)
+  const targetPosition = useMemo(
+    () => new THREE.Vector3(player.position[0], player.position[1] + avatarGroundOffset, player.position[2]),
+    [player.position],
+  )
+
+  useFrame((_, delta) => {
+    if (!group.current) return
+    const smoothing = 1 - Math.exp(-delta * 12)
+    group.current.position.lerp(targetPosition, smoothing)
+    group.current.rotation.y = THREE.MathUtils.lerp(
+      group.current.rotation.y,
+      player.yaw,
+      smoothing,
+    )
+  })
+
   return (
-    <group position={[player.position[0], player.position[1] + avatarGroundOffset, player.position[2]]} rotation={[0, player.yaw, 0]}>
+    <group ref={group} position={[player.position[0], player.position[1] + avatarGroundOffset, player.position[2]]} rotation={[0, player.yaw, 0]}>
       <BlockAvatar
         bodyColor={player.avatar.bodyColor}
         shirtColor={player.avatar.shirtColor}
@@ -2697,6 +2722,28 @@ function PlacedBlocks() {
     <>
       {blocks.map((block) => (
         <BuildPiece key={block.id} block={block} />
+      ))}
+    </>
+  )
+}
+
+function RemotePlacedBlocks() {
+  const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
+  const blocks = useMemo(() => {
+    const synced = new Map<string, { key: string; block: BuildBlock }>()
+    Object.values(remotePlayerRecord).forEach((player) => {
+      player.placedBlocks?.forEach((block) => {
+        const key = `${player.id}:${block.id}`
+        synced.set(key, { key, block })
+      })
+    })
+    return [...synced.values()]
+  }, [remotePlayerRecord])
+
+  return (
+    <>
+      {blocks.map(({ key, block }) => (
+        <BuildPiece key={`remote:${key}`} block={block} />
       ))}
     </>
   )
