@@ -10,6 +10,25 @@
 
 ### Known Issues
 
+## [v1.5.42-tutorial-menu] - 2026-07-16
+
+### Added
+
+- Added a Tutorial section to the hamburger menu with mobile-friendly guidance for movement, Local Party, messages, Build Mode, map travel, mini-games, cars, and saving.
+- Added UI regression coverage for opening the Tutorial menu item and for the tutorial content.
+
+### Changed
+
+- The game menu now includes Tutorial near the top so new players can learn core flows before opening the feature panels.
+
+### Fixed
+
+- Fixed the game having no in-app help for Local Party setup, synced building, or the main mobile controls.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.41-name-messaging-build-fixes] - 2026-07-16
 
 ### Added

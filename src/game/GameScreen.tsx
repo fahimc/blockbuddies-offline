@@ -21,6 +21,7 @@ import { MiniGamesPanel } from '../ui/MiniGamesPanel'
 import { MiniGameAnnouncement } from '../ui/MiniGameAnnouncement'
 import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
+import { TutorialPanel } from '../ui/TutorialPanel'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
@@ -94,6 +95,7 @@ export function GameScreen() {
         {openPanel === 'emotes' ? <EmotePanel /> : null}
         {openPanel === 'minigames' ? <MiniGamesPanel /> : null}
         {openPanel === 'map' ? <MapPanel /> : null}
+        {openPanel === 'tutorial' ? <TutorialPanel /> : null}
       </section>
     </KeyboardControls>
   )

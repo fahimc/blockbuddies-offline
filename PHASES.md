@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase tutorial menu
+
+- [x] Add a hamburger-menu Tutorial section.
+- [x] Teach movement, camera orbit, Local Party, messages, Build Mode, map travel, mini-games, cars, and saving.
+- [x] Add UI regression coverage for the Tutorial menu route and content.
+- [x] Package and release Android debug APK for the tutorial build.
+
 ## Post-phase name, messaging, and build fixes
 
 - [x] Remove `Offline` from the app/game name surfaces while keeping offline-play feature copy.

@@ -121,6 +121,7 @@ export type GamePanel =
   | 'emotes'
   | 'minigames'
   | 'messages'
+  | 'tutorial'
 
 type GameState = GameSave & {
   playerPosition: Vec3

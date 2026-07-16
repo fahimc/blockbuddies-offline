@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  BookOpenCheck,
   Blocks,
   Gamepad2,
   HeartHandshake,
@@ -27,6 +28,7 @@ const menuItems: {
   icon: ReactNode
 }[] = [
   { panel: 'map', label: 'Town Map', icon: <Map size={21} aria-hidden /> },
+  { panel: 'tutorial', label: 'Tutorial', icon: <BookOpenCheck size={21} aria-hidden /> },
   { panel: 'messages', label: 'Messages', icon: <MessageCircle size={21} aria-hidden /> },
   { panel: 'avatar', label: 'Customise Character', icon: <Palette size={21} aria-hidden /> },
   { panel: 'quests', label: 'Quests', icon: <ListChecks size={21} aria-hidden /> },

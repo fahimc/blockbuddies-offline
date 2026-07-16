@@ -6,6 +6,16 @@ import { useGameStore } from '../state/gameStore'
 import { GameMenu } from './GameMenu'
 
 describe('GameMenu', () => {
+  it('opens the tutorial section from the hamburger menu', () => {
+    useGameStore.setState({ openPanel: undefined })
+
+    render(<GameMenu />)
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Tutorial' }))
+
+    expect(useGameStore.getState().openPanel).toBe('tutorial')
+  })
+
   it('resets the player to Spawn Plaza from the hamburger menu', () => {
     const plaza = getLocation('spawn')
     useGameStore.setState((state) => ({

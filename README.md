@@ -471,6 +471,10 @@ The `v1.5.41` APK removes `Offline` from the app/game name, adds a reliable
 tap target for messaging connected local players, and fixes Build mode so the
 Place action searches nearby legal grid cells instead of failing silently.
 
+The `v1.5.42` APK adds a Tutorial section to the hamburger menu. It teaches
+movement, camera orbit, Local Party setup, predefined messages, Build Mode,
+map travel, mini-games, cars, and local saving inside the game UI.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The
