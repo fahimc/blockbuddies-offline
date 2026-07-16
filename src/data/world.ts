@@ -74,6 +74,24 @@ export const worldLocations: WorldLocation[] = [
     travelYaw: -Math.PI / 2,
     color: '#2563eb',
   },
+  {
+    id: 'builder',
+    label: 'Builder Meadows',
+    description: 'An open parcel district for roads, homes, and custom creations.',
+    position: [54, 0, 54],
+    travelPosition: [54, 0, 54],
+    travelYaw: Math.PI,
+    color: '#14b8a6',
+  },
+  {
+    id: 'hall',
+    label: 'Clocktower Hall',
+    description: 'Visit the civic square and the town clocktower.',
+    position: [0, 0, -34],
+    travelPosition: [0, 0, -28.5],
+    travelYaw: Math.PI,
+    color: '#c08457',
+  },
 ]
 
 export function getLocation(id: LocationId) {

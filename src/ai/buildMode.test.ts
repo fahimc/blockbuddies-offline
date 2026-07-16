@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getBuildPiece } from '../data/buildPieces'
 import { buildPieceDimensions, realScale } from '../game/scale'
+import { createProceduralChunkPlan } from '../data/proceduralTownPlan'
 import {
   canPlaceBlock,
   canPlacePiece,
@@ -9,6 +10,7 @@ import {
   mergeBuildPieces,
   nextBuildPosition,
   rotateBuildYaw,
+  worldBuildPlacementIssue,
 } from './buildMode'
 
 describe('build mode', () => {
@@ -66,5 +68,27 @@ describe('build mode', () => {
     expect(accepted.length).toBeLessThan(stamp.length)
     expect(accepted.map((piece) => piece.id)).not.toContain('piece-0')
     expect(accepted.every((piece, index) => accepted.slice(index + 1).every((other) => canPlacePiece([piece], other.position, other.kind)))).toBe(true)
+  })
+
+  it('rejects roads, reserved town cells, and developed procedural parcels', () => {
+    expect(worldBuildPlacementIssue([0, 0, -7], 'house')).toContain('road')
+    expect(worldBuildPlacementIssue([12, 0, -7], 'tree')).toBe('That cell is reserved for the town layout')
+
+    const developed = [-2, -1, 0, 1, 2]
+      .flatMap((cx) => [-2, -1, 0, 1, 2].flatMap((cz) =>
+        createProceduralChunkPlan('LONDON-2026', cx, cz).parcels,
+      ))
+      .find((parcel) => parcel.use === 'residential' || parcel.use === 'commercial')
+    expect(developed).toBeDefined()
+    if (developed) {
+      expect(worldBuildPlacementIssue(developed.center, 'block')).toBe('Build inside an empty parcel beside the road')
+    }
+  })
+
+  it('allows building inside a complete empty parcel and lamps on clear sidewalks', () => {
+    const empty = createProceduralChunkPlan('LONDON-2026', 2, 1).parcels.find((parcel) => parcel.use === 'buildable')
+    expect(empty).toBeDefined()
+    if (empty) expect(worldBuildPlacementIssue(empty.center, 'block')).toBeUndefined()
+    expect(worldBuildPlacementIssue([7, 0, -8], 'lamp')).toBeUndefined()
   })
 })

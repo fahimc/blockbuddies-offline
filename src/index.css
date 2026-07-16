@@ -565,6 +565,7 @@ canvas {
   color: white;
   font-size: 0.62rem;
   font-weight: 900;
+  pointer-events: none;
 }
 
 .bb-town-map-key > span {

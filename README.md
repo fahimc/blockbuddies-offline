@@ -91,6 +91,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Original superhero-style avatar skins with capes, chest emblems, suit trim,
   gloves, armour panels, and a dedicated Hero Skins tab in Clothing.
+- Layered grid-based town generation with planned roads, sidewalks, zoning,
+  parks, clear entrances, and player-buildable parcels. The generation and
+  placement rules are documented in [`docs/WORLD_GENERATION.md`](docs/WORLD_GENERATION.md).
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses a responsive phone grid for the character

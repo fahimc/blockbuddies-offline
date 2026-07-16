@@ -57,14 +57,14 @@ export const miniGameDefinitions: MiniGameDefinition[] = [
 ]
 
 export const coinRushTargets: MiniGameTarget[] = [
-  { id: 'rush-coin-1', label: 'Coin', position: [6, 0, -2], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-2', label: 'Coin', position: [11, 0, -1], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-3', label: 'Coin', position: [14, 0, -3], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-4', label: 'Coin', position: [12, 0, -8], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-5', label: 'Coin', position: [6, 0, -7], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-6', label: 'Coin', position: [3, 0, -3], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-7', label: 'Coin', position: [2, 0, 2], coinReward: 1, kind: 'coin' },
-  { id: 'rush-coin-8', label: 'Coin', position: [7, 0, 4], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-1', label: 'Coin', position: [9, 0, -2], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-2', label: 'Coin', position: [14, 0, -2], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-3', label: 'Coin', position: [19, 0, -3], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-4', label: 'Coin', position: [20, 0, 17], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-5', label: 'Coin', position: [13, 0, 23], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-6', label: 'Coin', position: [-10, 0, -1], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-7', label: 'Coin', position: [-16, 0, -2], coinReward: 1, kind: 'coin' },
+  { id: 'rush-coin-8', label: 'Coin', position: [-19, 0, -10], coinReward: 1, kind: 'coin' },
 ]
 
 export const deliveryDashTargets: MiniGameTarget[] = [
@@ -80,7 +80,7 @@ export const deliveryDashTargets: MiniGameTarget[] = [
     id: 'delivery-park',
     label: 'Park drop-off',
     mapLabel: 'Deliver to Park',
-    position: [-12, 0, -8],
+    position: [-12, 0, -3.6],
     coinReward: 8,
     timeBonusMs: 5_000,
     kind: 'dropoff',
@@ -89,7 +89,7 @@ export const deliveryDashTargets: MiniGameTarget[] = [
     id: 'delivery-school',
     label: 'School drop-off',
     mapLabel: 'Deliver to School',
-    position: [-14, 0, 10],
+    position: [-14, 0, 14.9],
     coinReward: 8,
     timeBonusMs: 5_000,
     kind: 'dropoff',
@@ -98,7 +98,7 @@ export const deliveryDashTargets: MiniGameTarget[] = [
     id: 'delivery-houses',
     label: 'House drop-off',
     mapLabel: 'Deliver to Houses',
-    position: [2, 0, 18],
+    position: [1, 0, 22.7],
     coinReward: 8,
     timeBonusMs: 5_000,
     kind: 'dropoff',
@@ -106,9 +106,9 @@ export const deliveryDashTargets: MiniGameTarget[] = [
 ]
 
 export const hideAndSeekTargets: MiniGameTarget[] = [
-  { id: 'hide-luna', label: 'LunaBlocks', position: [-18, 0, -14] },
-  { id: 'hide-max', label: 'MaxJumps', position: [7, 0, 18] },
-  { id: 'hide-pip', label: 'PipPop', position: [-7, 0, 7] },
+  { id: 'hide-luna', label: 'LunaBlocks', position: [-18, 0, -12] },
+  { id: 'hide-max', label: 'MaxJumps', position: [14, 0, 18] },
+  { id: 'hide-pip', label: 'PipPop', position: [-10, 0, 1] },
 ]
 
 const miniGameEngine = createMiniGameEngine({

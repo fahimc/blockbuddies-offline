@@ -274,6 +274,37 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
   }).toEqual({ x: -14, z: 14.9, grounded: true, teleported: true })
 })
 
+test('travels to the planned build and civic districts', async ({ page }) => {
+  await page.goto('/')
+  await completeStartFlow(page, 'TownPlanner')
+
+  await page.getByRole('button', { name: 'Open town map' }).click()
+  await expect(page.getByTestId('map-marker-builder')).toBeVisible()
+  await page.getByTestId('map-marker-builder').click()
+  await page.getByRole('button', { name: 'Travel to Builder Meadows' }).click()
+
+  await expect.poll(async () => {
+    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    return {
+      x: Math.round(snapshot.playerPosition[0]),
+      z: Math.round(snapshot.playerPosition[2]),
+    }
+  }).toEqual({ x: 54, z: 54 })
+
+  await page.getByRole('button', { name: 'Open town map' }).click()
+  await expect(page.getByTestId('map-marker-hall')).toBeVisible()
+  await page.getByTestId('map-marker-hall').click()
+  await page.getByRole('button', { name: 'Travel to Clocktower Hall' }).click()
+
+  await expect.poll(async () => {
+    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    return {
+      x: Math.round(snapshot.playerPosition[0] * 10) / 10,
+      z: Math.round(snapshot.playerPosition[2] * 10) / 10,
+    }
+  }).toEqual({ x: 0, z: -28.5 })
+})
+
 test.describe('portrait splash layout', () => {
   test.use({
     viewport: { width: 720, height: 1280 },

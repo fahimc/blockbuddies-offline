@@ -55,7 +55,7 @@ describe('procedural borough world', () => {
     })
 
     expect(far.pieces.length).toBeGreaterThan(near.pieces.length)
-    expect(districtFor([-50, 0, 3])).toBe('Westminster')
+    expect(districtFor([-50, 0, 3])).toBe('West Gardens')
     expect(hashSeed('LONDON-2026')).toBe(hashSeed('LONDON-2026'))
   })
 
@@ -221,6 +221,39 @@ describe('procedural borough world', () => {
     expect(lamps.length).toBeGreaterThan(0)
     expect(lamps.every((lamp) => roads.every((road) => !overlapsTopDown(lamp, road)))).toBe(true)
     expect(lamps.every((lamp) => pavements.some((pavement) => overlapsTopDown(lamp, pavement)))).toBe(true)
+  })
+
+  it('keeps generated buildings inside planned parcels and reserves empty lots for players', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [54, 0, 54],
+      viewDistance: 2,
+      night: false,
+    })
+    const buildings = world.pieces.filter((piece) => piece.kind === 'building' && piece.id.startsWith('building:'))
+
+    expect(buildings.length).toBeGreaterThan(0)
+    expect(world.buildableParcels.length).toBeGreaterThan(0)
+    expect(world.buildableParcels.every((parcel) =>
+      buildings.every((building) => !overlapsTopDown({
+        position: parcel.center,
+        scale: parcel.size,
+      }, building)),
+    )).toBe(true)
+  })
+
+  it('keeps the clocktower hall as one complete landmark assembly', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [0, 0, -34],
+      viewDistance: 1,
+      night: true,
+    })
+
+    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall' && piece.kind === 'building')).toBe(true)
+    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-tower')).toBe(true)
+    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-face')).toBe(true)
+    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:door')).toBe(true)
   })
 })
 

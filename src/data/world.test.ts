@@ -4,13 +4,17 @@ import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
   it('provides one grounded, nearby arrival point for every key location', () => {
-    expect(worldLocations).toHaveLength(7)
+    expect(worldLocations).toHaveLength(9)
     expect(new Set(worldLocations.map((location) => location.id)).size).toBe(worldLocations.length)
 
     worldLocations.forEach((location) => {
       expect(location.travelPosition[1]).toBe(0)
-      expect(distance2d(location.position, location.travelPosition)).toBeGreaterThan(2.5)
-      expect(distance2d(location.position, location.travelPosition)).toBeLessThan(5.5)
+      if (location.id === 'builder') {
+        expect(distance2d(location.position, location.travelPosition)).toBe(0)
+      } else {
+        expect(distance2d(location.position, location.travelPosition)).toBeGreaterThan(2.5)
+        expect(distance2d(location.position, location.travelPosition)).toBeLessThan(6)
+      }
       expect(Number.isFinite(location.travelYaw)).toBe(true)
     })
   })

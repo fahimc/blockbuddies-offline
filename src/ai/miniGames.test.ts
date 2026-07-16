@@ -6,6 +6,8 @@ import {
   startMiniGameSession,
   tickMiniGameSession,
 } from './miniGames'
+import { staticTownBuildings, coreTerrainZones } from '../game/townPlacement'
+import { terrainAt } from '../game/worldGrid'
 
 describe('mini game sessions', () => {
   it('starts a session with the configured target and timer', () => {
@@ -79,5 +81,17 @@ describe('mini game sessions', () => {
     expect(result.reward).toBe(0)
     expect(result.state.status).toBe('failed')
     expect(result.state.records['hide-and-seek']).toMatchObject({ plays: 1, bestScore: 0 })
+  })
+
+  it('keeps event coins off roads and delivery targets outside building footprints', () => {
+    expect(coinRushTargets.every((target) =>
+      terrainAt(target.position[0], target.position[2], coreTerrainZones) !== 'road',
+    )).toBe(true)
+    expect(deliveryDashTargets.slice(1).every((target) =>
+      staticTownBuildings.every((building) =>
+        Math.abs(target.position[0] - building.position[0]) > building.scale[0] / 2 + 0.5 ||
+        Math.abs(target.position[2] - building.position[2]) > building.scale[2] / 2 + 0.5,
+      ),
+    )).toBe(true)
   })
 })

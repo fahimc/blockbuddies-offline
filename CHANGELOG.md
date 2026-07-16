@@ -10,6 +10,32 @@
 
 ### Known Issues
 
+## [v1.5.34-layered-world-generation] - 2026-07-16
+
+### Added
+
+- Added a deterministic chunk-planning layer that creates road-served residential, commercial, park, and player-buildable parcels before placing world objects.
+- Added Builder Meadows and Clocktower Hall fast-travel destinations.
+- Added world-planning documentation and deterministic tests for zoning, terrain, occupancy, road clearance, entrances, buildable lots, and destination travel.
+
+### Changed
+
+- Procedural generation now builds terrain, roads, sidewalks, setbacks, parcels, buildings, parks, and furniture in a fixed semantic order.
+- Generated buildings face their nearest road, trees stay inside park parcels, and lamps stay on sidewalk-edge cells.
+- District naming and landmarks now use original BlockBuddies locations instead of real-world landmark references.
+- Updated Android and package version metadata to `1.5.34` / `10534`.
+
+### Fixed
+
+- Fixed random trees, furniture, coins, and delivery targets appearing on roads or inside other objects.
+- Fixed rotated building entrances and occupancy footprints so doors remain reachable and collisions match the visible building.
+- Fixed the Clocktower Hall assembly being removed by generation-order occupancy conflicts.
+- Fixed the town map legend intercepting taps on the Builder Meadows marker.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.33-hero-skins] - 2026-07-16
 
 ### Added

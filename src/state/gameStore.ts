@@ -25,6 +25,7 @@ import {
   mergeBuildPieces,
   nextBuildPosition,
   rotateBuildYaw,
+  worldBuildPlacementIssue,
 } from '../ai/buildMode'
 import type {
   AvatarSettings,
@@ -815,6 +816,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         !canPlacePiece(state.placedBlocks, position, state.selectedBuildPiece)
       )
         return state
+      const placementIssue = worldBuildPlacementIssue(
+        position,
+        state.selectedBuildPiece,
+        state.settings.worldSeed,
+      )
+      if (placementIssue) {
+        return {
+          chat: [...state.chat.slice(-60), systemMessage(placementIssue)],
+        }
+      }
       const block: BuildBlock = {
         ...createBuildPiece({
           id: crypto.randomUUID(),
@@ -864,6 +875,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         state.placedBlocks,
         stamp,
         maxBuildPieces,
+        (piece) => !worldBuildPlacementIssue(
+          piece.position,
+          piece.kind ?? 'block',
+          state.settings.worldSeed,
+        ),
       )
       if (accepted.length === 0) {
         return {

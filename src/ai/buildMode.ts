@@ -1,6 +1,9 @@
 import { getBuildPiece } from '../data/buildPieces'
+import { proceduralBuildableParcelFor, proceduralTerrainAt } from '../data/proceduralTownPlan'
 import { realScale } from '../game/scale'
+import { coreReservedFootprints, coreTerrainZones } from '../game/townPlacement'
 import type { BuildBlock, BuildPieceId, Vec3 } from '../game/types'
+import { terrainAt, type WorldTerrain } from '../game/worldGrid'
 
 export const maxBuildPieces = 240
 const halfTurn = Math.PI * 2
@@ -76,6 +79,39 @@ export function canPlaceBlock(blocks: BuildBlock[], position: Vec3) {
   return canPlacePiece(blocks, position, 'block')
 }
 
+export function worldBuildPlacementIssue(
+  position: Vec3,
+  pieceId: BuildPieceId,
+  worldSeed = 'LONDON-2026',
+) {
+  const definition = getBuildPiece(pieceId)
+  const footprintSize: Vec3 = [definition.footprint, 1, definition.footprint]
+  const footprint = { id: `build-preview:${pieceId}`, center: position, size: footprintSize }
+  const insideCoreTown = Math.abs(position[0]) <= 27 && Math.abs(position[2]) <= 27
+
+  if (insideCoreTown && coreReservedFootprints.some((reserved) => footprintsOverlap(footprint, reserved, 0.25))) {
+    return 'That cell is reserved for the town layout'
+  }
+
+  const terrains = sampledBuildTerrains(position, footprintSize)
+  const allowed = allowedBuildTerrain[pieceId]
+  if ([...terrains].some((terrain) => !allowed.includes(terrain))) {
+    return `${definition.label} cannot be placed on ${[...terrains].join(' / ')}`
+  }
+
+  const usesGround = terrains.has('ground')
+  const canUseExistingTransport = pieceId === 'car' || pieceId === 'lamp'
+  if (
+    !insideCoreTown &&
+    usesGround &&
+    !canUseExistingTransport &&
+    !proceduralBuildableParcelFor(worldSeed, position, footprintSize)
+  ) {
+    return 'Build inside an empty parcel beside the road'
+  }
+  return undefined
+}
+
 export function createBuildPiece({
   id,
   kind,
@@ -129,11 +165,61 @@ export function createBuildMapStamp({ origin, yaw, idFactory = () => crypto.rand
   return pieces
 }
 
-export function mergeBuildPieces(existing: BuildBlock[], incoming: BuildBlock[], limit = maxBuildPieces) {
+export function mergeBuildPieces(
+  existing: BuildBlock[],
+  incoming: BuildBlock[],
+  limit = maxBuildPieces,
+  isWorldPlacementAllowed: (piece: BuildBlock) => boolean = () => true,
+) {
   const accepted: BuildBlock[] = []
   for (const piece of incoming) {
     if (existing.length + accepted.length >= limit) break
-    if (canPlacePiece([...existing, ...accepted], piece.position, piece.kind ?? 'block')) accepted.push(piece)
+    if (
+      isWorldPlacementAllowed(piece) &&
+      canPlacePiece([...existing, ...accepted], piece.position, piece.kind ?? 'block')
+    ) accepted.push(piece)
   }
   return accepted
+}
+
+const allowedBuildTerrain: Record<BuildPieceId, readonly WorldTerrain[]> = {
+  block: ['ground'],
+  road: ['ground'],
+  house: ['ground'],
+  building: ['ground'],
+  shop: ['ground'],
+  car: ['ground', 'road'],
+  tree: ['ground', 'park'],
+  lamp: ['ground', 'sidewalk'],
+}
+
+function sampledBuildTerrains(center: Vec3, size: Vec3) {
+  const terrains = new Set<WorldTerrain>()
+  const halfX = size[0] / 2
+  const halfZ = size[2] / 2
+  const minX = Math.ceil(center[0] - halfX + 0.01)
+  const maxX = Math.floor(center[0] + halfX - 0.01)
+  const minZ = Math.ceil(center[2] - halfZ + 0.01)
+  const maxZ = Math.floor(center[2] + halfZ - 0.01)
+  for (let x = minX; x <= maxX; x += 1) {
+    for (let z = minZ; z <= maxZ; z += 1) {
+      terrains.add(
+        Math.abs(x) <= 27 && Math.abs(z) <= 27
+          ? terrainAt(x, z, coreTerrainZones)
+          : proceduralTerrainAt(x, z),
+      )
+    }
+  }
+  return terrains
+}
+
+function footprintsOverlap(
+  a: { center: Vec3; size: Vec3 },
+  b: { center: Vec3; size: Vec3 },
+  padding = 0,
+) {
+  return (
+    Math.abs(a.center[0] - b.center[0]) < (a.size[0] + b.size[0]) / 2 + padding &&
+    Math.abs(a.center[2] - b.center[2]) < (a.size[2] + b.size[2]) / 2 + padding
+  )
 }

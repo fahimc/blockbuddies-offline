@@ -118,14 +118,21 @@ export function buildBlockInteriorEntrance(block: BuildBlock): InteriorEntrance 
 export function proceduralDoorEntrance(piece: ProceduralPiece): InteriorEntrance | undefined {
   if (piece.kind !== 'door') return undefined
   const title = piece.id.startsWith('landmark:town-hall') ? 'Town Hall' : piece.id.includes('shop') ? 'Borough Shop' : 'Borough House'
+  const yaw = piece.rotation?.[1] ?? 0
+  const outwardX = Math.sin(yaw)
+  const outwardZ = Math.cos(yaw)
   return {
     id: `procedural:${piece.id}`,
     title,
     kind: title.includes('Shop') ? 'shop' : title === 'Town Hall' ? 'school' : 'house',
-    position: [piece.position[0], 0, piece.position[2] + 0.34],
+    position: [piece.position[0] + outwardX * 0.34, 0, piece.position[2] + outwardZ * 0.34],
     radius: 1.05,
-    returnPosition: [piece.position[0], 0, piece.position[2] + 0.34 + exteriorDoorClearanceDistance],
-    returnYaw: 0,
+    returnPosition: [
+      piece.position[0] + outwardX * (0.34 + exteriorDoorClearanceDistance),
+      0,
+      piece.position[2] + outwardZ * (0.34 + exteriorDoorClearanceDistance),
+    ],
+    returnYaw: yaw,
   }
 }
 

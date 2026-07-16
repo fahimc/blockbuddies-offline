@@ -91,10 +91,11 @@ function footprintCells(footprint: WorldFootprint) {
   const minZ = footprint.center[2] - footprint.size[2] / 2 + epsilon
   const maxZ = footprint.center[2] + footprint.size[2] / 2 - epsilon
   const cells: { x: number; z: number; key: string }[] = []
-  const startX = Math.floor(minX / worldGridCellSize) * worldGridCellSize
-  const endX = Math.floor(maxX / worldGridCellSize) * worldGridCellSize
-  const startZ = Math.floor(minZ / worldGridCellSize) * worldGridCellSize
-  const endZ = Math.floor(maxZ / worldGridCellSize) * worldGridCellSize
+  const halfCell = worldGridCellSize / 2
+  const startX = Math.ceil((minX - halfCell) / worldGridCellSize) * worldGridCellSize
+  const endX = Math.floor((maxX + halfCell) / worldGridCellSize) * worldGridCellSize
+  const startZ = Math.ceil((minZ - halfCell) / worldGridCellSize) * worldGridCellSize
+  const endZ = Math.floor((maxZ + halfCell) / worldGridCellSize) * worldGridCellSize
 
   for (let x = startX; x <= endX; x += worldGridCellSize) {
     for (let z = startZ; z <= endZ; z += worldGridCellSize) {

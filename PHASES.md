@@ -692,3 +692,16 @@
 - [x] Save interior camera zoom in settings
 - [x] Add unit and Playwright coverage for the room zoom control
 - [x] Bump Android debug APK version metadata to 1.5.26 / 10526
+
+## Post-phase layered world generation
+
+- [x] Preserve seeded chunk streaming while adding a deterministic town-planning layer
+- [x] Generate connected roads, sidewalks, setbacks, and road-served parcels before objects
+- [x] Zone parcels for homes, shops, parks, and future player construction
+- [x] Keep generated trees in parks and street furniture on clear sidewalk-edge cells
+- [x] Move mini-game coins and delivery targets onto validated pedestrian cells
+- [x] Validate player builds against terrain, reserved core objects, and empty procedural parcels
+- [x] Add Builder Meadows and Clocktower Hall to the fast-travel map
+- [x] Add unit coverage for zoning, occupancy, terrain rules, clear roads, and buildable lots
+- [x] Add browser coverage for Builder Meadows and Clocktower Hall travel
+- [x] Bump Android debug APK version metadata to 1.5.34 / 10534

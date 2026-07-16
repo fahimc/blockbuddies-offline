@@ -62,7 +62,7 @@ export const coreTerrainZones: TerrainZone[] = [
   { id: 'core-buddy-park', terrain: 'park', center: [-12, 0, -8], size: [13, 0.06, 12] },
 ]
 
-const coreReservedFootprints: WorldFootprint[] = [
+export const coreReservedFootprints: WorldFootprint[] = [
   ...staticTownBuildings.map((building) => ({ id: building.id, center: building.position, size: building.scale })),
   ...staticTreePositions.map((position, index) => ({
     id: `tree:${index}`,
