@@ -41,6 +41,7 @@ export function SaveManager() {
     state.placedBlocks,
     state.questProgress,
     state.botMemory,
+    state.messageThreads,
     state.settings,
     state.obby.bestTime,
     state.miniGame.records,

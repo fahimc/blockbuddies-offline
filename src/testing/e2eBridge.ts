@@ -16,6 +16,7 @@ export type MiniGameE2ESnapshot = {
   coins: number
   earnedBadges: string[]
   playerPosition: Vec3
+  chatTexts: string[]
 }
 
 export type BlockBuddiesE2EBridge = {
@@ -46,6 +47,7 @@ export type GameplayE2ESnapshot = {
   obbyActive: boolean
   miniGameStatus: string
   playerEmote: string
+  chatTexts: string[]
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -195,6 +197,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     obbyActive: game.obby.active,
     miniGameStatus: game.miniGame.status,
     playerEmote: game.playerEmote,
+    chatTexts: game.chat.map((message) => message.text),
   }
 }
 
@@ -248,6 +251,7 @@ function getSnapshot(): MiniGameE2ESnapshot {
     coins: state.coins,
     earnedBadges: state.earnedBadges,
     playerPosition: state.playerPosition,
+    chatTexts: state.chat.map((message) => message.text),
   }
 }
 

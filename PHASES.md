@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase buddy message inbox
+
+- [x] Replace the always-open chat feed with a buddy inbox icon and unread badge.
+- [x] Let players tap buddy characters to open direct message threads.
+- [x] Add 100 kid-safe predefined messages for common chat and gameplay.
+- [x] Persist buddy message threads and unread state in local saves.
+- [x] Add unit and UI coverage for preset messages, unread state, sending, replies, and save snapshots.
+- [x] Package and release Android debug APK for the buddy message inbox build.
+
 ## Post-phase world tile map rebuild
 
 - [x] Define shared road coordinates for terrain, rendering, traffic, and the minimap.

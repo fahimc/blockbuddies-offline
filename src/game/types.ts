@@ -57,6 +57,23 @@ export type ChatMessage = {
   createdAt: number
 }
 
+export type DirectMessage = {
+  id: string
+  presetId: string
+  text: string
+  from: 'player' | 'bot'
+  createdAt: number
+  read: boolean
+}
+
+export type MessageThread = {
+  id: string
+  botId: string
+  botName: string
+  messages: DirectMessage[]
+  updatedAt: number
+}
+
 export type QuestId =
   | 'meet-three-buddies'
   | 'visit-park'

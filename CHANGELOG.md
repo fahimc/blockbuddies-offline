@@ -10,6 +10,28 @@
 
 ### Known Issues
 
+## [v1.5.37-buddy-message-inbox] - 2026-07-16
+
+### Added
+
+- Added a buddy message inbox with unread badges, per-character threads, and click-to-message support from in-world buddy avatars.
+- Added 100 kid-safe predefined messages across greetings, games, quests, building, travel, teamwork, thanks, status, safety, and fun.
+- Added deterministic bot replies, speech bubble responses, persisted message threads, and tests for preset data, unread state, sending, replies, save snapshots, and inbox UI behavior.
+
+### Changed
+
+- Replaced the always-visible fake chat panel with a compact messages icon and inbox drawer.
+- Updated visible copy from quick chat to local messages where relevant.
+- Updated Android and package version metadata to `1.5.37` / `10537`.
+
+### Fixed
+
+- Fixed chat UI taking gameplay space by moving the interaction into an icon-driven inbox flow.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.36-world-tile-map] - 2026-07-16
 
 ### Added

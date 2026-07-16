@@ -10,7 +10,7 @@ export const badgeDefinitions: BadgeDefinition[] = [
   {
     id: 'social-buddy',
     title: 'Social Buddy',
-    description: 'Send a quick chat reply.',
+    description: 'Send a predefined buddy message.',
     icon: 'S',
   },
   {

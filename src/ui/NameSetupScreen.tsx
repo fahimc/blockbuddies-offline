@@ -71,7 +71,7 @@ export function NameSetupScreen({ onBack, onStart }: NameSetupScreenProps) {
         </label>
 
         <p className="bb-name-helper">
-          This name appears above your character and in local-only chat.
+          This name appears above your character and in local-only messages.
         </p>
 
         <button type="submit" className="bb-name-start">

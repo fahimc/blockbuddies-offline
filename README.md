@@ -67,8 +67,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Third-person blocky player with desktop movement and mobile touch controls.
 - Eight AI-simulated buddies with usernames, profiles, schedules, moods, goals,
   state transitions, and visible actions.
-- Local fake multiplayer chat, speech bubbles, quick replies, join messages, and
-  kid-safe dialogue templates.
+- Local fake multiplayer messaging with a buddy inbox, unread badges, clickable
+  character threads, speech bubbles, join messages, and 100 kid-safe predefined
+  message presets.
 - Five starter quests, rewards, coin pickups, local progress saving, and bot
   reactions.
 - Beginner obby with checkpoints, finish reward, restart/start control, and bot
@@ -81,7 +82,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
   pickup coins, glowing mesh pickups, and completion scoring.
 - Game-wide procedural music and WebAudio sound effects cover menu transitions,
-  customization, quick chat, quests, badges, shop unlocks, emotes, seats, beds,
+  customization, buddy messages, quests, badges, shop unlocks, emotes, seats, beds,
   build mode, obby, vehicles, and mini-games while respecting the audio/music
   settings toggles.
 - Delivery Dash is a mapped delivery route with a parcel pickup, ordered
@@ -113,7 +114,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   the preview and a full-width emote catalog.
 - Startup flow now routes Start through character customisation, character name
   entry, and then the 3D town.
-- Chosen character names appear above the player, in quick-reply chat, in Local
+- Chosen character names appear above the player, in local messages, in Local
   Party identity, and in the leaderboard.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
@@ -178,7 +179,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
-- Landscape mobile game HUD with chat icon, status pills, virtual joystick,
+- Landscape mobile game HUD with messages icon, status pills, virtual joystick,
   circular jump, hold-to-run, contextual interact, and reset/remove controls.
   Running is 2x walking speed; desktop players hold Shift to run. While driving,
   left/right screen input is mapped through the car steering adapter so it turns
@@ -190,7 +191,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   camera independently from the movement joystick.
 - Redesigned splash/menu, logo, panels, shop, quest log, avatar editor, settings,
   and buddy profile screens inspired by the supplied screen design sheet.
-- Responsive landscape phone layout with compact menu cards, chat icon, safe-area
+- Responsive landscape phone layout with compact menu cards, messages icon, safe-area
   spacing, and reference-style joystick/jump controls.
 - Android immersive fullscreen mode that hides system bars for the game-like
   landscape layout.
@@ -502,7 +503,7 @@ release build.
 ## Project Structure
 
 - `src/game` - 3D scene, world, player, NPCs, physics, interactions
-- `src/ui` - menus, HUD, chat, inventory, avatar editor, settings
+- `src/ui` - menus, HUD, messages, inventory, avatar editor, settings
 - `src/state` - Zustand stores
 - `src/ai` - simulated player brains, routines, dialogue, goals, memory
 - `src/data` - bot profiles, quests, items, world config

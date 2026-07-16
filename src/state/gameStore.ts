@@ -1,5 +1,9 @@
 import { create } from 'zustand'
 import { botProfiles } from '../data/botProfiles'
+import {
+  botReplyForPreset,
+  findPredefinedMessage,
+} from '../data/predefinedMessages'
 import { questDefinitions } from '../data/quests'
 import { shopItems } from '../data/shopItems'
 import { getLocation } from '../data/world'
@@ -35,9 +39,11 @@ import type {
   BotMemory,
   BotRuntime,
   ChatMessage,
+  DirectMessage,
   GameSettings,
   InteriorVisit,
   LocationId,
+  MessageThread,
   MiniGameId,
   MiniGameRecord,
   MiniGameRuntime,
@@ -64,6 +70,7 @@ export type GameSave = {
   placedBlocks: BuildBlock[]
   miniGameRecords?: Partial<Record<MiniGameId, MiniGameRecord>>
   obbyBestTime?: number
+  messageThreads?: MessageThread[]
 }
 
 type TouchInput = {
@@ -113,6 +120,7 @@ export type GamePanel =
   | 'server'
   | 'emotes'
   | 'minigames'
+  | 'messages'
 
 type GameState = GameSave & {
   playerPosition: Vec3
@@ -123,6 +131,8 @@ type GameState = GameSave & {
   saveLoaded: boolean
   bots: BotRuntime[]
   chat: ChatMessage[]
+  messageThreads: MessageThread[]
+  selectedMessageThreadId?: string
   nearbyLocation?: LocationId
   activeInterior?: InteriorVisit
   visitedBots: string[]
@@ -159,6 +169,9 @@ type GameState = GameSave & {
   tickBots: (now: number) => void
   botReact: (botId: string, context: DialogueContext) => void
   sendQuickReply: (text: string, context: DialogueContext) => void
+  openMessageThread: (botId: string) => void
+  closeMessageThread: () => void
+  sendPredefinedMessage: (botId: string, presetId: string) => void
   startQuest: (id: QuestId) => void
   advanceQuest: (id: QuestId, amount: number) => void
   addCoins: (amount: number) => void
@@ -305,16 +318,104 @@ function initialBots() {
   return botProfiles.map(createInitialBot)
 }
 
-function initialQuestProgress() {
-  return createQuestProgress(questDefinitions)
-}
-
 function makeId(prefix: string) {
   const randomId =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
       : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
   return `${prefix}-${randomId}`
+}
+
+function directMessage(
+  presetId: string,
+  text: string,
+  from: DirectMessage['from'],
+  read: boolean,
+): DirectMessage {
+  return {
+    id: makeId('dm'),
+    presetId,
+    text,
+    from,
+    read,
+    createdAt: Date.now(),
+  }
+}
+
+const starterMessageIds = ['greeting-008', 'game-001', 'quest-001', 'fun-003']
+
+function createInitialMessageThreads(): MessageThread[] {
+  const now = Date.now()
+  return botProfiles.map((bot, index) => {
+    const presetId = starterMessageIds[index]
+    const preset = presetId ? findPredefinedMessage(presetId) : undefined
+    const messages = preset
+      ? [
+          {
+            id: makeId('dm'),
+            presetId: preset.id,
+            text: preset.text,
+            from: 'bot' as const,
+            read: false,
+            createdAt: now + index,
+          },
+        ]
+      : []
+    return {
+      id: bot.id,
+      botId: bot.id,
+      botName: bot.username,
+      messages,
+      updatedAt: messages[0]?.createdAt ?? now,
+    }
+  })
+}
+
+function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
+  const now = Date.now()
+  return botProfiles.map((bot) => {
+    const existing = threads?.find((thread) => thread.botId === bot.id)
+    return {
+      id: bot.id,
+      botId: bot.id,
+      botName: bot.username,
+      messages: existing?.messages ?? [],
+      updatedAt: existing?.updatedAt ?? now,
+    }
+  })
+}
+
+function addDirectMessage(
+  threads: MessageThread[],
+  botId: string,
+  message: DirectMessage,
+): MessageThread[] {
+  return ensureMessageThreads(threads).map((thread) =>
+    thread.botId === botId
+      ? {
+          ...thread,
+          messages: [...thread.messages.slice(-80), message],
+          updatedAt: message.createdAt,
+        }
+      : thread,
+  )
+}
+
+function markThreadRead(threads: MessageThread[], botId: string): MessageThread[] {
+  return ensureMessageThreads(threads).map((thread) =>
+    thread.botId === botId
+      ? {
+          ...thread,
+          messages: thread.messages.map((message) =>
+            message.from === 'bot' ? { ...message, read: true } : message,
+          ),
+        }
+      : thread,
+  )
+}
+
+function initialQuestProgress() {
+  return createQuestProgress(questDefinitions)
 }
 
 const initialObby: ObbyState = {
@@ -350,6 +451,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       .slice(0, 4)
       .map((bot) => systemMessage(`${bot.username} joined the local server`)),
   ],
+  messageThreads: createInitialMessageThreads(),
+  selectedMessageThreadId: undefined,
   visitedBots: [],
   obby: initialObby,
   miniGame: initialMiniGame,
@@ -598,6 +701,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (!profile) return state
       const memory = state.botMemory[botId]
       const line = selectDialogue(profile, context, Date.now(), memory)
+      const inboxMessage = directMessage(
+        `bot-${context}`,
+        line,
+        'bot',
+        state.openPanel === 'messages' && state.selectedMessageThreadId === botId,
+      )
       return {
         bots: state.bots.map((bot) =>
           bot.id === botId
@@ -605,6 +714,11 @@ export const useGameStore = create<GameState>((set, get) => ({
             : bot,
         ),
         chat: [...state.chat.slice(-60), botMessage(profile.username, line)],
+        messageThreads: addDirectMessage(
+          state.messageThreads,
+          botId,
+          inboxMessage,
+        ),
       }
     }),
 
@@ -615,6 +729,64 @@ export const useGameStore = create<GameState>((set, get) => ({
     get().awardBadge('social-buddy')
     const nearest = get().bots[0]
     if (nearest) get().botReact(nearest.id, context)
+  },
+
+  openMessageThread: (botId) =>
+    set((state) => ({
+      openPanel: 'messages',
+      selectedMessageThreadId: botId,
+      messageThreads: markThreadRead(state.messageThreads, botId),
+    })),
+
+  closeMessageThread: () => set({ selectedMessageThreadId: undefined }),
+
+  sendPredefinedMessage: (botId, presetId) => {
+    const preset = findPredefinedMessage(presetId)
+    const profile = botProfiles.find((bot) => bot.id === botId)
+    if (!preset || !profile) return
+    const reply = botReplyForPreset(preset.id)
+    const outgoing = directMessage(preset.id, preset.text, 'player', true)
+    const replyMessage = reply
+      ? directMessage(
+          reply.id,
+          reply.text,
+          'bot',
+          get().openPanel === 'messages' &&
+            get().selectedMessageThreadId === botId,
+        )
+      : undefined
+
+    set((state) => ({
+      messageThreads: replyMessage
+        ? addDirectMessage(
+            addDirectMessage(state.messageThreads, botId, outgoing),
+            botId,
+            replyMessage,
+          )
+        : addDirectMessage(state.messageThreads, botId, outgoing),
+      bots: replyMessage
+        ? state.bots.map((bot) =>
+            bot.id === botId
+              ? {
+                  ...bot,
+                  speech: replyMessage.text,
+                  speechUntil: Date.now() + 3200,
+                }
+              : bot,
+          )
+        : state.bots,
+      chat: replyMessage
+        ? [
+            ...state.chat.slice(-58),
+            playerMessage(state.playerName, preset.text),
+            botMessage(profile.username, replyMessage.text),
+          ]
+        : [
+            ...state.chat.slice(-60),
+            playerMessage(state.playerName, preset.text),
+          ],
+    }))
+    get().awardBadge('social-buddy')
   },
 
   startQuest: (id) =>
@@ -1161,6 +1333,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       const line = profile
         ? selectDialogue(profile, 'nearby', now, memory)
         : undefined
+      const inboxMessage =
+        line && profile
+          ? directMessage(
+              'bot-nearby',
+              line,
+              'bot',
+              state.openPanel === 'messages' &&
+                state.selectedMessageThreadId === botId,
+            )
+          : undefined
       return {
         visitedBots: firstMeet
           ? [...state.visitedBots, botId]
@@ -1185,6 +1367,9 @@ export const useGameStore = create<GameState>((set, get) => ({
               botMessage(profile?.username ?? 'Buddy', line),
             ]
           : state.chat,
+        messageThreads: inboxMessage
+          ? addDirectMessage(state.messageThreads, botId, inboxMessage)
+          : state.messageThreads,
       }
     }),
 
@@ -1238,6 +1423,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       obby: initialObby,
       miniGame: createInitialMiniGame(),
       chat: [systemMessage('Save reset')],
+      messageThreads: createInitialMessageThreads(),
+      selectedMessageThreadId: undefined,
     })
   },
 
@@ -1263,6 +1450,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         miniGame: createInitialMiniGame(
           save.miniGameRecords ?? state.miniGame.records,
         ),
+        messageThreads: ensureMessageThreads(
+          save.messageThreads ?? state.messageThreads,
+        ),
+        selectedMessageThreadId: undefined,
         activeInterior: undefined,
         sleeping: false,
         seatedSeatId: undefined,
@@ -1293,6 +1484,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     settings: state.settings,
     obbyBestTime: state.obby.bestTime,
     miniGameRecords: state.miniGame.records,
+    messageThreads: ensureMessageThreads(state.messageThreads),
   }
 }
 

@@ -1845,12 +1845,21 @@ function Bots() {
 }
 
 function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; username: string; color: string; shirtColor: string }) {
+  const openMessageThread = useGameStore((state) => state.openMessageThread)
   const jumpLift = bot.action === 'jump' ? Math.max(0, Math.sin(performance.now() / 170)) * 0.18 : 0
   const dx = bot.target[0] - bot.position[0]
   const dz = bot.target[2] - bot.position[2]
   const yaw = bot.action === 'walk' || bot.action === 'run' ? Math.atan2(dx, dz) : 0
   return (
-    <group position={[bot.position[0], avatarGroundOffset + jumpLift, bot.position[2]]} rotation={[0, yaw, 0]}>
+    <group
+      position={[bot.position[0], avatarGroundOffset + jumpLift, bot.position[2]]}
+      rotation={[0, yaw, 0]}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation()
+        openMessageThread(bot.id)
+      }}
+    >
       <BlockAvatar
         bodyColor={color}
         shirtColor={shirtColor}

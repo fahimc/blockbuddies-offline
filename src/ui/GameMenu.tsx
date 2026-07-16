@@ -7,6 +7,7 @@ import {
   Map,
   Medal,
   Menu,
+  MessageCircle,
   Palette,
   RotateCcw,
   Server,
@@ -26,6 +27,7 @@ const menuItems: {
   icon: ReactNode
 }[] = [
   { panel: 'map', label: 'Town Map', icon: <Map size={21} aria-hidden /> },
+  { panel: 'messages', label: 'Messages', icon: <MessageCircle size={21} aria-hidden /> },
   { panel: 'avatar', label: 'Customise Character', icon: <Palette size={21} aria-hidden /> },
   { panel: 'quests', label: 'Quests', icon: <ListChecks size={21} aria-hidden /> },
   { panel: 'minigames', label: 'Mini Games', icon: <Gamepad2 size={21} aria-hidden /> },

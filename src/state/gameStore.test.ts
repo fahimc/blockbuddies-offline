@@ -198,6 +198,109 @@ describe('player setup flow', () => {
   })
 })
 
+describe('direct message inbox', () => {
+  it('marks buddy messages read when the thread is opened', () => {
+    useGameStore.setState({
+      openPanel: undefined,
+      selectedMessageThreadId: undefined,
+      messageThreads: [
+        {
+          id: 'luna',
+          botId: 'luna',
+          botName: 'LunaBlocks',
+          updatedAt: 100,
+          messages: [
+            {
+              id: 'dm-test',
+              presetId: 'greeting-008',
+              text: 'Welcome back!',
+              from: 'bot',
+              read: false,
+              createdAt: 100,
+            },
+          ],
+        },
+      ],
+    })
+
+    useGameStore.getState().openMessageThread('luna')
+
+    const thread = useGameStore
+      .getState()
+      .messageThreads.find((entry) => entry.botId === 'luna')
+    expect(useGameStore.getState().openPanel).toBe('messages')
+    expect(useGameStore.getState().selectedMessageThreadId).toBe('luna')
+    expect(thread?.messages[0]?.read).toBe(true)
+  })
+
+  it('sends only predefined messages and stores the bot reply in the inbox', () => {
+    useGameStore.setState({
+      playerName: 'BlockBuddy',
+      chat: [],
+      earnedBadges: [],
+      openPanel: undefined,
+      selectedMessageThreadId: undefined,
+      messageThreads: [
+        {
+          id: 'luna',
+          botId: 'luna',
+          botName: 'LunaBlocks',
+          updatedAt: 100,
+          messages: [],
+        },
+      ],
+    })
+
+    useGameStore.getState().sendPredefinedMessage('luna', 'game-001')
+
+    const thread = useGameStore
+      .getState()
+      .messageThreads.find((entry) => entry.botId === 'luna')
+    expect(thread?.messages.map((message) => message.text)).toEqual([
+      'Want to play a mini game?',
+      'Hi!',
+    ])
+    expect(thread?.messages[1]?.read).toBe(false)
+    expect(useGameStore.getState().chat.map((message) => message.text)).toEqual([
+      'Want to play a mini game?',
+      'Hi!',
+      'Badge earned: Social Buddy',
+    ])
+    expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
+  })
+
+  it('persists message threads in the save snapshot', () => {
+    useGameStore.setState({
+      messageThreads: [
+        {
+          id: 'max',
+          botId: 'max',
+          botName: 'MaxJumps',
+          updatedAt: 200,
+          messages: [
+            {
+              id: 'dm-save',
+              presetId: 'game-004',
+              text: 'Meet me at the obby.',
+              from: 'bot',
+              read: false,
+              createdAt: 200,
+            },
+          ],
+        },
+      ],
+    })
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+
+    expect(snapshot.messageThreads?.find((thread) => thread.botId === 'max'))
+      .toMatchObject({
+        botName: 'MaxJumps',
+        messages: [{ text: 'Meet me at the obby.', read: false }],
+      })
+  })
+})
+
 describe('mini game store flow', () => {
   it('adds a spendable coin immediately for each Coin Rush pickup', () => {
     useGameStore.setState({

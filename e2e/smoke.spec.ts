@@ -25,7 +25,15 @@ test('opens menu and navigates to game shell', async ({ page }) => {
   await expect(page.getByTestId('game-canvas')).toBeVisible()
   await expect(page.getByTestId('mini-map')).toBeVisible()
   await expect(page.getByText('FlowTester')).toBeVisible()
-  await expect(page.getByText('Local server started')).toBeVisible()
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+        ),
+      { timeout: 5000 },
+    )
+    .toContain('Local server started')
 })
 
 test('opens Roblox-inspired offline feature panels', async ({ page }) => {
@@ -129,7 +137,7 @@ test.describe('landscape phone layout', () => {
     await expect(page.getByTestId('game-canvas')).toBeVisible()
     await expect(page.locator('.desktop-hud')).toBeHidden()
     await expect(page.locator('.chat-panel-desktop')).toBeHidden()
-    await expect(page.locator('.mobile-chat-button')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Messages/i })).toBeVisible()
     await expect(page.locator('.virtual-joystick')).toBeVisible()
     await expect(page.locator('.mobile-jump-button')).toBeVisible()
     const runButton = page.getByRole('button', { name: 'Run' })

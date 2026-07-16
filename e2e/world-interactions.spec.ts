@@ -69,7 +69,15 @@ test('uses classroom seats and drives a parked car end to end', async ({ page },
   await page.getByRole('button', { name: 'Town Map', exact: true }).click()
   await page.getByTestId('map-marker-parking').click()
   await page.getByRole('button', { name: 'Travel to Buddy Parking' }).click()
-  await expect(page.getByText('Travelled to Buddy Parking')).toBeVisible()
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+        ),
+      { timeout: 5000 },
+    )
+    .toContain('Travelled to Buddy Parking')
   const driveAction = page.getByRole('button', { name: 'Drive Sunny Car' })
   await expect(driveAction).toBeVisible()
   await driveAction.click()

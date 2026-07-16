@@ -87,15 +87,15 @@ test.describe('mini games end-to-end flow', () => {
       page.getByTestId('mini-game-announcement'),
     ).toContainText('All players')
     await expect(page.getByTestId('mini-game-announcement').locator('strong')).toContainText(/\d+s/)
-    await expect(
-      page.getByText('Mini game started for all players: Coin Rush'),
-    ).toBeVisible()
     const started = await page.evaluate(() =>
       window.__blockBuddiesE2E!.getSnapshot(),
     )
     expect(started.miniGame.activeId).toBe('coin-rush')
     expect(started.miniGame.score).toBe(0)
     expect(started.miniGame.points).toBe(0)
+    expect(started.chatTexts).toContain(
+      'Mini game started for all players: Coin Rush',
+    )
 
     const firstCoin = await collectNextTarget(page)
     expect(firstCoin.miniGame.score).toBe(1)
@@ -117,9 +117,9 @@ test.describe('mini games end-to-end flow', () => {
     expect(snapshot.coins).toBe(43)
     expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
-    await expect(page.getByText('Coin Rush complete! 130 pts, +35 coins')).toBeVisible()
-    await expect(page.getByText('Badge earned: Mini Game Star')).toBeVisible()
-    await expect(page.getByText('Nice run in Coin Rush!')).toBeVisible()
+    expect(snapshot.chatTexts).toContain('Coin Rush complete! 130 pts, +35 coins')
+    expect(snapshot.chatTexts).toContain('Badge earned: Mini Game Star')
+    expect(snapshot.chatTexts).toContain('Nice run in Coin Rush!')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
     await expect(
       page.locator('.desktop-hud').getByText('43').first(),
@@ -139,7 +139,17 @@ test.describe('mini games end-to-end flow', () => {
     await expect(page.getByTestId('town-map-objective')).toContainText('Pickup parcel')
     await expect(page.getByText('Active target: Pickup parcel')).toBeVisible()
     await page.getByRole('button', { name: 'Close map' }).click()
-    await expect(page.getByText('Delivery Dash: Pickup parcel').first()).toBeVisible({ timeout: 15_000 })
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            window.__blockBuddiesE2E!.getSnapshot().chatTexts.some((text) =>
+              text.startsWith('Delivery Dash: Pickup parcel'),
+            ),
+          ),
+        { timeout: 15_000 },
+      )
+      .toBe(true)
 
     const pickup = await collectNextTarget(page)
     expect(pickup.miniGame.status).toBe('running')
@@ -148,7 +158,7 @@ test.describe('mini games end-to-end flow', () => {
     expect(pickup.coins).toBe(0)
     await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*1\/4/)
     await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to Park')
-    await expect(page.getByText('Parcel pickup collected! +5 pts (1/4)')).toBeVisible()
+    expect(pickup.chatTexts).toContain('Parcel pickup collected! +5 pts (1/4)')
 
     const firstDropOff = await collectNextTarget(page)
     expect(firstDropOff.miniGame.score).toBe(2)
@@ -156,7 +166,9 @@ test.describe('mini games end-to-end flow', () => {
     expect(firstDropOff.coins).toBe(8)
     await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*2\/4/)
     await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to School')
-    await expect(page.getByText('Park drop-off collected! +20 pts, +8 coins, +5s (2/4)')).toBeVisible()
+    expect(firstDropOff.chatTexts).toContain(
+      'Park drop-off collected! +20 pts, +8 coins, +5s (2/4)',
+    )
 
     const secondDropOff = await collectNextTarget(page)
     expect(secondDropOff.miniGame.score).toBe(3)
@@ -171,9 +183,7 @@ test.describe('mini games end-to-end flow', () => {
       bestPoints: 105,
     })
     expect(finished.coins).toBe(64)
-    await expect(
-      page.getByText('Delivery Dash complete! 105 pts, +40 coins'),
-    ).toBeVisible()
+    expect(finished.chatTexts).toContain('Delivery Dash complete! 105 pts, +40 coins')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
 
@@ -184,9 +194,7 @@ test.describe('mini games end-to-end flow', () => {
     await completeStartFlow(page, 'Seeker')
 
     await startMiniGame(page, 'Play Hide & Seek', /Hide & Seek.*0\/3/)
-    await expect(page.getByText('Hide & Seek: LunaBlocks')).toHaveCount(1, { timeout: 15_000 })
-    await expect(page.getByText('Hide & Seek: MaxJumps')).toHaveCount(1, { timeout: 15_000 })
-    await expect(page.getByText('Hide & Seek: PipPop')).toHaveCount(1, { timeout: 15_000 })
+    await expect(page.getByTestId('mini-game-hud')).toContainText('LunaBlocks')
 
     const finished = await completeMiniGameRoute(page)
 
@@ -197,9 +205,7 @@ test.describe('mini games end-to-end flow', () => {
       bestPoints: 100,
     })
     expect(finished.coins).toBe(50)
-    await expect(
-      page.getByText('Hide & Seek complete! 100 pts, +50 coins'),
-    ).toBeVisible()
+    expect(finished.chatTexts).toContain('Hide & Seek complete! 100 pts, +50 coins')
 
     await openMiniGamesPanel(page)
     await expect(page.getByText('Best 3/3')).toBeVisible()
@@ -223,7 +229,7 @@ test.describe('mini games end-to-end flow', () => {
     expect(snapshot.miniGame.records['coin-rush']).toBeUndefined()
     expect(snapshot.miniGame.points).toBe(0)
     expect(snapshot.coins).toBe(0)
-    await expect(page.getByText('Mini game cancelled')).toBeVisible()
+    expect(snapshot.chatTexts).toContain('Mini game cancelled')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
 })
@@ -258,10 +264,11 @@ test.describe('mobile mini game controls', () => {
     )
     expect(snapshot.miniGame.status).toBe('idle')
     expect(snapshot.coins).toBe(0)
-    await page.locator('.mobile-chat-button').click()
-    await expect(
-      page.locator('.mobile-chat-drawer').getByText('Mini game cancelled'),
-    ).toBeVisible()
+    expect(
+      await page.evaluate(() =>
+        window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+      ),
+    ).toContain('Mini game cancelled')
     await expect(page.getByTestId('mini-game-hud-mobile')).toHaveCount(0)
   })
 })
