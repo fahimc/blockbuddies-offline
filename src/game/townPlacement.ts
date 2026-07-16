@@ -22,20 +22,19 @@ export type StaticTownBuilding = {
 export const staticTownBuildings: StaticTownBuilding[] = [
   staticBuilding('park-clubhouse', 'Park Clubhouse', 'house', -12, -8, 2, 4.2, 3.6, '#22c55e'),
   staticBuilding('coin-shop', 'Coin Shop', 'shop', 12, -7, 2, 4.6, 3.8, '#fb923c'),
-  staticBuilding('skill-school', 'Skill School', 'school', -22, 10, 3, 5.4, 4.2, '#a78bfa'),
-  staticBuilding('buddy-house-a', 'Buddy House', 'house', 2, 18, 2, 4.4, 3.8, '#facc15'),
-  staticBuilding('buddy-house-b', 'Pink Buddy House', 'house', -4, 18, 2, 3.8, 3.4, '#f9a8d4'),
-  staticBuilding('buddy-house-c', 'Blue Buddy House', 'house', 8, 18, 2, 3.8, 3.4, '#93c5fd'),
+  staticBuilding('skill-school', 'Skill School', 'school', -21, 22, 3, 5.4, 4.2, '#a78bfa'),
+  staticBuilding('buddy-house-a', 'Buddy House', 'house', -10, 22, 2, 4.4, 3.8, '#facc15'),
+  staticBuilding('buddy-house-b', 'Pink Buddy House', 'house', 0, 22, 2, 3.8, 3.4, '#f9a8d4'),
+  staticBuilding('buddy-house-c', 'Blue Buddy House', 'house', 10, 22, 2, 3.8, 3.4, '#93c5fd'),
 ]
 
 export const staticTreePositions: Vec3[] = [
   [-18, 0, -17],
-  [-10, 0, -16],
-  [18, 0, -18],
+  [-12, 0, -18],
+  [24, 0, -18],
   [22, 0, -8],
   [-20, 0, -5],
-  [-24, 0, 3],
-  [-20, 0, 17],
+  [-25, 0, -10],
 ]
 
 export const staticLampPositions: Vec3[] = [
@@ -48,8 +47,8 @@ export const staticLampPositions: Vec3[] = [
 ]
 
 export const coreRoadZones: TerrainZone[] = [
-  { id: 'core-road-vertical', terrain: 'road', center: [0, 0, -7.5], size: [realScale.roadTile, 0.08, 22] },
-  { id: 'core-road-horizontal', terrain: 'road', center: [0, 0, 9], size: [32, 0.08, realScale.roadTile] },
+  { id: 'core-road-vertical', terrain: 'road', center: [0, 0, -9.75], size: [realScale.roadTile, 0.08, 37.5] },
+  { id: 'core-road-horizontal', terrain: 'road', center: [0, 0, 9], size: [54, 0.08, realScale.roadTile] },
 ]
 
 export const authoredCoreBounds = {
@@ -76,10 +75,10 @@ const coreSidewalkOffset = realScale.roadTile / 2 + realScale.pavementWidth / 2
 
 export const coreTerrainZones: TerrainZone[] = [
   ...coreRoadZones,
-  { id: 'core-walk-vertical-west', terrain: 'sidewalk', center: [-coreSidewalkOffset, 0, -7.5], size: [realScale.pavementWidth, 0.06, 22] },
-  { id: 'core-walk-vertical-east', terrain: 'sidewalk', center: [coreSidewalkOffset, 0, -7.5], size: [realScale.pavementWidth, 0.06, 22] },
-  { id: 'core-walk-horizontal-south', terrain: 'sidewalk', center: [0, 0, 9 - coreSidewalkOffset], size: [32, 0.06, realScale.pavementWidth] },
-  { id: 'core-walk-horizontal-north', terrain: 'sidewalk', center: [0, 0, 9 + coreSidewalkOffset], size: [32, 0.06, realScale.pavementWidth] },
+  { id: 'core-walk-vertical-west', terrain: 'sidewalk', center: [-coreSidewalkOffset, 0, -9.75], size: [realScale.pavementWidth, 0.06, 37.5] },
+  { id: 'core-walk-vertical-east', terrain: 'sidewalk', center: [coreSidewalkOffset, 0, -9.75], size: [realScale.pavementWidth, 0.06, 37.5] },
+  { id: 'core-walk-horizontal-south', terrain: 'sidewalk', center: [0, 0, 9 - coreSidewalkOffset], size: [54, 0.06, realScale.pavementWidth] },
+  { id: 'core-walk-horizontal-north', terrain: 'sidewalk', center: [0, 0, 9 + coreSidewalkOffset], size: [54, 0.06, realScale.pavementWidth] },
   { id: 'core-buddy-park', terrain: 'park', center: [-12, 0, -8], size: [13, 0.06, 12] },
 ]
 
@@ -128,7 +127,7 @@ function placeCoreItems() {
   const activityCandidates = {
     'coin-rush': [15, 0, -2] as Vec3,
     'delivery-dash': [21, 0, -12] as Vec3,
-    'hide-and-seek': [-20, 0, 23] as Vec3,
+    'hide-and-seek': [-23, 0, -20] as Vec3,
   }
   const activities = Object.fromEntries(
     Object.entries(activityCandidates).map(([id, center]) => {

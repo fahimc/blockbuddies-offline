@@ -271,7 +271,7 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
       grounded: Math.abs(snapshot.playerPosition[1]) <= 0.15,
       teleported: snapshot.teleportSequence > before.teleportSequence,
     }
-  }).toEqual({ x: -22, z: 14.9, grounded: true, teleported: true })
+  }).toEqual({ x: -21, z: 17.5, grounded: true, teleported: true })
 })
 
 test('travels to the planned build and civic districts', async ({ page }) => {
@@ -289,7 +289,7 @@ test('travels to the planned build and civic districts', async ({ page }) => {
       x: Math.round(snapshot.playerPosition[0]),
       z: Math.round(snapshot.playerPosition[2]),
     }
-  }).toEqual({ x: 54, z: 54 })
+  }).toEqual({ x: 67, z: 54 })
 
   await page.getByRole('button', { name: 'Open town map' }).click()
   await expect(page.getByTestId('map-marker-hall')).toBeVisible()

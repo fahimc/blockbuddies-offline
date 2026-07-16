@@ -1,0 +1,264 @@
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #0f172a;
+  background: #dbeafe;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+input,
+select {
+  font: inherit;
+  letter-spacing: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.world-review-shell {
+  min-height: 100vh;
+  padding: 20px;
+  background: #dbeafe;
+}
+.world-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1440px;
+  margin: 0 auto 16px;
+}
+.world-review-header h1 {
+  margin: 2px 0 4px;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+}
+.world-review-header p {
+  margin: 0;
+  color: #475569;
+}
+.world-review-eyebrow {
+  color: #0369a1 !important;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.world-review-game-link {
+  flex: none;
+  border-radius: 7px;
+  background: #0f172a;
+  padding: 12px 16px;
+  color: white;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.world-review-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  max-width: 1440px;
+  margin: 0 auto 12px;
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: white;
+}
+.world-review-toolbar label {
+  display: grid;
+  flex: 1 0 180px;
+  gap: 5px;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.world-review-toolbar input,
+.world-review-toolbar select {
+  min-height: 42px;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #0f172a;
+  background: white;
+}
+.world-review-toolbar button {
+  display: inline-flex;
+  min-height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+}
+.world-review-toolbar button.active {
+  background: #2563eb;
+  color: white;
+}
+
+.world-review-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  max-width: 1440px;
+  margin: 0 auto 12px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #064e3b;
+  color: #d1fae5;
+  font-size: 0.86rem;
+}
+.world-review-status strong {
+  color: white;
+}
+
+.world-review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 14px;
+  max-width: 1440px;
+  margin: 0 auto;
+  align-items: start;
+}
+.world-review-map-panel {
+  min-width: 0;
+  overflow: auto;
+  border: 2px solid white;
+  border-radius: 8px;
+  padding: 8px;
+  background: #0f172a;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+}
+.world-review-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: #8ddc79;
+  cursor: crosshair;
+  image-rendering: pixelated;
+}
+.world-review-sidebar {
+  display: grid;
+  gap: 10px;
+}
+.world-review-sidebar section {
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+.world-review-sidebar h2 {
+  margin: 0 0 9px;
+  font-size: 1rem;
+}
+.world-review-sidebar p {
+  margin: 4px 0;
+  color: #475569;
+  font-size: 0.84rem;
+}
+.world-review-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.world-review-legend span {
+  display: grid;
+  grid-template-columns: 13px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-size: 0.76rem;
+  text-transform: capitalize;
+}
+.world-review-legend i {
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 2px;
+}
+.world-review-legend.compact span {
+  grid-template-columns: 13px 1fr;
+}
+.world-review-scale {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+.world-review-scale div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+.world-review-scale dt {
+  color: #64748b;
+}
+.world-review-scale dd {
+  margin: 0;
+  font-weight: 800;
+}
+.world-review-errors {
+  border-color: #fecaca !important;
+  background: #fff1f2 !important;
+}
+.world-review-errors ol {
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  padding-left: 20px;
+  color: #991b1b;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 800px) {
+  .world-review-shell {
+    padding: 10px;
+  }
+  .world-review-header {
+    align-items: flex-start;
+  }
+  .world-review-header p:not(.world-review-eyebrow) {
+    display: none;
+  }
+  .world-review-layout {
+    grid-template-columns: 1fr;
+  }
+  .world-review-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .world-review-header h1 {
+    font-size: 1.6rem;
+  }
+  .world-review-game-link {
+    padding: 10px;
+  }
+  .world-review-sidebar {
+    grid-template-columns: 1fr;
+  }
+}

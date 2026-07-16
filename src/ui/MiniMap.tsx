@@ -7,10 +7,13 @@ import { createTrafficVehicles, makeTrafficLanes, trafficPositionAtTime, type Tr
 import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
 import { miniMapPlayerRotation, miniMapPointPercent, miniMapRoadPercent } from './miniMapMath'
+import {
+  centralAvenue,
+  horizontalRoadCentersBetween,
+  verticalRoadCentersBetween,
+} from '../data/proceduralTownPlan'
 
 const mapRange = 82
-const roadRepeat = 72
-const roadOrigin = 18
 
 export function MiniMap() {
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
@@ -111,7 +114,7 @@ function roadLinesFor(center: Vec3) {
   const maxZ = center[2] + mapRange / 2
   const lines: { id: string; orientation: 'vertical' | 'horizontal'; style: Record<string, string> }[] = []
 
-  for (const roadX of roadCentersBetween(minX, maxX)) {
+  for (const roadX of verticalRoadCentersBetween(minX, maxX)) {
     lines.push({
       id: `x:${roadX}`,
       orientation: 'vertical',
@@ -122,7 +125,7 @@ function roadLinesFor(center: Vec3) {
     })
   }
 
-  for (const roadZ of roadCentersBetween(minZ, maxZ)) {
+  for (const roadZ of horizontalRoadCentersBetween(minZ, maxZ)) {
     lines.push({
       id: `z:${roadZ}`,
       orientation: 'horizontal',
@@ -133,18 +136,26 @@ function roadLinesFor(center: Vec3) {
     })
   }
 
-  return lines
-}
-
-function roadCentersBetween(min: number, max: number) {
-  const first = Math.floor((min - roadOrigin) / roadRepeat) - 1
-  const last = Math.ceil((max - roadOrigin) / roadRepeat) + 1
-  const centers: number[] = []
-  for (let index = first; index <= last; index += 1) {
-    const center = roadOrigin + roadRepeat * index
-    if (center >= min - realScale.roadTile && center <= max + realScale.roadTile) centers.push(center)
+  const avenueMinZ = Math.max(minZ, centralAvenue.minZ)
+  const avenueMaxZ = Math.min(maxZ, centralAvenue.maxZ)
+  if (
+    centralAvenue.centerX >= minX - realScale.roadTile / 2 &&
+    centralAvenue.centerX <= maxX + realScale.roadTile / 2 &&
+    avenueMaxZ > avenueMinZ
+  ) {
+    lines.push({
+      id: 'central-avenue',
+      orientation: 'vertical',
+      style: {
+        left: `${miniMapRoadPercent(centralAvenue.centerX, center[0], mapRange)}%`,
+        top: `${miniMapRoadPercent(avenueMinZ, center[2], mapRange)}%`,
+        width: `${roadWidthPercent}%`,
+        height: `${((avenueMaxZ - avenueMinZ) / mapRange) * 100}%`,
+      },
+    })
   }
-  return centers
+
+  return lines
 }
 
 function isOnMap(position: Vec3, center: Vec3) {

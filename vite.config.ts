@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [
@@ -34,6 +35,14 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        app: fileURLToPath(new URL('./index.html', import.meta.url)),
+        worldMap: fileURLToPath(new URL('./world-map.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],

@@ -10,6 +10,29 @@
 
 ### Known Issues
 
+## [v1.5.36-world-tile-map] - 2026-07-16
+
+### Added
+
+- Added `world-map.html`, a responsive bird's-eye developer page that renders the real one-unit terrain and object layers, supports tile inspection, seed/view controls, and JSON export.
+- Added map diagnostics and regression tests for forbidden terrain placement, occupied-cell conflicts, road continuity, and vehicle-scale road width.
+
+### Changed
+
+- Rebuilt the road plan around shared horizontal, vertical, and central-avenue coordinates consumed by generation, terrain rules, traffic, and the minimap.
+- Moved the school, houses, obby, parking lot, activities, and conflicting trees into validated parcels with clear road, sidewalk, and vehicle space.
+- Updated Android and package version metadata to `1.5.36` / `10536`.
+
+### Fixed
+
+- Fixed generated road strips disappearing when one end touched the authored core town.
+- Fixed traffic following legacy road coordinates and therefore appearing to drive over grass or stop against mismatched scenery.
+- Fixed hidden overlaps between trees, sidewalks, the parking lot, parked cars, the school, coins, and activity footprints.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.35-core-road-cleanup] - 2026-07-16
 
 ### Added

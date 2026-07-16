@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase world tile map rebuild
+
+- [x] Define shared road coordinates for terrain, rendering, traffic, and the minimap.
+- [x] Separate base terrain tiles from rule-checked object occupancy.
+- [x] Add a bird's-eye `world-map.html` review page with tile inspection and JSON export.
+- [x] Validate road continuity, real vehicle clearance, terrain rules, and occupied cells.
+- [x] Relocate authored buildings, activities, parking, vehicles, and scenery found in invalid cells.
+- [x] Package and release Android debug APK for the world tile map build.
+
 ## Post-phase core road cleanup
 
 - [x] Protect the handcrafted central town from overlapping procedural roads, pavements, lane markings, parks, and props.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { proceduralTerrainAt } from '../data/proceduralTownPlan'
 import { realScale } from './scale'
 import {
   advanceTraffic,
@@ -34,6 +35,16 @@ describe('traffic paths', () => {
     expect(eastPose.position[0]).toBeCloseTo(0, 1)
     expect(eastPose.yaw).toBeCloseTo(0, 3)
     expect(northPose.yaw).toBeCloseTo(-Math.PI / 2, 3)
+  })
+
+  it('keeps every traffic lane on the shared road terrain layer', () => {
+    const lanes = makeTrafficLanes()
+
+    expect(lanes.every((lane) => [0, 0.25, 0.5, 0.75, 1].every((ratio) => {
+      const x = lane.start[0] + (lane.end[0] - lane.start[0]) * ratio
+      const z = lane.start[2] + (lane.end[2] - lane.start[2]) * ratio
+      return proceduralTerrainAt(x, z) === 'road'
+    }))).toBe(true)
   })
 
   it('converts traffic lane direction to drivable heading yaw for takeovers', () => {

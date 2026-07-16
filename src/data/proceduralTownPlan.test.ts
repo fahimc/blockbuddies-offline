@@ -8,8 +8,8 @@ import {
 
 describe('procedural town plan', () => {
   it('creates deterministic road-served parcels and leaves empty parcels for players', () => {
-    const first = createProceduralChunkPlan('BUDDY-TOWN', 2, 1)
-    const second = createProceduralChunkPlan('BUDDY-TOWN', 2, 1)
+    const first = createProceduralChunkPlan('BUDDY-TOWN', -2, 1)
+    const second = createProceduralChunkPlan('BUDDY-TOWN', -2, 1)
 
     expect(first).toEqual(second)
     expect(first.layout.hasVerticalRoad).toBe(true)
@@ -43,6 +43,16 @@ describe('procedural town plan', () => {
     expect(plan.sidewalkFurniture.every(([x, , z]) => proceduralTerrainAt(x, z) === 'sidewalk')).toBe(true)
     expect(new Set(plan.sidewalkFurniture.map(([x, , z]) => `${x}:${z}`)).size).toBe(plan.sidewalkFurniture.length)
     expect(realScale.pavementWidth).toBeGreaterThan(realScale.avatarHeight)
+  })
+
+  it('keeps the main road continuous through the core and connects it to outer roads', () => {
+    for (let x = -108; x <= 108; x += 3) expect(proceduralTerrainAt(x, 9)).toBe('road')
+    for (let z = -108; z <= 108; z += 3) {
+      expect(proceduralTerrainAt(-54, z)).toBe('road')
+      expect(proceduralTerrainAt(54, z)).toBe('road')
+    }
+    for (let z = -28; z <= 9; z += 2) expect(proceduralTerrainAt(0, z)).toBe('road')
+    expect(proceduralTerrainAt(0, 22)).toBe('ground')
   })
 
   it('finds buildable parcels only when a complete footprint fits', () => {

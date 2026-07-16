@@ -20,14 +20,16 @@ References:
 | --- | ---: | --- |
 | Occupancy cell | 1 world unit | Exclusive placement and overlap checks |
 | Streaming chunk | 36 world units | Nearby generation and rendering |
-| Road repeat | 72 world units | Predictable connected street network |
+| Horizontal road repeat | 72 world units | Predictable east-west routes through every district |
+| Vertical road repeat | 108 world units | Wider north-south superblocks with larger buildable parcels |
 | Road width | 7.2 real-world metres | Two-way traffic and vehicle clearance |
 | Sidewalk width | 2.4 real-world metres | Clear pedestrian route plus furniture edge |
 
 ## Generation Order
 
 1. **Ground tiles** create one flat, low-cost base per chunk.
-2. **Road tiles** create the repeating connected street network.
+2. **Road tiles** create the repeating connected street network from shared
+   horizontal, vertical, and central-avenue coordinates.
 3. **Sidewalk tiles** run along both sides of every road.
 4. **Parcels** are cut only from cells outside the road, sidewalk, and setback corridor.
 5. **Zoning** marks parcels as residential, commercial, park, or player-buildable.
@@ -42,19 +44,33 @@ References:
 
 | Object | Allowed terrain | Additional rule |
 | --- | --- | --- |
-| Building | Ground | Must fit a road-served parcel; door clearance remains open |
+| Building | Ground or authored park | Must fit a road-served parcel; door clearance remains open |
 | Player structure | Ground | Outside the core town, must fit completely inside an empty buildable parcel |
 | Road | Ground | Cannot cover an existing road, sidewalk, park, or reserved town object |
 | Tree | Ground or park | Generated trees are park-only; canopy footprint owns its full grid area |
 | Lamp | Sidewalk | Generated lamps use the furniture edge, never the driving lane or intersection |
 | Phone box | Sidewalk | Must not block a road, door, or another prop |
-| Car | Road or ground | Requires vehicle clearance and a safe exit position |
+| Car | Road or parking | Requires vehicle clearance and a safe exit position |
 | Coin | Ground, park, or sidewalk | Must occupy a unique pedestrian cell and cannot sit inside another object |
 | Activity | Ground or park | Uses a reserved footprint before coins are placed |
 
 ## Authored Core Town
 
 The spawn plaza, park, school, shop, houses, obby, and parking lot remain authored landmarks because they support quests and onboarding. They use the same occupancy grid for buildings, props, activities, and coins. Procedural objects are suppressed inside this authored core.
+
+The east-west road at `z = 9` passes continuously through the core and joins
+the outer north-south roads. A short central avenue links Spawn Plaza and
+Clocktower Hall to that road without cutting through the northern houses. Road
+surfaces are allowed through the authored core; procedural buildings and props
+are not.
+
+## Bird's-eye Review
+
+Run `npm run dev:map` or open `/world-map.html` while the Vite server is running.
+The review page renders every one-unit terrain tile and object footprint from
+the same rules as the game. Red diagnostics identify forbidden terrain or
+shared occupancy cells. The current map can also be exported as JSON for
+offline inspection.
 
 ## Player Building
 

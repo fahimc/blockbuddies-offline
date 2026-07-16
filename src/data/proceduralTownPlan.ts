@@ -2,8 +2,16 @@ import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
 
 export const proceduralChunkSize = 36
-export const proceduralRoadRepeat = proceduralChunkSize * 2
-export const proceduralRoadOrigin = proceduralChunkSize / 2
+export const proceduralHorizontalRoadRepeat = proceduralChunkSize * 2
+export const proceduralHorizontalRoadOrigin = 9
+export const proceduralVerticalRoadRepeat = proceduralChunkSize * 3
+export const proceduralVerticalRoadOrigin = -54
+
+export const centralAvenue = {
+  centerX: 0,
+  minZ: -28.5,
+  maxZ: proceduralHorizontalRoadOrigin,
+}
 
 export type PlannedParcelUse = 'residential' | 'commercial' | 'park' | 'buildable'
 
@@ -22,6 +30,10 @@ export type ProceduralChunkRoadLayout = {
   centerZ: number
   hasHorizontalRoad: boolean
   hasVerticalRoad: boolean
+  horizontalRoadCenters: number[]
+  verticalRoadCenters: number[]
+  ownedHorizontalRoadCenters: number[]
+  ownedVerticalRoadCenters: number[]
 }
 
 export type ProceduralChunkPlan = {
@@ -40,13 +52,13 @@ export function createProceduralChunkPlan(seed: string, cx: number, cz: number):
   const xSegments = splitAvailableAxis(
     layout.x0,
     layout.x0 + proceduralChunkSize,
-    layout.hasVerticalRoad ? layout.centerX : undefined,
+    layout.verticalRoadCenters,
     transportHalfWidth,
   )
   const zSegments = splitAvailableAxis(
     layout.z0,
     layout.z0 + proceduralChunkSize,
-    layout.hasHorizontalRoad ? layout.centerZ : undefined,
+    layout.horizontalRoadCenters,
     transportHalfWidth,
   )
   const candidates = xSegments.flatMap((xSegment, xIndex) =>
@@ -94,20 +106,73 @@ export function createProceduralChunkPlan(seed: string, cx: number, cz: number):
 export function proceduralChunkRoadLayout(cx: number, cz: number): ProceduralChunkRoadLayout {
   const x0 = cx * proceduralChunkSize
   const z0 = cz * proceduralChunkSize
+  const x1 = x0 + proceduralChunkSize
+  const z1 = z0 + proceduralChunkSize
+  const transportHalfWidth = realScale.roadTile / 2 + realScale.pavementWidth + parcelSetback
+  const horizontalRoadCenters = roadCentersAffectingRange(
+    z0,
+    z1,
+    proceduralHorizontalRoadOrigin,
+    proceduralHorizontalRoadRepeat,
+    transportHalfWidth,
+  )
+  const verticalRoadCenters = roadCentersAffectingRange(
+    x0,
+    x1,
+    proceduralVerticalRoadOrigin,
+    proceduralVerticalRoadRepeat,
+    transportHalfWidth,
+  )
+  const overlapsCentralAvenue = z1 > centralAvenue.minZ && z0 < centralAvenue.maxZ
+  if (
+    overlapsCentralAvenue &&
+    centralAvenue.centerX + transportHalfWidth > x0 &&
+    centralAvenue.centerX - transportHalfWidth < x1 &&
+    !verticalRoadCenters.includes(centralAvenue.centerX)
+  ) {
+    verticalRoadCenters.push(centralAvenue.centerX)
+  }
+
   return {
     x0,
     z0,
     centerX: x0 + proceduralChunkSize / 2,
     centerZ: z0 + proceduralChunkSize / 2,
-    hasHorizontalRoad: Math.abs(cz) % 2 === 0,
-    hasVerticalRoad: Math.abs(cx) % 2 === 0,
+    hasHorizontalRoad: horizontalRoadCenters.length > 0,
+    hasVerticalRoad: verticalRoadCenters.length > 0,
+    horizontalRoadCenters,
+    verticalRoadCenters,
+    ownedHorizontalRoadCenters: roadCentersOwnedByRange(
+      z0,
+      z1,
+      proceduralHorizontalRoadOrigin,
+      proceduralHorizontalRoadRepeat,
+    ),
+    ownedVerticalRoadCenters: roadCentersOwnedByRange(
+      x0,
+      x1,
+      proceduralVerticalRoadOrigin,
+      proceduralVerticalRoadRepeat,
+    ),
   }
 }
 
 export function proceduralTerrainAt(x: number, z: number): 'ground' | 'road' | 'sidewalk' {
-  const distanceToVerticalRoad = distanceToRepeatingLine(x, proceduralRoadOrigin, proceduralRoadRepeat)
-  const distanceToHorizontalRoad = distanceToRepeatingLine(z, proceduralRoadOrigin, proceduralRoadRepeat)
-  const nearestRoad = Math.min(distanceToVerticalRoad, distanceToHorizontalRoad)
+  const distanceToVerticalRoad = distanceToRepeatingLine(
+    x,
+    proceduralVerticalRoadOrigin,
+    proceduralVerticalRoadRepeat,
+  )
+  const distanceToHorizontalRoad = distanceToRepeatingLine(
+    z,
+    proceduralHorizontalRoadOrigin,
+    proceduralHorizontalRoadRepeat,
+  )
+  const centralAvenueDistance =
+    z >= centralAvenue.minZ && z <= centralAvenue.maxZ
+      ? Math.abs(x - centralAvenue.centerX)
+      : Number.POSITIVE_INFINITY
+  const nearestRoad = Math.min(distanceToVerticalRoad, distanceToHorizontalRoad, centralAvenueDistance)
   if (nearestRoad <= realScale.roadTile / 2) return 'road'
   if (nearestRoad <= realScale.roadTile / 2 + realScale.pavementWidth) return 'sidewalk'
   return 'ground'
@@ -125,13 +190,19 @@ export function proceduralBuildableParcelFor(
   )
 }
 
-function splitAvailableAxis(min: number, max: number, roadCenter: number | undefined, transportHalfWidth: number) {
-  const available = roadCenter === undefined
-    ? [{ min: min + parcelEdgeInset, max: max - parcelEdgeInset }]
-    : [
-        { min: min + parcelEdgeInset, max: roadCenter - transportHalfWidth },
-        { min: roadCenter + transportHalfWidth, max: max - parcelEdgeInset },
-      ]
+function splitAvailableAxis(min: number, max: number, roadCenters: number[], transportHalfWidth: number) {
+  let available = [{ min: min + parcelEdgeInset, max: max - parcelEdgeInset }]
+  for (const roadCenter of roadCenters) {
+    const corridorMin = roadCenter - transportHalfWidth
+    const corridorMax = roadCenter + transportHalfWidth
+    available = available.flatMap((segment) => {
+      if (corridorMax <= segment.min || corridorMin >= segment.max) return [segment]
+      return [
+        { min: segment.min, max: Math.min(segment.max, corridorMin) },
+        { min: Math.max(segment.min, corridorMax), max: segment.max },
+      ].filter((candidate) => candidate.max > candidate.min)
+    })
+  }
 
   return available.flatMap((segment) => subdivideSegment(segment.min, segment.max))
 }
@@ -149,11 +220,11 @@ function subdivideSegment(min: number, max: number) {
 
 function nearestRoadFacing([x, , z]: Vec3, layout: ProceduralChunkRoadLayout) {
   const candidates: Array<{ distance: number; yaw: number }> = []
-  if (layout.hasHorizontalRoad) {
-    candidates.push({ distance: Math.abs(z - layout.centerZ), yaw: z < layout.centerZ ? 0 : Math.PI })
+  for (const roadZ of layout.horizontalRoadCenters) {
+    candidates.push({ distance: Math.abs(z - roadZ), yaw: z < roadZ ? 0 : Math.PI })
   }
-  if (layout.hasVerticalRoad) {
-    candidates.push({ distance: Math.abs(x - layout.centerX), yaw: x < layout.centerX ? Math.PI / 2 : -Math.PI / 2 })
+  for (const roadX of layout.verticalRoadCenters) {
+    candidates.push({ distance: Math.abs(x - roadX), yaw: x < roadX ? Math.PI / 2 : -Math.PI / 2 })
   }
   candidates.sort((a, b) => a.distance - b.distance)
   return candidates[0]?.yaw ?? 0
@@ -161,24 +232,64 @@ function nearestRoadFacing([x, , z]: Vec3, layout: ProceduralChunkRoadLayout) {
 
 function plannedSidewalkFurniture(layout: ProceduralChunkRoadLayout): Vec3[] {
   const points: Vec3[] = []
-  const furnitureOffset = realScale.roadTile / 2 + realScale.pavementWidth * 0.78
+  const furnitureOffset = realScale.roadTile / 2 + realScale.pavementWidth * 0.72
   const along = [7, proceduralChunkSize - 7]
 
-  if (layout.hasHorizontalRoad) {
+  for (const roadZ of layout.ownedHorizontalRoadCenters) {
     for (const xOffset of along) {
       const x = layout.x0 + xOffset
-      if (layout.hasVerticalRoad && Math.abs(x - layout.centerX) <= realScale.roadTile / 2 + realScale.pavementWidth) continue
-      points.push([x, 0, layout.centerZ - furnitureOffset], [x, 0, layout.centerZ + furnitureOffset])
+      points.push([x, 0, roadZ - furnitureOffset], [x, 0, roadZ + furnitureOffset])
     }
   }
-  if (layout.hasVerticalRoad) {
+  for (const roadX of layout.ownedVerticalRoadCenters) {
     for (const zOffset of along) {
       const z = layout.z0 + zOffset
-      if (layout.hasHorizontalRoad && Math.abs(z - layout.centerZ) <= realScale.roadTile / 2 + realScale.pavementWidth) continue
-      points.push([layout.centerX - furnitureOffset, 0, z], [layout.centerX + furnitureOffset, 0, z])
+      points.push([roadX - furnitureOffset, 0, z], [roadX + furnitureOffset, 0, z])
     }
   }
-  return points
+  return points.filter(([x, , z], index) =>
+    proceduralTerrainAt(x, z) === 'sidewalk' &&
+    points.findIndex(([otherX, , otherZ]) => otherX === x && otherZ === z) === index,
+  )
+}
+
+export function horizontalRoadCentersBetween(min: number, max: number) {
+  return roadCentersAffectingRange(
+    min,
+    max,
+    proceduralHorizontalRoadOrigin,
+    proceduralHorizontalRoadRepeat,
+    realScale.roadTile / 2,
+  )
+}
+
+export function verticalRoadCentersBetween(min: number, max: number) {
+  return roadCentersAffectingRange(
+    min,
+    max,
+    proceduralVerticalRoadOrigin,
+    proceduralVerticalRoadRepeat,
+    realScale.roadTile / 2,
+  )
+}
+
+function roadCentersAffectingRange(min: number, max: number, origin: number, repeat: number, padding: number) {
+  const first = Math.floor((min - padding - origin) / repeat)
+  const last = Math.ceil((max + padding - origin) / repeat)
+  const centers: number[] = []
+  for (let index = first; index <= last; index += 1) {
+    const center = origin + repeat * index
+    if (center + padding > min && center - padding < max) centers.push(center)
+  }
+  return centers
+}
+
+function roadCentersOwnedByRange(min: number, max: number, origin: number, repeat: number) {
+  const first = Math.ceil((min - origin) / repeat)
+  const last = Math.ceil((max - origin) / repeat) - 1
+  const centers: number[] = []
+  for (let index = first; index <= last; index += 1) centers.push(origin + repeat * index)
+  return centers
 }
 
 function distanceToRepeatingLine(value: number, origin: number, repeat: number) {

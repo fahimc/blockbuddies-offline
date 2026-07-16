@@ -19,19 +19,19 @@ export type DriveInput = {
 }
 
 export const parkingLot = {
-  center: [10, 0.035, -16] as Vec3,
+  center: [14, 0.035, -17] as Vec3,
   width: 9,
   depth: 11,
-  drivewayCenter: [5.4, 0.03, -16] as Vec3,
-  drivewayWidth: 2.6,
-  drivewayDepth: 5.4,
-  signPosition: [15.9, 0, -21.2] as Vec3,
+  drivewayCenter: [7.4, 0.03, -17] as Vec3,
+  drivewayWidth: 4.2,
+  drivewayDepth: 3.2,
+  signPosition: [19, 0, -22] as Vec3,
 }
 
 export const parkedVehicleDefinitions: DrivableVehicle[] = [
-  parkedVehicle('sunny-car', 'Sunny Car', '#f97316', -16.1),
-  parkedVehicle('sky-car', 'Sky Car', '#38bdf8', -19.5),
-  parkedVehicle('mint-car', 'Mint Car', '#22c55e', -12.7),
+  parkedVehicle('sunny-car', 'Sunny Car', '#f97316', -17.1),
+  parkedVehicle('sky-car', 'Sky Car', '#38bdf8', -20.5),
+  parkedVehicle('mint-car', 'Mint Car', '#22c55e', -13.7),
 ]
 
 export const vehicleInteractionRadius = 1.35

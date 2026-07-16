@@ -580,7 +580,13 @@ function InteriorProps({ kind }: { kind: InteriorKind }) {
 
 function proceduralObjectInsideCoreTown(piece: ProceduralPiece) {
   if (piece.id.startsWith('landmark:')) return false
-  if (piece.kind === 'ground' || piece.kind === 'water') return false
+  if (
+    piece.kind === 'ground' ||
+    piece.kind === 'water' ||
+    piece.kind === 'road' ||
+    piece.kind === 'pavement' ||
+    piece.kind === 'line'
+  ) return false
   return footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08)
 }
 
@@ -1007,8 +1013,8 @@ function Town() {
         <Building key={building.position.join(',')} position={building.position} color={building.color} scale={building.scale} />
       ))}
       <Storefront position={[12, 0, -7]} label="SHOP" color="#f97316" />
-      <Storefront position={[-22, 0, 10]} label="SCHOOL" color="#a78bfa" />
-      <Storefront position={[21, 0, 11]} label="OBBY" color="#ef4444" />
+      <Storefront position={[-21, 0, 22]} label="SCHOOL" color="#a78bfa" />
+      <Storefront position={[18, 0, 21]} label="OBBY" color="#ef4444" />
       <Billboard position={[-11, 0, 2]} />
       <Benches />
       <StreetLamps />
@@ -1047,12 +1053,12 @@ function SpawnPad() {
 function Roads() {
   return (
     <group>
-      <mesh receiveShadow position={[0, 0.025, -7.5]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[realScale.roadTile, 22]} />
+      <mesh receiveShadow position={[0, 0.025, -9.75]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[realScale.roadTile, 37.5]} />
         <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
       </mesh>
       <mesh receiveShadow position={[0, 0.03, 9]} rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
-        <planeGeometry args={[realScale.roadTile, 32]} />
+        <planeGeometry args={[realScale.roadTile, 54]} />
         <meshStandardMaterial color="#cbd5e1" roughness={0.9} />
       </mesh>
       {coreTerrainZones

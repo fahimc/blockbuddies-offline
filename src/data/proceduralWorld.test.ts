@@ -224,6 +224,26 @@ describe('procedural borough world', () => {
     expect(lamps.every((lamp) => pavements.some((pavement) => overlapsTopDown(lamp, pavement)))).toBe(true)
   })
 
+  it('renders continuous shared road surfaces across chunk boundaries and the core', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: [18, 0, 18],
+      viewDistance: 3,
+      night: false,
+    })
+    const roads = world.pieces.filter((piece) => piece.kind === 'road')
+    const samples: Array<[number, number]> = []
+    for (let x = -96; x <= 132; x += 6) samples.push([x, 9])
+    for (let z = -96; z <= 132; z += 6) {
+      samples.push([-54, z], [54, z])
+    }
+
+    expect(samples.every(([x, z]) => roads.some((road) =>
+      Math.abs(x - road.position[0]) <= road.scale[0] / 2 + 0.01 &&
+      Math.abs(z - road.position[2]) <= road.scale[2] / 2 + 0.01,
+    ))).toBe(true)
+  })
+
   it('keeps generated buildings inside planned parcels and reserves empty lots for players', () => {
     const world = generateProceduralWorld({
       seed: 'LONDON-2026',
@@ -257,16 +277,16 @@ describe('procedural borough world', () => {
     expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:door')).toBe(true)
   })
 
-  it('does not draw procedural transport or props through the authored central town', () => {
+  it('allows the shared road layer through the core while suppressing procedural props', () => {
     const world = generateProceduralWorld({
       seed: 'LONDON-2026',
       center: [18, 0, 18],
       viewDistance: 1,
       night: true,
     })
+    const allowedCoreLayers = new Set(['ground', 'water', 'road', 'pavement', 'line'])
     const coreConflicts = world.pieces.filter((piece) =>
-      piece.kind !== 'ground' &&
-      piece.kind !== 'water' &&
+      !allowedCoreLayers.has(piece.kind) &&
       !piece.id.startsWith('landmark:') &&
       footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08),
     )

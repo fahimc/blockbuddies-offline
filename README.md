@@ -91,12 +91,14 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   trail placeholder.
 - Original superhero-style avatar skins with capes, chest emblems, suit trim,
   gloves, armour panels, and a dedicated Hero Skins tab in Clothing.
-- Layered grid-based town generation with planned roads, sidewalks, zoning,
-  parks, clear entrances, and player-buildable parcels. The generation and
-  placement rules are documented in [`docs/WORLD_GENERATION.md`](docs/WORLD_GENERATION.md).
-- The handcrafted central town is protected from overlapping procedural roads,
-  pavements, lane markings, parks, and props, so authored buildings, benches,
-  activity pads, collectibles, parking, and obby pieces stay out of road lanes.
+- Layered grid-based town generation with shared road coordinates, terrain
+  tiles, sidewalks, zoning, parks, clear entrances, and player-buildable
+  parcels. The generation and placement rules are documented in
+  [`docs/WORLD_GENERATION.md`](docs/WORLD_GENERATION.md).
+- The 3D world, traffic, minimap, placement validation, and bird's-eye review
+  page consume the same tiled road plan. Authored buildings, benches, activity
+  pads, collectibles, parking, and obby pieces are validated against terrain
+  and exclusive occupancy cells before release.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
 - Body & Style customizer uses a responsive phone grid for the character
@@ -220,8 +222,13 @@ npm install
 
 ```bash
 npm run dev
+npm run dev:map
 npm run preview
 ```
+
+`npm run dev:map` opens the standalone tiled world review at
+`http://localhost:5173/world-map.html`. The page shows terrain and object
+layers, invalid placement diagnostics, per-tile inspection, and JSON export.
 
 ## Test Commands
 
@@ -444,11 +451,15 @@ badges, shop unlocks, emotes, seating, sleeping, build actions, obby, vehicles,
 and mini-games now have local WebAudio cues, and procedural music changes by
 context across menu, customizer, town, interiors, driving, and mini-games.
 
-The `v1.5.35` APK protects the handcrafted central town from overlapping
-procedural roads and moves the school, obby, benches, billboard, Coin Rush
-targets, and Delivery Dash targets onto clear non-road cells. New unit and E2E
-coverage keeps authored gameplay markers and procedural road suppression from
-regressing.
+The `v1.5.36` APK replaces core road suppression with one shared tiled road
+plan. Generation, traffic, and the minimap now use the same coordinates, while
+the standalone bird's-eye map validates every terrain and object cell. The
+school, houses, obby, parking lot, activities, trees, and cars were moved into
+clear validated parcels.
+
+The `v1.5.35` APK protected the handcrafted central town from overlapping
+procedural props and moved gameplay markers onto clear cells. It is superseded
+by the connected tile-map road plan in `v1.5.36`.
 
 The `v1.3.8` APK includes Local Party controls in the Local Server panel. Two
 devices can exchange host invite and join answer codes to connect through

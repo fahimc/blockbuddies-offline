@@ -114,23 +114,24 @@ function generateChunk(seed: string, cx: number, cz: number, night: boolean): {
 } {
   const random = rng(`${seed}:${cx}:${cz}`)
   const plan = createProceduralChunkPlan(seed, cx, cz)
-  const { centerX, centerZ, hasHorizontalRoad, hasVerticalRoad } = plan.layout
+  const { centerX, centerZ, ownedHorizontalRoadCenters, ownedVerticalRoadCenters } = plan.layout
   const pieces: ProceduralPiece[] = [
     piece(`ground:${cx}:${cz}`, 'ground', [centerX, -0.12, centerZ], [chunkSize, 0.12, chunkSize], '#6fde6a'),
   ]
   let buildingCount = 0
+  const sidewalkOffset = realScale.roadTile / 2 + realScale.pavementWidth / 2
 
-  if (hasHorizontalRoad) {
-    pieces.push(piece(`road-x:${cx}:${cz}`, 'road', [centerX, 0.01, centerZ], [chunkSize, 0.08, realScale.roadTile], '#9ca3af'))
-    pieces.push(piece(`line-x:${cx}:${cz}`, 'line', [centerX, 0.065, centerZ], [chunkSize * 0.86, 0.025, 0.18], '#fde047'))
-    pieces.push(piece(`pavement-x-a:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ - realScale.roadTile * 0.66], [chunkSize, 0.055, realScale.pavementWidth], '#e5e7eb'))
-    pieces.push(piece(`pavement-x-b:${cx}:${cz}`, 'pavement', [centerX, 0.035, centerZ + realScale.roadTile * 0.66], [chunkSize, 0.055, realScale.pavementWidth], '#e5e7eb'))
+  for (const roadZ of ownedHorizontalRoadCenters) {
+    pieces.push(piece(`road-x:${cx}:${cz}:${roadZ}`, 'road', [centerX, 0.01, roadZ], [chunkSize, 0.08, realScale.roadTile], '#9ca3af'))
+    pieces.push(piece(`line-x:${cx}:${cz}:${roadZ}`, 'line', [centerX, 0.065, roadZ], [chunkSize, 0.025, 0.18], '#fde047'))
+    pieces.push(piece(`pavement-x-a:${cx}:${cz}:${roadZ}`, 'pavement', [centerX, 0.035, roadZ - sidewalkOffset], [chunkSize, 0.055, realScale.pavementWidth], '#e5e7eb'))
+    pieces.push(piece(`pavement-x-b:${cx}:${cz}:${roadZ}`, 'pavement', [centerX, 0.035, roadZ + sidewalkOffset], [chunkSize, 0.055, realScale.pavementWidth], '#e5e7eb'))
   }
-  if (hasVerticalRoad) {
-    pieces.push(piece(`road-z:${cx}:${cz}`, 'road', [centerX, 0.015, centerZ], [realScale.roadTile, 0.09, chunkSize], '#94a3b8'))
-    pieces.push(piece(`line-z:${cx}:${cz}`, 'line', [centerX, 0.07, centerZ], [0.18, 0.025, chunkSize * 0.86], '#fde047'))
-    pieces.push(piece(`pavement-z-a:${cx}:${cz}`, 'pavement', [centerX - realScale.roadTile * 0.66, 0.04, centerZ], [realScale.pavementWidth, 0.055, chunkSize], '#e5e7eb'))
-    pieces.push(piece(`pavement-z-b:${cx}:${cz}`, 'pavement', [centerX + realScale.roadTile * 0.66, 0.04, centerZ], [realScale.pavementWidth, 0.055, chunkSize], '#e5e7eb'))
+  for (const roadX of ownedVerticalRoadCenters) {
+    pieces.push(piece(`road-z:${cx}:${cz}:${roadX}`, 'road', [roadX, 0.015, centerZ], [realScale.roadTile, 0.09, chunkSize], '#94a3b8'))
+    pieces.push(piece(`line-z:${cx}:${cz}:${roadX}`, 'line', [roadX, 0.07, centerZ], [0.18, 0.025, chunkSize], '#fde047'))
+    pieces.push(piece(`pavement-z-a:${cx}:${cz}:${roadX}`, 'pavement', [roadX - sidewalkOffset, 0.04, centerZ], [realScale.pavementWidth, 0.055, chunkSize], '#e5e7eb'))
+    pieces.push(piece(`pavement-z-b:${cx}:${cz}:${roadX}`, 'pavement', [roadX + sidewalkOffset, 0.04, centerZ], [realScale.pavementWidth, 0.055, chunkSize], '#e5e7eb'))
   }
 
   plan.parcels.forEach((parcel, index) => {
@@ -316,7 +317,13 @@ function isDriveCorridorBlocker(piece: ProceduralPiece) {
 function removeAuthoredCoreConflicts(pieces: ProceduralPiece[]) {
   return pieces.filter((piece) => {
     if (piece.id.startsWith('landmark:')) return true
-    if (piece.kind === 'ground' || piece.kind === 'water') return true
+    if (
+      piece.kind === 'ground' ||
+      piece.kind === 'water' ||
+      piece.kind === 'road' ||
+      piece.kind === 'pavement' ||
+      piece.kind === 'line'
+    ) return true
     return !footprintOverlapsAuthoredCore(piece.position, orientedFootprintScale(piece), 0.08)
   })
 }

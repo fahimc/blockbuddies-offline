@@ -1,10 +1,11 @@
 {
   "name": "blox-world",
   "private": true,
-  "version": "1.5.35",
+  "version": "1.5.36",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:map": "vite --open /world-map.html",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",

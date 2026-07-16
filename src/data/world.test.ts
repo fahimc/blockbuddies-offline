@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createParkedVehicles, distanceToVehicle, vehicleInteractionRadius } from '../game/vehicles'
+import { proceduralBuildableParcelFor, proceduralTerrainAt } from './proceduralTownPlan'
 import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
@@ -45,5 +46,12 @@ describe('world travel destinations', () => {
       const location = getLocation(id as keyof typeof buildingClearance)
       expect(distance2d(location.position, location.travelPosition)).toBeGreaterThan(clearance)
     })
+  })
+
+  it('places Builder Meadows on a clear player-buildable ground parcel', () => {
+    const builder = getLocation('builder')
+
+    expect(proceduralTerrainAt(builder.travelPosition[0], builder.travelPosition[2])).toBe('ground')
+    expect(proceduralBuildableParcelFor('LONDON-2026', builder.travelPosition, [1, 1, 1])).toBeDefined()
   })
 })

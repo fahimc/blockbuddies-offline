@@ -6,10 +6,10 @@ export type ObbyPlatform = {
 }
 
 export const obbyPlatforms: ObbyPlatform[] = [
-  { position: [21, 0.8, 11], scale: [2.2, 0.35, 2.2] },
-  { position: [23.5, 1.8, 13.5], scale: [1.7, 0.3, 1.7] },
-  { position: [24.5, 3.1, 16], scale: [1.7, 0.3, 1.7] },
-  { position: [22, 4.6, 19], scale: [2.2, 0.35, 2.2] },
+  { position: [18, 0.8, 21], scale: [2.2, 0.35, 2.2] },
+  { position: [20.5, 1.8, 23], scale: [1.7, 0.3, 1.7] },
+  { position: [23, 3.1, 21.5], scale: [1.7, 0.3, 1.7] },
+  { position: [24.5, 4.6, 24], scale: [2.2, 0.35, 2.2] },
 ]
 
 export const obbyCheckpoints: Vec3[] = obbyPlatforms.map(({ position, scale }) => [
