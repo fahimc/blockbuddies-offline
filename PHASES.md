@@ -845,3 +845,12 @@
 - [x] Persist created NPCs through the normal save snapshot
 - [x] Add store and UI regression tests for saved-style NPC creation
 - [x] Bump Android debug APK version metadata to 1.5.50 / 10550
+
+## Post-phase NPC look editor
+
+- [x] Add full NPC appearance editing in the Buddies & NPCs menu
+- [x] Add live NPC preview while changing skin, clothes, hair, face, accessories, trails, and hero skins
+- [x] Create NPCs from the edited draft avatar rather than only from saved templates
+- [x] Add regression tests for custom NPC creation choices
+- [x] Add save/load regression tests for NPCs and built world objects in the same save snapshot
+- [x] Bump Android debug APK version metadata to 1.5.51 / 10551

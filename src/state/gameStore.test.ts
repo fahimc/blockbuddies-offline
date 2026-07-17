@@ -264,6 +264,56 @@ describe('saved game friends', () => {
     expect(snapshot.savedFriends[0].inWorld).toBe(false)
     expect(snapshot.savedFriends[0].route.length).toBeGreaterThan(1)
   })
+
+  it('restores created NPCs and built objects from the same save snapshot', () => {
+    useGameStore.setState({
+      playerName: 'Fahim',
+      avatar: { ...defaultAvatar, shirtColor: '#7c3aed' },
+      savedFriends: [],
+      placedBlocks: [
+        {
+          id: 'saved-house',
+          kind: 'house',
+          name: 'NPC Clubhouse',
+          position: [14, 0.02, 16],
+          color: '#60a5fa',
+          rotation: Math.PI / 2,
+        },
+      ],
+      messageThreads: [],
+      chat: [],
+    })
+
+    useGameStore.getState().createSavedFriend('Nova Hero', {
+      ...defaultAvatar,
+      shirtColor: '#7c3aed',
+      hairStyle: 'bob',
+      face: 'robot',
+      topStyle: 'hero-skin-neon-knight',
+      outfitStyle: 'hero-armour',
+    })
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+    useGameStore.setState({ savedFriends: [], placedBlocks: [] })
+    useGameStore.getState().loadFromSave(snapshot)
+
+    expect(useGameStore.getState().savedFriends[0]).toMatchObject({
+      name: 'Nova Hero',
+      inWorld: true,
+      avatar: expect.objectContaining({
+        shirtColor: '#7c3aed',
+        hairStyle: 'bob',
+        face: 'robot',
+        topStyle: 'hero-skin-neon-knight',
+      }),
+    })
+    expect(useGameStore.getState().placedBlocks[0]).toMatchObject({
+      id: 'saved-house',
+      kind: 'house',
+      name: 'NPC Clubhouse',
+      rotation: Math.PI / 2,
+    })
+  })
 })
 
 describe('quest progression', () => {

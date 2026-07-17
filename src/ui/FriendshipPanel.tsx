@@ -1,8 +1,22 @@
+import { useMemo, useState, type ReactNode } from 'react'
+import {
+  accessoryItems,
+  accentColors,
+  clothingItems,
+  eyeColors,
+  faceStyles,
+  hairColors,
+  hairStyles,
+  heroSkinItems,
+  pantsItems,
+  skinTones,
+  trailItems,
+} from '../data/avatarCustomization'
 import { botProfiles } from '../data/botProfiles'
 import { friendshipLabel } from '../ai/relationship'
 import { useGameStore } from '../state/gameStore'
+import { GameAvatarPreview } from './GameAvatarPreview'
 import { Panel } from './Panel'
-import { useMemo, useState } from 'react'
 
 export function FriendshipPanel() {
   const memories = useGameStore((state) => state.botMemory)
@@ -15,6 +29,7 @@ export function FriendshipPanel() {
   const openMessageThread = useGameStore((state) => state.openMessageThread)
   const [npcName, setNpcName] = useState('')
   const [selectedStyleId, setSelectedStyleId] = useState('current')
+  const [draftAvatar, setDraftAvatar] = useState(avatar)
   const styleOptions = useMemo(
     () => [
       { id: 'current', name: 'Current Character', avatar },
@@ -26,10 +41,17 @@ export function FriendshipPanel() {
     ],
     [avatar, savedAvatars],
   )
-  const selectedStyle =
-    styleOptions.find((style) => style.id === selectedStyleId) ?? styleOptions[0]
+  const selectTemplate = (id: string) => {
+    const style = styleOptions.find((entry) => entry.id === id) ?? styleOptions[0]
+    setSelectedStyleId(style.id)
+    setDraftAvatar(style.avatar)
+  }
+  const updateDraft = (patch: Partial<typeof draftAvatar>) => {
+    setSelectedStyleId('custom')
+    setDraftAvatar((current) => ({ ...current, ...patch }))
+  }
   const createNpc = () => {
-    createSavedFriend(npcName, selectedStyle.avatar)
+    createSavedFriend(npcName, draftAvatar)
     setNpcName('')
   }
 
@@ -39,7 +61,7 @@ export function FriendshipPanel() {
         <div className="mb-2 flex items-center justify-between gap-2">
           <div>
             <h3 className="font-black text-slate-950">Create NPC Character</h3>
-            <p className="text-xs font-bold text-slate-500">Pick a saved character style, name them, and add them to the town.</p>
+            <p className="text-xs font-bold text-slate-500">Name them, customise their full look, and add them to the town.</p>
           </div>
         </div>
         <div className="bb-npc-creator">
@@ -52,6 +74,84 @@ export function FriendshipPanel() {
               aria-label="NPC name"
             />
           </label>
+          <div className="bb-npc-editor">
+            <div className="bb-npc-preview" aria-label="NPC look preview">
+              <GameAvatarPreview avatar={draftAvatar} yaw={-0.2} />
+            </div>
+            <div className="bb-npc-controls">
+              <NpcOptionGroup title="Templates">
+                {styleOptions.map((style) => (
+                  <button
+                    key={style.id}
+                    type="button"
+                    className={selectedStyleId === style.id ? 'selected' : ''}
+                    onClick={() => selectTemplate(style.id)}
+                  >
+                    <span className="bb-buddy-avatar mini" style={{ background: style.avatar.shirtColor }} />
+                    <span>{style.name}</span>
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcSwatches title="Skin" selected={draftAvatar.bodyColor} colors={skinTones} onPick={(bodyColor) => updateDraft({ bodyColor })} />
+              <NpcSwatches title="Shirt" selected={draftAvatar.shirtColor} colors={['#0b74ff', '#16a34a', '#dc2626', '#7c3aed', '#f97316', '#facc15', '#14b8a6', '#111827']} onPick={(shirtColor) => updateDraft({ shirtColor })} />
+              <NpcSwatches title="Pants" selected={draftAvatar.pantsColor ?? '#111827'} colors={['#111827', '#1d4ed8', '#14532d', '#7c2d12', '#334155']} onPick={(pantsColor) => updateDraft({ pantsColor })} />
+              <NpcSwatches title="Hair" selected={draftAvatar.hairColor ?? '#5a2f16'} colors={hairColors} onPick={(hairColor) => updateDraft({ hairColor })} />
+              <NpcSwatches title="Eyes" selected={draftAvatar.eyeColor ?? '#111827'} colors={eyeColors} onPick={(eyeColor) => updateDraft({ eyeColor })} />
+              <NpcSwatches title="Accent" selected={draftAvatar.accentColor ?? '#0b74ff'} colors={accentColors} onPick={(accentColor) => updateDraft({ accentColor })} />
+              <NpcOptionGroup title="Hero skins">
+                {heroSkinItems.map((item) => (
+                  <button key={item.id} type="button" onClick={() => updateDraft(item.patch)}>
+                    <span className="bb-npc-color-chip" style={{ background: item.color }} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcOptionGroup title="Hair style">
+                {hairStyles.map((item) => (
+                  <button key={item.id} type="button" className={draftAvatar.hairStyle === item.patch.hairStyle ? 'selected' : ''} onClick={() => updateDraft(item.patch)}>
+                    {item.name}
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcOptionGroup title="Face">
+                {faceStyles.map((item) => (
+                  <button key={item.id} type="button" className={draftAvatar.face === item.patch.face ? 'selected' : ''} onClick={() => updateDraft(item.patch)}>
+                    {item.name}
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcOptionGroup title="Clothes">
+                {[...clothingItems, ...pantsItems].map((item) => (
+                  <button key={item.id} type="button" onClick={() => updateDraft(item.patch)}>
+                    <span className="bb-npc-color-chip" style={{ background: item.color }} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcOptionGroup title="Accessories">
+                <button type="button" className={draftAvatar.hat === 'none' && draftAvatar.accessory === 'none' ? 'selected' : ''} onClick={() => updateDraft({ hat: 'none', accessory: 'none' })}>
+                  None
+                </button>
+                {accessoryItems.map((item) => (
+                  <button key={item.id} type="button" onClick={() => updateDraft(item.patch)}>
+                    <span className="bb-npc-color-chip" style={{ background: item.color }} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
+              </NpcOptionGroup>
+              <NpcOptionGroup title="Trails">
+                <button type="button" className={draftAvatar.trail === 'none' ? 'selected' : ''} onClick={() => updateDraft({ trail: 'none' })}>
+                  None
+                </button>
+                {trailItems.map((item) => (
+                  <button key={item.id} type="button" className={draftAvatar.trail === item.patch.trail ? 'selected' : ''} onClick={() => updateDraft(item.patch)}>
+                    <span className="bb-npc-color-chip" style={{ background: item.color }} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
+              </NpcOptionGroup>
+            </div>
+          </div>
           <div className="bb-npc-style-strip" role="listbox" aria-label="NPC avatar style">
             {styleOptions.map((style) => (
               <button
@@ -60,7 +160,7 @@ export function FriendshipPanel() {
                 role="option"
                 aria-selected={selectedStyleId === style.id}
                 className={selectedStyleId === style.id ? 'selected' : ''}
-                onClick={() => setSelectedStyleId(style.id)}
+                onClick={() => selectTemplate(style.id)}
               >
                 <span className="bb-buddy-avatar mini" style={{ background: style.avatar.shirtColor }} />
                 <span>{style.name}</span>
@@ -141,5 +241,50 @@ export function FriendshipPanel() {
         })}
       </div>
     </Panel>
+  )
+}
+
+function NpcOptionGroup({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section className="bb-npc-option-group">
+      <h4>{title}</h4>
+      <div>{children}</div>
+    </section>
+  )
+}
+
+function NpcSwatches({
+  title,
+  selected,
+  colors,
+  onPick,
+}: {
+  title: string
+  selected: string
+  colors: string[]
+  onPick: (color: string) => void
+}) {
+  return (
+    <section className="bb-npc-option-group">
+      <h4>{title}</h4>
+      <div className="bb-npc-swatches">
+        {colors.map((color) => (
+          <button
+            key={`${title}-${color}`}
+            type="button"
+            className={selected === color ? 'selected' : ''}
+            style={{ background: color }}
+            onClick={() => onPick(color)}
+            aria-label={`${title} ${color}`}
+          />
+        ))}
+      </div>
+    </section>
   )
 }

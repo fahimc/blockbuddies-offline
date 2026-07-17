@@ -18,6 +18,26 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.51-npc-look-editor] - 2026-07-17
+
+### Added
+
+- Added a full NPC look editor inside the Buddies & NPCs menu with live preview, saved templates, skin tones, shirt, pants, hair, eyes, accent colours, hero skins, hair styles, faces, clothes, accessories, and trails.
+- Added regression coverage proving custom NPC looks are applied before creation.
+- Added save/load regression coverage proving created NPCs and built world objects restore together from the same save snapshot.
+
+### Changed
+
+- NPC creation now uses the edited draft avatar instead of only copying a selected saved style.
+
+### Fixed
+
+- Fixed NPC creation not allowing players to completely customise the NPC appearance before adding them to the game.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.50-npc-creator] - 2026-07-17
 
 ### Added
