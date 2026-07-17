@@ -18,6 +18,26 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.52-netlify-web-deploy] - 2026-07-17
+
+### Added
+
+- Deployed the production web version to Netlify at `https://blockbuddies-offline.netlify.app`.
+- Added Netlify build configuration for future production web deploys.
+
+### Changed
+
+- Added the local `.netlify` folder to `.gitignore` after linking the Netlify project locally.
+- Updated Android and package version metadata to `1.5.52` / `10552`.
+
+### Fixed
+
+- Added a Netlify SPA fallback redirect so app routes resolve to `index.html`.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.51-npc-look-editor] - 2026-07-17
 
 ### Added

@@ -521,6 +521,11 @@ customise a new NPC's skin, clothes, hair, face, accessories, trails, and hero
 skin before adding them to the town. Regression tests now verify created NPCs
 and built world objects restore together from the same local save snapshot.
 
+The `v1.5.52` web build is deployed to Netlify at
+`https://blockbuddies-offline.netlify.app`. The repo now includes
+`netlify.toml` so future production deploys build with `npm run build`, publish
+from `dist`, and route app paths back to `index.html`.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

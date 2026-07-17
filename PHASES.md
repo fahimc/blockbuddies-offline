@@ -854,3 +854,11 @@
 - [x] Add regression tests for custom NPC creation choices
 - [x] Add save/load regression tests for NPCs and built world objects in the same save snapshot
 - [x] Bump Android debug APK version metadata to 1.5.51 / 10551
+
+## Post-phase Netlify web deployment
+
+- [x] Create and link the `blockbuddies-offline` Netlify project
+- [x] Deploy the production web build to `https://blockbuddies-offline.netlify.app`
+- [x] Add Netlify build and SPA fallback configuration
+- [x] Verify the deployed site returns `200 OK`
+- [x] Bump Android debug APK version metadata to 1.5.52 / 10552
