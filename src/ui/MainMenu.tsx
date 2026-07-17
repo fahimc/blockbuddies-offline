@@ -21,24 +21,26 @@ export function MainMenu({ onStart, ready = true }: MainMenuProps) {
       <div className="bb-splash-vignette" aria-hidden />
       <h1 className="sr-only">BlockBuddies</h1>
 
-      <div className="bb-splash-start-card">
-        <header className="bb-splash-brand" aria-label="BlockBuddies">
-          <BrandLogo compact />
-        </header>
-        <button
-          type="button"
-          onClick={onStart}
-          aria-label="Start"
-          className="bb-splash-play"
-          disabled={!ready}
-        >
-          <Play aria-hidden size={34} fill="currentColor" />
-          {ready ? 'START' : 'LOADING'}
-        </button>
+      <div className="bb-splash-start-area">
+        <div className="bb-splash-start-card">
+          <header className="bb-splash-brand" aria-label="BlockBuddies">
+            <BrandLogo compact />
+          </header>
+          <button
+            type="button"
+            onClick={onStart}
+            aria-label="Start"
+            className="bb-splash-play"
+            disabled={!ready}
+          >
+            <Play aria-hidden size={34} fill="currentColor" />
+            {ready ? 'START' : 'LOADING'}
+          </button>
 
-        <div className="bb-splash-feature-strip" aria-label="Game features">
-          <Feature icon={<WifiOff size={18} />} label="Offline play" />
-          <Feature icon={<ShieldCheck size={18} />} label="Safe for kids" />
+          <div className="bb-splash-feature-strip" aria-label="Game features">
+            <Feature icon={<WifiOff size={18} />} label="Offline play" />
+            <Feature icon={<ShieldCheck size={18} />} label="Safe for kids" />
+          </div>
         </div>
       </div>
 

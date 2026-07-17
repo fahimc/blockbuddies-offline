@@ -18,6 +18,24 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.49-splash-flex-layout] - 2026-07-17
+
+### Added
+
+- Added mobile regression coverage for splash logo and Start button centering across multiple portrait viewport heights.
+
+### Changed
+
+- Rebuilt the splash Start/logo area as an explicit flex-centered region instead of relying on overlapping grid-row overrides.
+
+### Fixed
+
+- Fixed the splash logo and Start button container drifting out of vertical center on mobile layouts affected by available viewport height.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.48-build-remove-button] - 2026-07-17
 
 ### Added

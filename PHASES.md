@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase splash flex layout
+
+- [x] Replace competing splash grid-row rules with a flex-centered Start area.
+- [x] Keep the BlockBuddies logo and Start button centered across mobile viewport heights.
+- [x] Add Playwright mobile regression coverage for multiple portrait sizes.
+- [x] Package and release the Android debug APK for the splash layout fix.
+
 ## Post-phase build remove button cleanup
 
 - [x] Remove the duplicate bottom-center Build Mode Remove touch button.

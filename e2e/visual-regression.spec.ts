@@ -7,13 +7,49 @@ test.describe('mobile visual regression', () => {
     await page.goto('/')
     await page.evaluate(() => document.fonts.ready)
 
+    const area = page.locator('.bb-splash-start-area')
     const card = page.locator('.bb-splash-start-card')
+    await expect(area).toBeVisible()
     await expect(card).toBeVisible()
+    const areaBox = await requiredBox(area)
     const cardBox = await requiredBox(card)
-    const expectedCentre = Math.max(256, 1024 * 0.31) / 2
+    const areaCentreY = areaBox.y + areaBox.height / 2
+    const areaCentreX = areaBox.x + areaBox.width / 2
+    const cardCentreY = cardBox.y + cardBox.height / 2
+    const cardCentreX = cardBox.x + cardBox.width / 2
 
-    expect(Math.abs(cardBox.y + cardBox.height / 2 - expectedCentre)).toBeLessThan(20)
+    expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
+    expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
     await expect(page).toHaveScreenshot('splash-portrait.png', screenshotOptions)
+  })
+
+  test('keeps the splash logo and start button centred across mobile heights', async ({ page }) => {
+    for (const viewport of [
+      { width: 360, height: 700 },
+      { width: 393, height: 851 },
+      { width: 576, height: 1024 },
+      { width: 720, height: 1280 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await page.goto('/')
+      await page.evaluate(() => document.fonts.ready)
+
+      const areaBox = await requiredBox(page.locator('.bb-splash-start-area'))
+      const cardBox = await requiredBox(page.locator('.bb-splash-start-card'))
+      const buttonBox = await requiredBox(page.getByRole('button', { name: 'Start' }))
+      const logoBox = await requiredBox(page.locator('.bb-splash-brand'))
+      const areaCentreY = areaBox.y + areaBox.height / 2
+      const areaCentreX = areaBox.x + areaBox.width / 2
+      const cardCentreY = cardBox.y + cardBox.height / 2
+      const cardCentreX = cardBox.x + cardBox.width / 2
+
+      expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
+      expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
+      expect(logoBox.x + logoBox.width / 2).toBeCloseTo(areaCentreX, 0)
+      expect(buttonBox.x + buttonBox.width / 2).toBeCloseTo(areaCentreX, 0)
+      expect(buttonBox.y).toBeGreaterThan(logoBox.y + logoBox.height)
+      await expect(page.getByRole('button', { name: 'Start' })).toBeInViewport()
+    }
   })
 
   test('keeps character creation and clothing in separate responsive rows', async ({ page }) => {
