@@ -862,3 +862,13 @@
 - [x] Add Netlify build and SPA fallback configuration
 - [x] Verify the deployed site returns `200 OK`
 - [x] Bump Android debug APK version metadata to 1.5.52 / 10552
+
+## Post-phase hosted web party rooms
+
+- [x] Add a Netlify Function for short-lived web party room signaling
+- [x] Store room offers and join answers in Netlify Blobs
+- [x] Let web players host and join by room name instead of manual codes
+- [x] Keep host approval before a guest connects to the WebRTC data channel
+- [x] Preserve Android LAN discovery and manual code fallback
+- [x] Add regression tests for hosted web signaling requests and errors
+- [x] Bump Android debug APK version metadata to 1.5.53 / 10553

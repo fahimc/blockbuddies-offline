@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.53-hosted-web-party] - 2026-07-17
+
+### Added
+
+- Added Netlify-hosted web party room signaling so web/PWA players can host or join by room name instead of manually copying WebRTC offer and answer codes.
+- Added a Netlify Function backed by Netlify Blobs to store short-lived party room offers and host-approved join answers.
+- Added regression tests for hosted room creation, room lookup, join-answer publishing, polling, closing, and server error handling.
+
+### Changed
+
+- Updated the Local Server panel to show Host Web Room and Join Web Room on web while preserving Android LAN discovery and manual code fallback.
+- Updated Android and package version metadata to `1.5.53` / `10553`.
+
+### Fixed
+
+- Fixed web local-party onboarding requiring long manual invite and answer codes when the Netlify deployment is available.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+- Netlify hosted rooms are a signaling/handshake service only. The live game state still syncs peer-to-peer through WebRTC data channels after the host approves a join request.
+
 ## [v1.5.52-netlify-web-deploy] - 2026-07-17
 
 ### Added

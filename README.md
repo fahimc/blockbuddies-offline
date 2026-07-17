@@ -526,6 +526,14 @@ The `v1.5.52` web build is deployed to Netlify at
 `netlify.toml` so future production deploys build with `npm run build`, publish
 from `dist`, and route app paths back to `index.html`.
 
+The `v1.5.53` web build adds hosted web party room signaling on Netlify. In the
+Local Server panel, web players can enter a shared room name, tap Host Web Room
+or Join Web Room, and the host approves the join request. Netlify stores only
+the short-lived WebRTC handshake data in Blobs; after approval, movement,
+messages, and build snapshots still sync directly over the WebRTC data channel.
+Android APK builds keep the native LAN discovery path, and manual codes remain
+available as a fallback.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

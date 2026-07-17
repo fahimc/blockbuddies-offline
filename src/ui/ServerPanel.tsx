@@ -6,6 +6,7 @@ import type { BotState } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { extractPartyCode, useLocalPartyStore } from '../state/localPartyStore'
 import { isLocalSignalSupported, roomLabel } from '../network/localSignal'
+import { isHostedSignalSupported } from '../network/hostedSignal'
 import { Panel } from './Panel'
 import { copyPartyCode, pastePartyCode, sharePartyCode, type PartyCodeActionResult } from './partyCodeActions'
 
@@ -32,7 +33,9 @@ export function ServerPanel() {
   const lanRooms = useLocalPartyStore((state) => state.lanRooms)
   const lanSearching = useLocalPartyStore((state) => state.lanSearching)
   const lanHost = useLocalPartyStore((state) => state.lanHost)
+  const hostedRoom = useLocalPartyStore((state) => state.hostedRoom)
   const pendingLanAnswerName = useLocalPartyStore((state) => state.pendingLanAnswerName)
+  const pendingHostedAnswerName = useLocalPartyStore((state) => state.pendingHostedAnswerName)
   const error = useLocalPartyStore((state) => state.error)
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
   const lastEvent = useLocalPartyStore((state) => state.lastEvent)
@@ -43,6 +46,8 @@ export function ServerPanel() {
   const discoverRooms = useLocalPartyStore((state) => state.discoverRooms)
   const startRoomHost = useLocalPartyStore((state) => state.startRoomHost)
   const joinRoom = useLocalPartyStore((state) => state.joinRoom)
+  const startHostedRoom = useLocalPartyStore((state) => state.startHostedRoom)
+  const joinHostedRoom = useLocalPartyStore((state) => state.joinHostedRoom)
   const startHost = useLocalPartyStore((state) => state.startHost)
   const startJoin = useLocalPartyStore((state) => state.startJoin)
   const acceptAnswer = useLocalPartyStore((state) => state.acceptAnswer)
@@ -50,6 +55,7 @@ export function ServerPanel() {
   const [codeActionMessage, setCodeActionMessage] = useState('')
   const remotePlayers = useMemo(() => Object.values(remotePlayerRecord), [remotePlayerRecord])
   const nativeRoomsSupported = isLocalSignalSupported()
+  const hostedRoomsSupported = isHostedSignalSupported()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -101,14 +107,30 @@ export function ServerPanel() {
           maxLength={18}
         />
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => void startRoomHost()} className="bb-party-action host">
-            Host Room
-          </button>
-          <button type="button" onClick={() => void discoverRooms()} className="bb-party-action join compact">
-            {lanSearching ? 'Searching...' : 'Find Rooms'}
-          </button>
-        </div>
+        {hostedRoomsSupported ? (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => void startHostedRoom()} className="bb-party-action host">
+                Host Web Room
+              </button>
+              <button type="button" onClick={() => void joinHostedRoom()} className="bb-party-action join compact">
+                Join Web Room
+              </button>
+            </div>
+            <p className="mt-2 rounded-lg bg-sky-100 px-3 py-2 text-xs font-black text-sky-800">
+              Web players join by typing the same room name. The host approves each join request.
+            </p>
+          </>
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => void startRoomHost()} className="bb-party-action host">
+              Host Room
+            </button>
+            <button type="button" onClick={() => void discoverRooms()} className="bb-party-action join compact">
+              {lanSearching ? 'Searching...' : 'Find Rooms'}
+            </button>
+          </div>
+        )}
 
         <button type="button" onClick={disconnect} className="bb-party-action disconnect mt-2 w-full">
           Disconnect
@@ -121,9 +143,20 @@ export function ServerPanel() {
           </div>
         ) : null}
 
+        {hostedRoom ? (
+          <div className="bb-party-room-card">
+            <strong>{hostedRoom.roomName}</strong>
+            <span>
+              {role === 'host'
+                ? 'Web room is open. Share this room name with another web player.'
+                : `Waiting for ${hostedRoom.hostName ?? 'the host'} to accept your join request.`}
+            </span>
+          </div>
+        ) : null}
+
         {!nativeRoomsSupported ? (
           <p className="mt-2 rounded-lg bg-amber-100 px-3 py-2 text-xs font-black text-amber-800">
-            Room discovery needs the Android APK. Web/PWA uses manual codes below.
+            Android LAN discovery needs the APK. Web/PWA can use hosted web rooms or manual codes below.
           </p>
         ) : null}
 
@@ -140,7 +173,7 @@ export function ServerPanel() {
 
         {role === 'host' && answerCodeInput ? (
           <div className="bb-party-room-card pending">
-            <strong>{pendingLanAnswerName ?? 'A player'} wants to join</strong>
+            <strong>{pendingHostedAnswerName ?? pendingLanAnswerName ?? 'A player'} wants to join</strong>
             <span>Host approval is required before they enter the room.</span>
             <button type="button" onClick={() => void acceptAnswer()} className="bb-party-action accept mt-2 w-full">
               Accept Join Request

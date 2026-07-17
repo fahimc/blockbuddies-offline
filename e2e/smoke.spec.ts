@@ -98,9 +98,10 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     if (item.button === 'Local Party') {
       await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
       await expect(page.getByLabel('Room Name')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Host Room' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Find Rooms' })).toBeVisible()
-      await expect(page.getByText('Room discovery needs the Android APK')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Host Web Room' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Join Web Room' })).toBeVisible()
+      await expect(page.getByText('Web players join by typing the same room name')).toBeVisible()
+      await expect(page.getByText('Android LAN discovery needs the APK')).toBeVisible()
       await page.getByText('Manual code fallback').click()
       await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
