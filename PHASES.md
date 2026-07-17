@@ -1,5 +1,11 @@
 # Build Phases
 
+## Post-phase splash top anchor
+
+- [x] Move the portrait splash logo/start card to a 30% viewport top anchor.
+- [x] Update mobile visual regression geometry checks for the new anchor.
+- [x] Package and release Android debug APK for the splash anchor update.
+
 ## Post-phase selected message buttons
 
 - [x] Hide floating Message buttons until a person is selected.

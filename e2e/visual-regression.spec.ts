@@ -1,9 +1,15 @@
 import { expect, test, type Locator } from '@playwright/test'
 
 test.describe('mobile visual regression', () => {
-  test.use({ viewport: { width: 576, height: 1024 }, isMobile: true, hasTouch: true })
+  test.use({
+    viewport: { width: 576, height: 1024 },
+    isMobile: true,
+    hasTouch: true,
+  })
 
-  test('keeps the splash call-to-action vertically centred in its top region', async ({ page }) => {
+  test('keeps the splash call-to-action anchored 30 percent from the top', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.evaluate(() => document.fonts.ready)
 
@@ -22,12 +28,17 @@ test.describe('mobile visual regression', () => {
 
     expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
     expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
-    expect(Math.abs(cardCentreY - viewport.height / 2)).toBeLessThan(4)
+    expect(Math.abs(cardCentreY - viewport.height * 0.3)).toBeLessThan(4)
     expect(Math.abs(cardCentreX - viewport.width / 2)).toBeLessThan(4)
-    await expect(page).toHaveScreenshot('splash-portrait.png', screenshotOptions)
+    await expect(page).toHaveScreenshot(
+      'splash-portrait.png',
+      screenshotOptions,
+    )
   })
 
-  test('keeps the splash logo and start button centred across mobile heights', async ({ page }) => {
+  test('keeps the splash logo and start button at the 30 percent mobile anchor', async ({
+    page,
+  }) => {
     for (const viewport of [
       { width: 360, height: 700 },
       { width: 393, height: 851 },
@@ -40,7 +51,9 @@ test.describe('mobile visual regression', () => {
 
       const areaBox = await requiredBox(page.locator('.bb-splash-start-area'))
       const cardBox = await requiredBox(page.locator('.bb-splash-start-card'))
-      const buttonBox = await requiredBox(page.getByRole('button', { name: 'Start' }))
+      const buttonBox = await requiredBox(
+        page.getByRole('button', { name: 'Start' }),
+      )
       const logoBox = await requiredBox(page.locator('.bb-splash-brand'))
       const areaCentreY = areaBox.y + areaBox.height / 2
       const areaCentreX = areaBox.x + areaBox.width / 2
@@ -49,7 +62,7 @@ test.describe('mobile visual regression', () => {
 
       expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
       expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
-      expect(Math.abs(cardCentreY - viewport.height / 2)).toBeLessThan(4)
+      expect(Math.abs(cardCentreY - viewport.height * 0.3)).toBeLessThan(4)
       expect(Math.abs(cardCentreX - viewport.width / 2)).toBeLessThan(4)
       expect(logoBox.x + logoBox.width / 2).toBeCloseTo(areaCentreX, 0)
       expect(buttonBox.x + buttonBox.width / 2).toBeCloseTo(areaCentreX, 0)
@@ -58,7 +71,9 @@ test.describe('mobile visual regression', () => {
     }
   })
 
-  test('keeps character creation and clothing in separate responsive rows', async ({ page }) => {
+  test('keeps character creation and clothing in separate responsive rows', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Start' }).click()
     await page.evaluate(() => document.fonts.ready)
@@ -75,7 +90,10 @@ test.describe('mobile visual regression', () => {
     expect(leftBox.y).toBeGreaterThan(hubBox.y)
     expect(rightBox.y).toBeGreaterThan(leftBox.y + leftBox.height)
     expect(rightBox.y + rightBox.height).toBeLessThan(hubFooterBox.y)
-    await expect(page).toHaveScreenshot('customizer-hub-portrait.png', screenshotOptions)
+    await expect(page).toHaveScreenshot(
+      'customizer-hub-portrait.png',
+      screenshotOptions,
+    )
 
     await page.getByRole('button', { name: 'Customize' }).click()
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
@@ -85,24 +103,31 @@ test.describe('mobile visual regression', () => {
     const catalogBox = await requiredBox(page.locator('.bb-custom-catalog'))
     const clothingFooterBox = await requiredBox(footer)
     expect(stageBox.y + stageBox.height).toBeLessThanOrEqual(catalogBox.y)
-    expect(catalogBox.y + catalogBox.height).toBeLessThanOrEqual(clothingFooterBox.y)
-
-    const previewFits = await page.locator('.bb-custom-item-preview').evaluateAll((previews) =>
-      previews.every((preview) => {
-        const child = preview.firstElementChild
-        if (!child) return false
-        const parentBox = preview.getBoundingClientRect()
-        const childBox = child.getBoundingClientRect()
-        return (
-          childBox.left >= parentBox.left &&
-          childBox.right <= parentBox.right &&
-          childBox.top >= parentBox.top &&
-          childBox.bottom <= parentBox.bottom
-        )
-      }),
+    expect(catalogBox.y + catalogBox.height).toBeLessThanOrEqual(
+      clothingFooterBox.y,
     )
+
+    const previewFits = await page
+      .locator('.bb-custom-item-preview')
+      .evaluateAll((previews) =>
+        previews.every((preview) => {
+          const child = preview.firstElementChild
+          if (!child) return false
+          const parentBox = preview.getBoundingClientRect()
+          const childBox = child.getBoundingClientRect()
+          return (
+            childBox.left >= parentBox.left &&
+            childBox.right <= parentBox.right &&
+            childBox.top >= parentBox.top &&
+            childBox.bottom <= parentBox.bottom
+          )
+        }),
+      )
     expect(previewFits).toBe(true)
-    await expect(page).toHaveScreenshot('customizer-clothing-portrait.png', screenshotOptions)
+    await expect(page).toHaveScreenshot(
+      'customizer-clothing-portrait.png',
+      screenshotOptions,
+    )
   })
 })
 

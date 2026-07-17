@@ -511,9 +511,9 @@ The `v1.5.48` APK removes the duplicate bottom-center Build Mode Remove button.
 Selected build items are now removed from the left Build Mode drawer, leaving
 one clear delete action on mobile.
 
-The `v1.5.49` APK fixes the splash screen logo and Start button alignment by
-moving that top call-to-action group to a dedicated flex-centered region. Mobile
-regression tests now verify the centering across several portrait heights.
+The `v1.5.57` APK positions the splash screen logo and Start button as a single
+call-to-action card anchored 30% down from the portrait viewport top. Mobile
+regression tests verify that anchor across several portrait heights.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

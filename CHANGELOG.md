@@ -18,6 +18,25 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.57-splash-top-anchor] - 2026-07-17
+
+### Added
+
+- Added visual regression coverage that checks the portrait splash logo/start card is anchored 30% down from the viewport top.
+
+### Changed
+
+- Moved the portrait splash logo/start card from the vertical midpoint to a 30% top anchor.
+- Updated Android and package version metadata to `1.5.57` / `10557`.
+
+### Fixed
+
+- Fixed the splash call-to-action sitting too low when the requested layout needs it above the screen middle.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.56-message-selection] - 2026-07-17
 
 ### Added

@@ -1615,7 +1615,7 @@ canvas {
 .bb-splash-start-area {
   position: absolute;
   z-index: 1;
-  top: 50%;
+  top: 30%;
   left: 50%;
   display: flex;
   width: min(94vw, 36rem);
