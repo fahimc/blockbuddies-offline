@@ -183,7 +183,6 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
             playerName={playerName}
             savedAvatars={savedAvatars}
             onNameChange={setPlayerName}
-            onSaveStyle={() => saveCurrentAvatarStyle(playerName)}
             onApplySaved={applySavedAvatarStyle}
             onDeleteSaved={deleteSavedAvatarStyle}
             onStep={setStep}
@@ -234,9 +233,14 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
       />
 
       <footer className="bb-customizer-footer">
-        <button type="button" className="bb-customizer-save" onClick={() => saveCurrentAvatarStyle(playerName)}>
+        <button
+          type="button"
+          className="bb-customizer-save"
+          aria-label="Save Character"
+          onClick={() => saveCurrentAvatarStyle(playerName)}
+        >
           <Save size={20} aria-hidden />
-          Save Character
+          Save
         </button>
         <button type="button" className="bb-customizer-cta" onClick={next}>
           <span>{stepInfo.cta}</span>
@@ -257,7 +261,6 @@ function HubStep({
   playerName,
   savedAvatars,
   onNameChange,
-  onSaveStyle,
   onApplySaved,
   onDeleteSaved,
   onStep,
@@ -267,7 +270,6 @@ function HubStep({
   playerName: string
   savedAvatars: SavedAvatarStyle[]
   onNameChange: (name: string) => void
-  onSaveStyle: () => void
   onApplySaved: (id: string) => void
   onDeleteSaved: (id: string) => void
   onStep: (step: CustomizationStepId) => void
@@ -301,10 +303,7 @@ function HubStep({
         <section className="bb-saved-character-strip" aria-label="Saved characters">
           <div>
             <strong>Saved Characters</strong>
-            <button type="button" onClick={onSaveStyle}>
-              <Save size={15} aria-hidden />
-              Save
-            </button>
+            <span>{savedAvatars.length} saved</span>
           </div>
           {savedAvatars.length === 0 ? (
             <p>Save this character, then pick it next time.</p>
@@ -918,7 +917,9 @@ function ItemCard({
           <Check size={18} aria-hidden />
         </span>
       ) : null}
-      <ItemPreview item={item} avatar={avatar} />
+      <span className="bb-custom-item-preview">
+        <ItemPreview item={item} avatar={avatar} />
+      </span>
       <strong>{item.name}</strong>
       <span className={`rarity ${item.rarity.toLowerCase()}`}>{item.rarity}</span>
       <span className={owned ? 'price owned' : 'price'}>

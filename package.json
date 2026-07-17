@@ -1,7 +1,7 @@
 {
   "name": "blox-world",
   "private": true,
-  "version": "1.5.43",
+  "version": "1.5.44",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "lint": "eslint . && oxlint",
     "format": "prettier --write .",
     "e2e": "playwright test",
+    "e2e:vrt": "playwright test e2e/visual-regression.spec.ts",
     "cap:sync": "cap sync android",
     "android:debug": "cd android && gradlew.bat assembleDebug",
     "android:open": "cap open android"

@@ -1,4 +1,5 @@
 import type { ObbyState, Vec3 } from '../game/types'
+import { avatarGroundOffset } from '../game/scale'
 
 export type ObbyPlatform = {
   position: Vec3
@@ -14,7 +15,7 @@ export const obbyPlatforms: ObbyPlatform[] = [
 
 export const obbyCheckpoints: Vec3[] = obbyPlatforms.map(({ position, scale }) => [
   position[0],
-  position[1] + scale[1] / 2,
+  position[1] + scale[1] / 2 + avatarGroundOffset,
   position[2],
 ])
 export const obbyStart: Vec3 = obbyCheckpoints[0]

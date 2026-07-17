@@ -32,6 +32,7 @@ export type BlockBuddiesE2EBridge = {
   prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
   prepareParkingInteraction: () => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
+  startObbyGame: () => GameplayE2ESnapshot
   setDriveInput: (throttle: number, steer?: number, brake?: boolean) => GameplayE2ESnapshot
   setMovementInput: (forward: number, strafe?: number, lookX?: number) => GameplayE2ESnapshot
 }
@@ -89,9 +90,15 @@ export function installE2EBridge() {
     prepareClassroomSeatInteraction,
     prepareParkingInteraction,
     prepareMovementInteraction,
+    startObbyGame,
     setDriveInput,
     setMovementInput,
   }
+}
+
+function startObbyGame() {
+  useGameStore.getState().beginObby(performance.now())
+  return getGameplaySnapshot()
 }
 
 function prepareClassroomSeatInteraction() {

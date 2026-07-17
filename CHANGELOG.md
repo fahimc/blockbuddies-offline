@@ -10,6 +10,31 @@
 
 ### Known Issues
 
+## [v1.5.44-mobile-customizer-collision] - 2026-07-17
+
+### Added
+
+- Added Playwright visual regression baselines for the portrait splash, customization hub, and clothing catalog.
+- Added deterministic unit and browser coverage for obby platform geometry, grounded spawning, inactive collision removal, and player movement.
+
+### Changed
+
+- Rebuilt the portrait customization layout as bounded preview, category, catalog, and footer rows that scale to narrow phone viewports.
+- Centered the splash logo and Start control vertically within the upper poster region.
+- Changed the customization footer to compact Save and primary navigation controls with a separate note row.
+
+### Fixed
+
+- Fixed customization controls, saved-character content, and clothing catalogs overlapping each other on portrait screens.
+- Fixed hero-skin and clothing previews overflowing or stretching beyond their item cards.
+- Fixed the clothing character preview rendering underneath catalog controls.
+- Fixed inactive obby platforms remaining in the town as red blockers.
+- Fixed the obby start position placing the avatar inside a platform instead of grounded on its solid top.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.43-onboarding-build-friends] - 2026-07-17
 
 ### Added

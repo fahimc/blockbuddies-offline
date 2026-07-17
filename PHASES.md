@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase mobile customizer and obby collision repair
+
+- [x] Center the portrait splash logo and Start control using measured viewport geometry.
+- [x] Rebuild the customization hub as non-overlapping responsive grid rows.
+- [x] Keep character previews separate from category and clothing catalog controls.
+- [x] Constrain skin and clothing previews to their item cards.
+- [x] Remove inactive obby platforms from collision and ground active obby spawns on platform tops.
+- [x] Add unit, end-to-end, and screenshot visual regression coverage.
+- [x] Package and release the Android debug APK for the mobile layout and collision update.
+
 ## Post-phase onboarding, saved friends, and build drawer
 
 - [x] Rework splash button/logo placement, press effect, slogan placement, feature strip, and Remetheia Games credit.

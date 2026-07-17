@@ -250,7 +250,11 @@ npm run lint
 npm run typecheck
 npm run test
 npm run e2e
+npm run e2e:vrt
 ```
+
+`npm run e2e:vrt` checks the committed portrait splash and character-customizer
+screenshots as well as their measured row boundaries and preview containment.
 
 ## Build Commands
 

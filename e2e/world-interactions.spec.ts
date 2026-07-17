@@ -126,3 +126,25 @@ test.describe('mobile vehicle controls', () => {
     await page.screenshot({ path: testInfo.outputPath('parking-drive-mobile.png') })
   })
 })
+
+test('starts the obby on top of its solid platform and allows movement', async ({ page }) => {
+  test.setTimeout(90_000)
+  await completeStartFlow(page, 'ObbyTester')
+  await expect(page.getByText('Loading town...')).toBeHidden({ timeout: 30_000 })
+  await page.getByRole('button', { name: 'Start Playing' }).click()
+
+  await page.evaluate(() => window.__blockBuddiesE2E!.startObbyGame())
+  await expect
+    .poll(async () => (await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())).obbyActive)
+    .toBe(true)
+
+  const beforeMove = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
+  expect(beforeMove[1]).toBeGreaterThan(1.5)
+
+  await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(1))
+  await page.waitForTimeout(320)
+  await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0))
+  const afterMove = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
+
+  expect(Math.hypot(afterMove[0] - beforeMove[0], afterMove[2] - beforeMove[2])).toBeGreaterThan(0.15)
+})

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { finishObby, obbyPlatforms, obbyStart, startObby, updateCheckpoint } from './obby'
+import { avatarGroundOffset } from '../game/scale'
 
 describe('obby state', () => {
   it('starts with an active checkpoint', () => {
     const state = startObby(1000)
     expect(state.active).toBe(true)
     expect(state.checkpoint).toEqual(obbyStart)
-    expect(obbyStart[1]).toBe(obbyPlatforms[0].position[1] + obbyPlatforms[0].scale[1] / 2)
+    expect(obbyStart[1] - avatarGroundOffset).toBe(
+      obbyPlatforms[0].position[1] + obbyPlatforms[0].scale[1] / 2,
+    )
   })
 
   it('updates checkpoints and rewards finish', () => {

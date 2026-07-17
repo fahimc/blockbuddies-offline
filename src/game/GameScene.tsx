@@ -29,6 +29,7 @@ import {
   separateCircleFromBoxes,
   type CollisionBox,
 } from './collision'
+import { activeObbyCollisionBoxes } from './obbyPhysics'
 import {
   buildBlockInteriorEntrance,
   filterEntranceSafeZoneCollisions,
@@ -138,11 +139,6 @@ const staticCollisionObstacles: CollisionBox[] = [
     half: [buildPieceDimensions.lamp.footprint / 2, buildPieceDimensions.lamp.height / 2, buildPieceDimensions.lamp.footprint / 2] as Vec3,
   })),
   { id: 'static-billboard', center: [-11, 1.1, 2], half: [2, 1.3, 0.35] },
-  ...obbyPlatforms.map(({ position, scale }, index) => ({
-    id: `obby-platform:${index}`,
-    center: position,
-    half: [scale[0] / 2, scale[1] / 2, scale[2] / 2] as Vec3,
-  })),
 ]
 
 const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map((building) =>
@@ -1331,13 +1327,14 @@ function PlayerController({
     )
     const outsideObstacles = [
       ...staticCollisionObstacles,
+      ...activeObbyCollisionBoxes(obby.active),
       ...parkingLotCollisionBoxes(),
       ...proceduralObstacles,
       ...buildBlocksToCollisionBoxes(placedBlocks),
       ...buildBlocksToCollisionBoxes(remotePlacedBlocks),
     ]
     return filterEntranceSafeZoneCollisions(outsideObstacles, interiorEntrances)
-  }, [activeInterior, interiorEntrances, placedBlocks, proceduralPieces, remotePlacedBlocks])
+  }, [activeInterior, interiorEntrances, obby.active, placedBlocks, proceduralPieces, remotePlacedBlocks])
 
   useFrame((state, delta) => {
     const nextCollisionChunk = {
@@ -1624,7 +1621,7 @@ function PlayerController({
       setAirborne(isAirborne)
     }
     if (position.current.y < -2 && obby.active) {
-      position.current.set(obby.checkpoint[0], obby.checkpoint[1] + avatarGroundOffset, obby.checkpoint[2])
+      position.current.set(obby.checkpoint[0], obby.checkpoint[1], obby.checkpoint[2])
       velocityY.current = 0
     }
 
@@ -2608,7 +2605,9 @@ function AvatarAccessory({
 }
 
 function ObbyCourse() {
-  const beginObby = useGameStore((state) => state.beginObby)
+  const active = useGameStore((state) => state.obby.active)
+  if (!active) return null
+
   return (
     <group>
       {obbyPlatforms.map(({ position, scale }, index) => (
@@ -2618,7 +2617,6 @@ function ObbyCourse() {
           receiveShadow
           position={position}
           scale={scale}
-          onClick={() => (index === 0 ? beginObby(performance.now()) : undefined)}
         >
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={index === obbyPlatforms.length - 1 ? '#22c55e' : '#ef4444'} />
