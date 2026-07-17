@@ -20,7 +20,11 @@ import {
   startMiniGameSession,
   tickMiniGameSession,
 } from '../ai/miniGames'
-import { sanitizePartyName, useLocalPartyStore, type LocalPartyDirectMessage } from './localPartyStore'
+import {
+  sanitizePartyName,
+  useLocalPartyStore,
+  type LocalPartyDirectMessage,
+} from './localPartyStore'
 import {
   createBuildMapStamp,
   createBuildPiece,
@@ -153,6 +157,7 @@ type GameState = GameSave & {
   worldActionRequest?: WorldActionRequest
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
+  selectedBuildBlockId?: string
   selectedBuildColor: string
   buildRotation: number
   setScreen: (screen: GameState['screen']) => void
@@ -198,11 +203,13 @@ type GameState = GameSave & {
   requestWorldAction: (type: WorldActionRequest['type'], id: string) => void
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
+  setSelectedBuildBlock: (blockId?: string) => void
   setSelectedBuildColor: (color: string) => void
   rotateBuildPiece: () => void
   placeBlock: () => void
   placeMapStamp: () => void
   removeLastBlock: () => void
+  removeSelectedBlock: () => void
   mergeSharedBuildBlocks: (blocks: BuildBlock[]) => void
   beginObby: (now: number) => void
   updateObby: (now: number, checkpoints: Vec3[]) => void
@@ -384,13 +391,17 @@ function createInitialMessageThreads(): MessageThread[] {
   })
 }
 
-function sanitizeSavedFriends(friends: SavedFriend[] | undefined): SavedFriend[] {
+function sanitizeSavedFriends(
+  friends: SavedFriend[] | undefined,
+): SavedFriend[] {
   if (!friends?.length) return []
   return friends.slice(0, 12).map((friend, index) => ({
     ...friend,
     name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
     avatar: normalizeSavedAvatar(friend.avatar) ?? defaultAvatar,
-    route: friend.route?.length ? friend.route : friendRoutes[index % friendRoutes.length],
+    route: friend.route?.length
+      ? friend.route
+      : friendRoutes[index % friendRoutes.length],
     inWorld: Boolean(friend.inWorld),
   }))
 }
@@ -408,7 +419,9 @@ function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
     }
   })
   const extraThreads =
-    threads?.filter((thread) => !botProfiles.some((bot) => bot.id === thread.botId)) ?? []
+    threads?.filter(
+      (thread) => !botProfiles.some((bot) => bot.id === thread.botId),
+    ) ?? []
   return [...botThreads, ...extraThreads]
 }
 
@@ -448,7 +461,10 @@ function addDirectMessage(
   )
 }
 
-function markThreadRead(threads: MessageThread[], botId: string): MessageThread[] {
+function markThreadRead(
+  threads: MessageThread[],
+  botId: string,
+): MessageThread[] {
   return ensureMessageThreads(threads).map((thread) =>
     thread.botId === botId
       ? {
@@ -461,7 +477,9 @@ function markThreadRead(threads: MessageThread[], botId: string): MessageThread[
   )
 }
 
-function localPartyDirectMessage(message: LocalPartyDirectMessage): DirectMessage {
+function localPartyDirectMessage(
+  message: LocalPartyDirectMessage,
+): DirectMessage {
   return {
     id: message.id,
     presetId: message.presetId,
@@ -533,6 +551,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   worldActionRequest: undefined,
   buildMode: false,
   selectedBuildPiece: 'block',
+  selectedBuildBlockId: undefined,
   selectedBuildColor: '#38bdf8',
   buildRotation: 0,
 
@@ -546,7 +565,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     const playerName = sanitizePartyName(name) || defaultPlayerName
     useLocalPartyStore.getState().setPlayerName(playerName)
     set((state) => {
-      const alreadySaved = state.savedAvatars.some((style) => avatarMatches(style.avatar, state.avatar))
+      const alreadySaved = state.savedAvatars.some((style) =>
+        avatarMatches(style.avatar, state.avatar),
+      )
       const saved: SavedAvatarStyle = {
         id: makeId('avatar-style'),
         name: playerName,
@@ -556,7 +577,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       return {
         playerName,
         profileComplete: true,
-        savedAvatars: alreadySaved ? state.savedAvatars : [saved, ...state.savedAvatars].slice(0, 18),
+        savedAvatars: alreadySaved
+          ? state.savedAvatars
+          : [saved, ...state.savedAvatars].slice(0, 18),
       }
     })
   },
@@ -777,7 +800,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         `bot-${context}`,
         line,
         'bot',
-        state.openPanel === 'messages' && state.selectedMessageThreadId === botId,
+        state.openPanel === 'messages' &&
+          state.selectedMessageThreadId === botId,
       )
       return {
         bots: state.bots.map((bot) =>
@@ -821,11 +845,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!preset) return
     if (!profile) {
       const contactName =
-        get().messageThreads.find((thread) => thread.botId === botId)?.botName ??
+        get().messageThreads.find((thread) => thread.botId === botId)
+          ?.botName ??
         useLocalPartyStore.getState().remotePlayers[botId]?.name ??
         'LocalBuddy'
       const outgoing = directMessage(preset.id, preset.text, 'player', true)
-      useLocalPartyStore.getState().sendDirectMessage(botId, preset.id, preset.text)
+      useLocalPartyStore
+        .getState()
+        .sendDirectMessage(botId, preset.id, preset.text)
       set((state) => ({
         messageThreads: addDirectMessage(
           ensureMessageThread(state.messageThreads, botId, contactName),
@@ -889,12 +916,19 @@ export const useGameStore = create<GameState>((set, get) => ({
   receiveLocalPartyMessage: (message) =>
     set((state) => ({
       messageThreads: addDirectMessage(
-        ensureMessageThread(state.messageThreads, message.fromId, message.fromName),
+        ensureMessageThread(
+          state.messageThreads,
+          message.fromId,
+          message.fromName,
+        ),
         message.fromId,
         localPartyDirectMessage(message),
         message.fromName,
       ),
-      chat: [...state.chat.slice(-60), botMessage(message.fromName, message.text)],
+      chat: [
+        ...state.chat.slice(-60),
+        botMessage(message.fromName, message.text),
+      ],
     })),
 
   startQuest: (id) =>
@@ -1060,12 +1094,15 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
         : {
             buildMode,
+            selectedBuildBlockId: undefined,
             seatedSeatId: buildMode ? undefined : state.seatedSeatId,
             activeVehicleId: buildMode ? undefined : state.activeVehicleId,
             interactionPrompt: buildMode ? undefined : state.interactionPrompt,
           },
     ),
   setSelectedBuildPiece: (selectedBuildPiece) => set({ selectedBuildPiece }),
+  setSelectedBuildBlock: (selectedBuildBlockId) =>
+    set({ selectedBuildBlockId }),
   setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
   rotateBuildPiece: () =>
     set((state) => ({ buildRotation: rotateBuildYaw(state.buildRotation) })),
@@ -1113,6 +1150,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return {
         placedBlocks: [...state.placedBlocks, block],
+        selectedBuildBlockId: block.id,
         chat: [...state.chat.slice(-60), systemMessage('World piece placed')],
         earnedBadges: state.earnedBadges.includes('builder')
           ? state.earnedBadges
@@ -1151,11 +1189,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         state.placedBlocks,
         stamp,
         maxBuildPieces,
-        (piece) => !worldBuildPlacementIssue(
-          piece.position,
-          piece.kind ?? 'block',
-          state.settings.worldSeed,
-        ),
+        (piece) =>
+          !worldBuildPlacementIssue(
+            piece.position,
+            piece.kind ?? 'block',
+            state.settings.worldSeed,
+          ),
       )
       if (accepted.length === 0) {
         return {
@@ -1177,14 +1216,40 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }),
   removeLastBlock: () =>
-    set((state) => ({
-      placedBlocks: state.placedBlocks.slice(0, -1),
-      chat: [...state.chat.slice(-60), systemMessage('Last block removed')],
-    })),
+    set((state) => {
+      const removedId = state.placedBlocks.at(-1)?.id
+      return {
+        placedBlocks: state.placedBlocks.slice(0, -1),
+        selectedBuildBlockId:
+          state.selectedBuildBlockId === removedId
+            ? undefined
+            : state.selectedBuildBlockId,
+        chat: [...state.chat.slice(-60), systemMessage('Last block removed')],
+      }
+    }),
+  removeSelectedBlock: () =>
+    set((state) => {
+      if (!state.selectedBuildBlockId) return state
+      const selectedExists = state.placedBlocks.some(
+        (block) => block.id === state.selectedBuildBlockId,
+      )
+      if (!selectedExists) return { selectedBuildBlockId: undefined }
+      return {
+        placedBlocks: state.placedBlocks.filter(
+          (block) => block.id !== state.selectedBuildBlockId,
+        ),
+        selectedBuildBlockId: undefined,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage('Selected world piece removed'),
+        ],
+      }
+    }),
   mergeSharedBuildBlocks: (blocks) =>
     set((state) => {
       const incoming = blocks.filter(
-        (block) => !state.placedBlocks.some((existing) => existing.id === block.id),
+        (block) =>
+          !state.placedBlocks.some((existing) => existing.id === block.id),
       )
       if (incoming.length === 0) return state
       const accepted = mergeBuildPieces(
@@ -1203,7 +1268,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         placedBlocks: [...state.placedBlocks, ...accepted],
         chat: [
           ...state.chat.slice(-60),
-          systemMessage(`Local party build synced: ${accepted.length} piece${accepted.length === 1 ? '' : 's'}`),
+          systemMessage(
+            `Local party build synced: ${accepted.length} piece${accepted.length === 1 ? '' : 's'}`,
+          ),
         ],
         earnedBadges: state.earnedBadges.includes('builder')
           ? state.earnedBadges
@@ -1260,16 +1327,21 @@ export const useGameStore = create<GameState>((set, get) => ({
   createSavedFriend: (name) =>
     set((state) => {
       const friendName =
-        sanitizePartyName(name ?? `${state.playerName} Friend ${state.savedFriends.length + 1}`) ||
-        `Friend ${state.savedFriends.length + 1}`
+        sanitizePartyName(
+          name ?? `${state.playerName} Friend ${state.savedFriends.length + 1}`,
+        ) || `Friend ${state.savedFriends.length + 1}`
       const friend: SavedFriend = {
         id: makeId('saved-friend'),
         name: friendName,
         avatar: {
           ...state.avatar,
           avatarSource: `${friendName} Style`,
-          shirtColor: state.savedFriends.length % 2 === 0 ? '#60a5fa' : '#f472b6',
-          accentColor: state.savedFriends.length % 3 === 0 ? '#22c55e' : state.avatar.accentColor,
+          shirtColor:
+            state.savedFriends.length % 2 === 0 ? '#60a5fa' : '#f472b6',
+          accentColor:
+            state.savedFriends.length % 3 === 0
+              ? '#22c55e'
+              : state.avatar.accentColor,
         },
         inWorld: true,
         route: friendRoutes[state.savedFriends.length % friendRoutes.length],
@@ -1277,7 +1349,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return {
         savedFriends: [friend, ...state.savedFriends].slice(0, 12),
-        messageThreads: ensureMessageThread(state.messageThreads, friend.id, friend.name),
+        messageThreads: ensureMessageThread(
+          state.messageThreads,
+          friend.id,
+          friend.name,
+        ),
         chat: [
           ...state.chat.slice(-60),
           systemMessage(`${friend.name} was added as a game friend`),
@@ -1293,7 +1369,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   deleteSavedFriend: (id) =>
     set((state) => ({
       savedFriends: state.savedFriends.filter((friend) => friend.id !== id),
-      messageThreads: state.messageThreads.filter((thread) => thread.botId !== id),
+      messageThreads: state.messageThreads.filter(
+        (thread) => thread.botId !== id,
+      ),
     })),
   selectCustomizationItem: (item) => {
     set((state) => {
@@ -1400,7 +1478,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       const teleportSequence = state.teleportSequence + 1
       const eventSequence = state.miniGame.eventSequence + 1
       return {
-        miniGame: startMiniGameSession(id, now, state.miniGame.records, eventSequence),
+        miniGame: startMiniGameSession(
+          id,
+          now,
+          state.miniGame.records,
+          eventSequence,
+        ),
         playerPosition: definition.startPosition,
         teleportSequence,
         teleportTarget: {
@@ -1417,7 +1500,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         openPanel: undefined,
         chat: [
           ...state.chat.slice(-60),
-          systemMessage(`Mini game started for all players: ${definition.title}`),
+          systemMessage(
+            `Mini game started for all players: ${definition.title}`,
+          ),
           systemMessage(`${definition.title}: ${definition.objective}`),
         ],
       }
@@ -1562,6 +1647,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       placedBlocks: [],
       settings: defaultSettings,
       buildMode: false,
+      selectedBuildBlockId: undefined,
       playerEmote: 'none',
       sleeping: false,
       seatedSeatId: undefined,
@@ -1612,7 +1698,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         coins: save.coins ?? state.coins,
         avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
         savedAvatars: save.savedAvatars ?? state.savedAvatars,
-        savedFriends: sanitizeSavedFriends(save.savedFriends ?? state.savedFriends),
+        savedFriends: sanitizeSavedFriends(
+          save.savedFriends ?? state.savedFriends,
+        ),
         unlockedItems: save.unlockedItems ?? state.unlockedItems,
         earnedBadges: save.earnedBadges ?? state.earnedBadges,
         placedBlocks: save.placedBlocks ?? state.placedBlocks,

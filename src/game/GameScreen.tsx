@@ -15,6 +15,7 @@ import { FriendshipPanel } from '../ui/FriendshipPanel'
 import { LeaderboardPanel } from '../ui/LeaderboardPanel'
 import { BadgesPanel } from '../ui/BadgesPanel'
 import { BuildPanel } from '../ui/BuildPanel'
+import { BuildHudPalette } from '../ui/BuildHudPalette'
 import { ServerPanel } from '../ui/ServerPanel'
 import { EmotePanel } from '../ui/EmotePanel'
 import { MiniGamesPanel } from '../ui/MiniGamesPanel'
@@ -45,7 +46,8 @@ export function GameScreen() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpenPanel(openPanel ? undefined : 'settings')
+      if (event.key === 'Escape')
+        setOpenPanel(openPanel ? undefined : 'settings')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -65,11 +67,24 @@ export function GameScreen() {
           data-testid="game-canvas"
         >
           <Suspense fallback={<CanvasLoading />}>
-            <color attach="background" args={[settings.nightMode ? '#101827' : '#bae6fd']} />
+            <color
+              attach="background"
+              args={[settings.nightMode ? '#101827' : '#bae6fd']}
+            />
             {settings.nightMode ? null : <Sky sunPosition={[100, 25, 100]} />}
             <ambientLight intensity={settings.nightMode ? 0.42 : 0.72} />
-            <directionalLight position={[8, 14, 10]} intensity={settings.nightMode ? 0.68 : 1.4} castShadow />
-            {settings.nightMode ? <pointLight position={[0, 7, -8]} intensity={1.25} color="#93c5fd" /> : null}
+            <directionalLight
+              position={[8, 14, 10]}
+              intensity={settings.nightMode ? 0.68 : 1.4}
+              castShadow
+            />
+            {settings.nightMode ? (
+              <pointLight
+                position={[0, 7, -8]}
+                intensity={1.25}
+                color="#93c5fd"
+              />
+            ) : null}
             <Physics gravity={[0, -18, 0]}>
               <GameScene />
             </Physics>
@@ -78,6 +93,7 @@ export function GameScreen() {
 
         <GameMenu />
         <HUD />
+        <BuildHudPalette />
         <MiniGameAnnouncement />
         <MiniMap />
         <ChatPanel />
@@ -105,10 +121,16 @@ export function GameScreen() {
 
 function LocalPartyRuntimeBridge() {
   const processedMessageIds = useRef(new Set<string>())
-  const incomingMessages = useLocalPartyStore((state) => state.incomingDirectMessages)
+  const incomingMessages = useLocalPartyStore(
+    (state) => state.incomingDirectMessages,
+  )
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
-  const receiveLocalPartyMessage = useGameStore((state) => state.receiveLocalPartyMessage)
-  const mergeSharedBuildBlocks = useGameStore((state) => state.mergeSharedBuildBlocks)
+  const receiveLocalPartyMessage = useGameStore(
+    (state) => state.receiveLocalPartyMessage,
+  )
+  const mergeSharedBuildBlocks = useGameStore(
+    (state) => state.mergeSharedBuildBlocks,
+  )
 
   useEffect(() => {
     incomingMessages.forEach((message) => {
@@ -119,7 +141,9 @@ function LocalPartyRuntimeBridge() {
   }, [incomingMessages, receiveLocalPartyMessage])
 
   useEffect(() => {
-    const blocks = Object.values(remotePlayers).flatMap((player) => player.placedBlocks ?? [])
+    const blocks = Object.values(remotePlayers).flatMap(
+      (player) => player.placedBlocks ?? [],
+    )
     if (blocks.length > 0) mergeSharedBuildBlocks(blocks)
   }, [mergeSharedBuildBlocks, remotePlayers])
 

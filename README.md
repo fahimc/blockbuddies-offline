@@ -137,7 +137,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
 - Build Mode shows a floor grid and green placement preview, with a drawer-style
-  catalog for tapping or dragging build pieces into the world.
+  catalog plus a compact left-side HUD list for selecting build pieces. Tapping
+  a placed item gives it a yellow outline so that exact item can be removed.
+- Solid build placement reserves avatar clearance, and collision recovery moves
+  players out of overlapping saved or synchronized builds instead of trapping
+  them inside a wall.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
   buildings, street props, phone boxes, landmarks, world seeds, view
   distance, and night mode settings.

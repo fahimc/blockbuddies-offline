@@ -6,7 +6,12 @@
   color: #0f172a;
   background: #e0f2fe;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -150,7 +155,11 @@ canvas {
   border: 0.12rem solid rgb(255 255 255 / 0.82);
   border-radius: 1rem;
   background:
-    radial-gradient(circle at 50% 50%, rgb(236 253 245 / 0.35), transparent 55%),
+    radial-gradient(
+      circle at 50% 50%,
+      rgb(236 253 245 / 0.35),
+      transparent 55%
+    ),
     linear-gradient(135deg, rgb(74 222 128 / 0.76), rgb(34 197 94 / 0.64));
   box-shadow:
     inset 0 0 0 0.08rem rgb(15 23 42 / 0.1),
@@ -256,7 +265,7 @@ canvas {
   height: 0.32rem;
   border-radius: 0.08rem;
   background: white;
-  content: "";
+  content: '';
 }
 
 @keyframes bb-objective-pulse {
@@ -290,7 +299,7 @@ canvas {
   border-right: 0.32rem solid transparent;
   border-bottom: 0.72rem solid #0f172a;
   border-left: 0.32rem solid transparent;
-  content: "";
+  content: '';
   filter: drop-shadow(0 0.05rem 0 rgb(255 255 255 / 0.72));
 }
 
@@ -301,8 +310,7 @@ canvas {
   display: grid;
   place-items: center;
   background: rgb(15 23 42 / 0.58);
-  padding:
-    max(0.65rem, env(safe-area-inset-top))
+  padding: max(0.65rem, env(safe-area-inset-top))
     max(0.65rem, env(safe-area-inset-right))
     max(0.65rem, env(safe-area-inset-bottom))
     max(0.65rem, env(safe-area-inset-left));
@@ -379,7 +387,11 @@ canvas {
   overflow: hidden;
   border-right: 0.12rem solid rgb(15 23 42 / 0.14);
   background:
-    linear-gradient(90deg, rgb(255 255 255 / 0.13) 0.08rem, transparent 0.08rem),
+    linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.13) 0.08rem,
+      transparent 0.08rem
+    ),
     linear-gradient(rgb(255 255 255 / 0.13) 0.08rem, transparent 0.08rem),
     #4fc76a;
   background-size: 2.4rem 2.4rem;
@@ -392,7 +404,7 @@ canvas {
   inset: 1rem;
   border: 0.1rem dashed rgb(15 23 42 / 0.18);
   border-radius: 0.5rem;
-  content: "";
+  content: '';
   pointer-events: none;
 }
 
@@ -422,8 +434,12 @@ canvas {
 
 .bb-town-map-road::after {
   position: absolute;
-  background: repeating-linear-gradient(0deg, #facc15 0 0.7rem, transparent 0.7rem 1.35rem);
-  content: "";
+  background: repeating-linear-gradient(
+    0deg,
+    #facc15 0 0.7rem,
+    transparent 0.7rem 1.35rem
+  );
+  content: '';
 }
 
 .bb-town-map-road.vertical::after {
@@ -438,7 +454,11 @@ canvas {
   right: 0;
   left: 0;
   height: 0.11rem;
-  background: repeating-linear-gradient(90deg, #facc15 0 0.7rem, transparent 0.7rem 1.35rem);
+  background: repeating-linear-gradient(
+    90deg,
+    #facc15 0 0.7rem,
+    transparent 0.7rem 1.35rem
+  );
 }
 
 .bb-town-map-plaza {
@@ -567,7 +587,7 @@ canvas {
   border-right: 0.32rem solid transparent;
   border-bottom: 0.72rem solid #111827;
   border-left: 0.32rem solid transparent;
-  content: "";
+  content: '';
 }
 
 .bb-town-map-friend {
@@ -778,10 +798,11 @@ canvas {
   font-weight: 900;
 }
 
-@media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
+@media (max-width: 700px),
+  (max-height: 600px) and (orientation: landscape),
+  (pointer: coarse) and (max-width: 950px) {
   .bb-map-overlay {
-    padding:
-      max(0.3rem, env(safe-area-inset-top))
+    padding: max(0.3rem, env(safe-area-inset-top))
       max(0.3rem, env(safe-area-inset-right))
       max(0.3rem, env(safe-area-inset-bottom))
       max(0.3rem, env(safe-area-inset-left));
@@ -946,7 +967,7 @@ canvas {
   height: 3.2rem;
   border-radius: 999px;
   background: rgb(255 255 255 / 0.12);
-  content: "";
+  content: '';
 }
 
 .joystick-thumb {
@@ -1168,7 +1189,9 @@ canvas {
   text-shadow: 0 0.08rem 0 #991b1b;
 }
 
-@media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
+@media (max-width: 700px),
+  (max-height: 600px) and (orientation: landscape),
+  (pointer: coarse) and (max-width: 950px) {
   .bb-world-action-button.vehicle-exit-world {
     display: none;
   }
@@ -1272,8 +1295,16 @@ canvas {
 
 .bb-splash {
   background:
-    radial-gradient(circle at 15% 18%, rgb(255 255 255 / 0.9) 0 4rem, transparent 4.1rem),
-    radial-gradient(circle at 72% 14%, rgb(255 255 255 / 0.72) 0 5.5rem, transparent 5.6rem),
+    radial-gradient(
+      circle at 15% 18%,
+      rgb(255 255 255 / 0.9) 0 4rem,
+      transparent 4.1rem
+    ),
+    radial-gradient(
+      circle at 72% 14%,
+      rgb(255 255 255 / 0.72) 0 5.5rem,
+      transparent 5.6rem
+    ),
     linear-gradient(#62c8ff 0%, #a9e4ff 45%, #7ee454 46%, #38b84e 100%);
 }
 
@@ -1288,8 +1319,7 @@ canvas {
   min-height: min(100svh, var(--app-height, 100dvh));
   max-height: var(--app-height, 100dvh);
   overflow: hidden;
-  padding:
-    max(0.75rem, env(safe-area-inset-top))
+  padding: max(0.75rem, env(safe-area-inset-top))
     max(0.9rem, env(safe-area-inset-right))
     max(clamp(2.2rem, 4.8svh, 3.8rem), env(safe-area-inset-bottom))
     max(0.9rem, env(safe-area-inset-left));
@@ -1313,15 +1343,26 @@ canvas {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgb(2 6 23 / 0.1) 0%, transparent 30%, transparent 54%, rgb(2 6 23 / 0.6) 100%),
-    radial-gradient(circle at 50% 4%, rgb(255 255 255 / 0.16), transparent 18rem);
+    linear-gradient(
+      180deg,
+      rgb(2 6 23 / 0.1) 0%,
+      transparent 30%,
+      transparent 54%,
+      rgb(2 6 23 / 0.6) 100%
+    ),
+    radial-gradient(
+      circle at 50% 4%,
+      rgb(255 255 255 / 0.16),
+      transparent 18rem
+    );
 }
 
 .bb-splash-brand {
   align-self: start;
   justify-self: center;
   margin-top: clamp(2.15rem, 5.5svh, 4.5rem);
-  filter: drop-shadow(0 0.55rem 0 rgb(2 6 23 / 0.9)) drop-shadow(0 1rem 1.1rem rgb(2 6 23 / 0.34));
+  filter: drop-shadow(0 0.55rem 0 rgb(2 6 23 / 0.9))
+    drop-shadow(0 1rem 1.1rem rgb(2 6 23 / 0.34));
 }
 
 .bb-splash-brand .bb-brand-mascot {
@@ -1340,7 +1381,8 @@ canvas {
 
 .bb-splash-brand .bb-offline-badge {
   min-width: clamp(8.2rem, 34vw, 14rem);
-  padding: clamp(0.32rem, 1.2vw, 0.55rem) clamp(1rem, 4vw, 2rem) clamp(0.42rem, 1.4vw, 0.65rem);
+  padding: clamp(0.32rem, 1.2vw, 0.55rem) clamp(1rem, 4vw, 2rem)
+    clamp(0.42rem, 1.4vw, 0.65rem);
   border-radius: clamp(0.55rem, 1.7vw, 0.95rem);
   font-size: clamp(1.25rem, 5.4vw, 2.55rem);
 }
@@ -1465,8 +1507,7 @@ canvas {
 @media (orientation: landscape) {
   .bb-splash-poster {
     grid-template-rows: auto 1fr auto;
-    padding:
-      max(0.45rem, env(safe-area-inset-top))
+    padding: max(0.45rem, env(safe-area-inset-top))
       max(0.65rem, env(safe-area-inset-right))
       max(0.45rem, env(safe-area-inset-bottom))
       max(0.65rem, env(safe-area-inset-left));
@@ -1478,8 +1519,19 @@ canvas {
 
   .bb-splash-vignette {
     background:
-      linear-gradient(90deg, rgb(2 6 23 / 0.58), transparent 34%, transparent 68%, rgb(2 6 23 / 0.42)),
-      linear-gradient(180deg, rgb(2 6 23 / 0.08), transparent 42%, rgb(2 6 23 / 0.58));
+      linear-gradient(
+        90deg,
+        rgb(2 6 23 / 0.58),
+        transparent 34%,
+        transparent 68%,
+        rgb(2 6 23 / 0.42)
+      ),
+      linear-gradient(
+        180deg,
+        rgb(2 6 23 / 0.08),
+        transparent 42%,
+        rgb(2 6 23 / 0.58)
+      );
   }
 
   .bb-splash-brand {
@@ -1656,7 +1708,10 @@ canvas {
   z-index: 70;
   display: grid;
   place-items: center;
-  padding: max(1rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+  padding: max(1rem, env(safe-area-inset-top))
+    max(0.9rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(0.9rem, env(safe-area-inset-left));
   background: rgb(15 23 42 / 0.38);
   backdrop-filter: blur(0.18rem);
 }
@@ -1739,17 +1794,23 @@ canvas {
   background: #0b74ff;
   color: white;
   font-weight: 1000;
-  box-shadow: inset 0 0.16rem 0 rgb(255 255 255 / 0.28), 0 0.25rem 0 #0754b9;
+  box-shadow:
+    inset 0 0.16rem 0 rgb(255 255 255 / 0.28),
+    0 0.25rem 0 #0754b9;
 }
 
 .bb-welcome-actions button:first-child {
   background: linear-gradient(#7cf45d, #16a34a);
-  box-shadow: inset 0 0.16rem 0 rgb(255 255 255 / 0.34), 0 0.25rem 0 #15803d;
+  box-shadow:
+    inset 0 0.16rem 0 rgb(255 255 255 / 0.34),
+    0 0.25rem 0 #15803d;
 }
 
 .bb-welcome-actions button:active {
   transform: translateY(0.14rem);
-  box-shadow: inset 0 0.16rem 0 rgb(255 255 255 / 0.26), 0 0.08rem 0 rgb(15 23 42 / 0.28);
+  box-shadow:
+    inset 0 0.16rem 0 rgb(255 255 255 / 0.26),
+    0 0.08rem 0 rgb(15 23 42 / 0.28);
 }
 
 .bb-name-card {
@@ -1773,7 +1834,11 @@ canvas {
   overflow: hidden;
   border-radius: 1.1rem;
   background:
-    radial-gradient(circle at 50% 80%, rgb(59 130 246 / 0.28) 0 5rem, transparent 5.2rem),
+    radial-gradient(
+      circle at 50% 80%,
+      rgb(59 130 246 / 0.28) 0 5rem,
+      transparent 5.2rem
+    ),
     linear-gradient(#bcecff, #e0f7ff 52%, #a7f3d0 53%, #5edb66);
 }
 
@@ -1989,7 +2054,9 @@ canvas {
   min-width: 8rem;
   border-radius: 0.55rem;
   background: linear-gradient(#60a5fa, #2563eb);
-  box-shadow: inset 0 0.18rem 0 rgb(255 255 255 / 0.35), 0 0.25rem 0 rgb(30 64 175 / 0.8);
+  box-shadow:
+    inset 0 0.18rem 0 rgb(255 255 255 / 0.35),
+    0 0.25rem 0 rgb(30 64 175 / 0.8);
   color: white;
   font-size: clamp(1.1rem, 2.1vw, 1.65rem);
   font-weight: 1000;
@@ -2014,7 +2081,9 @@ canvas {
   position: absolute;
   border-radius: 999px;
   background: rgb(255 255 255 / 0.82);
-  box-shadow: 1.2rem 0.25rem 0 rgb(255 255 255 / 0.82), 2.2rem 0 0 rgb(255 255 255 / 0.82);
+  box-shadow:
+    1.2rem 0.25rem 0 rgb(255 255 255 / 0.82),
+    2.2rem 0 0 rgb(255 255 255 / 0.82);
 }
 
 .bb-cloud.c1 {
@@ -2057,7 +2126,7 @@ canvas {
   height: 0.9rem;
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
   background: #dc2626;
-  content: "";
+  content: '';
 }
 
 .bb-building.tower {
@@ -2110,7 +2179,7 @@ canvas {
   height: 2.6rem;
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
   background: #15803d;
-  content: "";
+  content: '';
 }
 
 .bb-tree.t1 {
@@ -2150,7 +2219,9 @@ canvas {
   height: 35%;
   border-radius: 0.55rem;
   background: #f2ad72;
-  box-shadow: inset 0 0.65rem 0 var(--hair), 0 0.25rem 0 rgb(15 23 42 / 0.2);
+  box-shadow:
+    inset 0 0.65rem 0 var(--hair),
+    0 0.25rem 0 rgb(15 23 42 / 0.2);
 }
 
 .bb-menu-buddy-head::before,
@@ -2161,7 +2232,7 @@ canvas {
   height: 0.28rem;
   border-radius: 999px;
   background: #111827;
-  content: "";
+  content: '';
 }
 
 .bb-menu-buddy-head::before {
@@ -2196,7 +2267,9 @@ canvas {
 }
 
 .bb-menu-button {
-  transition: transform 140ms ease, filter 140ms ease;
+  transition:
+    transform 140ms ease,
+    filter 140ms ease;
 }
 
 .bb-menu-button:hover,
@@ -2269,7 +2342,7 @@ canvas {
   height: 0.55rem;
   border-radius: 999px;
   background: #22c55e;
-  content: "";
+  content: '';
 }
 
 .bb-panel {
@@ -2471,7 +2544,9 @@ canvas {
   color: white;
   font-size: 0.82rem;
   font-weight: 900;
-  box-shadow: inset 0 0.12rem 0 rgb(255 255 255 / 0.32), 0 0.2rem 0.65rem rgb(15 23 42 / 0.14);
+  box-shadow:
+    inset 0 0.12rem 0 rgb(255 255 255 / 0.32),
+    0 0.2rem 0.65rem rgb(15 23 42 / 0.14);
 }
 
 .bb-build-action.place {
@@ -2488,6 +2563,118 @@ canvas {
 
 .bb-build-action.undo {
   background: linear-gradient(#475569, #0f172a);
+}
+
+.bb-build-hud-palette {
+  position: absolute;
+  z-index: 22;
+  top: clamp(6.25rem, 13dvh, 8rem);
+  left: max(0.65rem, env(safe-area-inset-left));
+  display: grid;
+  width: clamp(4.65rem, 8.5vw, 5.5rem);
+  max-height: calc(100dvh - clamp(6.25rem, 13dvh, 8rem) - 1rem);
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.42rem;
+  border: 0.1rem solid rgb(255 255 255 / 0.78);
+  border-radius: 0.85rem;
+  background: rgb(15 23 42 / 0.92);
+  padding: 0.42rem;
+  color: white;
+  box-shadow: 0 0.7rem 1.8rem rgb(15 23 42 / 0.3);
+  backdrop-filter: blur(0.65rem);
+}
+
+.bb-build-hud-palette header {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.16rem;
+}
+
+.bb-build-hud-palette header strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 1000;
+  text-overflow: ellipsis;
+}
+
+.bb-build-hud-palette header button {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: rgb(255 255 255 / 0.12);
+}
+
+.bb-build-hud-palette nav {
+  display: grid;
+  min-height: 0;
+  align-content: start;
+  gap: 0.34rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.bb-build-hud-palette nav::-webkit-scrollbar {
+  width: 0;
+}
+
+.bb-build-hud-palette nav button,
+.bb-build-hud-remove {
+  display: grid;
+  min-width: 0;
+  min-height: 3.25rem;
+  grid-template-rows: 1.45rem auto;
+  place-items: center;
+  gap: 0.12rem;
+  border: 0.1rem solid rgb(255 255 255 / 0.18);
+  border-radius: 0.72rem;
+  background: rgb(255 255 255 / 0.09);
+  padding: 0.3rem 0.15rem;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.bb-build-hud-palette nav button.selected {
+  border-color: #fde047;
+  background: #facc15;
+  color: #172033;
+  box-shadow: 0 0 0 0.12rem rgb(255 255 255 / 0.86);
+}
+
+.bb-build-hud-remove {
+  width: 100%;
+  border-color: rgb(253 164 175 / 0.58);
+  background: #e11d48;
+}
+
+.bb-build-hud-remove:disabled {
+  border-color: rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.07);
+  color: #cbd5e1;
+  opacity: 0.72;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .bb-build-hud-palette {
+    width: clamp(4.3rem, 16vw, 5.1rem);
+    max-height: calc(
+      100dvh - clamp(6.25rem, 13dvh, 8rem) - clamp(10.5rem, 22dvh, 14.5rem)
+    );
+  }
+
+  .bb-build-hud-palette nav button,
+  .bb-build-hud-remove {
+    min-height: clamp(2.95rem, 6dvh, 3.35rem);
+  }
 }
 
 .bb-setting-row {
@@ -2547,7 +2734,9 @@ canvas {
   font-size: 0.78rem;
   font-weight: 900;
   color: white;
-  box-shadow: inset 0 0.12rem 0 rgb(255 255 255 / 0.32), 0 0.18rem 0.55rem rgb(15 23 42 / 0.12);
+  box-shadow:
+    inset 0 0.12rem 0 rgb(255 255 255 / 0.32),
+    0 0.18rem 0.55rem rgb(15 23 42 / 0.12);
 }
 
 .bb-party-action.host,
@@ -2790,7 +2979,9 @@ canvas {
   height: 3.7rem;
   flex: none;
   border-radius: 0.9rem;
-  box-shadow: inset 0 0.7rem 0 rgb(255 255 255 / 0.26), 0 0.25rem 0 rgb(15 23 42 / 0.15);
+  box-shadow:
+    inset 0 0.7rem 0 rgb(255 255 255 / 0.26),
+    0 0.25rem 0 rgb(15 23 42 / 0.15);
 }
 
 .bb-buddy-avatar::before,
@@ -2801,7 +2992,7 @@ canvas {
   height: 0.35rem;
   border-radius: 999px;
   background: #111827;
-  content: "";
+  content: '';
 }
 
 .bb-buddy-avatar::before {
@@ -2837,7 +3028,7 @@ canvas {
   position: absolute;
   border-radius: 999px;
   background: rgb(255 255 255 / 0.72);
-  content: "";
+  content: '';
 }
 
 .bb-customizer-bg::before {
@@ -2845,7 +3036,9 @@ canvas {
   top: 12%;
   width: 7rem;
   height: 1.5rem;
-  box-shadow: 21rem -1rem 0 0.1rem rgb(255 255 255 / 0.65), 32rem 5rem 0 -0.1rem rgb(255 255 255 / 0.62);
+  box-shadow:
+    21rem -1rem 0 0.1rem rgb(255 255 255 / 0.65),
+    32rem 5rem 0 -0.1rem rgb(255 255 255 / 0.62);
 }
 
 .bb-customizer-bg::after {
@@ -2863,18 +3056,33 @@ canvas {
   filter: blur(2.2px) saturate(1.1);
   background:
     linear-gradient(#2563eb, #1d4ed8) 8% 18% / 5rem 9rem no-repeat,
-    linear-gradient(135deg, transparent 50%, #ef4444 51%) 8% 10% / 5rem 2.2rem no-repeat,
+    linear-gradient(135deg, transparent 50%, #ef4444 51%) 8% 10% / 5rem 2.2rem
+      no-repeat,
     linear-gradient(#d97706, #b45309) 21% 23% / 7rem 8rem no-repeat,
     linear-gradient(#2563eb, #1e40af) 21% 9% / 5rem 4rem no-repeat,
-    radial-gradient(circle, #f8fafc 0 34%, transparent 35%) 21% 20% / 2.8rem 2.8rem no-repeat,
+    radial-gradient(circle, #f8fafc 0 34%, transparent 35%) 21% 20% / 2.8rem
+      2.8rem no-repeat,
     linear-gradient(#eab308, #ca8a04) 88% 24% / 5.8rem 9rem no-repeat,
     linear-gradient(#16a34a, #15803d) 72% 18% / 7rem 7rem no-repeat,
     linear-gradient(#f97316, #ea580c) 78% 33% / 7rem 5rem no-repeat,
     linear-gradient(#dc2626, #b91c1c) 77% 28% / 7.2rem 1rem no-repeat,
     linear-gradient(#8b5cf6, #6d28d9) 58% 28% / 4.5rem 8rem no-repeat,
-    radial-gradient(circle at 50% 35%, #dbeafe 0 8%, transparent 9% 100%) 50% 42% / 14rem 13rem no-repeat,
+    radial-gradient(circle at 50% 35%, #dbeafe 0 8%, transparent 9% 100%) 50%
+      42% / 14rem 13rem no-repeat,
     linear-gradient(#bfe7ff, #82cfff) 50% 52% / 1.4rem 12rem no-repeat,
-    linear-gradient(90deg, #d6a06a 0 18%, #d97706 18% 20%, #e7b06e 20% 38%, #d97706 38% 40%, #e7b06e 40% 58%, #d97706 58% 60%, #e7b06e 60% 78%, #d97706 78% 80%, #e7b06e 80%) 0 75% / 100% 25% no-repeat;
+    linear-gradient(
+        90deg,
+        #d6a06a 0 18%,
+        #d97706 18% 20%,
+        #e7b06e 20% 38%,
+        #d97706 38% 40%,
+        #e7b06e 40% 58%,
+        #d97706 58% 60%,
+        #e7b06e 60% 78%,
+        #d97706 78% 80%,
+        #e7b06e 80%
+      )
+      0 75% / 100% 25% no-repeat;
 }
 
 .bb-customizer-topbar {
@@ -2884,8 +3092,12 @@ canvas {
   align-items: center;
   gap: 0.75rem;
   min-height: 6.1rem;
-  padding: max(0.85rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) 0.8rem max(0.9rem, env(safe-area-inset-left));
-  text-shadow: 0 0.18rem 0 #06235d, 0 0.32rem 0.6rem rgb(0 0 0 / 0.28);
+  padding: max(0.85rem, env(safe-area-inset-top))
+    max(0.9rem, env(safe-area-inset-right)) 0.8rem
+    max(0.9rem, env(safe-area-inset-left));
+  text-shadow:
+    0 0.18rem 0 #06235d,
+    0 0.32rem 0.6rem rgb(0 0 0 / 0.28);
 }
 
 .bb-customizer-topbar h2 {
@@ -2906,7 +3118,10 @@ canvas {
   border: 0.16rem solid rgb(255 255 255 / 0.28);
   border-radius: 1.15rem;
   background: linear-gradient(#3aa1ff, #125ed6);
-  box-shadow: inset 0 0.24rem 0 rgb(255 255 255 / 0.25), 0 0.35rem 0 #06327e, 0 0.7rem 1rem rgb(0 0 0 / 0.2);
+  box-shadow:
+    inset 0 0.24rem 0 rgb(255 255 255 / 0.25),
+    0 0.35rem 0 #06327e,
+    0 0.7rem 1rem rgb(0 0 0 / 0.2);
 }
 
 .bb-customizer-wallet {
@@ -2968,7 +3183,9 @@ canvas {
   padding: 0.45rem 1.35rem;
   font-size: 1rem;
   font-weight: 1000;
-  box-shadow: 0 0.2rem 0.55rem rgb(0 0 0 / 0.22), inset 0 0.14rem 0 rgb(255 255 255 / 0.22);
+  box-shadow:
+    0 0.2rem 0.55rem rgb(0 0 0 / 0.22),
+    inset 0 0.14rem 0 rgb(255 255 255 / 0.22);
 }
 
 .bb-step-dots {
@@ -2995,7 +3212,8 @@ canvas {
   inset: 8.8rem 0 11.2rem;
   display: grid;
   overflow: hidden;
-  padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+  padding: 0 max(1rem, env(safe-area-inset-right)) 0
+    max(1rem, env(safe-area-inset-left));
 }
 
 .bb-customizer-footer {
@@ -3041,8 +3259,13 @@ canvas {
   color: white;
   font-size: clamp(2rem, 7.5vw, 3rem);
   font-weight: 1000;
-  text-shadow: 0 0.18rem 0 #0b5b13, 0 0.28rem 0.45rem rgb(0 0 0 / 0.22);
-  box-shadow: inset 0 0.22rem 0 rgb(255 255 255 / 0.4), 0 0.35rem 0 #07540d, 0 0.9rem 1.2rem rgb(0 0 0 / 0.2);
+  text-shadow:
+    0 0.18rem 0 #0b5b13,
+    0 0.28rem 0.45rem rgb(0 0 0 / 0.22);
+  box-shadow:
+    inset 0 0.22rem 0 rgb(255 255 255 / 0.4),
+    0 0.35rem 0 #07540d,
+    0 0.9rem 1.2rem rgb(0 0 0 / 0.2);
 }
 
 .bb-customizer-note {
@@ -3085,7 +3308,9 @@ canvas {
   color: #174174;
   font-size: clamp(0.78rem, 2.8vw, 1.05rem);
   font-weight: 1000;
-  box-shadow: 0 0.28rem 0 #aeb8ca, 0 0.65rem 1rem rgb(0 0 0 / 0.16);
+  box-shadow:
+    0 0.28rem 0 #aeb8ca,
+    0 0.65rem 1rem rgb(0 0 0 / 0.16);
 }
 
 .bb-hub-button svg {
@@ -3232,7 +3457,12 @@ canvas {
   width: 82%;
   height: 17%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgb(56 189 248 / 0.95), rgb(30 64 175 / 0.95) 42%, rgb(15 23 42 / 0.75) 43% 100%);
+  background: radial-gradient(
+    circle,
+    rgb(56 189 248 / 0.95),
+    rgb(30 64 175 / 0.95) 42%,
+    rgb(15 23 42 / 0.75) 43% 100%
+  );
   box-shadow: 0 0 1.1rem #38bdf8;
 }
 
@@ -3308,7 +3538,9 @@ canvas {
   height: 22%;
   border-radius: 0.45rem;
   background: var(--skin);
-  box-shadow: inset 0 0.18rem 0 rgb(255 255 255 / 0.22), 0 0.18rem 0 rgb(0 0 0 / 0.16);
+  box-shadow:
+    inset 0 0.18rem 0 rgb(255 255 255 / 0.22),
+    0 0.18rem 0 rgb(0 0 0 / 0.16);
 }
 
 .bb-mini-avatar .hair {
@@ -3318,8 +3550,18 @@ canvas {
   height: 15%;
   border-radius: 55% 55% 28% 28%;
   background:
-    linear-gradient(135deg, transparent 0 22%, var(--hair) 23% 45%, transparent 46% 100%),
-    linear-gradient(45deg, transparent 0 20%, var(--hair) 21% 42%, transparent 43% 100%),
+    linear-gradient(
+      135deg,
+      transparent 0 22%,
+      var(--hair) 23% 45%,
+      transparent 46% 100%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 0 20%,
+      var(--hair) 21% 42%,
+      transparent 43% 100%
+    ),
     var(--hair);
   transform: rotate(-6deg);
   z-index: 2;
@@ -3364,7 +3606,12 @@ canvas {
   height: 22%;
   border-radius: 55% 55% 18% 18%;
   background:
-    linear-gradient(90deg, var(--hair) 0 14%, transparent 15% 85%, var(--hair) 86% 100%),
+    linear-gradient(
+      90deg,
+      var(--hair) 0 14%,
+      transparent 15% 85%,
+      var(--hair) 86% 100%
+    ),
     var(--hair);
   transform: rotate(0);
 }
@@ -3478,7 +3725,14 @@ canvas {
   height: 34%;
   border-radius: 0.28rem;
   background:
-    linear-gradient(90deg, transparent 0 42%, rgb(255 255 255 / 0.75) 43% 46%, transparent 47% 53%, rgb(255 255 255 / 0.75) 54% 57%, transparent 58% 100%),
+    linear-gradient(
+      90deg,
+      transparent 0 42%,
+      rgb(255 255 255 / 0.75) 43% 46%,
+      transparent 47% 53%,
+      rgb(255 255 255 / 0.75) 54% 57%,
+      transparent 58% 100%
+    ),
     linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent 32%),
     var(--shirt);
   box-shadow: inset 0 -1.2rem 0 rgb(0 0 0 / 0.08);
@@ -3491,8 +3745,12 @@ canvas {
 }
 
 .bb-mini-avatar.outfit-jacket .body {
-  background:
-    linear-gradient(90deg, var(--accent) 0 28%, var(--shirt) 29% 71%, var(--accent) 72% 100%);
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0 28%,
+    var(--shirt) 29% 71%,
+    var(--accent) 72% 100%
+  );
 }
 
 .bb-mini-avatar.outfit-suit .body {
@@ -3517,14 +3775,26 @@ canvas {
 .bb-mini-avatar.outfit-hero-cape .body {
   background:
     radial-gradient(circle at 50% 43%, var(--accent) 0 11%, transparent 12%),
-    linear-gradient(180deg, var(--secondary) 0 18%, transparent 19% 76%, var(--accent) 77% 100%),
+    linear-gradient(
+      180deg,
+      var(--secondary) 0 18%,
+      transparent 19% 76%,
+      var(--accent) 77% 100%
+    ),
     var(--shirt);
 }
 
 .bb-mini-avatar.outfit-hero-armour .body {
   background:
     radial-gradient(circle at 50% 43%, var(--secondary) 0 10%, transparent 11%),
-    linear-gradient(90deg, transparent 0 15%, var(--accent) 16% 29%, transparent 30% 70%, var(--accent) 71% 84%, transparent 85%),
+    linear-gradient(
+      90deg,
+      transparent 0 15%,
+      var(--accent) 16% 29%,
+      transparent 30% 70%,
+      var(--accent) 71% 84%,
+      transparent 85%
+    ),
     linear-gradient(180deg, rgb(255 255 255 / 0.24), transparent 32%),
     var(--shirt);
 }
@@ -3623,7 +3893,7 @@ canvas {
   height: 20%;
   border-radius: 0.18rem;
   background: var(--pants);
-  content: "";
+  content: '';
 }
 
 .bb-mini-avatar .leg.left {
@@ -3648,7 +3918,7 @@ canvas {
   height: 22%;
   border-radius: 0.18rem;
   background: var(--shoe);
-  content: "";
+  content: '';
 }
 
 .bb-mini-avatar.shoes-boots .leg::after,
@@ -3686,7 +3956,11 @@ canvas {
   width: 84%;
   height: 48%;
   border-radius: 0.28rem 0.28rem 0.45rem 0.45rem;
-  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #111827));
+  background: linear-gradient(
+    180deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 70%, #111827)
+  );
   transform: skewX(-4deg);
   z-index: 0;
 }
@@ -3701,7 +3975,10 @@ canvas {
 }
 
 .bb-customizer-body {
-  grid-template-columns: minmax(5rem, 7rem) minmax(12rem, 1fr) minmax(17rem, 31rem);
+  grid-template-columns: minmax(5rem, 7rem) minmax(12rem, 1fr) minmax(
+      17rem,
+      31rem
+    );
   align-items: center;
   gap: 1rem;
 }
@@ -3723,7 +4000,9 @@ canvas {
   color: #143869;
   font-size: 0.78rem;
   font-weight: 1000;
-  box-shadow: 0 0.22rem 0 #aab6ca, 0 0.5rem 0.8rem rgb(0 0 0 / 0.14);
+  box-shadow:
+    0 0.22rem 0 #aab6ca,
+    0 0.5rem 0.8rem rgb(0 0 0 / 0.14);
 }
 
 .bb-custom-side-rail .active {
@@ -3754,7 +4033,9 @@ canvas {
   background: rgb(248 250 252 / 0.94);
   color: #153866;
   padding: 0.72rem;
-  box-shadow: 0 0.22rem 0 #aab6ca, 0 0.65rem 1rem rgb(0 0 0 / 0.14);
+  box-shadow:
+    0 0.22rem 0 #aab6ca,
+    0 0.65rem 1rem rgb(0 0 0 / 0.14);
 }
 
 .bb-palette-panel h3,
@@ -4005,7 +4286,9 @@ canvas {
   color: #153866;
   font-size: 0.72rem;
   font-weight: 1000;
-  box-shadow: 0 0.24rem 0 #aeb8ca, 0 0.45rem 0.75rem rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 0.24rem 0 #aeb8ca,
+    0 0.45rem 0.75rem rgb(0 0 0 / 0.1);
   overflow: hidden;
 }
 
@@ -4094,7 +4377,7 @@ canvas {
   margin-right: 0.25rem;
   border-radius: 999px;
   background: #facc15;
-  content: "";
+  content: '';
 }
 
 .bb-custom-item .price.owned {
@@ -4124,7 +4407,7 @@ canvas {
   border-radius: 0.35rem;
   background: var(--item-color);
   box-shadow: inset 0 -0.8rem 0 rgb(0 0 0 / 0.1);
-  content: "";
+  content: '';
 }
 
 .bb-item-top::after {
@@ -4135,7 +4418,7 @@ canvas {
   height: 0.85rem;
   border-radius: 0.15rem;
   background: var(--item-accent);
-  content: "";
+  content: '';
 }
 
 .bb-item-pants::before,
@@ -4146,7 +4429,7 @@ canvas {
   height: 3rem;
   border-radius: 0.22rem;
   background: var(--item-color);
-  content: "";
+  content: '';
 }
 
 .bb-item-pants::before {
@@ -4159,7 +4442,12 @@ canvas {
 
 .bb-item-trail {
   border-radius: 999px;
-  background: conic-gradient(var(--item-color), var(--item-accent), #38bdf8, var(--item-color));
+  background: conic-gradient(
+    var(--item-color),
+    var(--item-accent),
+    #38bdf8,
+    var(--item-color)
+  );
   filter: drop-shadow(0 0.2rem 0.35rem rgb(0 0 0 / 0.18));
 }
 
@@ -4173,7 +4461,7 @@ canvas {
   border-radius: inherit;
   background: var(--item-color);
   box-shadow: inset 0 0.45rem 0 rgb(255 255 255 / 0.26);
-  content: "";
+  content: '';
 }
 
 .bb-item-accessory.hat::before {
@@ -4189,7 +4477,7 @@ canvas {
   height: 0.5rem;
   border-radius: 999px;
   background: var(--item-accent);
-  content: "";
+  content: '';
 }
 
 .bb-style-card {
@@ -4334,7 +4622,8 @@ canvas {
 
   .bb-customizer-main.bb-customizer-body {
     inset: 8.35rem 0 10.95rem;
-    padding-inline: max(0.35rem, env(safe-area-inset-left)) max(0.35rem, env(safe-area-inset-right));
+    padding-inline: max(0.35rem, env(safe-area-inset-left))
+      max(0.35rem, env(safe-area-inset-right));
   }
 
   .bb-customizer-hub {
@@ -4475,7 +4764,8 @@ canvas {
 
   .bb-customizer-main.bb-customizer-emotes {
     inset: 8.35rem 0 10.95rem;
-    padding-inline: max(0.45rem, env(safe-area-inset-left)) max(0.45rem, env(safe-area-inset-right));
+    padding-inline: max(0.45rem, env(safe-area-inset-left))
+      max(0.45rem, env(safe-area-inset-right));
   }
 
   .bb-customizer-emotes {
@@ -4604,7 +4894,8 @@ canvas {
   .bb-customizer-topbar {
     grid-template-columns: clamp(3.1rem, 12vw, 3.75rem) minmax(0, 1fr) auto;
     min-height: clamp(4.85rem, 12dvh, 5.75rem);
-    padding: max(0.55rem, env(safe-area-inset-top)) max(0.55rem, env(safe-area-inset-right)) 0.5rem
+    padding: max(0.55rem, env(safe-area-inset-top))
+      max(0.55rem, env(safe-area-inset-right)) 0.5rem
       max(0.55rem, env(safe-area-inset-left));
   }
 
@@ -4669,7 +4960,8 @@ canvas {
 
   .bb-customizer-main {
     inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(7.45rem, 17dvh, 8.35rem);
-    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+    padding-inline: max(0.55rem, env(safe-area-inset-left))
+      max(0.55rem, env(safe-area-inset-right));
   }
 
   .bb-customizer-footer {
@@ -4747,7 +5039,8 @@ canvas {
 
   .bb-customizer-main.bb-customizer-body {
     inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(8.7rem, 18dvh, 9rem);
-    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+    padding-inline: max(0.55rem, env(safe-area-inset-left))
+      max(0.55rem, env(safe-area-inset-right));
   }
 
   .bb-customizer-body {
@@ -4812,7 +5105,11 @@ canvas {
     max-height: 100%;
     border: 0.14rem solid rgb(255 255 255 / 0.55);
     border-radius: 1.1rem;
-    background: linear-gradient(180deg, rgb(27 111 226 / 0.92), rgb(10 77 190 / 0.92));
+    background: linear-gradient(
+      180deg,
+      rgb(27 111 226 / 0.92),
+      rgb(10 77 190 / 0.92)
+    );
     overflow-y: auto;
     padding: clamp(0.42rem, 1.5dvh, 0.58rem);
     scrollbar-width: none;
@@ -4906,7 +5203,8 @@ canvas {
 
   .bb-customizer-main.bb-customizer-emotes {
     inset: clamp(7.45rem, 17dvh, 8.25rem) 0 clamp(7.45rem, 17dvh, 8.35rem);
-    padding-inline: max(0.55rem, env(safe-area-inset-left)) max(0.55rem, env(safe-area-inset-right));
+    padding-inline: max(0.55rem, env(safe-area-inset-left))
+      max(0.55rem, env(safe-area-inset-right));
   }
 
   .bb-customizer-emotes {
@@ -5204,8 +5502,10 @@ canvas {
 @media (max-height: 620px) and (orientation: landscape) {
   .bb-splash:not(.bb-splash-poster) {
     overflow-y: auto;
-    padding: max(0.45rem, env(safe-area-inset-top)) max(0.55rem, env(safe-area-inset-right))
-      max(0.45rem, env(safe-area-inset-bottom)) max(0.55rem, env(safe-area-inset-left));
+    padding: max(0.45rem, env(safe-area-inset-top))
+      max(0.55rem, env(safe-area-inset-right))
+      max(0.45rem, env(safe-area-inset-bottom))
+      max(0.55rem, env(safe-area-inset-left));
   }
 
   .bb-top-banner {
@@ -5354,7 +5654,9 @@ canvas {
   }
 }
 
-@media (max-width: 700px), (max-height: 600px) and (orientation: landscape), (pointer: coarse) and (max-width: 950px) {
+@media (max-width: 700px),
+  (max-height: 600px) and (orientation: landscape),
+  (pointer: coarse) and (max-width: 950px) {
   .bb-panel {
     top: 3.6rem;
     right: 0.75rem;

@@ -4,11 +4,47 @@
 
 ### Added
 
+- Added a compact left-side Build Mode catalog with every placeable item available directly from the game HUD.
+- Added tap selection for player-built items, a clear yellow world outline, and exact selected-item removal.
+- Added deterministic unit and Playwright regression coverage for builder clearance, build selection, removal, and mobile HUD fit.
+
 ### Changed
+
+- Build Mode now returns to the world after choosing a piece so mobile players can place it immediately.
+- The mobile Remove control now removes the selected item instead of the most recently placed item.
 
 ### Fixed
 
+- Fixed houses and other solid builds spawning around the player and trapping the avatar inside their collision bounds.
+- Fixed saved or synchronized solid builds leaving an embedded avatar unable to move by resolving overlap to the nearest clear edge.
+- Fixed the full-screen camera drag layer intercepting taps on built items while Build Mode is active.
+
 ### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.45-build-mode-selection] - 2026-07-17
+
+### Added
+
+- Added a compact left-side Build Mode catalog with every placeable item available directly from the game HUD.
+- Added tap selection for player-built items, a clear yellow world outline, and exact selected-item removal.
+- Added deterministic unit and Playwright regression coverage for builder clearance, build selection, removal, and mobile HUD fit.
+
+### Changed
+
+- Build Mode now returns to the world after choosing a piece so mobile players can place it immediately.
+- The mobile Remove control now removes the selected item instead of the most recently placed item.
+
+### Fixed
+
+- Fixed houses and other solid builds spawning around the player and trapping the avatar inside their collision bounds.
+- Fixed saved or synchronized solid builds leaving an embedded avatar unable to move by resolving overlap to the nearest clear edge.
+- Fixed the full-screen camera drag layer intercepting taps on built items while Build Mode is active.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
 ## [v1.5.44-mobile-customizer-collision] - 2026-07-17
 

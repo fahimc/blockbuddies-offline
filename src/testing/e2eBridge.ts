@@ -1,8 +1,18 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
-import type { BuildBlock, MessageThread, MiniGameId, MiniGameRuntime, Vec3 } from '../game/types'
+import type {
+  BuildBlock,
+  MessageThread,
+  MiniGameId,
+  MiniGameRuntime,
+  Vec3,
+} from '../game/types'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
-import { createParkedVehicles, drivableVehicleCollisionBoxes, safeVehicleExitPosition } from '../game/vehicles'
+import {
+  createParkedVehicles,
+  drivableVehicleCollisionBoxes,
+  safeVehicleExitPosition,
+} from '../game/vehicles'
 import { useGameStore, type InteractionPrompt } from '../state/gameStore'
 import {
   makePartySnapshot,
@@ -22,8 +32,14 @@ export type MiniGameE2ESnapshot = {
 export type BlockBuddiesE2EBridge = {
   collectNextMiniGameTarget: () => MiniGameE2ESnapshot
   completeMiniGameRoute: () => MiniGameE2ESnapshot
-  broadcastLocalPartySnapshot: (position?: Vec3, placedBlocks?: BuildBlock[]) => LocalPartyE2ESnapshot
-  openLocalPartyMessageThread: (playerId: string, playerName: string) => GameplayE2ESnapshot
+  broadcastLocalPartySnapshot: (
+    position?: Vec3,
+    placedBlocks?: BuildBlock[],
+  ) => LocalPartyE2ESnapshot
+  openLocalPartyMessageThread: (
+    playerId: string,
+    playerName: string,
+  ) => GameplayE2ESnapshot
   sendSelectedPredefinedMessage: (presetId: string) => GameplayE2ESnapshot
   getLocalPartySnapshot: () => LocalPartyE2ESnapshot
   getGameplaySnapshot: () => GameplayE2ESnapshot
@@ -32,9 +48,18 @@ export type BlockBuddiesE2EBridge = {
   prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
   prepareParkingInteraction: () => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
+  prepareBuildModeInteraction: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
-  setDriveInput: (throttle: number, steer?: number, brake?: boolean) => GameplayE2ESnapshot
-  setMovementInput: (forward: number, strafe?: number, lookX?: number) => GameplayE2ESnapshot
+  setDriveInput: (
+    throttle: number,
+    steer?: number,
+    brake?: boolean,
+  ) => GameplayE2ESnapshot
+  setMovementInput: (
+    forward: number,
+    strafe?: number,
+    lookX?: number,
+  ) => GameplayE2ESnapshot
 }
 
 export type GameplayE2ESnapshot = {
@@ -47,6 +72,8 @@ export type GameplayE2ESnapshot = {
   teleportSequence: number
   interiorKind?: string
   buildMode: boolean
+  selectedBuildPiece: string
+  selectedBuildBlockId?: string
   obbyActive: boolean
   miniGameStatus: string
   playerEmote: string
@@ -90,10 +117,49 @@ export function installE2EBridge() {
     prepareClassroomSeatInteraction,
     prepareParkingInteraction,
     prepareMovementInteraction,
+    prepareBuildModeInteraction,
     startObbyGame,
     setDriveInput,
     setMovementInput,
   }
+}
+
+function prepareBuildModeInteraction() {
+  const game = useGameStore.getState()
+  const teleportSequence = game.teleportSequence + 1
+  const playerPosition: Vec3 = [34, 0, 34]
+  const placedBlocks: BuildBlock[] = [
+    {
+      id: 'e2e-build-house',
+      kind: 'house',
+      position: [34, 0.02, 40],
+      color: '#60a5fa',
+      rotation: 0,
+    },
+    {
+      id: 'e2e-build-tree',
+      kind: 'tree',
+      position: [40, 0.02, 38],
+      color: '#16a34a',
+      rotation: 0,
+    },
+  ]
+  useGameStore.setState({
+    activeInterior: undefined,
+    buildMode: true,
+    openPanel: undefined,
+    placedBlocks,
+    selectedBuildBlockId: undefined,
+    playerPosition,
+    playerYaw: 0,
+    teleportSequence,
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: playerPosition,
+      yaw: 0,
+    },
+  })
+  return getGameplaySnapshot()
 }
 
 function startObbyGame() {
@@ -103,7 +169,10 @@ function startObbyGame() {
 
 function prepareClassroomSeatInteraction() {
   const game = useGameStore.getState()
-  const seat = seatsForContext('school').find((target) => target.id.includes('back-centre')) ?? seatsForContext('school')[0]
+  const seat =
+    seatsForContext('school').find((target) =>
+      target.id.includes('back-centre'),
+    ) ?? seatsForContext('school')[0]
   game.enterInterior(
     {
       id: 'e2e-school',
@@ -116,7 +185,14 @@ function prepareClassroomSeatInteraction() {
     seat.yaw,
   )
   useGameStore.setState({
-    touch: { ...game.touch, x: 0, y: 0, jump: false, interact: false, run: false },
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
   })
   return getGameplaySnapshot()
 }
@@ -125,20 +201,34 @@ function prepareParkingInteraction() {
   const game = useGameStore.getState()
   const vehicles = createParkedVehicles()
   const vehicle = vehicles[0]
-  const arrival = safeVehicleExitPosition(vehicle, drivableVehicleCollisionBoxes(vehicles, vehicle.id))!
+  const arrival = safeVehicleExitPosition(
+    vehicle,
+    drivableVehicleCollisionBoxes(vehicles, vehicle.id),
+  )!
   const teleportSequence = game.teleportSequence + 1
   useGameStore.setState({
     activeInterior: undefined,
     playerPosition: arrival,
     playerYaw: vehicle.yaw,
     teleportSequence,
-    teleportTarget: { sequence: teleportSequence, position: arrival, yaw: vehicle.yaw },
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: arrival,
+      yaw: vehicle.yaw,
+    },
     sleeping: false,
     seatedSeatId: undefined,
     activeVehicleId: undefined,
     interactionPrompt: undefined,
     worldActionRequest: undefined,
-    touch: { ...game.touch, x: 0, y: 0, jump: false, interact: false, run: false },
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
   })
   return getGameplaySnapshot()
 }
@@ -166,7 +256,16 @@ function prepareMovementInteraction() {
     0,
   )
   useGameStore.setState({
-    touch: { ...game.touch, x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false },
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
   })
   return getGameplaySnapshot()
 }
@@ -207,6 +306,8 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     teleportSequence: game.teleportSequence,
     interiorKind: game.activeInterior?.kind,
     buildMode: game.buildMode,
+    selectedBuildPiece: game.selectedBuildPiece,
+    selectedBuildBlockId: game.selectedBuildBlockId,
     obbyActive: game.obby.active,
     miniGameStatus: game.miniGame.status,
     playerEmote: game.playerEmote,
@@ -270,7 +371,10 @@ function getSnapshot(): MiniGameE2ESnapshot {
   }
 }
 
-function broadcastLocalPartySnapshot(position?: Vec3, placedBlocks?: BuildBlock[]): LocalPartyE2ESnapshot {
+function broadcastLocalPartySnapshot(
+  position?: Vec3,
+  placedBlocks?: BuildBlock[],
+): LocalPartyE2ESnapshot {
   if (placedBlocks) useGameStore.setState({ placedBlocks })
   const game = useGameStore.getState()
   const party = useLocalPartyStore.getState()
@@ -289,14 +393,18 @@ function broadcastLocalPartySnapshot(position?: Vec3, placedBlocks?: BuildBlock[
   return getLocalPartySnapshot()
 }
 
-function openLocalPartyMessageThread(playerId: string, playerName: string): GameplayE2ESnapshot {
+function openLocalPartyMessageThread(
+  playerId: string,
+  playerName: string,
+): GameplayE2ESnapshot {
   useGameStore.getState().openMessageThread(playerId, playerName)
   return getGameplaySnapshot()
 }
 
 function sendSelectedPredefinedMessage(presetId: string): GameplayE2ESnapshot {
   const selectedThreadId = useGameStore.getState().selectedMessageThreadId
-  if (selectedThreadId) useGameStore.getState().sendPredefinedMessage(selectedThreadId, presetId)
+  if (selectedThreadId)
+    useGameStore.getState().sendPredefinedMessage(selectedThreadId, presetId)
   return getGameplaySnapshot()
 }
 

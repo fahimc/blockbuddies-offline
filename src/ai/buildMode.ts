@@ -1,5 +1,9 @@
 import { getBuildPiece } from '../data/buildPieces'
-import { proceduralBuildableParcelFor, proceduralTerrainAt } from '../data/proceduralTownPlan'
+import {
+  proceduralBuildableParcelFor,
+  proceduralTerrainAt,
+} from '../data/proceduralTownPlan'
+import { playerCollisionRadius } from '../game/collision'
 import { realScale } from '../game/scale'
 import { coreReservedFootprints, coreTerrainZones } from '../game/townPlacement'
 import type { BuildBlock, BuildPieceId, Vec3 } from '../game/types'
@@ -9,6 +13,7 @@ export const maxBuildPieces = 240
 const halfTurn = Math.PI * 2
 const quarterTurn = Math.PI / 2
 const mapTileSize = realScale.roadTile
+const buildPlayerPadding = 0.35
 
 type IdFactory = () => string
 
@@ -24,13 +29,7 @@ type BuildMapCell = {
   rotation?: number
 }
 
-const starterStreetMap = [
-  't.h.t',
-  'rrrrr',
-  'c...l',
-  'rrrrr',
-  's.b.h',
-] as const
+const starterStreetMap = ['t.h.t', 'rrrrr', 'c...l', 'rrrrr', 's.b.h'] as const
 
 const mapCells: Record<string, BuildMapCell> = {
   r: { kind: 'road', color: '#334155' },
@@ -55,11 +54,19 @@ export function rotateBuildYaw(yaw: number) {
   return normalizeBuildYaw((yaw + quarterTurn) % halfTurn)
 }
 
-export function nextBuildPosition(playerPosition: Vec3, yaw: number, pieceId: BuildPieceId = 'block'): Vec3 {
+export function nextBuildPosition(
+  playerPosition: Vec3,
+  yaw: number,
+  pieceId: BuildPieceId = 'block',
+): Vec3 {
   const piece = getBuildPiece(pieceId)
   const forwardX = Math.sin(yaw) * piece.placeDistance
   const forwardZ = Math.cos(yaw) * piece.placeDistance
-  return [snapBuildValue(playerPosition[0] + forwardX), piece.y, snapBuildValue(playerPosition[2] + forwardZ)]
+  return [
+    snapBuildValue(playerPosition[0] + forwardX),
+    piece.y,
+    snapBuildValue(playerPosition[2] + forwardZ),
+  ]
 }
 
 export function findBuildPlacementPosition({
@@ -101,7 +108,13 @@ export function findBuildPlacementPosition({
     const overlapIssue = canPlacePiece(blocks, candidate, pieceId)
       ? undefined
       : 'That build cell is already occupied'
-    const terrainIssue = overlapIssue ?? worldBuildPlacementIssue(candidate, pieceId, worldSeed)
+    const playerIssue =
+      overlapIssue ??
+      (buildPlacementClearsPlayer(candidate, playerPosition, pieceId)
+        ? undefined
+        : 'Move away from that build cell')
+    const terrainIssue =
+      playerIssue ?? worldBuildPlacementIssue(candidate, pieceId, worldSeed)
     firstIssue ??= terrainIssue
     if (!terrainIssue) return { position: candidate }
   }
@@ -109,11 +122,33 @@ export function findBuildPlacementPosition({
   return { issue: firstIssue ?? 'No clear build cell nearby' }
 }
 
+export function buildPlacementClearsPlayer(
+  position: Vec3,
+  playerPosition: Vec3,
+  pieceId: BuildPieceId,
+) {
+  if (pieceId === 'road') return true
+  const requiredDistance =
+    getBuildPiece(pieceId).footprint / 2 +
+    playerCollisionRadius +
+    buildPlayerPadding
+  return (
+    Math.hypot(
+      position[0] - playerPosition[0],
+      position[2] - playerPosition[2],
+    ) >= requiredDistance
+  )
+}
+
 export function buildCollisionRadius(block: Pick<BuildBlock, 'kind'>) {
   return getBuildPiece(block.kind ?? 'block').footprint / 2
 }
 
-export function canPlacePiece(blocks: BuildBlock[], position: Vec3, pieceId: BuildPieceId = 'block') {
+export function canPlacePiece(
+  blocks: BuildBlock[],
+  position: Vec3,
+  pieceId: BuildPieceId = 'block',
+) {
   const radius = getBuildPiece(pieceId).footprint / 2
   return !blocks.some((block) => {
     const dx = block.position[0] - position[0]
@@ -133,10 +168,20 @@ export function worldBuildPlacementIssue(
 ) {
   const definition = getBuildPiece(pieceId)
   const footprintSize: Vec3 = [definition.footprint, 1, definition.footprint]
-  const footprint = { id: `build-preview:${pieceId}`, center: position, size: footprintSize }
-  const insideCoreTown = Math.abs(position[0]) <= 27 && Math.abs(position[2]) <= 27
+  const footprint = {
+    id: `build-preview:${pieceId}`,
+    center: position,
+    size: footprintSize,
+  }
+  const insideCoreTown =
+    Math.abs(position[0]) <= 27 && Math.abs(position[2]) <= 27
 
-  if (insideCoreTown && coreReservedFootprints.some((reserved) => footprintsOverlap(footprint, reserved, 0.25))) {
+  if (
+    insideCoreTown &&
+    coreReservedFootprints.some((reserved) =>
+      footprintsOverlap(footprint, reserved, 0.25),
+    )
+  ) {
     return 'That cell is reserved for the town layout'
   }
 
@@ -181,7 +226,11 @@ export function createBuildPiece({
   }
 }
 
-export function createBuildMapStamp({ origin, yaw, idFactory = () => crypto.randomUUID() }: BuildMapStampOptions) {
+export function createBuildMapStamp({
+  origin,
+  yaw,
+  idFactory = () => crypto.randomUUID(),
+}: BuildMapStampOptions) {
   const rotation = normalizeBuildYaw(yaw)
   const centerRow = (starterStreetMap.length - 1) / 2
   const centerCol = (starterStreetMap[0].length - 1) / 2
@@ -223,8 +272,13 @@ export function mergeBuildPieces(
     if (existing.length + accepted.length >= limit) break
     if (
       isWorldPlacementAllowed(piece) &&
-      canPlacePiece([...existing, ...accepted], piece.position, piece.kind ?? 'block')
-    ) accepted.push(piece)
+      canPlacePiece(
+        [...existing, ...accepted],
+        piece.position,
+        piece.kind ?? 'block',
+      )
+    )
+      accepted.push(piece)
   }
   return accepted
 }
@@ -266,7 +320,8 @@ function footprintsOverlap(
   padding = 0,
 ) {
   return (
-    Math.abs(a.center[0] - b.center[0]) < (a.size[0] + b.size[0]) / 2 + padding &&
+    Math.abs(a.center[0] - b.center[0]) <
+      (a.size[0] + b.size[0]) / 2 + padding &&
     Math.abs(a.center[2] - b.center[2]) < (a.size[2] + b.size[2]) / 2 + padding
   )
 }

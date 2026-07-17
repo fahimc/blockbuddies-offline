@@ -7,6 +7,7 @@ import {
 } from '../ai/miniGames'
 import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
 import { getLocation } from '../data/world'
+import { buildPlacementClearsPlayer } from '../ai/buildMode'
 import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
 import {
   defaultAvatar,
@@ -56,8 +57,16 @@ describe('avatar customization selection', () => {
     ])
     expect(heroSkinItems.every((item) => item.kind === 'skin')).toBe(true)
     expect(heroSkinItems.every((item) => item.cost === 0)).toBe(true)
-    expect(heroSkinItems.every((item) => String(item.patch.outfitStyle).startsWith('hero-'))).toBe(true)
-    expect(heroSkinItems.every((item) => String(item.patch.accessory).startsWith('hero-cape-'))).toBe(true)
+    expect(
+      heroSkinItems.every((item) =>
+        String(item.patch.outfitStyle).startsWith('hero-'),
+      ),
+    ).toBe(true)
+    expect(
+      heroSkinItems.every((item) =>
+        String(item.patch.accessory).startsWith('hero-cape-'),
+      ),
+    ).toBe(true)
   })
 
   it('applies free superhero-style skins without spending coins', () => {
@@ -232,7 +241,11 @@ describe('saved game friends', () => {
 
     expect(friend.name).toBe('Builder Pal')
     expect(friend.inWorld).toBe(true)
-    expect(useGameStore.getState().messageThreads.some((thread) => thread.botId === friend.id)).toBe(true)
+    expect(
+      useGameStore
+        .getState()
+        .messageThreads.some((thread) => thread.botId === friend.id),
+    ).toBe(true)
 
     useGameStore.getState().toggleSavedFriendInWorld(friend.id)
 
@@ -245,16 +258,22 @@ describe('saved game friends', () => {
 describe('quest progression', () => {
   it('auto-starts quests when natural gameplay progress happens', () => {
     useGameStore.setState({
-      questProgress: useGameStore.getState().questProgress.map((quest) =>
-        quest.id === 'visit-park' ? { ...quest, started: false, completed: false, progress: 0 } : quest,
-      ),
+      questProgress: useGameStore
+        .getState()
+        .questProgress.map((quest) =>
+          quest.id === 'visit-park'
+            ? { ...quest, started: false, completed: false, progress: 0 }
+            : quest,
+        ),
       chat: [],
       coins: 0,
     })
 
     useGameStore.getState().advanceQuest('visit-park', 1)
 
-    const quest = useGameStore.getState().questProgress.find((entry) => entry.id === 'visit-park')
+    const quest = useGameStore
+      .getState()
+      .questProgress.find((entry) => entry.id === 'visit-park')
     expect(quest).toMatchObject({ started: true, completed: true, progress: 1 })
     expect(useGameStore.getState().coins).toBeGreaterThan(0)
   })
@@ -323,11 +342,9 @@ describe('direct message inbox', () => {
       'Hi!',
     ])
     expect(thread?.messages[1]?.read).toBe(false)
-    expect(useGameStore.getState().chat.map((message) => message.text)).toEqual([
-      'Want to play a mini game?',
-      'Hi!',
-      'Badge earned: Social Buddy',
-    ])
+    expect(useGameStore.getState().chat.map((message) => message.text)).toEqual(
+      ['Want to play a mini game?', 'Hi!', 'Badge earned: Social Buddy'],
+    )
     expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
   })
 
@@ -355,11 +372,12 @@ describe('direct message inbox', () => {
 
     const snapshot = makeSaveSnapshot(useGameStore.getState())
 
-    expect(snapshot.messageThreads?.find((thread) => thread.botId === 'max'))
-      .toMatchObject({
-        botName: 'MaxJumps',
-        messages: [{ text: 'Meet me at the obby.', read: false }],
-      })
+    expect(
+      snapshot.messageThreads?.find((thread) => thread.botId === 'max'),
+    ).toMatchObject({
+      botName: 'MaxJumps',
+      messages: [{ text: 'Meet me at the obby.', read: false }],
+    })
   })
 
   it('creates local party player inbox threads and sends predefined messages', () => {
@@ -406,13 +424,21 @@ describe('direct message inbox', () => {
     expect(thread?.messages).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ from: 'player', text: 'Hi!' }),
-        expect.objectContaining({ from: 'bot', text: 'Want to play a mini game?', read: false }),
+        expect.objectContaining({
+          from: 'bot',
+          text: 'Want to play a mini game?',
+          read: false,
+        }),
       ]),
     )
     expect(useGameStore.getState().openPanel).toBe('messages')
     expect(useGameStore.getState().selectedMessageThreadId).toBe('local-guest')
     expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
-    expect(sendDirectMessage).toHaveBeenCalledWith('local-guest', 'greeting-001', 'Hi!')
+    expect(sendDirectMessage).toHaveBeenCalledWith(
+      'local-guest',
+      'greeting-001',
+      'Hi!',
+    )
   })
 })
 
@@ -428,15 +454,57 @@ describe('local party shared build persistence', () => {
       placedBlocks: [],
       earnedBadges: [],
       chat: [],
-      settings: { ...useGameStore.getState().settings, worldSeed: 'LONDON-2026' },
+      settings: {
+        ...useGameStore.getState().settings,
+        worldSeed: 'LONDON-2026',
+      },
     })
 
     useGameStore.getState().placeBlock()
 
     const placed = useGameStore.getState().placedBlocks[0]
     expect(placed).toMatchObject({ kind: 'house', color: '#60a5fa' })
+    expect(
+      buildPlacementClearsPlayer(
+        placed.position,
+        builder.travelPosition,
+        'house',
+      ),
+    ).toBe(true)
+    expect(useGameStore.getState().selectedBuildBlockId).toBe(placed.id)
     expect(useGameStore.getState().chat.at(-1)?.text).toBe('World piece placed')
     expect(useGameStore.getState().earnedBadges).toContain('builder')
+  })
+
+  it('removes the selected built item instead of the last item', () => {
+    useGameStore.setState({
+      selectedBuildBlockId: 'first-house',
+      placedBlocks: [
+        {
+          id: 'first-house',
+          kind: 'house',
+          position: [10, 0.02, 10],
+          color: '#60a5fa',
+        },
+        {
+          id: 'second-tree',
+          kind: 'tree',
+          position: [18, 0.02, 10],
+          color: '#16a34a',
+        },
+      ],
+      chat: [],
+    })
+
+    useGameStore.getState().removeSelectedBlock()
+
+    expect(
+      useGameStore.getState().placedBlocks.map((block) => block.id),
+    ).toEqual(['second-tree'])
+    expect(useGameStore.getState().selectedBuildBlockId).toBeUndefined()
+    expect(useGameStore.getState().chat.at(-1)?.text).toBe(
+      'Selected world piece removed',
+    )
   })
 
   it('merges remote player build pieces into the saved custom world', () => {
@@ -445,7 +513,10 @@ describe('local party shared build persistence', () => {
       placedBlocks: [],
       earnedBadges: [],
       chat: [],
-      settings: { ...useGameStore.getState().settings, worldSeed: 'LONDON-2026' },
+      settings: {
+        ...useGameStore.getState().settings,
+        worldSeed: 'LONDON-2026',
+      },
     })
 
     useGameStore.getState().mergeSharedBuildBlocks([
@@ -459,7 +530,9 @@ describe('local party shared build persistence', () => {
     ])
 
     const snapshot = makeSaveSnapshot(useGameStore.getState())
-    expect(snapshot.placedBlocks?.map((block) => block.id)).toContain('party-house-1')
+    expect(snapshot.placedBlocks?.map((block) => block.id)).toContain(
+      'party-house-1',
+    )
     expect(useGameStore.getState().earnedBadges).toContain('builder')
   })
 })
@@ -479,9 +552,9 @@ describe('mini game store flow', () => {
 
     expect(useGameStore.getState().coins).toBe(1)
     expect(useGameStore.getState().miniGame.points).toBe(10)
-    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
-      'Coin collected! +10 pts, +1 coin (1/8)',
-    )
+    expect(
+      useGameStore.getState().chat.map((message) => message.text),
+    ).toContain('Coin collected! +10 pts, +1 coin (1/8)')
   })
 
   it('awards Delivery Dash drop-off coins and time bonuses before completion', () => {
@@ -501,9 +574,9 @@ describe('mini game store flow', () => {
     expect(useGameStore.getState().coins).toBe(8)
     expect(useGameStore.getState().miniGame.score).toBe(2)
     expect(useGameStore.getState().miniGame.endsAt).toBe(initialEndsAt + 5_000)
-    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
-      'Park drop-off collected! +20 pts, +8 coins, +5s (2/4)',
-    )
+    expect(
+      useGameStore.getState().chat.map((message) => message.text),
+    ).toContain('Park drop-off collected! +20 pts, +8 coins, +5s (2/4)')
   })
 
   it('starts a mini game, completes it, and awards coins plus a badge', () => {
@@ -526,10 +599,12 @@ describe('mini game store flow', () => {
     )
     expect(useGameStore.getState().openPanel).toBeUndefined()
     expect(useGameStore.getState().buildMode).toBe(false)
-    expect(useGameStore.getState().miniGame.announcement?.title).toBe('Coin Rush')
-    expect(useGameStore.getState().chat.map((message) => message.text)).toContain(
-      'Mini game started for all players: Coin Rush',
+    expect(useGameStore.getState().miniGame.announcement?.title).toBe(
+      'Coin Rush',
     )
+    expect(
+      useGameStore.getState().chat.map((message) => message.text),
+    ).toContain('Mini game started for all players: Coin Rush')
 
     coinRushTargets.forEach((target, index) => {
       useGameStore.getState().tickMiniGame(2_000 + index * 100, target.position)
@@ -653,9 +728,13 @@ describe('world interaction state', () => {
       returnYaw: 1.2,
     }
 
-    useGameStore.getState().enterInterior(visit, interiorSpawnPosition, interiorEntryYaw)
+    useGameStore
+      .getState()
+      .enterInterior(visit, interiorSpawnPosition, interiorEntryYaw)
     expect(useGameStore.getState().teleportSequence).toBe(21)
-    expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
+    expect(useGameStore.getState().playerPosition).toEqual(
+      interiorSpawnPosition,
+    )
     expect(useGameStore.getState().playerYaw).toBe(interiorEntryYaw)
     expect(useGameStore.getState().teleportTarget).toMatchObject({
       sequence: 21,
@@ -674,8 +753,12 @@ describe('world interaction state', () => {
     })
 
     useGameStore.getState().setPlayer([99, 0, 99], 2, 20)
-    expect(useGameStore.getState().playerPosition).toEqual(interiorSpawnPosition)
-    useGameStore.getState().setPlayer(interiorSpawnPosition, interiorEntryYaw, 21)
+    expect(useGameStore.getState().playerPosition).toEqual(
+      interiorSpawnPosition,
+    )
+    useGameStore
+      .getState()
+      .setPlayer(interiorSpawnPosition, interiorEntryYaw, 21)
     expect(useGameStore.getState().teleportTarget).toBeUndefined()
 
     expect(useGameStore.getState().leaveInterior()).toEqual(visit)

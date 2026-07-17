@@ -6,9 +6,16 @@ import { TouchControls } from './TouchControls'
 describe('TouchControls', () => {
   beforeEach(() => {
     useGameStore.setState((state) => ({
-      touch: { ...state.touch, run: false, interact: false, lookX: 0, lookY: 0 },
+      touch: {
+        ...state.touch,
+        run: false,
+        interact: false,
+        lookX: 0,
+        lookY: 0,
+      },
       interactionPrompt: undefined,
       buildMode: false,
+      selectedBuildBlockId: undefined,
       activeVehicleId: undefined,
       playerEmote: 'none',
       miniGame: { ...state.miniGame, status: 'idle', activeId: undefined },
@@ -45,9 +52,24 @@ describe('TouchControls', () => {
     render(<TouchControls />)
     const dragLayer = screen.getByTestId('world-drag-control')
 
-    fireEvent.pointerDown(dragLayer, { pointerId: 2, pointerType: 'touch', clientX: 100, clientY: 100 })
-    fireEvent.pointerMove(dragLayer, { pointerId: 2, pointerType: 'touch', clientX: 135, clientY: 80 })
-    fireEvent.pointerUp(dragLayer, { pointerId: 2, pointerType: 'touch', clientX: 135, clientY: 80 })
+    fireEvent.pointerDown(dragLayer, {
+      pointerId: 2,
+      pointerType: 'touch',
+      clientX: 100,
+      clientY: 100,
+    })
+    fireEvent.pointerMove(dragLayer, {
+      pointerId: 2,
+      pointerType: 'touch',
+      clientX: 135,
+      clientY: 80,
+    })
+    fireEvent.pointerUp(dragLayer, {
+      pointerId: 2,
+      pointerType: 'touch',
+      clientX: 135,
+      clientY: 80,
+    })
 
     expect(useGameStore.getState().touch.lookX).toBe(35)
     expect(useGameStore.getState().touch.lookY).toBe(-20)
@@ -85,7 +107,42 @@ describe('TouchControls', () => {
     render(<TouchControls />)
 
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Toggle emotes' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Toggle emotes' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('removes the selected item while build meshes remain tappable', () => {
+    useGameStore.setState({
+      buildMode: true,
+      selectedBuildBlockId: 'selected-tree',
+      placedBlocks: [
+        {
+          id: 'keep-house',
+          kind: 'house',
+          position: [8, 0.02, 8],
+          color: '#60a5fa',
+        },
+        {
+          id: 'selected-tree',
+          kind: 'tree',
+          position: [14, 0.02, 8],
+          color: '#16a34a',
+        },
+      ],
+    })
+    render(<TouchControls />)
+
+    expect(screen.getByTestId('world-drag-control')).toHaveClass(
+      'pointer-events-none',
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Remove selected build item' }),
+    )
+
+    expect(
+      useGameStore.getState().placedBlocks.map((block) => block.id),
+    ).toEqual(['keep-house'])
   })
 
   it('switches to driving controls with a dedicated exit button in a car', () => {
@@ -98,8 +155,14 @@ describe('TouchControls', () => {
     expect(screen.getByLabelText('Driving joystick')).toBeInTheDocument()
     expect(screen.getByText('Drive')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Brake' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Exit car' })).toHaveTextContent('Exit')
-    expect(screen.queryByRole('button', { name: 'Run' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Toggle emotes' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Exit car' })).toHaveTextContent(
+      'Exit',
+    )
+    expect(
+      screen.queryByRole('button', { name: 'Run' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Toggle emotes' }),
+    ).not.toBeInTheDocument()
   })
 })

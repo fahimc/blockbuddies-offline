@@ -1,4 +1,15 @@
-import { Armchair, ArrowUp, BedDouble, CarFront, CircleStop, Gauge, Hand, Music2, RotateCw, X } from 'lucide-react'
+import {
+  Armchair,
+  ArrowUp,
+  BedDouble,
+  CarFront,
+  CircleStop,
+  Gauge,
+  Hand,
+  Music2,
+  RotateCw,
+  X,
+} from 'lucide-react'
 import type { PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerEmote } from '../game/types'
@@ -22,7 +33,10 @@ export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
   const miniGame = useGameStore((state) => state.miniGame)
   const cancelMiniGame = useGameStore((state) => state.cancelMiniGame)
-  const removeLastBlock = useGameStore((state) => state.removeLastBlock)
+  const removeSelectedBlock = useGameStore((state) => state.removeSelectedBlock)
+  const selectedBuildBlockId = useGameStore(
+    (state) => state.selectedBuildBlockId,
+  )
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
   const running = useGameStore((state) => state.touch.run)
@@ -31,7 +45,9 @@ export function TouchControls() {
   const interactionPrompt = useGameStore((state) => state.interactionPrompt)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const joystickRef = useRef<HTMLDivElement>(null)
-  const lookDragRef = useRef<{ pointerId: number; x: number; y: number } | undefined>(undefined)
+  const lookDragRef = useRef<
+    { pointerId: number; x: number; y: number } | undefined
+  >(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
 
   useEffect(
@@ -40,6 +56,49 @@ export function TouchControls() {
     },
     [],
   )
+
+  useEffect(() => {
+    if (!buildMode) return
+    let drag: { pointerId: number; x: number; y: number } | undefined
+
+    const onPointerDown = (event: globalThis.PointerEvent) => {
+      if (!(event.target instanceof HTMLCanvasElement)) return
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+    }
+    const onPointerMove = (event: globalThis.PointerEvent) => {
+      if (!drag || drag.pointerId !== event.pointerId) return
+      const dx = event.clientX - drag.x
+      const dy = event.clientY - drag.y
+      drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+      const current = useGameStore.getState().touch
+      useGameStore.getState().setTouch({
+        lookX: clamp(
+          current.lookX + dx,
+          -maxQueuedLookDelta,
+          maxQueuedLookDelta,
+        ),
+        lookY: clamp(
+          current.lookY + dy,
+          -maxQueuedLookDelta,
+          maxQueuedLookDelta,
+        ),
+      })
+    }
+    const stopDrag = (event: globalThis.PointerEvent) => {
+      if (drag?.pointerId === event.pointerId) drag = undefined
+    }
+
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('pointermove', onPointerMove, true)
+    window.addEventListener('pointerup', stopDrag, true)
+    window.addEventListener('pointercancel', stopDrag, true)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('pointermove', onPointerMove, true)
+      window.removeEventListener('pointerup', stopDrag, true)
+      window.removeEventListener('pointercancel', stopDrag, true)
+    }
+  }, [buildMode])
 
   const queueLookDelta = (dx: number, dy: number) => {
     const current = useGameStore.getState().touch
@@ -77,15 +136,13 @@ export function TouchControls() {
   }
 
   const press =
-    (input: TouchPatch) =>
-    (event: PointerEvent<HTMLButtonElement>) => {
+    (input: TouchPatch) => (event: PointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
       event.currentTarget.setPointerCapture?.(event.pointerId)
       setTouch(input)
     }
   const release =
-    (input: TouchPatch) =>
-    (event: PointerEvent<HTMLButtonElement>) => {
+    (input: TouchPatch) => (event: PointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId)
@@ -95,7 +152,10 @@ export function TouchControls() {
 
   const pulseInteract = () => {
     setTouch({ interact: true })
-    window.setTimeout(() => useGameStore.getState().setTouch({ interact: false }), 100)
+    window.setTimeout(
+      () => useGameStore.getState().setTouch({ interact: false }),
+      100,
+    )
   }
   const cycleEmote = () => {
     const currentIndex = mobileEmoteCycle.indexOf(playerEmote)
@@ -106,179 +166,224 @@ export function TouchControls() {
     playerEmote === 'none'
       ? 'Emote'
       : playerEmote.charAt(0).toUpperCase() + playerEmote.slice(1)
-  const interactionLabel =
-    buildMode
-      ? 'Place'
-      : interactionPrompt === 'sleep'
-        ? 'Sleep'
-        : interactionPrompt === 'wake'
-          ? 'Wake up'
-          : interactionPrompt === 'sit'
-            ? 'Sit'
-            : interactionPrompt === 'stand'
-              ? 'Stand up'
-              : interactionPrompt === 'enter-vehicle'
-                ? 'Drive car'
-                : interactionPrompt === 'exit-vehicle'
-                  ? 'Exit car'
-                  : 'Interact'
+  const interactionLabel = buildMode
+    ? 'Place'
+    : interactionPrompt === 'sleep'
+      ? 'Sleep'
+      : interactionPrompt === 'wake'
+        ? 'Wake up'
+        : interactionPrompt === 'sit'
+          ? 'Sit'
+          : interactionPrompt === 'stand'
+            ? 'Stand up'
+            : interactionPrompt === 'enter-vehicle'
+              ? 'Drive car'
+              : interactionPrompt === 'exit-vehicle'
+                ? 'Exit car'
+                : 'Interact'
 
   return (
     <>
       <div
-        className="world-drag-layer absolute inset-0 z-[8]"
+        className={`world-drag-layer absolute inset-0 z-[8] ${buildMode ? 'pointer-events-none' : ''}`}
         data-testid="world-drag-control"
         aria-hidden="true"
         onPointerDown={(event) => {
           if (event.pointerType === 'mouse' && event.button !== 0) return
           event.preventDefault()
           event.currentTarget.setPointerCapture?.(event.pointerId)
-          lookDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+          lookDragRef.current = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+          }
         }}
         onPointerMove={(event) => {
           const drag = lookDragRef.current
-          if (!drag || drag.pointerId !== event.pointerId || (event.currentTarget.hasPointerCapture && !event.currentTarget.hasPointerCapture(event.pointerId))) return
+          if (
+            !drag ||
+            drag.pointerId !== event.pointerId ||
+            (event.currentTarget.hasPointerCapture &&
+              !event.currentTarget.hasPointerCapture(event.pointerId))
+          )
+            return
           event.preventDefault()
           const dx = event.clientX - drag.x
           const dy = event.clientY - drag.y
-          lookDragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+          lookDragRef.current = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+          }
           queueLookDelta(dx, dy)
         }}
         onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-          if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          if (lookDragRef.current?.pointerId === event.pointerId)
+            lookDragRef.current = undefined
         }}
         onPointerCancel={(event) => {
-          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
-          if (lookDragRef.current?.pointerId === event.pointerId) lookDragRef.current = undefined
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          if (lookDragRef.current?.pointerId === event.pointerId)
+            lookDragRef.current = undefined
         }}
       />
       <div className="touch-control-layer pointer-events-none absolute inset-x-0 bottom-3 z-20 hidden items-end justify-between px-5">
-      <div
-        ref={joystickRef}
-        className={`virtual-joystick pointer-events-auto relative grid place-items-center rounded-full ${activeVehicleId ? 'driving' : ''}`}
-        onPointerDown={(event) => {
-          event.preventDefault()
-          event.currentTarget.setPointerCapture?.(event.pointerId)
-          updateJoystick(event)
-        }}
-        onPointerMove={(event) => {
-          if (!event.currentTarget.hasPointerCapture || event.currentTarget.hasPointerCapture(event.pointerId)) updateJoystick(event)
-        }}
-        onPointerUp={resetJoystick}
-        onPointerCancel={resetJoystick}
-        title={activeVehicleId ? 'Drive' : 'Move'}
-        aria-label={activeVehicleId ? 'Driving joystick' : 'Move joystick'}
-      >
         <div
-          className="joystick-thumb absolute rounded-full"
-          style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)` }}
-        />
-        {activeVehicleId ? <span className="joystick-mode-label">Drive</span> : null}
-      </div>
-
-      {activeVehicleId ? (
-        <button
-          type="button"
-          className="mobile-drive-exit-button pointer-events-auto"
-          onClick={(event) => {
+          ref={joystickRef}
+          className={`virtual-joystick pointer-events-auto relative grid place-items-center rounded-full ${activeVehicleId ? 'driving' : ''}`}
+          onPointerDown={(event) => {
             event.preventDefault()
-            pulseInteract()
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+            updateJoystick(event)
           }}
-          title="Exit car"
-          aria-label="Exit car"
-        >
-          <CarFront size={21} aria-hidden />
-          <span>Exit</span>
-        </button>
-      ) : buildMode || miniGame.status === 'running' ? (
-        <button
-          type="button"
-          className="mobile-remove-button pointer-events-auto"
-          onClick={(event) => {
-            event.preventDefault()
-            if (buildMode) {
-              removeLastBlock()
-            } else {
-              cancelMiniGame()
-            }
+          onPointerMove={(event) => {
+            if (
+              !event.currentTarget.hasPointerCapture ||
+              event.currentTarget.hasPointerCapture(event.pointerId)
+            )
+              updateJoystick(event)
           }}
-          title={buildMode ? 'Remove block' : 'Cancel mini game'}
+          onPointerUp={resetJoystick}
+          onPointerCancel={resetJoystick}
+          title={activeVehicleId ? 'Drive' : 'Move'}
+          aria-label={activeVehicleId ? 'Driving joystick' : 'Move joystick'}
         >
-          <X size={28} aria-hidden />
-          <span>{buildMode ? 'Remove' : 'Cancel'}</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          className={`mobile-emote-button pointer-events-auto ${playerEmote !== 'none' ? 'active' : ''}`}
-          onClick={(event) => {
-            event.preventDefault()
-            cycleEmote()
-          }}
-          title="Toggle emotes"
-          aria-label="Toggle emotes"
-          aria-pressed={playerEmote !== 'none'}
-        >
-          <Music2 size={20} aria-hidden />
-          <span>{emoteLabel}</span>
-        </button>
-      )}
-
-      <div className="mobile-action-cluster pointer-events-auto flex items-end gap-2">
-        <div className="flex flex-col gap-2">
-          {buildMode ? (
-            <button type="button" className="mobile-use-button" onClick={rotateBuildPiece} title="Rotate" aria-label="Rotate">
-              <RotateCw size={22} aria-hidden />
-            </button>
-          ) : !activeVehicleId ? (
-            <button
-              type="button"
-              className={`mobile-run-button ${running ? 'active' : ''}`}
-              onPointerDown={press({ run: true })}
-              onPointerUp={release({ run: false })}
-              onPointerCancel={release({ run: false })}
-              onLostPointerCapture={() => setTouch({ run: false })}
-              aria-label="Run"
-              aria-pressed={running}
-              title="Hold to run"
-            >
-              <Gauge size={20} aria-hidden />
-              <span>Run</span>
-            </button>
-          ) : null}
-          {!activeVehicleId ? (
-            <button
-              type="button"
-              className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
-              onClick={pulseInteract}
-              title={interactionLabel}
-              aria-label={interactionLabel}
-            >
-              {interactionPrompt === 'sleep' || interactionPrompt === 'wake' ? (
-                <BedDouble size={22} aria-hidden />
-              ) : interactionPrompt === 'sit' || interactionPrompt === 'stand' ? (
-                <Armchair size={22} aria-hidden />
-              ) : interactionPrompt === 'enter-vehicle' ? (
-                <CarFront size={22} aria-hidden />
-              ) : (
-                <Hand size={22} aria-hidden />
-              )}
-            </button>
+          <div
+            className="joystick-thumb absolute rounded-full"
+            style={{ transform: `translate(${thumb.x}px, ${thumb.y}px)` }}
+          />
+          {activeVehicleId ? (
+            <span className="joystick-mode-label">Drive</span>
           ) : null}
         </div>
-        <button
-          type="button"
-          className={`mobile-jump-button ${activeVehicleId ? 'brake' : ''}`}
-          onPointerDown={press({ jump: true })}
-          onPointerUp={release({ jump: false })}
-          onPointerCancel={release({ jump: false })}
-          title={activeVehicleId ? 'Hold to brake' : 'Jump'}
-          aria-label={activeVehicleId ? 'Brake' : 'Jump'}
-        >
-          {activeVehicleId ? <CircleStop size={28} aria-hidden /> : <ArrowUp size={30} aria-hidden />}
-        </button>
-      </div>
+
+        {activeVehicleId ? (
+          <button
+            type="button"
+            className="mobile-drive-exit-button pointer-events-auto"
+            onClick={(event) => {
+              event.preventDefault()
+              pulseInteract()
+            }}
+            title="Exit car"
+            aria-label="Exit car"
+          >
+            <CarFront size={21} aria-hidden />
+            <span>Exit</span>
+          </button>
+        ) : buildMode || miniGame.status === 'running' ? (
+          <button
+            type="button"
+            className="mobile-remove-button pointer-events-auto"
+            onClick={(event) => {
+              event.preventDefault()
+              if (buildMode) {
+                removeSelectedBlock()
+              } else {
+                cancelMiniGame()
+              }
+            }}
+            disabled={buildMode && !selectedBuildBlockId}
+            title={
+              buildMode
+                ? selectedBuildBlockId
+                  ? 'Remove selected item'
+                  : 'Tap a built item first'
+                : 'Cancel mini game'
+            }
+          aria-label={
+            buildMode ? 'Remove selected build item' : 'Cancel'
+          }
+          >
+            <X size={28} aria-hidden />
+            <span>{buildMode ? 'Remove' : 'Cancel'}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={`mobile-emote-button pointer-events-auto ${playerEmote !== 'none' ? 'active' : ''}`}
+            onClick={(event) => {
+              event.preventDefault()
+              cycleEmote()
+            }}
+            title="Toggle emotes"
+            aria-label="Toggle emotes"
+            aria-pressed={playerEmote !== 'none'}
+          >
+            <Music2 size={20} aria-hidden />
+            <span>{emoteLabel}</span>
+          </button>
+        )}
+
+        <div className="mobile-action-cluster pointer-events-auto flex items-end gap-2">
+          <div className="flex flex-col gap-2">
+            {buildMode ? (
+              <button
+                type="button"
+                className="mobile-use-button"
+                onClick={rotateBuildPiece}
+                title="Rotate"
+                aria-label="Rotate"
+              >
+                <RotateCw size={22} aria-hidden />
+              </button>
+            ) : !activeVehicleId ? (
+              <button
+                type="button"
+                className={`mobile-run-button ${running ? 'active' : ''}`}
+                onPointerDown={press({ run: true })}
+                onPointerUp={release({ run: false })}
+                onPointerCancel={release({ run: false })}
+                onLostPointerCapture={() => setTouch({ run: false })}
+                aria-label="Run"
+                aria-pressed={running}
+                title="Hold to run"
+              >
+                <Gauge size={20} aria-hidden />
+                <span>Run</span>
+              </button>
+            ) : null}
+            {!activeVehicleId ? (
+              <button
+                type="button"
+                className={`mobile-use-button ${interactionPrompt ? 'contextual' : ''}`}
+                onClick={pulseInteract}
+                title={interactionLabel}
+                aria-label={interactionLabel}
+              >
+                {interactionPrompt === 'sleep' ||
+                interactionPrompt === 'wake' ? (
+                  <BedDouble size={22} aria-hidden />
+                ) : interactionPrompt === 'sit' ||
+                  interactionPrompt === 'stand' ? (
+                  <Armchair size={22} aria-hidden />
+                ) : interactionPrompt === 'enter-vehicle' ? (
+                  <CarFront size={22} aria-hidden />
+                ) : (
+                  <Hand size={22} aria-hidden />
+                )}
+              </button>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className={`mobile-jump-button ${activeVehicleId ? 'brake' : ''}`}
+            onPointerDown={press({ jump: true })}
+            onPointerUp={release({ jump: false })}
+            onPointerCancel={release({ jump: false })}
+            title={activeVehicleId ? 'Hold to brake' : 'Jump'}
+            aria-label={activeVehicleId ? 'Brake' : 'Jump'}
+          >
+            {activeVehicleId ? (
+              <CircleStop size={28} aria-hidden />
+            ) : (
+              <ArrowUp size={30} aria-hidden />
+            )}
+          </button>
+        </div>
       </div>
     </>
   )

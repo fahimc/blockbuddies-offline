@@ -22,13 +22,20 @@ export function BuildPanel() {
   const buildRotation = useGameStore((state) => state.buildRotation)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
   const setBuildMode = useGameStore((state) => state.setBuildMode)
-  const setSelectedBuildPiece = useGameStore((state) => state.setSelectedBuildPiece)
-  const setSelectedBuildColor = useGameStore((state) => state.setSelectedBuildColor)
+  const setOpenPanel = useGameStore((state) => state.setOpenPanel)
+  const setSelectedBuildPiece = useGameStore(
+    (state) => state.setSelectedBuildPiece,
+  )
+  const setSelectedBuildColor = useGameStore(
+    (state) => state.setSelectedBuildColor,
+  )
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const placeBlock = useGameStore((state) => state.placeBlock)
   const placeMapStamp = useGameStore((state) => state.placeMapStamp)
   const removeLastBlock = useGameStore((state) => state.removeLastBlock)
-  const selectedPiece = buildPieceDefinitions.find((piece) => piece.id === selectedBuildPiece) ?? buildPieceDefinitions[0]
+  const selectedPiece =
+    buildPieceDefinitions.find((piece) => piece.id === selectedBuildPiece) ??
+    buildPieceDefinitions[0]
   const colors = selectedPiece.colors
 
   return (
@@ -36,7 +43,14 @@ export function BuildPanel() {
       <label className="bb-setting-row mb-3">
         Build mode
         <span className={`bb-toggle ${buildMode ? 'on' : ''}`}>
-          <input type="checkbox" checked={buildMode} onChange={(event) => setBuildMode(event.target.checked)} />
+          <input
+            type="checkbox"
+            checked={buildMode}
+            onChange={(event) => {
+              setBuildMode(event.target.checked)
+              if (event.target.checked) setOpenPanel(undefined)
+            }}
+          />
           <span />
         </span>
       </label>
@@ -59,11 +73,13 @@ export function BuildPanel() {
               onDragEnd={() => {
                 setBuildMode(true)
                 placeBlock()
+                setOpenPanel(undefined)
               }}
               onClick={() => {
                 setSelectedBuildPiece(piece.id)
                 setSelectedBuildColor(piece.defaultColor)
                 setBuildMode(true)
+                setOpenPanel(undefined)
               }}
               className={`bb-build-piece ${selectedBuildPiece === piece.id ? 'selected' : ''}`}
               aria-label={piece.label}
@@ -82,7 +98,9 @@ export function BuildPanel() {
         <div className="mb-2 flex items-center justify-between gap-2">
           <div>
             <h3 className="font-black">{selectedPiece.label}</h3>
-            <p className="text-xs font-black uppercase text-slate-500">{selectedPiece.category}</p>
+            <p className="text-xs font-black uppercase text-slate-500">
+              {selectedPiece.category}
+            </p>
           </div>
           <span className="rounded-lg bg-sky-100 px-3 py-1 text-xs font-black text-sky-800">
             {Math.round((buildRotation / (Math.PI * 2)) * 360)} deg
@@ -104,19 +122,35 @@ export function BuildPanel() {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={placeBlock} className="bb-build-action place">
+        <button
+          type="button"
+          onClick={placeBlock}
+          className="bb-build-action place"
+        >
           <Blocks size={18} aria-hidden />
           Place
         </button>
-        <button type="button" onClick={rotateBuildPiece} className="bb-build-action rotate">
+        <button
+          type="button"
+          onClick={rotateBuildPiece}
+          className="bb-build-action rotate"
+        >
           <RotateCw size={18} aria-hidden />
           Rotate
         </button>
-        <button type="button" onClick={placeMapStamp} className="bb-build-action map">
+        <button
+          type="button"
+          onClick={placeMapStamp}
+          className="bb-build-action map"
+        >
           <Map size={18} aria-hidden />
           Auto Street
         </button>
-        <button type="button" onClick={removeLastBlock} className="bb-build-action undo">
+        <button
+          type="button"
+          onClick={removeLastBlock}
+          className="bb-build-action undo"
+        >
           <Trash2 size={18} aria-hidden />
           Undo
         </button>

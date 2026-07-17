@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase build selection and placement clearance
+
+- [x] Keep every solid build outside the avatar's collision clearance when placing or searching fallback cells.
+- [x] Recover the avatar from overlapping saved or synchronized solid builds.
+- [x] Select player-built items by tapping their rendered geometry.
+- [x] Highlight the selected item and remove that exact item.
+- [x] Add a compact left-side item catalog to the active Build Mode HUD.
+- [x] Add unit, component, and mobile Playwright regression coverage.
+- [x] Package and release the Android debug APK for the build-mode repair.
+
 ## Post-phase mobile customizer and obby collision repair
 
 - [x] Center the portrait splash logo and Start control using measured viewport geometry.
