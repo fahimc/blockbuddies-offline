@@ -66,12 +66,31 @@ export function updateBot(input: BotTickInput): BotRuntime {
   const { bot, profile, playerPosition, now, random } = input
   const nearPlayer = distance2d(bot.position, playerPosition) < 3.2
   let next = { ...bot }
+  const scheduledLocationId = scheduleLocation(profile, now)
+  const scheduledLocation = getLocation(scheduledLocationId)
+  const distanceToScheduled = distance2d(bot.position, scheduledLocation.position)
 
   if (now >= bot.nextDecisionAt) {
-    const state = chooseNextState(bot.state, nearPlayer, random())
-    const locationId = state === 'go_to_location' ? scheduleLocation(profile, now) : bot.targetLocation
+    const routeState: BotState =
+      !nearPlayer && (bot.targetLocation !== scheduledLocationId || distanceToScheduled > 1.2)
+        ? 'go_to_location'
+        : !nearPlayer && distanceToScheduled <= 1.2
+          ? 'do_activity'
+          : chooseNextState(bot.state, nearPlayer, random())
+    const state = routeState
+    const locationId = state === 'go_to_location' || state === 'do_activity' ? scheduledLocationId : bot.targetLocation
     const location = getLocation(locationId)
     const wobble = () => (random() - 0.5) * 4
+    const activityActions: BotRuntime['action'][] =
+      locationId === 'obby'
+        ? ['jump', 'cheer']
+        : locationId === 'park'
+          ? ['walk', 'wave']
+          : locationId === 'school'
+            ? ['idle', 'wave']
+            : locationId === 'parking'
+              ? ['run', 'cheer']
+              : ['cheer', 'wave', 'idle']
     next = {
       ...next,
       state,
@@ -84,9 +103,7 @@ export function updateBot(input: BotTickInput): BotRuntime {
         state === 'greet_player'
           ? 'wave'
           : state === 'do_activity'
-            ? random() > 0.5
-              ? 'jump'
-              : 'cheer'
+            ? activityActions[Math.floor(random() * activityActions.length)] ?? 'cheer'
             : state === 'go_to_location'
               ? 'run'
               : state === 'wander'

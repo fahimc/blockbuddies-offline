@@ -226,6 +226,15 @@ export type SavedAvatarStyle = {
   createdAt: number
 }
 
+export type SavedFriend = {
+  id: string
+  name: string
+  avatar: AvatarSettings
+  inWorld: boolean
+  route: LocationId[]
+  createdAt: number
+}
+
 export type BotMemory = {
   botId: string
   timesMet: number

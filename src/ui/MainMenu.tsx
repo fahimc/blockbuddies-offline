@@ -21,21 +21,10 @@ export function MainMenu({ onStart, ready = true }: MainMenuProps) {
       <div className="bb-splash-vignette" aria-hidden />
       <h1 className="sr-only">BlockBuddies</h1>
 
-      <header className="bb-splash-brand" aria-label="BlockBuddies">
-        <BrandLogo compact />
-      </header>
-
-      <div className="bb-splash-main-copy">
-        <p>
-          Your world.
-          <br />
-          <span>Your buddies.</span>
-          <br />
-          Your adventure.
-        </p>
-      </div>
-
-      <div className="bb-splash-controls">
+      <div className="bb-splash-start-card">
+        <header className="bb-splash-brand" aria-label="BlockBuddies">
+          <BrandLogo compact />
+        </header>
         <button
           type="button"
           onClick={onStart}
@@ -50,9 +39,20 @@ export function MainMenu({ onStart, ready = true }: MainMenuProps) {
         <div className="bb-splash-feature-strip" aria-label="Game features">
           <Feature icon={<WifiOff size={18} />} label="Offline play" />
           <Feature icon={<ShieldCheck size={18} />} label="Safe for kids" />
-          <Feature icon={<WifiOff size={18} />} label="No internet needed" />
         </div>
       </div>
+
+      <div className="bb-splash-main-copy">
+        <p>
+          Your world.
+          <br />
+          <span>Your buddies.</span>
+          <br />
+          Your adventure.
+        </p>
+      </div>
+
+      <footer className="bb-splash-studio">Remetheia Games</footer>
     </section>
   )
 }

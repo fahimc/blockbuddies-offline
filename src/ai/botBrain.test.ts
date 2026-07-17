@@ -23,4 +23,25 @@ describe('bot brain', () => {
     })
     expect(updated.position).not.toEqual(bot.position)
   })
+
+  it('routes bots toward their scheduled location when the schedule changes', () => {
+    const profile = botProfiles[0]
+    const bot = {
+      ...createInitialBot(profile, 0),
+      targetLocation: profile.schedule[0],
+      nextDecisionAt: 0,
+    }
+
+    const updated = updateBot({
+      bot,
+      profile,
+      playerPosition: [100, 0, 100],
+      now: 21000,
+      random: () => 0.2,
+    })
+
+    expect(updated.state).toBe('go_to_location')
+    expect(updated.targetLocation).toBe(profile.schedule[1])
+    expect(updated.goal).toContain('Visit')
+  })
 })

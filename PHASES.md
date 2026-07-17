@@ -1,5 +1,18 @@
 # Build Phases
 
+## Post-phase onboarding, saved friends, and build drawer
+
+- [x] Rework splash button/logo placement, press effect, slogan placement, feature strip, and Remetheia Games credit.
+- [x] Add a welcome overlay explaining how to play and Local Party.
+- [x] Add Save Character, saved-character selection, and editable character names to customization.
+- [x] Add saved custom friends with persistence, map markers, town presence, and predefined-message threads.
+- [x] Add scheduled NPC route behavior and activity actions.
+- [x] Remove the visible saved HUD pill while preserving autosave.
+- [x] Fix Buddy Houses yellow circle, auto-scroll message threads, quest auto-progress, and skin preview scaling.
+- [x] Add Sims-style build drawer controls plus a build grid and placement preview.
+- [x] Add unit and Playwright smoke coverage for the new flow.
+- [x] Package and release Android debug APK for the onboarding/build/friends update.
+
 ## Post-phase tutorial menu
 
 - [x] Add a hamburger-menu Tutorial section.

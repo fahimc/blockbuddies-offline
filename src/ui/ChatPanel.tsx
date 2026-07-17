@@ -1,5 +1,5 @@
 import { ArrowLeft, Inbox, MessageCircle, Send, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   messageCategories,
   predefinedMessages,
@@ -185,9 +185,21 @@ function ThreadView({
   onCategory: (category: MessageCategory) => void
   onSend: (presetId: string) => void
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const node = scrollRef.current
+    if (!node) return
+    if (typeof node.scrollTo === 'function') {
+      node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' })
+    } else {
+      node.scrollTop = node.scrollHeight
+    }
+  }, [botId, messages.length])
+
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-slate-50 p-3">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto bg-slate-50 p-3">
         {messages.length === 0 ? (
           <div className="rounded-xl bg-white p-4 text-center text-sm font-bold text-slate-600 shadow-sm">
             Choose a message below to start.

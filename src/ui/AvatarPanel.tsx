@@ -78,9 +78,11 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
   const textureInputRef = useRef<HTMLInputElement>(null)
   const avatar = useGameStore((state) => state.avatar)
   const savedAvatars = useGameStore((state) => state.savedAvatars)
+  const playerName = useGameStore((state) => state.playerName)
   const coins = useGameStore((state) => state.coins)
   const unlocked = useGameStore((state) => state.unlockedItems)
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
+  const setPlayerName = useGameStore((state) => state.setPlayerName)
   const updateAvatar = useGameStore((state) => state.updateAvatar)
   const saveCurrentAvatarStyle = useGameStore((state) => state.saveCurrentAvatarStyle)
   const applySavedAvatarStyle = useGameStore((state) => state.applySavedAvatarStyle)
@@ -175,7 +177,19 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
       </div>
 
       <main className={`bb-customizer-main bb-customizer-${step}`}>
-        {step === 'hub' ? <HubStep avatar={avatar} onStep={setStep} onBodySection={setBodySection} /> : null}
+        {step === 'hub' ? (
+          <HubStep
+            avatar={avatar}
+            playerName={playerName}
+            savedAvatars={savedAvatars}
+            onNameChange={setPlayerName}
+            onSaveStyle={() => saveCurrentAvatarStyle(playerName)}
+            onApplySaved={applySavedAvatarStyle}
+            onDeleteSaved={deleteSavedAvatarStyle}
+            onStep={setStep}
+            onBodySection={setBodySection}
+          />
+        ) : null}
         {step === 'body' ? (
           <BodyStep
             avatar={avatar}
@@ -220,6 +234,10 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
       />
 
       <footer className="bb-customizer-footer">
+        <button type="button" className="bb-customizer-save" onClick={() => saveCurrentAvatarStyle(playerName)}>
+          <Save size={20} aria-hidden />
+          Save Character
+        </button>
         <button type="button" className="bb-customizer-cta" onClick={next}>
           <span>{stepInfo.cta}</span>
           <ChevronRight size={42} aria-hidden />
@@ -236,10 +254,22 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
 
 function HubStep({
   avatar,
+  playerName,
+  savedAvatars,
+  onNameChange,
+  onSaveStyle,
+  onApplySaved,
+  onDeleteSaved,
   onStep,
   onBodySection,
 }: {
   avatar: AvatarSettings
+  playerName: string
+  savedAvatars: SavedAvatarStyle[]
+  onNameChange: (name: string) => void
+  onSaveStyle: () => void
+  onApplySaved: (id: string) => void
+  onDeleteSaved: (id: string) => void
   onStep: (step: CustomizationStepId) => void
   onBodySection: (section: BodySectionId) => void
 }) {
@@ -258,7 +288,42 @@ function HubStep({
         <HubButton label="Bottoms" icon={<Footprints size={31} />} onClick={() => onStep('clothing')} />
       </div>
       <div className="bb-hub-stage">
+        <label className="bb-character-name-editor">
+          <span>Character name</span>
+          <input
+            value={playerName}
+            onChange={(event) => onNameChange(event.target.value)}
+            maxLength={18}
+            aria-label="Character name"
+          />
+        </label>
         <AvatarStage avatar={avatar} size="large" />
+        <section className="bb-saved-character-strip" aria-label="Saved characters">
+          <div>
+            <strong>Saved Characters</strong>
+            <button type="button" onClick={onSaveStyle}>
+              <Save size={15} aria-hidden />
+              Save
+            </button>
+          </div>
+          {savedAvatars.length === 0 ? (
+            <p>Save this character, then pick it next time.</p>
+          ) : (
+            <div>
+              {savedAvatars.slice(0, 6).map((style) => (
+                <div key={style.id} className="bb-saved-character-card">
+                  <button type="button" onClick={() => onApplySaved(style.id)} aria-label={`Use ${style.name}`}>
+                  <MiniAvatar avatar={style.avatar} />
+                  <span>{style.name}</span>
+                  </button>
+                  <button type="button" aria-label={`Delete ${style.name}`} onClick={() => onDeleteSaved(style.id)}>
+                    <Trash2 size={13} aria-hidden />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
       <div className="bb-hub-rail right">
         <HubButton label="Hats" icon={<BadgePlus size={31} />} onClick={() => onStep('accessories')} />

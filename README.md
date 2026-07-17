@@ -102,6 +102,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   and exclusive occupancy cells before release.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
+- Character setup includes explicit Save Character controls, automatic saving
+  when setup completes, saved-character selection, and editable player names.
 - Body & Style customizer uses a responsive phone grid for the character
   preview, five category buttons, and colour/control panels while switching
   between Body, Hair, Face, Colours, and Wardrobe.
@@ -117,6 +119,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Chosen character names appear above the player, in local messages, in Local
   Party identity, and in the leaderboard.
 - Bot memory, friendship levels, times met, and relationship-aware greetings.
+- Saved custom friends can be created from the Buddies menu, added back into
+  the town, shown on the mini-map/full map, persisted locally, and messaged
+  through predefined inbox threads.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
   live synced player avatars.
@@ -131,6 +136,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   Request.
 - Custom world builder with blocks, roads, houses, towers, shops, cars, trees,
   lamps, rotation, colour swatches, undo, and procedural Auto Street maps.
+- Build Mode shows a floor grid and green placement preview, with a drawer-style
+  catalog for tapping or dragging build pieces into the world.
 - Deterministic procedural borough streaming with tiled roads, pavements, parks,
   buildings, street props, phone boxes, landmarks, world seeds, view
   distance, and night mode settings.
@@ -179,6 +186,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Kenney CC0 blocky character models and prototype grid textures.
 - In-game hamburger menu keeps customisation, shop, quests, build mode, Local
   Party, badges, leaderboard, emotes, and settings out of the main HUD.
+- The first game entry shows a welcome overlay with core controls, interaction,
+  and Local Party guidance, with a shortcut into the Tutorial panel.
 - Landscape mobile game HUD with messages icon, status pills, virtual joystick,
   circular jump, hold-to-run, contextual interact, and reset/remove controls.
   Running is 2x walking speed; desktop players hold Shift to run. While driving,
@@ -198,6 +207,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Grounded procedural block avatars with visible walking leg and arm animation.
 - Portrait-first splash poster matching the supplied design direction, with a
   generated original town background and responsive Play button placement.
+- Splash now groups the larger logo and Start button at the top, keeps the
+  slogan below the controls, removes the old no-internet badge copy, adds a
+  tactile Start press effect, and credits Remetheia Games.
 - PWA manifest, service worker offline cache, settings, graphics quality,
   reduced motion, audio/music toggles, and save reset.
 - Capacitor Android project with debug APK output.

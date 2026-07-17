@@ -52,6 +52,7 @@ import type {
   QuestId,
   QuestProgress,
   SavedAvatarStyle,
+  SavedFriend,
   ShopItemId,
   Vec3,
 } from '../game/types'
@@ -62,6 +63,7 @@ export type GameSave = {
   coins: number
   avatar: AvatarSettings
   savedAvatars: SavedAvatarStyle[]
+  savedFriends: SavedFriend[]
   unlockedItems: ShopItemId[]
   questProgress: QuestProgress[]
   botMemory: Record<string, BotMemory>
@@ -184,6 +186,9 @@ type GameState = GameSave & {
   saveCurrentAvatarStyle: (name?: string) => void
   applySavedAvatarStyle: (id: string) => void
   deleteSavedAvatarStyle: (id: string) => void
+  createSavedFriend: (name?: string) => void
+  toggleSavedFriendInWorld: (id: string) => void
+  deleteSavedFriend: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
   setSleeping: (sleeping: boolean) => void
@@ -346,6 +351,11 @@ function directMessage(
 }
 
 const starterMessageIds = ['greeting-008', 'game-001', 'quest-001', 'fun-003']
+const friendRoutes: LocationId[][] = [
+  ['spawn', 'park', 'shop', 'houses'],
+  ['spawn', 'school', 'obby', 'park'],
+  ['parking', 'shop', 'hall', 'spawn'],
+]
 
 function createInitialMessageThreads(): MessageThread[] {
   const now = Date.now()
@@ -372,6 +382,17 @@ function createInitialMessageThreads(): MessageThread[] {
       updatedAt: messages[0]?.createdAt ?? now,
     }
   })
+}
+
+function sanitizeSavedFriends(friends: SavedFriend[] | undefined): SavedFriend[] {
+  if (!friends?.length) return []
+  return friends.slice(0, 12).map((friend, index) => ({
+    ...friend,
+    name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
+    avatar: normalizeSavedAvatar(friend.avatar) ?? defaultAvatar,
+    route: friend.route?.length ? friend.route : friendRoutes[index % friendRoutes.length],
+    inWorld: Boolean(friend.inWorld),
+  }))
 }
 
 function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
@@ -474,6 +495,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   placedBlocks: [],
   avatar: defaultAvatar,
   savedAvatars: [],
+  savedFriends: [],
   unlockedItems: [],
   questProgress: initialQuestProgress(),
   botMemory: {},
@@ -523,7 +545,20 @@ export const useGameStore = create<GameState>((set, get) => ({
   completePlayerProfile: (name) => {
     const playerName = sanitizePartyName(name) || defaultPlayerName
     useLocalPartyStore.getState().setPlayerName(playerName)
-    set({ playerName, profileComplete: true })
+    set((state) => {
+      const alreadySaved = state.savedAvatars.some((style) => avatarMatches(style.avatar, state.avatar))
+      const saved: SavedAvatarStyle = {
+        id: makeId('avatar-style'),
+        name: playerName,
+        avatar: { ...state.avatar, avatarSource: playerName },
+        createdAt: Date.now(),
+      }
+      return {
+        playerName,
+        profileComplete: true,
+        savedAvatars: alreadySaved ? state.savedAvatars : [saved, ...state.savedAvatars].slice(0, 18),
+      }
+    })
   },
   setPlayer: (playerPosition, playerYaw, controllerSequence) =>
     set((state) => {
@@ -1222,6 +1257,44 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((state) => ({
       savedAvatars: state.savedAvatars.filter((style) => style.id !== id),
     })),
+  createSavedFriend: (name) =>
+    set((state) => {
+      const friendName =
+        sanitizePartyName(name ?? `${state.playerName} Friend ${state.savedFriends.length + 1}`) ||
+        `Friend ${state.savedFriends.length + 1}`
+      const friend: SavedFriend = {
+        id: makeId('saved-friend'),
+        name: friendName,
+        avatar: {
+          ...state.avatar,
+          avatarSource: `${friendName} Style`,
+          shirtColor: state.savedFriends.length % 2 === 0 ? '#60a5fa' : '#f472b6',
+          accentColor: state.savedFriends.length % 3 === 0 ? '#22c55e' : state.avatar.accentColor,
+        },
+        inWorld: true,
+        route: friendRoutes[state.savedFriends.length % friendRoutes.length],
+        createdAt: Date.now(),
+      }
+      return {
+        savedFriends: [friend, ...state.savedFriends].slice(0, 12),
+        messageThreads: ensureMessageThread(state.messageThreads, friend.id, friend.name),
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${friend.name} was added as a game friend`),
+        ],
+      }
+    }),
+  toggleSavedFriendInWorld: (id) =>
+    set((state) => ({
+      savedFriends: state.savedFriends.map((friend) =>
+        friend.id === id ? { ...friend, inWorld: !friend.inWorld } : friend,
+      ),
+    })),
+  deleteSavedFriend: (id) =>
+    set((state) => ({
+      savedFriends: state.savedFriends.filter((friend) => friend.id !== id),
+      messageThreads: state.messageThreads.filter((thread) => thread.botId !== id),
+    })),
   selectCustomizationItem: (item) => {
     set((state) => {
       const itemId = item.shopItemId
@@ -1483,6 +1556,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       coins: 0,
       avatar: defaultAvatar,
       savedAvatars: [],
+      savedFriends: [],
       unlockedItems: [],
       earnedBadges: ['welcome'],
       placedBlocks: [],
@@ -1538,6 +1612,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         coins: save.coins ?? state.coins,
         avatar: normalizeSavedAvatar(save.avatar) ?? state.avatar,
         savedAvatars: save.savedAvatars ?? state.savedAvatars,
+        savedFriends: sanitizeSavedFriends(save.savedFriends ?? state.savedFriends),
         unlockedItems: save.unlockedItems ?? state.unlockedItems,
         earnedBadges: save.earnedBadges ?? state.earnedBadges,
         placedBlocks: save.placedBlocks ?? state.placedBlocks,
@@ -1574,6 +1649,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     coins: state.coins,
     avatar: state.avatar,
     savedAvatars: state.savedAvatars,
+    savedFriends: sanitizeSavedFriends(state.savedFriends),
     unlockedItems: state.unlockedItems,
     earnedBadges: state.earnedBadges,
     placedBlocks: state.placedBlocks,

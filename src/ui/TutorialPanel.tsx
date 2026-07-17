@@ -89,7 +89,7 @@ const tutorialSections: TutorialSection[] = [
     icon: <Save size={18} aria-hidden />,
     steps: [
       'Your character, coins, quests, messages, and custom world save locally.',
-      'The saved pill at the top means your latest progress is stored.',
+      'Progress saves quietly in the background while you play.',
       'Use Settings only if you want to reset save data.',
     ],
   },

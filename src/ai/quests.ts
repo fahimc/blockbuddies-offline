@@ -18,14 +18,16 @@ export function advanceQuest(
   definition: QuestDefinition,
   amount: number,
 ): { progress: QuestProgress; completedNow: boolean } {
-  if (!progress.started || progress.completed) {
+  if (progress.completed) {
     return { progress, completedNow: false }
   }
+  const started = progress.started || amount > 0
   const nextValue = Math.min(definition.target, progress.progress + amount)
   const completedNow = nextValue >= definition.target
   return {
     progress: {
       ...progress,
+      started,
       progress: nextValue,
       completed: completedNow,
     },

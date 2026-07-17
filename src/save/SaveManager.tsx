@@ -36,6 +36,7 @@ export function SaveManager() {
     state.coins,
     state.avatar,
     state.savedAvatars,
+    state.savedFriends,
     state.unlockedItems,
     state.earnedBadges,
     state.placedBlocks,

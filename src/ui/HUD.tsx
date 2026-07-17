@@ -13,7 +13,6 @@ export function HUD() {
   const activeInterior = useGameStore((state) => state.activeInterior)
   const obby = useGameStore((state) => state.obby)
   const miniGame = useGameStore((state) => state.miniGame)
-  const saveStatus = useGameStore((state) => state.saveStatus)
   const seatedSeatId = useGameStore((state) => state.seatedSeatId)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const activeVehicle = activeVehicleId ? getDrivableVehicle(activeVehicleId) : undefined
@@ -84,9 +83,6 @@ export function HUD() {
               tone="bg-sky-200"
             />
           ) : null}
-          <span className="px-2 text-xs font-bold text-slate-500">
-            {saveStatus}
-          </span>
         </div>
       </div>
 
@@ -120,11 +116,13 @@ export function HUD() {
               <strong className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[13px] leading-none">{miniGameSecondsLeft}s</strong>
             </span>
           ) : null}
-          <MobilePill
-            icon={activeVehicle ? <CarFront size={14} /> : seatedSeatId ? <Armchair size={14} /> : <Sparkles size={14} />}
-            text={locationLabel ?? saveStatus}
-            tone="bg-emerald-500 text-white"
-          />
+          {locationLabel ? (
+            <MobilePill
+              icon={activeVehicle ? <CarFront size={14} /> : seatedSeatId ? <Armchair size={14} /> : <Sparkles size={14} />}
+              text={locationLabel}
+              tone="bg-emerald-500 text-white"
+            />
+          ) : null}
         </div>
       </div>
     </>

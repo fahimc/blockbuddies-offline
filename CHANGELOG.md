@@ -10,6 +10,36 @@
 
 ### Known Issues
 
+## [v1.5.43-onboarding-build-friends] - 2026-07-17
+
+### Added
+
+- Added a first-entry welcome overlay with movement, interaction, and Local Party guidance plus a shortcut into the Tutorial panel.
+- Added explicit Save Character controls to the customization flow, automatic character saving when setup completes, saved-character selection, and an editable character name field.
+- Added saved custom friends that can be created from the Buddies menu, persisted locally, added to the town, shown on maps, and messaged through predefined inbox threads.
+- Added deterministic NPC route behavior so buddies follow schedules and do activities around town instead of only random wandering.
+- Added build-mode floor grid and green placement preview using the same placement rules as actual world building.
+
+### Changed
+
+- Reworked the splash screen so the logo and Start button share a centered top container, the logo is larger, the slogan sits below the buttons, the Start button has a press effect, and Remetheia Games appears at the bottom.
+- Removed the visible `saved` HUD pill while keeping background autosave active.
+- Full map and mini-map now show saved in-world friends and connected Local Party players.
+- Buddy message threads now scroll to the newest message automatically.
+- Quest progress now starts naturally when gameplay progress happens.
+- Build Mode now uses a drawer-style piece selector with drag/tap affordances.
+- Updated Android and package version metadata to `1.5.43` / `10543`.
+
+### Fixed
+
+- Removed passive location floor pads, including the misleading yellow circle near Buddy Houses.
+- Fixed customization mini avatar previews appearing squashed.
+- Fixed the welcome overlay blocking unrelated game controls outside its card.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.42-tutorial-menu] - 2026-07-16
 
 ### Added

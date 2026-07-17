@@ -7,7 +7,9 @@ import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import { obbyCheckpoints, obbyPlatforms } from '../ai/obby'
+import { findBuildPlacementPosition } from '../ai/buildMode'
 import { generateProceduralWorld, type ProceduralPiece } from '../data/proceduralWorld'
+import { getBuildPiece } from '../data/buildPieces'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
 import { makePartySnapshot, useLocalPartyStore, type LocalPartySnapshot } from '../state/localPartyStore'
@@ -97,12 +99,14 @@ import {
 } from './vehicles'
 import type {
   AvatarBottomStyle,
+  AvatarSettings,
   AvatarFaceStyle,
   AvatarHairStyle,
   AvatarOutfitStyle,
   AvatarShoeStyle,
   BotRuntime,
   BuildBlock,
+  BuildPieceId,
   InteriorKind,
   InteriorVisit,
   ShopItemId,
@@ -201,6 +205,7 @@ function OutdoorWorld() {
         drivableRuntime={drivableRuntime}
       />
       <Bots />
+      <SavedFriendPlayers />
       <LocalPartyPlayers />
       <ObbyCourse />
       <CoinField />
@@ -208,6 +213,7 @@ function OutdoorWorld() {
       <ToyPickup />
       <PlacedBlocks />
       <RemotePlacedBlocks />
+      <BuildModeOverlay />
     </>
   )
 }
@@ -1003,10 +1009,6 @@ function Town() {
               {location.label}
             </span>
           </Html>
-          <mesh receiveShadow position={[0, 0.04, 0]}>
-            <cylinderGeometry args={[2.8, 2.8, 0.08, 24]} />
-            <meshStandardMaterial color={location.color} />
-          </mesh>
         </group>
       ))}
 
@@ -1931,6 +1933,90 @@ function BotAvatar({ bot, username, color, shirtColor }: { bot: BotRuntime; user
   )
 }
 
+function SavedFriendPlayers() {
+  const friends = useGameStore((state) => state.savedFriends)
+  return (
+    <>
+      {friends.filter((friend) => friend.inWorld).map((friend, index) => (
+        <SavedFriendAvatar key={friend.id} friend={friend} index={index} />
+      ))}
+    </>
+  )
+}
+
+function SavedFriendAvatar({
+  friend,
+  index,
+}: {
+  friend: { id: string; name: string; avatar: AvatarSettings; route: string[] }
+  index: number
+}) {
+  const group = useRef<THREE.Group>(null)
+  const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const target = useRef(new THREE.Vector3())
+  const position = useRef(new THREE.Vector3())
+  const route = friend.route.length ? friend.route : ['spawn']
+
+  useFrame((_, delta) => {
+    const routeIndex = Math.floor(performance.now() / 10000 + index) % route.length
+    const location = worldLocations.find((entry) => entry.id === route[routeIndex]) ?? worldLocations[0]
+    const offset = (index % 4) * 0.9
+    target.current.set(location.position[0] + offset, avatarGroundOffset, location.position[2] - offset)
+    if (position.current.lengthSq() === 0) position.current.copy(target.current)
+    const previous = position.current.clone()
+    position.current.lerp(target.current, 1 - Math.exp(-delta * 0.45))
+    if (!group.current) return
+    group.current.position.copy(position.current)
+    const dx = position.current.x - previous.x
+    const dz = position.current.z - previous.z
+    if (Math.hypot(dx, dz) > 0.002) group.current.rotation.y = Math.atan2(dx, dz)
+  })
+
+  const openThread = () => openMessageThread(friend.id, friend.name)
+
+  return (
+    <group
+      ref={group}
+      position={[worldLocations[index % worldLocations.length].position[0], avatarGroundOffset, worldLocations[index % worldLocations.length].position[2]]}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation()
+        openThread()
+      }}
+    >
+      <mesh
+        position={[0, realScale.avatarHeight * 0.5, 0]}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          openThread()
+        }}
+      >
+        <boxGeometry args={[playerCollisionRadius * 3, realScale.avatarHeight * 1.25, playerCollisionRadius * 3]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <BlockAvatar
+        bodyColor={friend.avatar.bodyColor}
+        shirtColor={friend.avatar.shirtColor}
+        hairColor={friend.avatar.hairColor}
+        hairStyle={friend.avatar.hairStyle}
+        pantsColor={friend.avatar.pantsColor}
+        eyeColor={friend.avatar.eyeColor}
+        accentColor={friend.avatar.accentColor}
+        secondaryColor={friend.avatar.secondaryColor}
+        outfitStyle={friend.avatar.outfitStyle}
+        bottomStyle={friend.avatar.bottomStyle}
+        shoeStyle={friend.avatar.shoeStyle}
+        shoeColor={friend.avatar.shoeColor}
+        accessory={friend.avatar.accessory}
+        face={friend.avatar.face}
+        username={friend.name}
+        hat={friend.avatar.hat !== 'none'}
+        action="walk"
+      />
+    </group>
+  )
+}
+
 type BlockAvatarProps = {
   bodyColor: string
   shirtColor: string
@@ -2771,6 +2857,87 @@ function RemotePlacedBlocks() {
       ))}
     </>
   )
+}
+
+function BuildModeOverlay() {
+  const buildMode = useGameStore((state) => state.buildMode)
+  const playerPosition = useGameStore((state) => state.playerPosition)
+  const playerYaw = useGameStore((state) => state.playerYaw)
+  const placedBlocks = useGameStore((state) => state.placedBlocks)
+  const selectedBuildPiece = useGameStore((state) => state.selectedBuildPiece)
+  const selectedBuildColor = useGameStore((state) => state.selectedBuildColor)
+  const buildRotation = useGameStore((state) => state.buildRotation)
+  const settings = useGameStore((state) => state.settings)
+  const placement = useMemo(
+    () =>
+      buildMode
+        ? findBuildPlacementPosition({
+            blocks: placedBlocks,
+            playerPosition,
+            yaw: playerYaw,
+            pieceId: selectedBuildPiece,
+            worldSeed: settings.worldSeed,
+          })
+        : undefined,
+    [buildMode, placedBlocks, playerPosition, playerYaw, selectedBuildPiece, settings.worldSeed],
+  )
+
+  if (!buildMode) return null
+  const previewPosition = placement?.position
+  const piece = getBuildPiece(selectedBuildPiece)
+  const previewHeight = buildPreviewHeight(selectedBuildPiece)
+
+  return (
+    <group>
+      <gridHelper args={[96, 96, '#0ea5e9', '#93c5fd']} position={[0, 0.075, 0]} />
+      {previewPosition ? (
+        <group position={previewPosition} rotation={[0, buildRotation, 0]}>
+          <mesh position={[0, 0.09, 0]}>
+            <boxGeometry args={[piece.footprint, 0.08, piece.footprint]} />
+            <meshStandardMaterial color="#22c55e" transparent opacity={0.38} />
+          </mesh>
+          <mesh position={[0, previewHeight / 2 + 0.08, 0]}>
+            <boxGeometry
+              args={[
+                Math.max(0.55, piece.footprint * 0.7),
+                Math.max(0.32, previewHeight),
+                Math.max(0.55, piece.footprint * 0.7),
+              ]}
+            />
+            <meshStandardMaterial color={selectedBuildColor} transparent opacity={0.32} />
+          </mesh>
+        </group>
+      ) : (
+        <Html center position={[playerPosition[0], 2.75, playerPosition[2]]} zIndexRange={worldActionZIndexRange}>
+          <span className="whitespace-nowrap rounded-full bg-rose-600 px-3 py-1 text-xs font-black text-white shadow">
+            {placement?.issue ?? 'No build cell'}
+          </span>
+        </Html>
+      )}
+    </group>
+  )
+}
+
+function buildPreviewHeight(pieceId: BuildPieceId) {
+  switch (pieceId) {
+    case 'house':
+      return buildPieceDimensions.house.bodyHeight
+    case 'building':
+      return buildPieceDimensions.building.bodyHeight
+    case 'shop':
+      return buildPieceDimensions.shop.bodyHeight
+    case 'car':
+      return buildPieceDimensions.car.height
+    case 'tree':
+      return buildPieceDimensions.tree.height
+    case 'lamp':
+      return buildPieceDimensions.lamp.height
+    case 'road':
+      return 0.1
+    case 'block':
+    default:
+      return 1
+  }
 }
 
 function BuildPiece({ block }: { block: BuildBlock }) {

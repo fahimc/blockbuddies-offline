@@ -23,6 +23,7 @@ import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
 import { TutorialPanel } from '../ui/TutorialPanel'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
+import { WelcomeOverlay } from '../ui/WelcomeOverlay'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
 
@@ -82,6 +83,7 @@ export function GameScreen() {
         <ChatPanel />
         <TouchControls />
         <RoomCameraZoom />
+        <WelcomeOverlay />
         <LocalPartyRuntimeBridge />
         {openPanel === 'quests' ? <QuestPanel /> : null}
         {openPanel === 'shop' ? <ShopPanel /> : null}

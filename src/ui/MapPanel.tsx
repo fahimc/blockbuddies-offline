@@ -19,6 +19,7 @@ import { distance2d, worldLocations, type WorldLocation } from '../data/world'
 import { unitsPerMeter } from '../game/scale'
 import type { LocationId, Vec3 } from '../game/types'
 import { useGameStore } from '../state/gameStore'
+import { useLocalPartyStore } from '../state/localPartyStore'
 import { miniMapPlayerRotation } from './miniMapMath'
 
 const townExtent = 27
@@ -57,6 +58,8 @@ export function MapPanel() {
   const obbyActive = useGameStore((state) => state.obby.active)
   const miniGameRunning = useGameStore((state) => state.miniGame.status === 'running')
   const miniGame = useGameStore((state) => state.miniGame)
+  const savedFriends = useGameStore((state) => state.savedFriends)
+  const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
   const [selectedId, setSelectedId] = useState<LocationId>(nearbyLocation ?? 'spawn')
   const selected = useMemo(
     () => worldLocations.find((location) => location.id === selectedId) ?? worldLocations[0],
@@ -96,6 +99,8 @@ export function MapPanel() {
             playerPosition={mapPlayerPosition}
             playerYaw={playerYaw}
             activeTarget={activeTarget}
+            savedFriends={savedFriends}
+            localPlayers={Object.values(remotePlayers).filter((player) => !player.interiorId)}
             onSelect={setSelectedId}
           />
 
@@ -155,12 +160,16 @@ function TownMap({
   playerPosition,
   playerYaw,
   activeTarget,
+  savedFriends,
+  localPlayers,
   onSelect,
 }: {
   selectedId: LocationId
   playerPosition: Vec3
   playerYaw: number
   activeTarget?: { label: string; mapLabel?: string; position: Vec3; kind?: string }
+  savedFriends: { id: string; name: string; inWorld: boolean; route: LocationId[] }[]
+  localPlayers: { id: string; name: string; position: Vec3 }[]
   onSelect: (id: LocationId) => void
 }) {
   return (
@@ -198,6 +207,22 @@ function TownMap({
         title="You are here"
         aria-label="Your current position"
       />
+      {savedFriends.filter((friend) => friend.inWorld).map((friend, index) => (
+        <span
+          key={friend.id}
+          className="bb-town-map-friend saved"
+          style={townPointStyle(friendMapPosition(friend.route, index))}
+          title={friend.name}
+        />
+      ))}
+      {localPlayers.map((player) => (
+        <span
+          key={player.id}
+          className="bb-town-map-friend local"
+          style={townPointStyle(player.position)}
+          title={player.name}
+        />
+      ))}
       {activeTarget ? (
         <span
           className={`bb-town-map-objective ${activeTarget.kind ?? 'dropoff'}`}
@@ -213,6 +238,13 @@ function TownMap({
       </span>
     </div>
   )
+}
+
+function friendMapPosition(route: LocationId[], index: number): Vec3 {
+  const routeIds = route.length ? route : ['spawn']
+  const location = worldLocations.find((entry) => entry.id === routeIds[index % routeIds.length]) ?? worldLocations[0]
+  const offset = (index % 4) * 0.9
+  return [location.position[0] + offset, 0, location.position[2] - offset]
 }
 
 function DestinationButton({

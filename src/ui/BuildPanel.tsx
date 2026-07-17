@@ -41,26 +41,42 @@ export function BuildPanel() {
         </span>
       </label>
 
-      <div className="mb-3 grid grid-cols-4 gap-2">
-        {buildPieceDefinitions.map((piece) => (
-          <button
-            key={piece.id}
-            type="button"
-            onClick={() => {
-              setSelectedBuildPiece(piece.id)
-              setSelectedBuildColor(piece.defaultColor)
-            }}
-            className={`bb-build-piece ${selectedBuildPiece === piece.id ? 'selected' : ''}`}
-            aria-label={piece.label}
-            title={piece.label}
-          >
-            <span className="text-lg" aria-hidden>
-              {pieceIcons[piece.id]}
-            </span>
-            <span>{piece.label}</span>
-          </button>
-        ))}
-      </div>
+      <section className="bb-build-drawer" aria-label="Build drawer">
+        <header>
+          <strong>Select a piece</strong>
+          <span>Drag or tap, then place on the green grid preview.</span>
+        </header>
+        <div>
+          {buildPieceDefinitions.map((piece) => (
+            <button
+              key={piece.id}
+              type="button"
+              draggable
+              onDragStart={() => {
+                setSelectedBuildPiece(piece.id)
+                setSelectedBuildColor(piece.defaultColor)
+              }}
+              onDragEnd={() => {
+                setBuildMode(true)
+                placeBlock()
+              }}
+              onClick={() => {
+                setSelectedBuildPiece(piece.id)
+                setSelectedBuildColor(piece.defaultColor)
+                setBuildMode(true)
+              }}
+              className={`bb-build-piece ${selectedBuildPiece === piece.id ? 'selected' : ''}`}
+              aria-label={piece.label}
+              title={piece.label}
+            >
+              <span className="text-lg" aria-hidden>
+                {pieceIcons[piece.id]}
+              </span>
+              <span>{piece.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="mb-3 rounded-xl bg-white p-3 shadow-sm">
         <div className="mb-2 flex items-center justify-between gap-2">

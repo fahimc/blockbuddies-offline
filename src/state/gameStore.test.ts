@@ -197,6 +197,67 @@ describe('player setup flow', () => {
     expect(useGameStore.getState().savedAvatars).toHaveLength(1)
     expect(useGameStore.getState().avatar.shirtColor).toBe('#14b8a6')
   })
+
+  it('saves the chosen character when setup is completed', () => {
+    useGameStore.setState({
+      profileComplete: false,
+      playerName: defaultPlayerName,
+      avatar: { ...defaultAvatar, shirtColor: '#ef4444' },
+      savedAvatars: [],
+    })
+
+    useGameStore.getState().completePlayerProfile('SetupBuddy')
+
+    expect(useGameStore.getState().profileComplete).toBe(true)
+    expect(useGameStore.getState().playerName).toBe('SetupBuddy')
+    expect(useGameStore.getState().savedAvatars[0]).toMatchObject({
+      name: 'SetupBuddy',
+      avatar: expect.objectContaining({ shirtColor: '#ef4444' }),
+    })
+  })
+})
+
+describe('saved game friends', () => {
+  it('creates saved friends that can be toggled into the world and persisted', () => {
+    useGameStore.setState({
+      playerName: 'Fahim',
+      avatar: defaultAvatar,
+      savedFriends: [],
+      messageThreads: [],
+      chat: [],
+    })
+
+    useGameStore.getState().createSavedFriend('Builder Pal')
+    const friend = useGameStore.getState().savedFriends[0]
+
+    expect(friend.name).toBe('Builder Pal')
+    expect(friend.inWorld).toBe(true)
+    expect(useGameStore.getState().messageThreads.some((thread) => thread.botId === friend.id)).toBe(true)
+
+    useGameStore.getState().toggleSavedFriendInWorld(friend.id)
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+    expect(snapshot.savedFriends[0].inWorld).toBe(false)
+    expect(snapshot.savedFriends[0].route.length).toBeGreaterThan(1)
+  })
+})
+
+describe('quest progression', () => {
+  it('auto-starts quests when natural gameplay progress happens', () => {
+    useGameStore.setState({
+      questProgress: useGameStore.getState().questProgress.map((quest) =>
+        quest.id === 'visit-park' ? { ...quest, started: false, completed: false, progress: 0 } : quest,
+      ),
+      chat: [],
+      coins: 0,
+    })
+
+    useGameStore.getState().advanceQuest('visit-park', 1)
+
+    const quest = useGameStore.getState().questProgress.find((entry) => entry.id === 'visit-park')
+    expect(quest).toMatchObject({ started: true, completed: true, progress: 1 })
+    expect(useGameStore.getState().coins).toBeGreaterThan(0)
+  })
 })
 
 describe('direct message inbox', () => {

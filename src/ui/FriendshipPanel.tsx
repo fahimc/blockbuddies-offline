@@ -5,8 +5,57 @@ import { Panel } from './Panel'
 
 export function FriendshipPanel() {
   const memories = useGameStore((state) => state.botMemory)
+  const savedFriends = useGameStore((state) => state.savedFriends)
+  const createSavedFriend = useGameStore((state) => state.createSavedFriend)
+  const toggleSavedFriendInWorld = useGameStore((state) => state.toggleSavedFriendInWorld)
+  const deleteSavedFriend = useGameStore((state) => state.deleteSavedFriend)
+  const openMessageThread = useGameStore((state) => state.openMessageThread)
   return (
     <Panel title="Buddy Profiles">
+      <section className="mb-4 rounded-2xl bg-sky-50 p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div>
+            <h3 className="font-black text-slate-950">Saved Friends</h3>
+            <p className="text-xs font-bold text-slate-500">Create friends, message them, and add them to the town.</p>
+          </div>
+          <button type="button" className="bb-friend-action primary" onClick={() => createSavedFriend()}>
+            Make Friend
+          </button>
+        </div>
+        {savedFriends.length === 0 ? (
+          <p className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-600 shadow-sm">
+            No custom friends yet.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {savedFriends.map((friend) => (
+              <article key={friend.id} className="bb-buddy-card">
+                <div className="flex items-center gap-3">
+                  <span className="bb-buddy-avatar" style={{ background: friend.avatar.shirtColor }} />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-black text-slate-950">{friend.name}</h3>
+                    <p className="text-xs font-bold text-slate-500">
+                      {friend.inWorld ? 'In the town' : 'Saved for later'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  <button type="button" className="bb-friend-action" onClick={() => openMessageThread(friend.id, friend.name)}>
+                    Message
+                  </button>
+                  <button type="button" className="bb-friend-action" onClick={() => toggleSavedFriendInWorld(friend.id)}>
+                    {friend.inWorld ? 'Remove' : 'Add'}
+                  </button>
+                  <button type="button" className="bb-friend-action danger" onClick={() => deleteSavedFriend(friend.id)}>
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="space-y-3">
         {botProfiles.map((bot) => {
           const memory = memories[bot.id]
