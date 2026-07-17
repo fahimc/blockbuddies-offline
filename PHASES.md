@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase selected message buttons
+
+- [x] Hide floating Message buttons until a person is selected.
+- [x] Let tapping an NPC, saved friend, or local-party player select that person instead of opening the inbox immediately.
+- [x] Show exactly one selected-person Message button and keep the inbox open action on that button.
+- [x] Update tutorial copy and Playwright/component coverage for the selected message flow.
+- [x] Package and release Android debug APK for the selected-message update.
+
 ## Post-phase quest log expansion
 
 - [x] Replace truncated quest rows with expandable mobile-friendly quest cards.

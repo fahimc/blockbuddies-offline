@@ -42,7 +42,8 @@ const tutorialSections: TutorialSection[] = [
     title: 'Messages',
     icon: <MessageCircle size={18} aria-hidden />,
     steps: [
-      'Tap a buddy or a local player to open their message thread.',
+      'Tap a buddy or a local player to show their Message button.',
+      'Tap Message to open the thread for that selected person.',
       'Choose one of the safe preset messages. There is no free-text chat.',
       'Unread replies show on the Messages icon and inside the inbox.',
     ],
@@ -105,22 +106,31 @@ export function TutorialPanel() {
             <h3 className="text-base font-black">How to play</h3>
           </div>
           <p className="mt-1 text-sm font-bold leading-snug text-slate-700">
-            Learn the core controls, local multiplayer, building, travel, and rewards.
+            Learn the core controls, local multiplayer, building, travel, and
+            rewards.
           </p>
         </section>
 
         <div className="grid gap-3">
           {tutorialSections.map((section) => (
-            <section key={section.title} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+            <section
+              key={section.title}
+              className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200"
+            >
               <div className="mb-2 flex items-center gap-2 text-blue-700">
                 <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-100">
                   {section.icon}
                 </span>
-                <h3 className="text-base font-black text-slate-950">{section.title}</h3>
+                <h3 className="text-base font-black text-slate-950">
+                  {section.title}
+                </h3>
               </div>
               <ol className="space-y-1.5">
                 {section.steps.map((step, index) => (
-                  <li key={step} className="grid grid-cols-[1.65rem_1fr] gap-2 text-sm font-bold leading-snug text-slate-700">
+                  <li
+                    key={step}
+                    className="grid grid-cols-[1.65rem_1fr] gap-2 text-sm font-bold leading-snug text-slate-700"
+                  >
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-slate-900 text-xs font-black text-white">
                       {index + 1}
                     </span>

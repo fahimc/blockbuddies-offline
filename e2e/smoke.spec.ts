@@ -1,15 +1,22 @@
 import { expect, test } from '@playwright/test'
 
-async function completeStartFlow(page: import('@playwright/test').Page, name = 'PixelPal') {
+async function completeStartFlow(
+  page: import('@playwright/test').Page,
+  name = 'PixelPal',
+) {
   await page.getByRole('button', { name: 'Start' }).click()
-  await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Customization Hub' }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Customize' }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Next: Trails' }).click()
   await page.getByRole('button', { name: 'Finish' }).click()
-  await expect(page.getByRole('heading', { name: 'Name Your Buddy' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Name Your Buddy' }),
+  ).toBeVisible()
   const nameInput = page.getByLabel('Character name')
   const startGame = page.getByRole('button', { name: 'Start Game' })
   await expect(nameInput).not.toBeFocused()
@@ -20,7 +27,9 @@ async function completeStartFlow(page: import('@playwright/test').Page, name = '
 
 test('opens menu and navigates to game shell', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'BlockBuddies' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'BlockBuddies' }),
+  ).toBeVisible()
   await completeStartFlow(page, 'FlowTester')
   await expect(page.getByTestId('game-canvas')).toBeVisible()
   await expect(page.getByTestId('mini-map')).toBeVisible()
@@ -28,8 +37,8 @@ test('opens menu and navigates to game shell', async ({ page }) => {
   await expect
     .poll(
       () =>
-        page.evaluate(() =>
-          window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+        page.evaluate(
+          () => window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
         ),
       { timeout: 5000 },
     )
@@ -45,24 +54,42 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
   await expect(page.locator('.bb-game-menu-drawer')).toBeVisible()
   await page.getByRole('button', { name: 'Customise Character' }).click()
-  await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Customization Hub' }),
+  ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Skin' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Hats' })).toBeVisible()
   await page.getByRole('button', { name: 'Customize' }).click()
-  await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Body & Style' }),
+  ).toBeVisible()
   const bodyCustomizer = page.locator('.bb-customizer-body')
-  await expect(bodyCustomizer.locator('.bb-body-stage .bb-game-avatar-preview')).toBeVisible()
-  await bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }).click()
+  await expect(
+    bodyCustomizer.locator('.bb-body-stage .bb-game-avatar-preview'),
+  ).toBeVisible()
+  await bodyCustomizer
+    .getByRole('button', { name: 'Colours', exact: true })
+    .click()
   await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
-  await expect(bodyCustomizer.locator('.bb-body-stage .bb-game-avatar-preview')).toBeVisible()
-  await bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }).click()
+  await expect(
+    bodyCustomizer.locator('.bb-body-stage .bb-game-avatar-preview'),
+  ).toBeVisible()
+  await bodyCustomizer
+    .getByRole('button', { name: 'Hair', exact: true })
+    .click()
   await expect(bodyCustomizer.getByText('Hair Colour')).toBeVisible()
   await expect(bodyCustomizer.getByText('Hair Style')).toBeVisible()
   await expect(bodyCustomizer.getByText('Skin Tone')).toHaveCount(0)
-  await bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true }).click()
+  await bodyCustomizer
+    .getByRole('button', { name: 'Wardrobe', exact: true })
+    .click()
   await expect(bodyCustomizer.getByText('Brick Borough Presets')).toBeVisible()
-  await expect(bodyCustomizer.getByRole('button', { name: 'Import project' })).toBeVisible()
-  await expect(bodyCustomizer.getByRole('heading', { name: 'Saved Styles' })).toBeVisible()
+  await expect(
+    bodyCustomizer.getByRole('button', { name: 'Import project' }),
+  ).toBeVisible()
+  await expect(
+    bodyCustomizer.getByRole('heading', { name: 'Saved Styles' }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Back' }).click()
 
@@ -80,48 +107,91 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     await page.getByRole('button', { name: 'Menu', exact: true }).click()
     await expect(page.locator('.bb-game-menu-drawer')).toBeVisible()
     await page.getByRole('button', { name: item.button, exact: true }).click()
-    await expect(page.getByRole('heading', { name: item.heading })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: item.heading }),
+    ).toBeVisible()
     if (item.heading === 'Build') {
       await expect(page.getByRole('button', { name: 'House' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Auto Street' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Auto Street' }),
+      ).toBeVisible()
       await expect(page.getByRole('button', { name: 'Rotate' })).toBeVisible()
     }
     if (item.button === 'Town Map') {
       await expect(page.getByTestId('town-map')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Travel to Spawn Plaza' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Travel to Spawn Plaza' }),
+      ).toBeVisible()
     }
     if (item.button === 'Quests') {
       await expect(page.getByText('Meet three buddies')).toBeVisible()
-      await page.locator('.bb-quest-summary').filter({ hasText: 'Visit Skill School' }).click()
-      await expect(page.getByText('Walk to Skill School or use the Town Map to travel there.')).toBeVisible()
+      await page
+        .locator('.bb-quest-summary')
+        .filter({ hasText: 'Visit Skill School' })
+        .click()
+      await expect(
+        page.getByText(
+          'Walk to Skill School or use the Town Map to travel there.',
+        ),
+      ).toBeVisible()
       await page.getByRole('button', { name: 'Daily' }).click()
       await expect(page.getByText('Drive a car')).toBeVisible()
     }
     if (item.button === 'Mini Games') {
-      await expect(page.getByRole('button', { name: 'Play Coin Rush' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Play Delivery Dash' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Play Hide & Seek' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Play Beginner Obby' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Play Coin Rush' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Play Delivery Dash' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Play Hide & Seek' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Play Beginner Obby' }),
+      ).toBeVisible()
     }
     if (item.button === 'Local Party') {
-      await expect(page.getByRole('heading', { name: 'Local Party' })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Local Party' }),
+      ).toBeVisible()
       await expect(page.getByLabel('Room Name')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Host Web Room' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Join Web Room' })).toBeVisible()
-      await expect(page.getByText('Web players join by typing the same room name')).toBeVisible()
-      await expect(page.getByText('Android LAN discovery needs the APK')).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Host Web Room' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Join Web Room' }),
+      ).toBeVisible()
+      await expect(
+        page.getByText('Web players join by typing the same room name'),
+      ).toBeVisible()
+      await expect(
+        page.getByText('Android LAN discovery needs the APK'),
+      ).toBeVisible()
       await page.getByText('Manual code fallback').click()
-      await expect(page.getByRole('button', { name: 'Host Local Party' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Host Local Party' }),
+      ).toBeVisible()
       await expect(page.getByLabel('Join with invite code')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Paste Invite Code' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Paste Invite Code' }),
+      ).toBeVisible()
       await page.getByRole('button', { name: 'Host Local Party' }).click()
       await expect(page.getByLabel('Host invite code preview')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Copy Host invite code' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Share Host invite code' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Paste Answer Code' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Copy Host invite code' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Share Host invite code' }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Paste Answer Code' }),
+      ).toBeVisible()
     }
     if (item.button === 'Settings') {
-      await expect(page.getByRole('textbox', { name: 'World Seed' })).toBeVisible()
+      await expect(
+        page.getByRole('textbox', { name: 'World Seed' }),
+      ).toBeVisible()
       await expect(page.getByText('Procedural Borough')).toBeVisible()
       await expect(page.getByText('Night Mode')).toBeVisible()
     }
@@ -136,7 +206,9 @@ test.describe('landscape phone layout', () => {
     hasTouch: true,
   })
 
-  test('uses responsive splash and compact in-game controls', async ({ page }) => {
+  test('uses responsive splash and compact in-game controls', async ({
+    page,
+  }) => {
     await page.goto('/')
     await expect(page.getByText('OFFLINE SANDBOX TOWN')).toHaveCount(0)
     await expect(page.locator('.bb-splash-poster')).toBeVisible()
@@ -152,19 +224,39 @@ test.describe('landscape phone layout', () => {
     const runButton = page.getByRole('button', { name: 'Run' })
     await expect(runButton).toBeVisible()
     await expect(runButton).toHaveAttribute('aria-pressed', 'false')
-    await runButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true })
+    await runButton.dispatchEvent('pointerdown', {
+      pointerId: 1,
+      pointerType: 'touch',
+      isPrimary: true,
+    })
     await expect(runButton).toHaveAttribute('aria-pressed', 'true')
-    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().run)).toBe(true)
-    await runButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true })
+    expect(
+      await page.evaluate(
+        () => window.__blockBuddiesE2E!.getGameplaySnapshot().run,
+      ),
+    ).toBe(true)
+    await runButton.dispatchEvent('pointerup', {
+      pointerId: 1,
+      pointerType: 'touch',
+      isPrimary: true,
+    })
     await expect(runButton).toHaveAttribute('aria-pressed', 'false')
-    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().run)).toBe(false)
+    expect(
+      await page.evaluate(
+        () => window.__blockBuddiesE2E!.getGameplaySnapshot().run,
+      ),
+    ).toBe(false)
     const emoteButton = page.getByRole('button', { name: 'Toggle emotes' })
     await expect(emoteButton).toBeVisible()
     await expect(emoteButton).toContainText('Emote')
     await emoteButton.click()
     await expect(emoteButton).toHaveAttribute('aria-pressed', 'true')
     await expect(emoteButton).toContainText('Wave')
-    expect(await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerEmote)).toBe('wave')
+    expect(
+      await page.evaluate(
+        () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerEmote,
+      ),
+    ).toBe('wave')
     await expect(page.getByTestId('world-drag-control')).toBeVisible()
     await expect(page.getByTestId('mini-map')).toBeVisible()
 
@@ -175,34 +267,64 @@ test.describe('landscape phone layout', () => {
     await expect(page.getByTestId('map-marker-houses')).toBeVisible()
     await page.getByRole('button', { name: 'Close map' }).click()
 
-    await page.evaluate(() => window.__blockBuddiesE2E!.prepareMovementInteraction())
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareMovementInteraction(),
+    )
     for (let step = 0; step < 7; step += 1) {
-      await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0, 0, -80))
+      await page.evaluate(() =>
+        window.__blockBuddiesE2E!.setMovementInput(0, 0, -80),
+      )
       await page.waitForTimeout(50)
     }
-    const beforeForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
+    const beforeForward = await page.evaluate(
+      () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition,
+    )
     await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(1))
     await page.waitForTimeout(450)
     await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(0))
-    const afterForward = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition)
-    expect(Math.hypot(afterForward[0] - beforeForward[0], afterForward[2] - beforeForward[2])).toBeGreaterThan(0.5)
+    const afterForward = await page.evaluate(
+      () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition,
+    )
+    expect(
+      Math.hypot(
+        afterForward[0] - beforeForward[0],
+        afterForward[2] - beforeForward[2],
+      ),
+    ).toBeGreaterThan(0.5)
 
     await page.getByRole('button', { name: 'Menu', exact: true }).click()
     await page.getByRole('button', { name: 'Reset to Square' }).click()
-    await expect.poll(async () => {
-      const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-      return JSON.stringify({
-        position: snapshot.playerPosition.map((value) => Math.round(value * 10) / 10),
-        emote: snapshot.playerEmote,
-        interior: snapshot.interiorKind,
-        miniGame: snapshot.miniGameStatus,
+    await expect
+      .poll(async () => {
+        const snapshot = await page.evaluate(() =>
+          window.__blockBuddiesE2E!.getGameplaySnapshot(),
+        )
+        return JSON.stringify({
+          position: snapshot.playerPosition.map(
+            (value) => Math.round(value * 10) / 10,
+          ),
+          emote: snapshot.playerEmote,
+          interior: snapshot.interiorKind,
+          miniGame: snapshot.miniGameStatus,
+        })
       })
-    }).toBe(JSON.stringify({ position: [0, 0, 4], emote: 'none', miniGame: 'idle' }))
+      .toBe(
+        JSON.stringify({
+          position: [0, 0, 4],
+          emote: 'none',
+          miniGame: 'idle',
+        }),
+      )
 
-    await page.evaluate(() => window.__blockBuddiesE2E!.prepareHouseBedInteraction())
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareHouseBedInteraction(),
+    )
     await expect
       .poll(
-        () => page.evaluate(() => JSON.stringify(window.__blockBuddiesE2E!.getGameplaySnapshot())),
+        () =>
+          page.evaluate(() =>
+            JSON.stringify(window.__blockBuddiesE2E!.getGameplaySnapshot()),
+          ),
         { timeout: 5000 },
       )
       .toContain('"interactionPrompt":"sleep"')
@@ -211,13 +333,17 @@ test.describe('landscape phone layout', () => {
     await page.getByTestId('bed-action-button').click()
     const wakeAction = page.locator('.mobile-use-button[aria-label="Wake up"]')
     await expect(wakeAction).toBeVisible()
-    const sleepingSnapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    const sleepingSnapshot = await page.evaluate(() =>
+      window.__blockBuddiesE2E!.getGameplaySnapshot(),
+    )
     expect(sleepingSnapshot.sleeping).toBe(true)
     expect(sleepingSnapshot.playerPosition[1]).toBeGreaterThan(0.7)
     expect(sleepingSnapshot.playerPosition[2]).toBeLessThan(2)
     await wakeAction.click()
     await expect(sleepAction).toBeVisible()
-    const awakeSnapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+    const awakeSnapshot = await page.evaluate(() =>
+      window.__blockBuddiesE2E!.getGameplaySnapshot(),
+    )
     expect(awakeSnapshot.sleeping).toBe(false)
     expect(awakeSnapshot.playerPosition[0]).toBeLessThan(2)
     expect(awakeSnapshot.playerPosition[1]).toBeCloseTo(0, 1)
@@ -231,11 +357,15 @@ test.describe('narrow portrait customizer layout', () => {
     hasTouch: true,
   })
 
-  test('keeps the Body & Style preview clear of the category and colour grids', async ({ page }) => {
+  test('keeps the Body & Style preview clear of the category and colour grids', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Start' }).click()
     await page.getByRole('button', { name: 'Customize' }).click()
-    await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Body & Style' }),
+    ).toBeVisible()
 
     const bodyCustomizer = page.locator('.bb-customizer-body')
     const preview = bodyCustomizer.locator('.bb-avatar-turntable')
@@ -257,11 +387,21 @@ test.describe('narrow portrait customizer layout', () => {
     expect(previewBox.x + previewBox.width).toBeLessThanOrEqual(576)
     expect(railBox.x + railBox.width).toBeLessThanOrEqual(576)
     expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(576)
-    await expect(bodyCustomizer.getByRole('button', { name: 'Body & Style' })).toBeInViewport()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Hair', exact: true })).toBeInViewport()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Face', exact: true })).toBeInViewport()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Colours', exact: true })).toBeInViewport()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true })).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Body & Style' }),
+    ).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }),
+    ).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Face', exact: true }),
+    ).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }),
+    ).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true }),
+    ).toBeInViewport()
     await expect(bodyCustomizer.getByText('Skin Tone')).toBeInViewport()
     await expect(bodyCustomizer.getByText('Accent Colour')).toBeInViewport()
   })
@@ -271,7 +411,9 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
   await page.goto('/')
   await completeStartFlow(page, 'MapRunner')
 
-  const before = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
+  const before = await page.evaluate(() =>
+    window.__blockBuddiesE2E!.getGameplaySnapshot(),
+  )
   await page.getByRole('button', { name: 'Open town map' }).click()
   await expect(page.getByTestId('world-map-panel')).toBeVisible()
   await expect(page.getByTestId('town-map')).toBeVisible()
@@ -280,15 +422,19 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
   await page.getByRole('button', { name: 'Travel to Skill School' }).click()
 
   await expect(page.getByTestId('world-map-panel')).toBeHidden()
-  await expect.poll(async () => {
-    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-    return {
-      x: Math.round(snapshot.playerPosition[0] * 10) / 10,
-      z: Math.round(snapshot.playerPosition[2] * 10) / 10,
-      grounded: Math.abs(snapshot.playerPosition[1]) <= 0.15,
-      teleported: snapshot.teleportSequence > before.teleportSequence,
-    }
-  }).toEqual({ x: -21, z: 17.5, grounded: true, teleported: true })
+  await expect
+    .poll(async () => {
+      const snapshot = await page.evaluate(() =>
+        window.__blockBuddiesE2E!.getGameplaySnapshot(),
+      )
+      return {
+        x: Math.round(snapshot.playerPosition[0] * 10) / 10,
+        z: Math.round(snapshot.playerPosition[2] * 10) / 10,
+        grounded: Math.abs(snapshot.playerPosition[1]) <= 0.15,
+        teleported: snapshot.teleportSequence > before.teleportSequence,
+      }
+    })
+    .toEqual({ x: -21, z: 17.5, grounded: true, teleported: true })
 })
 
 test('opens messages from an in-world buddy message icon', async ({ page }) => {
@@ -296,16 +442,28 @@ test('opens messages from an in-world buddy message icon', async ({ page }) => {
   await completeStartFlow(page, 'MessageTester')
   await page.getByRole('button', { name: 'Start Playing' }).click()
 
-  const messageButton = page.getByRole('button', { name: /^Message / }).first()
-  await expect(messageButton).toBeVisible()
-  const contactName = (await messageButton.getAttribute('aria-label'))?.replace(
-    /^Message\s+/,
-    '',
-  )
-  await messageButton.evaluate((button) => (button as HTMLButtonElement).click())
+  await expect(page.getByRole('button', { name: /^Message / })).toHaveCount(0)
+
+  await page
+    .getByRole('button', { name: 'Select LunaBlocks' })
+    .evaluate((button) => (button as HTMLButtonElement).click())
   await expect(
-    page.getByRole('heading', { name: contactName ?? /Messages|Buddy Chat/ }),
+    page.getByRole('button', { name: 'Message LunaBlocks' }),
   ).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Message / })).toHaveCount(1)
+
+  await page
+    .getByRole('button', { name: 'Select MaxJumps' })
+    .evaluate((button) => (button as HTMLButtonElement).click())
+  await expect(
+    page.getByRole('button', { name: 'Message LunaBlocks' }),
+  ).toHaveCount(0)
+  const messageButton = page.getByRole('button', { name: 'Message MaxJumps' })
+  await expect(messageButton).toBeVisible()
+  await messageButton.evaluate((button) =>
+    (button as HTMLButtonElement).click(),
+  )
+  await expect(page.getByRole('heading', { name: 'MaxJumps' })).toBeVisible()
 })
 
 test('travels to the planned build and civic districts', async ({ page }) => {
@@ -317,26 +475,34 @@ test('travels to the planned build and civic districts', async ({ page }) => {
   await page.getByTestId('map-marker-builder').click()
   await page.getByRole('button', { name: 'Travel to Builder Meadows' }).click()
 
-  await expect.poll(async () => {
-    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-    return {
-      x: Math.round(snapshot.playerPosition[0]),
-      z: Math.round(snapshot.playerPosition[2]),
-    }
-  }).toEqual({ x: 67, z: 54 })
+  await expect
+    .poll(async () => {
+      const snapshot = await page.evaluate(() =>
+        window.__blockBuddiesE2E!.getGameplaySnapshot(),
+      )
+      return {
+        x: Math.round(snapshot.playerPosition[0]),
+        z: Math.round(snapshot.playerPosition[2]),
+      }
+    })
+    .toEqual({ x: 67, z: 54 })
 
   await page.getByRole('button', { name: 'Open town map' }).click()
   await expect(page.getByTestId('map-marker-hall')).toBeVisible()
   await page.getByTestId('map-marker-hall').click()
   await page.getByRole('button', { name: 'Travel to Clocktower Hall' }).click()
 
-  await expect.poll(async () => {
-    const snapshot = await page.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-    return {
-      x: Math.round(snapshot.playerPosition[0] * 10) / 10,
-      z: Math.round(snapshot.playerPosition[2] * 10) / 10,
-    }
-  }).toEqual({ x: 0, z: -28.5 })
+  await expect
+    .poll(async () => {
+      const snapshot = await page.evaluate(() =>
+        window.__blockBuddiesE2E!.getGameplaySnapshot(),
+      )
+      return {
+        x: Math.round(snapshot.playerPosition[0] * 10) / 10,
+        z: Math.round(snapshot.playerPosition[2] * 10) / 10,
+      }
+    })
+    .toEqual({ x: 0, z: -28.5 })
 })
 
 test.describe('portrait splash layout', () => {
@@ -346,21 +512,31 @@ test.describe('portrait splash layout', () => {
     hasTouch: true,
   })
 
-  test('keeps the splash art and play button inside a portrait phone viewport', async ({ page }) => {
+  test('keeps the splash art and play button inside a portrait phone viewport', async ({
+    page,
+  }) => {
     await page.goto('/')
     await expect(page.locator('.bb-splash-poster')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'BlockBuddies' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'BlockBuddies' }),
+    ).toBeVisible()
     await expect(page.getByText('Your world.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Start' })).toBeInViewport()
     await expect(page.locator('.bb-splash-feature-strip')).toBeInViewport()
-    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    const scrollWidth = await page.evaluate(
+      () => document.documentElement.scrollWidth,
+    )
     expect(scrollWidth).toBeLessThanOrEqual(720)
   })
 
-  test('keeps the body customizer in a preview-first phone layout', async ({ page }) => {
+  test('keeps the body customizer in a preview-first phone layout', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Start' }).click()
-    await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Customization Hub' }),
+    ).toBeVisible()
     const hub = page.locator('.bb-customizer-hub')
     const hubStage = hub.locator('.bb-hub-stage')
     const hubLeftRail = hub.locator('.bb-hub-rail.left')
@@ -381,9 +557,13 @@ test.describe('portrait splash layout', () => {
     expect(hubLeftBox.y).toBeLessThan(hubRightBox.y)
     expect(hubLeftBox.width / hubBox.width).toBeGreaterThan(0.86)
     expect(hubRightBox.width / hubBox.width).toBeGreaterThan(0.86)
-    await expect(page.getByRole('button', { name: 'Customize' })).toBeInViewport()
+    await expect(
+      page.getByRole('button', { name: 'Customize' }),
+    ).toBeInViewport()
     await page.getByRole('button', { name: 'Customize' }).click()
-    await expect(page.getByRole('heading', { name: 'Body & Style' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Body & Style' }),
+    ).toBeVisible()
 
     const bodyCustomizer = page.locator('.bb-customizer-body')
     const rail = bodyCustomizer.locator('.bb-body-section-rail')
@@ -418,50 +598,98 @@ test.describe('portrait splash layout', () => {
     expect(stageBox.x + stageBox.width).toBeLessThanOrEqual(720)
     expect(railBox.x + railBox.width).toBeLessThanOrEqual(720)
     expect(controlsBox.x + controlsBox.width).toBeLessThanOrEqual(720)
-    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    const scrollWidth = await page.evaluate(
+      () => document.documentElement.scrollWidth,
+    )
     expect(scrollWidth).toBeLessThanOrEqual(720)
     const avatarBox = await avatarTurn.boundingBox()
     expect(avatarBox).not.toBeNull()
     if (!avatarBox) return
     expect(avatarBox.y + avatarBox.height).toBeLessThanOrEqual(railBox.y - 4)
-    await expect(bodyCustomizer.getByRole('button', { name: 'Hair', exact: true })).toBeInViewport()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Colours', exact: true })).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }),
+    ).toBeInViewport()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }),
+    ).toBeInViewport()
 
     const initialPreviewYaw = await avatarTurn.getAttribute('data-preview-yaw')
-    await avatarTurn.dispatchEvent('pointerdown', { pointerId: 9, pointerType: 'touch', clientX: 220, clientY: 260, isPrimary: true })
-    await avatarTurn.dispatchEvent('pointermove', { pointerId: 9, pointerType: 'touch', clientX: 300, clientY: 260, isPrimary: true })
-    await avatarTurn.dispatchEvent('pointerup', { pointerId: 9, pointerType: 'touch', clientX: 300, clientY: 260, isPrimary: true })
-    await expect.poll(() => avatarTurn.getAttribute('data-preview-yaw')).not.toBe(initialPreviewYaw)
+    await avatarTurn.dispatchEvent('pointerdown', {
+      pointerId: 9,
+      pointerType: 'touch',
+      clientX: 220,
+      clientY: 260,
+      isPrimary: true,
+    })
+    await avatarTurn.dispatchEvent('pointermove', {
+      pointerId: 9,
+      pointerType: 'touch',
+      clientX: 300,
+      clientY: 260,
+      isPrimary: true,
+    })
+    await avatarTurn.dispatchEvent('pointerup', {
+      pointerId: 9,
+      pointerType: 'touch',
+      clientX: 300,
+      clientY: 260,
+      isPrimary: true,
+    })
+    await expect
+      .poll(() => avatarTurn.getAttribute('data-preview-yaw'))
+      .not.toBe(initialPreviewYaw)
 
-    await bodyCustomizer.getByRole('button', { name: 'Hair', exact: true }).click()
+    await bodyCustomizer
+      .getByRole('button', { name: 'Hair', exact: true })
+      .click()
     await expect(bodyCustomizer.getByText('Hair Colour')).toBeVisible()
     await expect(bodyCustomizer.getByText('Hair Style')).toBeVisible()
     await expect(bodyCustomizer.getByText('Skin Tone')).toHaveCount(0)
-    await bodyCustomizer.getByRole('button', { name: 'Colours', exact: true }).click()
+    await bodyCustomizer
+      .getByRole('button', { name: 'Colours', exact: true })
+      .click()
     await expect(bodyCustomizer.getByText('Accent Colour')).toBeVisible()
     await expect(stage.locator('.bb-game-avatar-preview')).toBeInViewport()
-    await bodyCustomizer.getByRole('button', { name: 'Wardrobe', exact: true }).click()
-    await expect(bodyCustomizer.getByText('Brick Borough Presets')).toBeVisible()
-    await expect(bodyCustomizer.getByRole('button', { name: 'Sample texture' })).toBeVisible()
+    await bodyCustomizer
+      .getByRole('button', { name: 'Wardrobe', exact: true })
+      .click()
+    await expect(
+      bodyCustomizer.getByText('Brick Borough Presets'),
+    ).toBeVisible()
+    await expect(
+      bodyCustomizer.getByRole('button', { name: 'Sample texture' }),
+    ).toBeVisible()
     await expect(stage.locator('.bb-game-avatar-preview')).toBeInViewport()
   })
 
-  test('keeps emote options below the preview on portrait phones', async ({ page }) => {
+  test('keeps emote options below the preview on portrait phones', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Start' }).click()
-    await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Customization Hub' }),
+    ).toBeVisible()
     await page.getByRole('button', { name: 'Customize' }).click()
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Emotes & Animations' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Emotes & Animations' }),
+    ).toBeVisible()
 
     const emotes = page.locator('.bb-customizer-emotes')
     const preview = emotes.locator('.bb-emote-preview')
-    const categoryStrip = emotes.getByRole('navigation', { name: 'Customization categories' })
+    const categoryStrip = emotes.getByRole('navigation', {
+      name: 'Customization categories',
+    })
     const catalog = emotes.locator('.bb-custom-catalog')
-    await expect(categoryStrip.getByRole('button', { name: 'All' })).toBeVisible()
-    await expect(categoryStrip.getByRole('button', { name: 'Actions' })).toBeVisible()
+    await expect(
+      categoryStrip.getByRole('button', { name: 'All' }),
+    ).toBeVisible()
+    await expect(
+      categoryStrip.getByRole('button', { name: 'Actions' }),
+    ).toBeVisible()
     await expect(catalog.getByText('Wave')).toBeVisible()
 
     const [mainBox, previewBox, stripBox, catalogBox] = await Promise.all([
@@ -481,7 +709,9 @@ test.describe('portrait splash layout', () => {
     expect(stripBox.width / mainBox.width).toBeGreaterThan(0.86)
     expect(catalogBox.x).toBeGreaterThanOrEqual(0)
     expect(catalogBox.x + catalogBox.width).toBeLessThanOrEqual(720)
-    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth)
+    const scrollWidth = await page.evaluate(
+      () => document.documentElement.scrollWidth,
+    )
     expect(scrollWidth).toBeLessThanOrEqual(720)
   })
 })

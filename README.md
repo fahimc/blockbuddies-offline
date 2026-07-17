@@ -68,8 +68,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Eight AI-simulated buddies with usernames, profiles, schedules, moods, goals,
   state transitions, and visible actions.
 - Local fake multiplayer messaging with a buddy inbox, unread badges, visible
-  in-world Message buttons above characters, speech bubbles, join messages, and
-  100 kid-safe predefined message presets.
+  in-world Message buttons that appear only after selecting a person, speech
+  bubbles, join messages, and 100 kid-safe predefined message presets.
 - Expanded Quest Log with tappable mobile cards, full how-to instructions,
   Active/Daily/Completed tabs, rewards, local progress saving, and bot
   reactions.

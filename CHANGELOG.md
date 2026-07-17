@@ -18,6 +18,27 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.56-message-selection] - 2026-07-17
+
+### Added
+
+- Added regression coverage for selected-only in-world Message buttons.
+
+### Changed
+
+- Updated in-world buddy and local-player messaging so tapping a person selects them first, then shows a Message button only for that selected person.
+- Updated the Messages tutorial to explain the select-then-message flow.
+- Updated Android and package version metadata to `1.5.56` / `10556`.
+
+### Fixed
+
+- Fixed every NPC, saved friend, and local-party player showing a floating Message button at the same time.
+- Fixed avatar taps opening message threads immediately instead of revealing the intended per-person message action.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.55-quest-log-expansion] - 2026-07-17
 
 ### Added

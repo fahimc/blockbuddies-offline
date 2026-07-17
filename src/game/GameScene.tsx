@@ -3,6 +3,9 @@ import { Edges, useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Armchair, BedDouble, CarFront, MessageCircle } from 'lucide-react'
 import {
+  createContext,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -13,7 +16,10 @@ import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import { obbyCheckpoints, obbyPlatforms } from '../ai/obby'
-import { buildGridOverlayForPlayer, findBuildPlacementPosition } from '../ai/buildMode'
+import {
+  buildGridOverlayForPlayer,
+  findBuildPlacementPosition,
+} from '../ai/buildMode'
 import {
   generateProceduralWorld,
   type ProceduralPiece,
@@ -144,6 +150,23 @@ import type {
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 const worldActionZIndexRange: [number, number] = [26, 25]
 
+type MessageTargetSelection = {
+  selectedMessageTargetId?: string
+  selectMessageTarget: (targetId: string) => void
+}
+
+const MessageTargetSelectionContext =
+  createContext<MessageTargetSelection | null>(null)
+
+function useMessageTargetSelection() {
+  return (
+    useContext(MessageTargetSelectionContext) ?? {
+      selectedMessageTargetId: undefined,
+      selectMessageTarget: () => undefined,
+    }
+  )
+}
+
 const staticCollisionObstacles: CollisionBox[] = [
   ...staticTownBuildings.map(({ position, scale }, index) => ({
     id: `static-building:${index}`,
@@ -201,17 +224,34 @@ const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map(
 
 export function GameScene() {
   const activeInterior = useGameStore((state) => state.activeInterior)
-  if (activeInterior) {
-    return (
-      <>
-        <InteriorWorld interior={activeInterior} />
-        <PlayerController key={`interior:${activeInterior.id}`} />
-        <LocalPartyPlayers />
-      </>
-    )
-  }
+  const [selectedMessageTargetId, setSelectedMessageTargetId] =
+    useState<string>()
+  const selectMessageTarget = useCallback(
+    (targetId: string) => setSelectedMessageTargetId(targetId),
+    [],
+  )
+  const messageTargetSelection = useMemo(
+    () => ({ selectedMessageTargetId, selectMessageTarget }),
+    [selectedMessageTargetId, selectMessageTarget],
+  )
 
-  return <OutdoorWorld />
+  useEffect(() => {
+    setSelectedMessageTargetId(undefined)
+  }, [activeInterior?.id])
+
+  return (
+    <MessageTargetSelectionContext.Provider value={messageTargetSelection}>
+      {activeInterior ? (
+        <>
+          <InteriorWorld interior={activeInterior} />
+          <PlayerController key={`interior:${activeInterior.id}`} />
+          <LocalPartyPlayers />
+        </>
+      ) : (
+        <OutdoorWorld />
+      )}
+    </MessageTargetSelectionContext.Provider>
+  )
 }
 
 function OutdoorWorld() {
@@ -2650,7 +2690,12 @@ function LocalPartyPlayers() {
 
 function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
   const group = useRef<THREE.Group>(null)
+  const { selectedMessageTargetId, selectMessageTarget } =
+    useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const messageTargetId = `local-party:${player.id}`
+  const isSelected = selectedMessageTargetId === messageTargetId
+  const selectPlayer = () => selectMessageTarget(messageTargetId)
   const openPlayerMessages = () => openMessageThread(player.id, player.name)
   const targetPosition = useMemo(
     () =>
@@ -2682,17 +2727,20 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         player.position[2],
       ]}
       rotation={[0, player.yaw, 0]}
-      onPointerDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        selectPlayer()
+      }}
       onClick={(event) => {
         event.stopPropagation()
-        openPlayerMessages()
+        selectPlayer()
       }}
     >
       <mesh
         position={[0, realScale.avatarHeight * 0.5, 0]}
         onPointerDown={(event) => {
           event.stopPropagation()
-          openPlayerMessages()
+          selectPlayer()
         }}
       >
         <boxGeometry
@@ -2722,8 +2770,15 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         username={player.name}
         hat={player.avatar.hat !== 'none'}
         action={player.action}
+        isSelected={isSelected}
+        onSelect={selectPlayer}
       />
-      <FloatingMessageButton label={player.name} onOpen={openPlayerMessages} />
+      {isSelected ? (
+        <FloatingMessageButton
+          label={player.name}
+          onOpen={openPlayerMessages}
+        />
+      ) : null}
     </group>
   )
 }
@@ -2767,7 +2822,13 @@ function BotAvatar({
   color: string
   shirtColor: string
 }) {
+  const { selectedMessageTargetId, selectMessageTarget } =
+    useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const messageTargetId = `bot:${bot.id}`
+  const isSelected = selectedMessageTargetId === messageTargetId
+  const selectBot = () => selectMessageTarget(messageTargetId)
+  const openBotMessages = () => openMessageThread(bot.id)
   const jumpLift =
     bot.action === 'jump'
       ? Math.max(0, Math.sin(performance.now() / 170)) * 0.18
@@ -2784,10 +2845,13 @@ function BotAvatar({
         bot.position[2],
       ]}
       rotation={[0, yaw, 0]}
-      onPointerDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        selectBot()
+      }}
       onClick={(event) => {
         event.stopPropagation()
-        openMessageThread(bot.id)
+        selectBot()
       }}
     >
       <BlockAvatar
@@ -2815,6 +2879,8 @@ function BotAvatar({
               : 'none'
         }
         action={bot.action}
+        isSelected={isSelected}
+        onSelect={selectBot}
       />
       {bot.speech && bot.speechUntil > Date.now() ? (
         <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
@@ -2823,7 +2889,9 @@ function BotAvatar({
           </div>
         </Html>
       ) : null}
-      <FloatingMessageButton label={username} onOpen={() => openMessageThread(bot.id)} />
+      {isSelected ? (
+        <FloatingMessageButton label={username} onOpen={openBotMessages} />
+      ) : null}
     </group>
   )
 }
@@ -2849,7 +2917,12 @@ function SavedFriendAvatar({
   index: number
 }) {
   const group = useRef<THREE.Group>(null)
+  const { selectedMessageTargetId, selectMessageTarget } =
+    useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const messageTargetId = `friend:${friend.id}`
+  const isSelected = selectedMessageTargetId === messageTargetId
+  const selectFriend = () => selectMessageTarget(messageTargetId)
   const target = useRef(new THREE.Vector3())
   const position = useRef(new THREE.Vector3())
   const route = friend.route.length ? friend.route : ['spawn']
@@ -2887,17 +2960,20 @@ function SavedFriendAvatar({
         avatarGroundOffset,
         worldLocations[index % worldLocations.length].position[2],
       ]}
-      onPointerDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        selectFriend()
+      }}
       onClick={(event) => {
         event.stopPropagation()
-        openThread()
+        selectFriend()
       }}
     >
       <mesh
         position={[0, realScale.avatarHeight * 0.5, 0]}
         onPointerDown={(event) => {
           event.stopPropagation()
-          openThread()
+          selectFriend()
         }}
       >
         <boxGeometry
@@ -2927,8 +3003,12 @@ function SavedFriendAvatar({
         username={friend.name}
         hat={friend.avatar.hat !== 'none'}
         action="walk"
+        isSelected={isSelected}
+        onSelect={selectFriend}
       />
-      <FloatingMessageButton label={friend.name} onOpen={openThread} />
+      {isSelected ? (
+        <FloatingMessageButton label={friend.name} onOpen={openThread} />
+      ) : null}
     </group>
   )
 }
@@ -2984,6 +3064,8 @@ type BlockAvatarProps = {
   hat?: boolean
   emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit' | 'sleep'
   action?: BotRuntime['action']
+  isSelected?: boolean
+  onSelect?: () => void
 }
 
 export function BlockAvatar({
@@ -3006,6 +3088,8 @@ export function BlockAvatar({
   hat,
   emote = 'none',
   action = 'idle',
+  isSelected,
+  onSelect,
 }: BlockAvatarProps) {
   const body = useRef<THREE.Group>(null)
   const leftArm = useRef<THREE.Group>(null)
@@ -3090,13 +3174,32 @@ export function BlockAvatar({
 
   const sitDrop = emote === 'sit' ? -avatarSitDrop : 0
   const faceStyle = face === 'wow' ? 'surprised' : face
+  const nameClassName = `whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow transition ${isSelected ? 'ring-2 ring-sky-300 ring-offset-2 ring-offset-slate-950/20' : ''}`
   return (
     <group position={[0, sitDrop, 0]}>
       {showName ? (
         <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
-          <span className="whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow">
-            {username}
-          </span>
+          {onSelect ? (
+            <button
+              type="button"
+              className={nameClassName}
+              aria-label={`Select ${username}`}
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onSelect()
+              }}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onSelect()
+              }}
+            >
+              {username}
+            </button>
+          ) : (
+            <span className={nameClassName}>{username}</span>
+          )}
         </Html>
       ) : null}
       <group ref={body} position={[0, avatarBodyBaseY, 0]}>
@@ -4094,12 +4197,7 @@ function BuildModeOverlay() {
   return (
     <group>
       <gridHelper
-        args={[
-          gridOverlay.size,
-          gridOverlay.divisions,
-          '#0ea5e9',
-          '#93c5fd',
-        ]}
+        args={[gridOverlay.size, gridOverlay.divisions, '#0ea5e9', '#93c5fd']}
         position={gridOverlay.center}
       />
       <mesh
