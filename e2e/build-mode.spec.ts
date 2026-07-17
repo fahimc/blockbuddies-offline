@@ -72,6 +72,28 @@ test.describe('mobile build mode HUD', () => {
         ),
       )
       .toBe('e2e-build-house')
+    await expect(
+      page.getByRole('form', { name: 'Selected house' }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('My House - door', { exact: true }),
+    ).toBeVisible()
+    await page.getByRole('textbox', { name: 'House name' }).fill('Blue Base')
+    await page.getByRole('button', { name: 'Save house name' }).click()
+    await page.getByRole('button', { name: 'Rotate selected house' }).click()
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const house = window
+            .__blockBuddiesE2E!.getGameplaySnapshot()
+            .placedBlocks.find((block) => block.id === 'e2e-build-house')
+          return { name: house?.name, rotation: house?.rotation }
+        }),
+      )
+      .toEqual({ name: 'Blue Base', rotation: Math.PI / 2 })
+    await expect(
+      page.getByText('Blue Base - door', { exact: true }),
+    ).toBeVisible()
     const remove = page
       .getByRole('button', { name: 'Remove selected build item' })
       .first()

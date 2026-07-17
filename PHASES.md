@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase house direction and naming
+
+- [x] Render the real house and visible door in the placement preview.
+- [x] Show a high-contrast front-door arrow for previewed and selected houses.
+- [x] Rotate selected placed houses with the existing mobile-friendly Rotate control.
+- [x] Name and rename selected houses from a responsive Build Mode editor.
+- [x] Persist house names and use them for interior titles and Local Party synchronization.
+- [x] Add unit, component, persistence, networking, and mobile Playwright regression coverage.
+- [x] Package and release the Android debug APK for the house-builder update.
+
 ## Post-phase build selection and placement clearance
 
 - [x] Keep every solid build outside the avatar's collision clearance when placing or searching fallback cells.

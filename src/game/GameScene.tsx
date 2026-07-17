@@ -4016,6 +4016,9 @@ function BuildModeOverlay() {
   const playerYaw = useGameStore((state) => state.playerYaw)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
   const selectedBuildPiece = useGameStore((state) => state.selectedBuildPiece)
+  const selectedBuildBlockId = useGameStore(
+    (state) => state.selectedBuildBlockId,
+  )
   const selectedBuildColor = useGameStore((state) => state.selectedBuildColor)
   const buildRotation = useGameStore((state) => state.buildRotation)
   const settings = useGameStore((state) => state.settings)
@@ -4062,28 +4065,35 @@ function BuildModeOverlay() {
         <planeGeometry args={[96, 96]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      {previewPosition ? (
+      {!selectedBuildBlockId && previewPosition ? (
         <group position={previewPosition} rotation={[0, buildRotation, 0]}>
           <mesh position={[0, 0.09, 0]}>
             <boxGeometry args={[piece.footprint, 0.08, piece.footprint]} />
             <meshStandardMaterial color="#22c55e" transparent opacity={0.38} />
           </mesh>
-          <mesh position={[0, previewHeight / 2 + 0.08, 0]}>
-            <boxGeometry
-              args={[
-                Math.max(0.55, piece.footprint * 0.7),
-                Math.max(0.32, previewHeight),
-                Math.max(0.55, piece.footprint * 0.7),
-              ]}
-            />
-            <meshStandardMaterial
-              color={selectedBuildColor}
-              transparent
-              opacity={0.32}
-            />
-          </mesh>
+          {selectedBuildPiece === 'house' ? (
+            <>
+              <HousePiece color={selectedBuildColor} preview />
+              <BuildFrontIndicator label="Front" />
+            </>
+          ) : (
+            <mesh position={[0, previewHeight / 2 + 0.08, 0]}>
+              <boxGeometry
+                args={[
+                  Math.max(0.55, piece.footprint * 0.7),
+                  Math.max(0.32, previewHeight),
+                  Math.max(0.55, piece.footprint * 0.7),
+                ]}
+              />
+              <meshStandardMaterial
+                color={selectedBuildColor}
+                transparent
+                opacity={0.32}
+              />
+            </mesh>
+          )}
         </group>
-      ) : (
+      ) : !selectedBuildBlockId ? (
         <Html
           center
           position={[playerPosition[0], 2.75, playerPosition[2]]}
@@ -4093,7 +4103,7 @@ function BuildModeOverlay() {
             {placement?.issue ?? 'No build cell'}
           </span>
         </Html>
-      )}
+      ) : null}
     </group>
   )
 }
@@ -4156,7 +4166,12 @@ function BuildPiece({
         <BlockPiece color={block.color} />
       ) : null}
       {selected ? (
-        <BuildSelectionHighlight kind={block.kind ?? 'block'} />
+        <>
+          <BuildSelectionHighlight kind={block.kind ?? 'block'} />
+          {block.kind === 'house' ? (
+            <BuildFrontIndicator label={block.name ?? 'My House'} />
+          ) : null}
+        </>
       ) : null}
     </group>
   )
@@ -4215,15 +4230,51 @@ function RoadPiece({ color }: { color: string }) {
   )
 }
 
-function HousePiece({ color }: { color: string }) {
+function BuildFrontIndicator({ label }: { label: string }) {
+  const { depth } = buildPieceDimensions.house
+  return (
+    <group position={[0, 0.14, depth / 2 + 0.14]} raycast={() => null}>
+      <mesh position={[0, 0, 0.72]}>
+        <boxGeometry args={[0.18, 0.08, 1.15]} />
+        <meshBasicMaterial color="#facc15" depthTest={false} />
+      </mesh>
+      <mesh position={[0, 0, 1.5]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.46, 0.72, 3]} />
+        <meshBasicMaterial color="#facc15" depthTest={false} />
+      </mesh>
+      <Html
+        center
+        position={[0, 1.12, 0.68]}
+        zIndexRange={worldActionZIndexRange}
+      >
+        <span className="bb-build-door-label">{label} - door</span>
+      </Html>
+    </group>
+  )
+}
+
+function HousePiece({
+  color,
+  preview = false,
+}: {
+  color: string
+  preview?: boolean
+}) {
   const { width, depth, bodyHeight, roofHeight } = buildPieceDimensions.house
   const windowY = realScale.floorHeight * 1.43
+  const previewMaterial = preview
+    ? { transparent: true, opacity: 0.58, depthWrite: false }
+    : {}
 
   return (
     <group>
       <mesh castShadow receiveShadow position={[0, bodyHeight / 2, 0]}>
         <boxGeometry args={[width, bodyHeight, depth]} />
-        <meshStandardMaterial color={color} roughness={0.76} />
+        <meshStandardMaterial
+          color={color}
+          roughness={0.76}
+          {...previewMaterial}
+        />
       </mesh>
       <mesh
         castShadow
@@ -4231,7 +4282,11 @@ function HousePiece({ color }: { color: string }) {
         rotation={[0, Math.PI / 4, 0]}
       >
         <coneGeometry args={[Math.max(width, depth) * 0.74, roofHeight, 4]} />
-        <meshStandardMaterial color="#ef4444" roughness={0.78} />
+        <meshStandardMaterial
+          color="#ef4444"
+          roughness={0.78}
+          {...previewMaterial}
+        />
       </mesh>
       <mesh position={[0, realScale.doorHeight / 2, depth / 2 + 0.03]}>
         <boxGeometry
@@ -4241,7 +4296,51 @@ function HousePiece({ color }: { color: string }) {
             realScale.doorDepth,
           ]}
         />
-        <meshStandardMaterial color="#7c2d12" roughness={0.82} />
+        <meshStandardMaterial
+          color="#7c2d12"
+          roughness={0.82}
+          transparent={preview}
+          opacity={preview ? 0.9 : 1}
+          depthWrite={!preview}
+        />
+      </mesh>
+      <mesh
+        position={[
+          -realScale.doorWidth * 0.28,
+          realScale.doorHeight * 0.52,
+          depth / 2 + 0.12,
+        ]}
+      >
+        <sphereGeometry args={[0.09, 10, 10]} />
+        <meshStandardMaterial
+          color="#facc15"
+          emissive="#f59e0b"
+          emissiveIntensity={0.25}
+        />
+      </mesh>
+      <mesh position={[0, realScale.doorHeight + 0.09, depth / 2 + 0.055]}>
+        <boxGeometry args={[realScale.doorWidth + 0.24, 0.18, 0.15]} />
+        <meshStandardMaterial color="#451a03" {...previewMaterial} />
+      </mesh>
+      <mesh
+        position={[
+          -realScale.doorWidth / 2 - 0.08,
+          realScale.doorHeight / 2,
+          depth / 2 + 0.055,
+        ]}
+      >
+        <boxGeometry args={[0.16, realScale.doorHeight + 0.18, 0.15]} />
+        <meshStandardMaterial color="#451a03" {...previewMaterial} />
+      </mesh>
+      <mesh
+        position={[
+          realScale.doorWidth / 2 + 0.08,
+          realScale.doorHeight / 2,
+          depth / 2 + 0.055,
+        ]}
+      >
+        <boxGeometry args={[0.16, realScale.doorHeight + 0.18, 0.15]} />
+        <meshStandardMaterial color="#451a03" {...previewMaterial} />
       </mesh>
       <mesh position={[-width * 0.26, windowY, depth / 2 + 0.04]}>
         <boxGeometry

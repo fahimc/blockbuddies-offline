@@ -139,6 +139,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Build Mode shows a floor grid and green placement preview, with a drawer-style
   catalog plus a compact left-side HUD list for selecting build pieces. Tapping
   a placed item gives it a yellow outline so that exact item can be removed.
+- House previews render the real model and a yellow front-door arrow. Selecting
+  a placed house opens a responsive editor for rotating it and changing its
+  persistent name; named houses keep that title in saves, interiors, and Local
+  Party synchronization.
 - Solid build placement reserves avatar clearance, and collision recovery moves
   players out of overlapping saved or synchronized builds instead of trapping
   them inside a wall.

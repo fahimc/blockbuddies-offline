@@ -39,7 +39,10 @@ export const buildPieceDefinitions: BuildPieceDefinition[] = [
     id: 'house',
     label: 'House',
     category: 'structure',
-    footprint: Math.max(buildPieceDimensions.house.width, buildPieceDimensions.house.depth),
+    footprint: Math.max(
+      buildPieceDimensions.house.width,
+      buildPieceDimensions.house.depth,
+    ),
     y: 0.02,
     placeDistance: 5.8,
     defaultColor: '#60a5fa',
@@ -49,7 +52,10 @@ export const buildPieceDefinitions: BuildPieceDefinition[] = [
     id: 'building',
     label: 'Tower',
     category: 'structure',
-    footprint: Math.max(buildPieceDimensions.building.width, buildPieceDimensions.building.depth),
+    footprint: Math.max(
+      buildPieceDimensions.building.width,
+      buildPieceDimensions.building.depth,
+    ),
     y: 0.02,
     placeDistance: 6.4,
     defaultColor: '#818cf8',
@@ -59,7 +65,10 @@ export const buildPieceDefinitions: BuildPieceDefinition[] = [
     id: 'shop',
     label: 'Shop',
     category: 'structure',
-    footprint: Math.max(buildPieceDimensions.shop.width, buildPieceDimensions.shop.depth),
+    footprint: Math.max(
+      buildPieceDimensions.shop.width,
+      buildPieceDimensions.shop.depth,
+    ),
     y: 0.02,
     placeDistance: 6.8,
     defaultColor: '#f97316',
@@ -97,6 +106,27 @@ export const buildPieceDefinitions: BuildPieceDefinition[] = [
   },
 ]
 
+export const maxBuildPieceNameLength = 24
+
+export function sanitizeBuildPieceName(input: string | undefined) {
+  return (input ?? '')
+    .replace(/[^a-zA-Z0-9 '&-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxBuildPieceNameLength)
+}
+
+export function defaultBuildPieceName(kind: BuildPieceId, number = 1) {
+  const suffix = number > 1 ? ` ${number}` : ''
+  if (kind === 'house') return `My House${suffix}`
+  if (kind === 'shop') return `My Shop${suffix}`
+  if (kind === 'building') return `My Tower${suffix}`
+  return getBuildPiece(kind).label
+}
+
 export function getBuildPiece(id: BuildPieceId | undefined) {
-  return buildPieceDefinitions.find((piece) => piece.id === id) ?? buildPieceDefinitions[0]
+  return (
+    buildPieceDefinitions.find((piece) => piece.id === id) ??
+    buildPieceDefinitions[0]
+  )
 }

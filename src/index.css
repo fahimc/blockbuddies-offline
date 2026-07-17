@@ -2663,6 +2663,121 @@ canvas {
   opacity: 0.72;
 }
 
+.bb-build-house-editor {
+  position: absolute;
+  z-index: 23;
+  top: clamp(6.25rem, 13dvh, 8rem);
+  left: calc(
+    max(0.65rem, env(safe-area-inset-left)) + clamp(4.65rem, 8.5vw, 5.5rem) +
+      0.55rem
+  );
+  display: grid;
+  width: clamp(11rem, 28vw, 14rem);
+  gap: 0.58rem;
+  border: 0.1rem solid rgb(255 255 255 / 0.82);
+  border-radius: 0.9rem;
+  background: rgb(15 23 42 / 0.94);
+  padding: 0.7rem;
+  color: white;
+  box-shadow: 0 0.7rem 1.8rem rgb(15 23 42 / 0.3);
+  backdrop-filter: blur(0.65rem);
+}
+
+.bb-build-house-editor header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bb-build-house-editor header div {
+  display: grid;
+  min-width: 0;
+  gap: 0.08rem;
+}
+
+.bb-build-house-editor header strong {
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.bb-build-house-editor header small {
+  color: #fde047;
+  font-size: 0.62rem;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.bb-build-house-editor label {
+  display: grid;
+  gap: 0.28rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.bb-build-house-editor input {
+  min-width: 0;
+  width: 100%;
+  height: 2.35rem;
+  border: 0.12rem solid #38bdf8;
+  border-radius: 0.62rem;
+  background: white;
+  padding: 0 0.58rem;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  outline: none;
+}
+
+.bb-build-house-editor input:focus {
+  border-color: #fde047;
+  box-shadow: 0 0 0 0.15rem rgb(253 224 71 / 0.28);
+}
+
+.bb-build-house-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.bb-build-house-actions button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  border: 0.08rem solid rgb(255 255 255 / 0.24);
+  border-radius: 0.62rem;
+  background: #0ea5e9;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.bb-build-house-actions button:last-child {
+  background: #7c3aed;
+}
+
+.bb-build-door-label {
+  display: block;
+  max-width: 11rem;
+  overflow: hidden;
+  border: 0.12rem solid white;
+  border-radius: 0.55rem;
+  background: #facc15;
+  padding: 0.26rem 0.48rem;
+  color: #172033;
+  font-size: 0.7rem;
+  font-weight: 1000;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 0.25rem 0.7rem rgb(15 23 42 / 0.3);
+  user-select: none;
+}
+
 @media (max-width: 900px), (pointer: coarse) {
   .bb-build-hud-palette {
     width: clamp(4.3rem, 16vw, 5.1rem);
@@ -2674,6 +2789,32 @@ canvas {
   .bb-build-hud-palette nav button,
   .bb-build-hud-remove {
     min-height: clamp(2.95rem, 6dvh, 3.35rem);
+  }
+
+  .bb-build-house-editor {
+    left: calc(
+      max(0.65rem, env(safe-area-inset-left)) + clamp(4.3rem, 16vw, 5.1rem) +
+        0.45rem
+    );
+    width: clamp(10.5rem, 46vw, 13rem);
+  }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  .bb-build-house-editor {
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: min(22rem, 48vw);
+  }
+
+  .bb-build-house-editor header,
+  .bb-build-house-editor label {
+    grid-column: 1;
+  }
+
+  .bb-build-house-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-template-columns: 1fr;
   }
 }
 

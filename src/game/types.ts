@@ -1,6 +1,15 @@
 export type Vec3 = [number, number, number]
 
-export type LocationId = 'spawn' | 'park' | 'shop' | 'school' | 'obby' | 'houses' | 'parking' | 'hall' | 'builder'
+export type LocationId =
+  | 'spawn'
+  | 'park'
+  | 'shop'
+  | 'school'
+  | 'obby'
+  | 'houses'
+  | 'parking'
+  | 'hall'
+  | 'builder'
 
 export type InteriorKind = 'house' | 'shop' | 'school' | 'building'
 
@@ -188,15 +197,10 @@ export type AvatarOutfitStyle =
   | 'none'
 
 export type AvatarBottomStyle =
-  | 'jeans'
-  | 'shorts'
-  | 'joggers'
-  | 'cargo'
-  | 'skirt'
-  | 'leggings'
-  | 'none'
+  'jeans' | 'shorts' | 'joggers' | 'cargo' | 'skirt' | 'leggings' | 'none'
 
-export type AvatarShoeStyle = 'sneakers' | 'boots' | 'highTops' | 'sandals' | 'none'
+export type AvatarShoeStyle =
+  'sneakers' | 'boots' | 'highTops' | 'sandals' | 'none'
 
 export type AvatarSettings = {
   bodyColor: string
@@ -314,11 +318,13 @@ export type BadgeDefinition = {
   icon: string
 }
 
-export type BuildPieceId = 'block' | 'road' | 'house' | 'building' | 'shop' | 'car' | 'tree' | 'lamp'
+export type BuildPieceId =
+  'block' | 'road' | 'house' | 'building' | 'shop' | 'car' | 'tree' | 'lamp'
 
 export type BuildBlock = {
   id: string
   kind?: BuildPieceId
+  name?: string
   position: Vec3
   color: string
   rotation?: number

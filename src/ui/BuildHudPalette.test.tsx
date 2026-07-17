@@ -59,4 +59,35 @@ describe('BuildHudPalette', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Exit build mode' }))
     expect(useGameStore.getState().buildMode).toBe(false)
   })
+
+  it('renames and rotates a selected house from the HUD editor', () => {
+    useGameStore.setState({
+      selectedBuildBlockId: 'selected-house',
+      buildRotation: 0,
+      placedBlocks: [
+        {
+          id: 'selected-house',
+          kind: 'house',
+          name: 'My House',
+          position: [8, 0.02, 8],
+          color: '#60a5fa',
+          rotation: 0,
+        },
+      ],
+    })
+    render(<BuildHudPalette />)
+
+    const name = screen.getByLabelText('House name')
+    expect(name).toHaveValue('My House')
+    fireEvent.change(name, { target: { value: 'Blue Base' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save house name' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Rotate selected house' }),
+    )
+
+    expect(useGameStore.getState().placedBlocks[0]).toMatchObject({
+      name: 'Blue Base',
+      rotation: Math.PI / 2,
+    })
+  })
 })

@@ -4,20 +4,41 @@
 
 ### Added
 
-- Added a compact left-side Build Mode catalog with every placeable item available directly from the game HUD.
-- Added tap selection for player-built items, a clear yellow world outline, and exact selected-item removal.
-- Added deterministic unit and Playwright regression coverage for builder clearance, build selection, removal, and mobile HUD fit.
+- Added custom names for player-built houses, including automatic names for new houses and a responsive selected-house editor.
+- Added a real house placement preview, stronger door details, and a yellow front-door direction arrow.
+- Added deterministic store, persistence, Local Party, interior, UI, and mobile Playwright coverage for house names and rotation.
 
 ### Changed
 
-- Build Mode now returns to the world after choosing a piece so mobile players can place it immediately.
-- The mobile Remove control now removes the selected item instead of the most recently placed item.
+- The Build Mode Rotate control now rotates a selected placed item or the next placement when nothing is selected.
+- Built-house names now appear as interior titles and synchronize with Local Party build objects.
 
 ### Fixed
 
-- Fixed houses and other solid builds spawning around the player and trapping the avatar inside their collision bounds.
-- Fixed saved or synchronized solid builds leaving an embedded avatar unable to move by resolving overlap to the nearest clear edge.
-- Fixed the full-screen camera drag layer intercepting taps on built items while Build Mode is active.
+- Fixed the featureless build preview making it impossible to determine which direction a house door would face.
+- Fixed placed houses having no way to change their orientation or name after placement.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.46-house-builder] - 2026-07-17
+
+### Added
+
+- Added custom names for player-built houses, including automatic names for new houses and a responsive selected-house editor.
+- Added a real house placement preview, stronger door details, and a yellow front-door direction arrow.
+- Added deterministic store, persistence, Local Party, interior, UI, and mobile Playwright coverage for house names and rotation.
+
+### Changed
+
+- The Build Mode Rotate control now rotates a selected placed item or the next placement when nothing is selected.
+- Built-house names now appear as interior titles and synchronize with Local Party build objects.
+
+### Fixed
+
+- Fixed the featureless build preview making it impossible to determine which direction a house door would face.
+- Fixed placed houses having no way to change their orientation or name after placement.
 
 ### Known Issues
 

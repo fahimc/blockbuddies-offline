@@ -106,6 +106,7 @@ describe('local party helpers', () => {
         kind: index % 2 === 0 ? 'house' : 'tree',
         position: [index, 0, index + 1],
         color: index === 109 ? 'orange' : '#22c55e',
+        name: index === 109 ? '  Party <House>!!!  ' : undefined,
         rotation: Number.NaN,
       })),
       updatedAt: 100,
@@ -116,6 +117,7 @@ describe('local party helpers', () => {
     expect(snapshot.placedBlocks?.at(-1)).toMatchObject({
       id: 'piece-109',
       color: '#60a5fa',
+      name: 'Party House',
       rotation: 0,
     })
   })

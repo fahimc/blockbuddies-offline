@@ -47,6 +47,7 @@ describe('interior entrances', () => {
     const block: BuildBlock = {
       id: 'home-1',
       kind: 'house',
+      name: 'Sunny House',
       position: [4, 0, 8],
       color: '#60a5fa',
       rotation: Math.PI / 2,
@@ -56,6 +57,7 @@ describe('interior entrances', () => {
 
     expect(entrance).toBeDefined()
     expect(entrance?.kind).toBe('house')
+    expect(entrance?.title).toBe('Sunny House')
     expect(entrance?.position[0]).toBeGreaterThan(4 + buildPieceDimensions.house.depth / 2)
     expect(entrance?.position[2]).toBeCloseTo(8)
     expect((entrance?.returnPosition[0] ?? 0) - (entrance?.position[0] ?? 0)).toBeCloseTo(exteriorDoorClearanceDistance)

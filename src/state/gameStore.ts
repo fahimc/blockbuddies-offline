@@ -6,6 +6,10 @@ import {
 } from '../data/predefinedMessages'
 import { questDefinitions } from '../data/quests'
 import { shopItems } from '../data/shopItems'
+import {
+  defaultBuildPieceName,
+  sanitizeBuildPieceName,
+} from '../data/buildPieces'
 import { getLocation } from '../data/world'
 import { findBadge } from '../data/badges'
 import { createInitialBot, updateBot } from '../ai/botBrain'
@@ -204,6 +208,7 @@ type GameState = GameSave & {
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
   setSelectedBuildBlock: (blockId?: string) => void
+  renameSelectedBuildBlock: (name: string) => void
   setSelectedBuildColor: (color: string) => void
   rotateBuildPiece: () => void
   placeBlock: () => void
@@ -1100,12 +1105,58 @@ export const useGameStore = create<GameState>((set, get) => ({
             interactionPrompt: buildMode ? undefined : state.interactionPrompt,
           },
     ),
-  setSelectedBuildPiece: (selectedBuildPiece) => set({ selectedBuildPiece }),
+  setSelectedBuildPiece: (selectedBuildPiece) =>
+    set({ selectedBuildPiece, selectedBuildBlockId: undefined }),
   setSelectedBuildBlock: (selectedBuildBlockId) =>
-    set({ selectedBuildBlockId }),
+    set((state) => {
+      const selected = state.placedBlocks.find(
+        (block) => block.id === selectedBuildBlockId,
+      )
+      return {
+        selectedBuildBlockId,
+        buildRotation: selected?.rotation ?? state.buildRotation,
+      }
+    }),
+  renameSelectedBuildBlock: (name) =>
+    set((state) => {
+      const cleanName = sanitizeBuildPieceName(name)
+      if (!state.selectedBuildBlockId || !cleanName) return state
+      const selected = state.placedBlocks.find(
+        (block) => block.id === state.selectedBuildBlockId,
+      )
+      if (!selected || selected.kind !== 'house') return state
+      return {
+        placedBlocks: state.placedBlocks.map((block) =>
+          block.id === state.selectedBuildBlockId
+            ? { ...block, name: cleanName }
+            : block,
+        ),
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`House renamed ${cleanName}`),
+        ],
+      }
+    }),
   setSelectedBuildColor: (selectedBuildColor) => set({ selectedBuildColor }),
   rotateBuildPiece: () =>
-    set((state) => ({ buildRotation: rotateBuildYaw(state.buildRotation) })),
+    set((state) => {
+      const selected = state.placedBlocks.find(
+        (block) => block.id === state.selectedBuildBlockId,
+      )
+      const buildRotation = rotateBuildYaw(
+        selected?.rotation ?? state.buildRotation,
+      )
+      return selected
+        ? {
+            buildRotation,
+            placedBlocks: state.placedBlocks.map((block) =>
+              block.id === selected.id
+                ? { ...block, rotation: buildRotation }
+                : block,
+            ),
+          }
+        : { buildRotation }
+    }),
   placeBlock: () =>
     set((state) => {
       if (state.activeInterior) {
@@ -1147,6 +1198,15 @@ export const useGameStore = create<GameState>((set, get) => ({
           color: state.selectedBuildColor,
           rotation: state.buildRotation,
         }),
+        ...(state.selectedBuildPiece === 'house'
+          ? {
+              name: defaultBuildPieceName(
+                'house',
+                state.placedBlocks.filter((item) => item.kind === 'house')
+                  .length + 1,
+              ),
+            }
+          : {}),
       }
       return {
         placedBlocks: [...state.placedBlocks, block],
@@ -1247,13 +1307,36 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
   mergeSharedBuildBlocks: (blocks) =>
     set((state) => {
+      const incomingById = new Map(blocks.map((block) => [block.id, block]))
+      let existingChanged = false
+      const updatedExisting = state.placedBlocks.map((existing) => {
+        const incomingBlock = incomingById.get(existing.id)
+        if (!incomingBlock) return existing
+        const next = {
+          ...existing,
+          color: incomingBlock.color,
+          rotation: incomingBlock.rotation ?? existing.rotation,
+          ...(incomingBlock.name ? { name: incomingBlock.name } : {}),
+        }
+        if (
+          next.color !== existing.color ||
+          next.rotation !== existing.rotation ||
+          next.name !== existing.name
+        ) {
+          existingChanged = true
+          return next
+        }
+        return existing
+      })
       const incoming = blocks.filter(
         (block) =>
           !state.placedBlocks.some((existing) => existing.id === block.id),
       )
-      if (incoming.length === 0) return state
+      if (incoming.length === 0) {
+        return existingChanged ? { placedBlocks: updatedExisting } : state
+      }
       const accepted = mergeBuildPieces(
-        state.placedBlocks,
+        updatedExisting,
         incoming,
         maxBuildPieces,
         (piece) =>
@@ -1263,9 +1346,11 @@ export const useGameStore = create<GameState>((set, get) => ({
             state.settings.worldSeed,
           ),
       )
-      if (accepted.length === 0) return state
+      if (accepted.length === 0) {
+        return existingChanged ? { placedBlocks: updatedExisting } : state
+      }
       return {
-        placedBlocks: [...state.placedBlocks, ...accepted],
+        placedBlocks: [...updatedExisting, ...accepted],
         chat: [
           ...state.chat.slice(-60),
           systemMessage(

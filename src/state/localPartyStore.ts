@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate'
 import type { AvatarSettings, BotRuntime, Vec3, BuildBlock } from '../game/types'
+import { sanitizeBuildPieceName } from '../data/buildPieces'
 import {
   discoverSignalRooms,
   getSignalAnswers,
@@ -218,6 +219,9 @@ function sanitizeBuildBlocks(blocks: BuildBlock[] | undefined): BuildBlock[] | u
   return blocks.slice(-maxSyncedBuildBlocks).map((block) => ({
     id: String(block.id).slice(0, 64),
     kind: block.kind,
+    ...(sanitizeBuildPieceName(block.name)
+      ? { name: sanitizeBuildPieceName(block.name) }
+      : {}),
     position: [Number(block.position[0]) || 0, Number(block.position[1]) || 0, Number(block.position[2]) || 0],
     color: /^#[0-9a-f]{3,8}$/i.test(block.color) ? block.color : '#60a5fa',
     rotation: Number.isFinite(block.rotation) ? block.rotation : 0,

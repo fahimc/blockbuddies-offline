@@ -104,7 +104,8 @@ export function buildBlockInteriorEntrance(block: BuildBlock): InteriorEntrance 
       : block.kind === 'shop'
         ? buildPieceDimensions.shop
         : buildPieceDimensions.building
-  const label = block.kind === 'shop' ? 'Built Shop' : block.kind === 'house' ? 'Built House' : 'Built Tower'
+  const fallbackLabel = block.kind === 'shop' ? 'Built Shop' : block.kind === 'house' ? 'Built House' : 'Built Tower'
+  const label = block.kind === 'house' && block.name?.trim() ? block.name.trim() : fallbackLabel
   return buildingEntrance({
     id: `build:${block.id}`,
     title: label,

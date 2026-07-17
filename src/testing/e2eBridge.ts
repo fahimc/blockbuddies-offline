@@ -132,6 +132,7 @@ function prepareBuildModeInteraction() {
     {
       id: 'e2e-build-house',
       kind: 'house',
+      name: 'My House',
       position: [34, 0.02, 40],
       color: '#60a5fa',
       rotation: 0,

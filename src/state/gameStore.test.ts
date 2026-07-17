@@ -463,7 +463,11 @@ describe('local party shared build persistence', () => {
     useGameStore.getState().placeBlock()
 
     const placed = useGameStore.getState().placedBlocks[0]
-    expect(placed).toMatchObject({ kind: 'house', color: '#60a5fa' })
+    expect(placed).toMatchObject({
+      kind: 'house',
+      color: '#60a5fa',
+      name: 'My House',
+    })
     expect(
       buildPlacementClearsPlayer(
         placed.position,
@@ -474,6 +478,35 @@ describe('local party shared build persistence', () => {
     expect(useGameStore.getState().selectedBuildBlockId).toBe(placed.id)
     expect(useGameStore.getState().chat.at(-1)?.text).toBe('World piece placed')
     expect(useGameStore.getState().earnedBadges).toContain('builder')
+  })
+
+  it('renames and rotates the selected house while preserving it in saves', () => {
+    useGameStore.setState({
+      selectedBuildBlockId: 'named-house',
+      buildRotation: 0,
+      placedBlocks: [
+        {
+          id: 'named-house',
+          kind: 'house',
+          name: 'My House',
+          position: [12, 0.02, 12],
+          color: '#60a5fa',
+          rotation: 0,
+        },
+      ],
+      chat: [],
+    })
+
+    useGameStore.getState().renameSelectedBuildBlock("  Sunny's <Home>!!!  ")
+    useGameStore.getState().rotateBuildPiece()
+
+    const house = useGameStore.getState().placedBlocks[0]
+    expect(house.name).toBe("Sunny's Home")
+    expect(house.rotation).toBeCloseTo(Math.PI / 2)
+    expect(useGameStore.getState().buildRotation).toBeCloseTo(Math.PI / 2)
+    expect(makeSaveSnapshot(useGameStore.getState()).placedBlocks[0]).toEqual(
+      house,
+    )
   })
 
   it('removes the selected built item instead of the last item', () => {
@@ -534,6 +567,39 @@ describe('local party shared build persistence', () => {
       'party-house-1',
     )
     expect(useGameStore.getState().earnedBadges).toContain('builder')
+  })
+
+  it('reconciles renamed and rotated Local Party houses already in the world', () => {
+    useGameStore.setState({
+      placedBlocks: [
+        {
+          id: 'party-house-edit',
+          kind: 'house',
+          name: 'Old House',
+          position: [34, 0.02, 40],
+          color: '#60a5fa',
+          rotation: 0,
+        },
+      ],
+      chat: [],
+    })
+
+    useGameStore.getState().mergeSharedBuildBlocks([
+      {
+        id: 'party-house-edit',
+        kind: 'house',
+        name: 'Party Base',
+        position: [34, 0.02, 40],
+        color: '#f9a8d4',
+        rotation: Math.PI / 2,
+      },
+    ])
+
+    expect(useGameStore.getState().placedBlocks[0]).toMatchObject({
+      name: 'Party Base',
+      color: '#f9a8d4',
+      rotation: Math.PI / 2,
+    })
   })
 })
 
