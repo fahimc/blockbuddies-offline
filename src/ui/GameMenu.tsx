@@ -35,7 +35,7 @@ const menuItems: {
   { panel: 'minigames', label: 'Mini Games', icon: <Gamepad2 size={21} aria-hidden /> },
   { panel: 'build', label: 'Build Mode', icon: <Blocks size={21} aria-hidden /> },
   { panel: 'shop', label: 'Shop', icon: <ShoppingBag size={21} aria-hidden /> },
-  { panel: 'friends', label: 'Buddies', icon: <HeartHandshake size={21} aria-hidden /> },
+  { panel: 'friends', label: 'Buddies & NPCs', icon: <HeartHandshake size={21} aria-hidden /> },
   { panel: 'server', label: 'Local Party', icon: <Server size={21} aria-hidden /> },
   { panel: 'leaderboard', label: 'Leaderboard', icon: <Trophy size={21} aria-hidden /> },
   { panel: 'badges', label: 'Badges', icon: <Medal size={21} aria-hidden /> },

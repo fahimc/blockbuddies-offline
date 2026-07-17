@@ -18,6 +18,26 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.50-npc-creator] - 2026-07-17
+
+### Added
+
+- Added a Buddies & NPCs menu creator for making new in-game NPC characters from the current character or any saved character style.
+- Added tests for creating in-world NPCs from saved character styles and preserving their avatar data through save snapshots.
+
+### Changed
+
+- Renamed the hamburger menu entry from Buddies to Buddies & NPCs to make the new creator easier to find.
+- Custom NPCs now share the same message, add/remove, route, and town rendering path as saved game friends.
+
+### Fixed
+
+- Fixed custom NPC creation always cloning and recolouring the current player avatar instead of letting players choose a saved character style.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.49-splash-flex-layout] - 2026-07-17
 
 ### Added

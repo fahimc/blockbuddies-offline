@@ -2,29 +2,85 @@ import { botProfiles } from '../data/botProfiles'
 import { friendshipLabel } from '../ai/relationship'
 import { useGameStore } from '../state/gameStore'
 import { Panel } from './Panel'
+import { useMemo, useState } from 'react'
 
 export function FriendshipPanel() {
   const memories = useGameStore((state) => state.botMemory)
+  const avatar = useGameStore((state) => state.avatar)
+  const savedAvatars = useGameStore((state) => state.savedAvatars)
   const savedFriends = useGameStore((state) => state.savedFriends)
   const createSavedFriend = useGameStore((state) => state.createSavedFriend)
   const toggleSavedFriendInWorld = useGameStore((state) => state.toggleSavedFriendInWorld)
   const deleteSavedFriend = useGameStore((state) => state.deleteSavedFriend)
   const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const [npcName, setNpcName] = useState('')
+  const [selectedStyleId, setSelectedStyleId] = useState('current')
+  const styleOptions = useMemo(
+    () => [
+      { id: 'current', name: 'Current Character', avatar },
+      ...savedAvatars.map((style) => ({
+        id: style.id,
+        name: style.name,
+        avatar: style.avatar,
+      })),
+    ],
+    [avatar, savedAvatars],
+  )
+  const selectedStyle =
+    styleOptions.find((style) => style.id === selectedStyleId) ?? styleOptions[0]
+  const createNpc = () => {
+    createSavedFriend(npcName, selectedStyle.avatar)
+    setNpcName('')
+  }
+
   return (
-    <Panel title="Buddy Profiles">
+    <Panel title="Buddies & NPCs">
       <section className="mb-4 rounded-2xl bg-sky-50 p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <div>
-            <h3 className="font-black text-slate-950">Saved Friends</h3>
-            <p className="text-xs font-bold text-slate-500">Create friends, message them, and add them to the town.</p>
+            <h3 className="font-black text-slate-950">Create NPC Character</h3>
+            <p className="text-xs font-bold text-slate-500">Pick a saved character style, name them, and add them to the town.</p>
           </div>
-          <button type="button" className="bb-friend-action primary" onClick={() => createSavedFriend()}>
-            Make Friend
+        </div>
+        <div className="bb-npc-creator">
+          <label>
+            <span>NPC name</span>
+            <input
+              value={npcName}
+              onChange={(event) => setNpcName(event.target.value)}
+              placeholder="Sunny Builder"
+              aria-label="NPC name"
+            />
+          </label>
+          <div className="bb-npc-style-strip" role="listbox" aria-label="NPC avatar style">
+            {styleOptions.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                role="option"
+                aria-selected={selectedStyleId === style.id}
+                className={selectedStyleId === style.id ? 'selected' : ''}
+                onClick={() => setSelectedStyleId(style.id)}
+              >
+                <span className="bb-buddy-avatar mini" style={{ background: style.avatar.shirtColor }} />
+                <span>{style.name}</span>
+              </button>
+            ))}
+          </div>
+          <button type="button" className="bb-friend-action primary" onClick={createNpc}>
+            Create NPC
           </button>
+        </div>
+      </section>
+
+      <section className="mb-4 rounded-2xl bg-slate-50 p-3">
+        <div className="mb-2">
+          <h3 className="font-black text-slate-950">Custom NPCs</h3>
+          <p className="text-xs font-bold text-slate-500">Message them or choose who appears in your town.</p>
         </div>
         {savedFriends.length === 0 ? (
           <p className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-600 shadow-sm">
-            No custom friends yet.
+            No custom NPCs yet.
           </p>
         ) : (
           <div className="space-y-2">

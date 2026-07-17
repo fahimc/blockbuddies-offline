@@ -511,6 +511,11 @@ The `v1.5.49` APK fixes the splash screen logo and Start button alignment by
 moving that top call-to-action group to a dedicated flex-centered region. Mobile
 regression tests now verify the centering across several portrait heights.
 
+The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
+NPC, choose the current character or a saved character style as the avatar
+template, add that NPC to the town, message them, and persist them with the
+normal local save.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

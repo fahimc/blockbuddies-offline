@@ -228,6 +228,12 @@ describe('player setup flow', () => {
 
 describe('saved game friends', () => {
   it('creates saved friends that can be toggled into the world and persisted', () => {
+    const npcAvatar = {
+      ...defaultAvatar,
+      shirtColor: '#ef4444',
+      accentColor: '#8b5cf6',
+      avatarSource: 'Hero Style',
+    }
     useGameStore.setState({
       playerName: 'Fahim',
       avatar: defaultAvatar,
@@ -236,11 +242,16 @@ describe('saved game friends', () => {
       chat: [],
     })
 
-    useGameStore.getState().createSavedFriend('Builder Pal')
+    useGameStore.getState().createSavedFriend('Builder Pal', npcAvatar)
     const friend = useGameStore.getState().savedFriends[0]
 
     expect(friend.name).toBe('Builder Pal')
     expect(friend.inWorld).toBe(true)
+    expect(friend.avatar).toMatchObject({
+      shirtColor: '#ef4444',
+      accentColor: '#8b5cf6',
+      avatarSource: 'Builder Pal Style',
+    })
     expect(
       useGameStore
         .getState()

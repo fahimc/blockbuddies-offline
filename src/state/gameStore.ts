@@ -195,7 +195,7 @@ type GameState = GameSave & {
   saveCurrentAvatarStyle: (name?: string) => void
   applySavedAvatarStyle: (id: string) => void
   deleteSavedAvatarStyle: (id: string) => void
-  createSavedFriend: (name?: string) => void
+  createSavedFriend: (name?: string, avatar?: AvatarSettings) => void
   toggleSavedFriendInWorld: (id: string) => void
   deleteSavedFriend: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
@@ -1409,24 +1409,27 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((state) => ({
       savedAvatars: state.savedAvatars.filter((style) => style.id !== id),
     })),
-  createSavedFriend: (name) =>
+  createSavedFriend: (name, avatarOverride) =>
     set((state) => {
       const friendName =
         sanitizePartyName(
           name ?? `${state.playerName} Friend ${state.savedFriends.length + 1}`,
         ) || `Friend ${state.savedFriends.length + 1}`
+      const baseAvatar = normalizeSavedAvatar(avatarOverride) ?? state.avatar
       const friend: SavedFriend = {
         id: makeId('saved-friend'),
         name: friendName,
         avatar: {
-          ...state.avatar,
+          ...baseAvatar,
           avatarSource: `${friendName} Style`,
           shirtColor:
-            state.savedFriends.length % 2 === 0 ? '#60a5fa' : '#f472b6',
+            avatarOverride?.shirtColor ??
+            (state.savedFriends.length % 2 === 0 ? '#60a5fa' : '#f472b6'),
           accentColor:
-            state.savedFriends.length % 3 === 0
+            avatarOverride?.accentColor ??
+            (state.savedFriends.length % 3 === 0
               ? '#22c55e'
-              : state.avatar.accentColor,
+              : state.avatar.accentColor),
         },
         inWorld: true,
         route: friendRoutes[state.savedFriends.length % friendRoutes.length],

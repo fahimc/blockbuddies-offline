@@ -836,3 +836,12 @@
 - [x] Replace Android launcher icons across all density buckets
 - [x] Point the PWA manifest and HTML metadata at the new PNG icons
 - [x] Bump Android debug APK version metadata to 1.5.40 / 10540
+
+## Post-phase NPC creator
+
+- [x] Add a Buddies & NPCs menu creator for new in-game NPC characters
+- [x] Let players name NPCs and choose the current avatar or a saved character style
+- [x] Add created NPCs to the town immediately with routes, messaging, and add/remove controls
+- [x] Persist created NPCs through the normal save snapshot
+- [x] Add store and UI regression tests for saved-style NPC creation
+- [x] Bump Android debug APK version metadata to 1.5.50 / 10550
