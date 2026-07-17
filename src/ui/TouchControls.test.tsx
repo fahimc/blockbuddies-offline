@@ -112,7 +112,7 @@ describe('TouchControls', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('removes the selected item while build meshes remain tappable', () => {
+  it('does not duplicate the build drawer remove button in the touch controls', () => {
     useGameStore.setState({
       buildMode: true,
       selectedBuildBlockId: 'selected-tree',
@@ -136,13 +136,10 @@ describe('TouchControls', () => {
     expect(screen.getByTestId('world-drag-control')).toHaveClass(
       'pointer-events-none',
     )
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Remove selected build item' }),
-    )
-
     expect(
-      useGameStore.getState().placedBlocks.map((block) => block.id),
-    ).toEqual(['keep-house'])
+      screen.queryByRole('button', { name: 'Remove selected build item' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rotate' })).toBeInTheDocument()
   })
 
   it('switches to driving controls with a dedicated exit button in a car', () => {

@@ -33,10 +33,6 @@ export function TouchControls() {
   const setTouch = useGameStore((state) => state.setTouch)
   const miniGame = useGameStore((state) => state.miniGame)
   const cancelMiniGame = useGameStore((state) => state.cancelMiniGame)
-  const removeSelectedBlock = useGameStore((state) => state.removeSelectedBlock)
-  const selectedBuildBlockId = useGameStore(
-    (state) => state.selectedBuildBlockId,
-  )
   const rotateBuildPiece = useGameStore((state) => state.rotateBuildPiece)
   const buildMode = useGameStore((state) => state.buildMode)
   const running = useGameStore((state) => state.touch.run)
@@ -274,32 +270,19 @@ export function TouchControls() {
             <CarFront size={21} aria-hidden />
             <span>Exit</span>
           </button>
-        ) : buildMode || miniGame.status === 'running' ? (
+        ) : miniGame.status === 'running' ? (
           <button
             type="button"
             className="mobile-remove-button pointer-events-auto"
             onClick={(event) => {
               event.preventDefault()
-              if (buildMode) {
-                removeSelectedBlock()
-              } else {
-                cancelMiniGame()
-              }
+              cancelMiniGame()
             }}
-            disabled={buildMode && !selectedBuildBlockId}
-            title={
-              buildMode
-                ? selectedBuildBlockId
-                  ? 'Remove selected item'
-                  : 'Tap a built item first'
-                : 'Cancel mini game'
-            }
-          aria-label={
-            buildMode ? 'Remove selected build item' : 'Cancel'
-          }
+            title="Cancel mini game"
+            aria-label="Cancel"
           >
             <X size={28} aria-hidden />
-            <span>{buildMode ? 'Remove' : 'Cancel'}</span>
+            <span>Cancel</span>
           </button>
         ) : (
           <button

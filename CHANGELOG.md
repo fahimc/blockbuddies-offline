@@ -18,6 +18,24 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.48-build-remove-button] - 2026-07-17
+
+### Added
+
+- Added component and mobile Playwright regression coverage to ensure Build Mode exposes only one selected-item Remove action.
+
+### Changed
+
+- Build Mode now keeps selected-item removal in the left build drawer instead of also showing a duplicate bottom-center touch button.
+
+### Fixed
+
+- Fixed Build Mode showing two red Remove buttons when a built item was selected.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.47-build-grid] - 2026-07-17
 
 ### Added

@@ -97,6 +97,9 @@ test.describe('mobile build mode HUD', () => {
     const remove = page
       .getByRole('button', { name: 'Remove selected build item' })
       .first()
+    await expect(
+      page.getByRole('button', { name: 'Remove selected build item' }),
+    ).toHaveCount(1)
     await expect(remove).toBeEnabled()
     await page.screenshot({
       path: testInfo.outputPath('build-palette-selected-mobile.png'),

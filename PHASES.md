@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase build remove button cleanup
+
+- [x] Remove the duplicate bottom-center Build Mode Remove touch button.
+- [x] Keep selected-item removal in the left Build Mode drawer.
+- [x] Add component and mobile Playwright coverage for a single Remove action.
+- [x] Package and release the Android debug APK for the build-remove cleanup.
+
 ## Post-phase build grid paging
 
 - [x] Move the Build Mode grid overlay with the player across procedural map pages.

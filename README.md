@@ -503,6 +503,10 @@ The `v1.5.47` APK fixes Build Mode grid visibility across the procedural map.
 The visible grid and build-selection plane now page around the player's current
 world position instead of staying fixed to the origin-area patch.
 
+The `v1.5.48` APK removes the duplicate bottom-center Build Mode Remove button.
+Selected build items are now removed from the left Build Mode drawer, leaving
+one clear delete action on mobile.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The
