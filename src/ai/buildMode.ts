@@ -14,6 +14,8 @@ const halfTurn = Math.PI * 2
 const quarterTurn = Math.PI / 2
 const mapTileSize = realScale.roadTile
 const buildPlayerPadding = 0.35
+export const buildGridOverlaySize = 192
+export const buildGridOverlayDivisions = 192
 
 type IdFactory = () => string
 
@@ -52,6 +54,19 @@ export function normalizeBuildYaw(yaw: number) {
 
 export function rotateBuildYaw(yaw: number) {
   return normalizeBuildYaw((yaw + quarterTurn) % halfTurn)
+}
+
+export function buildGridOverlayForPlayer(playerPosition: Vec3) {
+  const pageSize = buildGridOverlaySize / 2
+  return {
+    center: [
+      Math.round(playerPosition[0] / pageSize) * pageSize,
+      0.14,
+      Math.round(playerPosition[2] / pageSize) * pageSize,
+    ] satisfies Vec3,
+    size: buildGridOverlaySize,
+    divisions: buildGridOverlayDivisions,
+  }
 }
 
 export function nextBuildPosition(

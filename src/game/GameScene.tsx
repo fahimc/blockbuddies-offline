@@ -13,7 +13,7 @@ import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import { obbyCheckpoints, obbyPlatforms } from '../ai/obby'
-import { findBuildPlacementPosition } from '../ai/buildMode'
+import { buildGridOverlayForPlayer, findBuildPlacementPosition } from '../ai/buildMode'
 import {
   generateProceduralWorld,
   type ProceduralPiece,
@@ -4045,6 +4045,10 @@ function BuildModeOverlay() {
       settings.worldSeed,
     ],
   )
+  const gridOverlay = useMemo(
+    () => buildGridOverlayForPlayer(playerPosition),
+    [playerPosition],
+  )
 
   if (!buildMode) return null
   const previewPosition = placement?.position
@@ -4054,15 +4058,20 @@ function BuildModeOverlay() {
   return (
     <group>
       <gridHelper
-        args={[96, 96, '#0ea5e9', '#93c5fd']}
-        position={[0, 0.075, 0]}
+        args={[
+          gridOverlay.size,
+          gridOverlay.divisions,
+          '#0ea5e9',
+          '#93c5fd',
+        ]}
+        position={gridOverlay.center}
       />
       <mesh
-        position={[0, 0.001, 0]}
+        position={[gridOverlay.center[0], 0.001, gridOverlay.center[2]]}
         rotation={[-Math.PI / 2, 0, 0]}
         onClick={() => setSelectedBuildBlock(undefined)}
       >
-        <planeGeometry args={[96, 96]} />
+        <planeGeometry args={[gridOverlay.size, gridOverlay.size]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       {!selectedBuildBlockId && previewPosition ? (

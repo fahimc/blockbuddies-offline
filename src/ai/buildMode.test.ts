@@ -6,6 +6,8 @@ import {
   canPlaceBlock,
   canPlacePiece,
   buildPlacementClearsPlayer,
+  buildGridOverlayForPlayer,
+  buildGridOverlaySize,
   createBuildMapStamp,
   createBuildPiece,
   findBuildPlacementPosition,
@@ -59,6 +61,21 @@ describe('build mode', () => {
   it('rotates build pieces in quarter turns', () => {
     expect(rotateBuildYaw(0)).toBeCloseTo(Math.PI / 2)
     expect(rotateBuildYaw((Math.PI / 2) * 3)).toBe(0)
+  })
+
+  it('keeps the visible build grid paged around the player across the procedural map', () => {
+    const originGrid = buildGridOverlayForPlayer([0, 0, 0])
+    expect(originGrid.center).toEqual([0, 0.14, 0])
+    expect(originGrid.size).toBe(buildGridOverlaySize)
+
+    const farGrid = buildGridOverlayForPlayer([146, 0, -119])
+    expect(farGrid.center).toEqual([192, 0.14, -96])
+    expect(Math.abs(farGrid.center[0] - 146)).toBeLessThanOrEqual(
+      buildGridOverlaySize / 4,
+    )
+    expect(Math.abs(farGrid.center[2] + 119)).toBeLessThanOrEqual(
+      buildGridOverlaySize / 4,
+    )
   })
 
   it('creates a deterministic procedural street stamp', () => {

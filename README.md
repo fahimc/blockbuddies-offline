@@ -499,6 +499,10 @@ The `v1.5.42` APK adds a Tutorial section to the hamburger menu. It teaches
 movement, camera orbit, Local Party setup, predefined messages, Build Mode,
 map travel, mini-games, cars, and local saving inside the game UI.
 
+The `v1.5.47` APK fixes Build Mode grid visibility across the procedural map.
+The visible grid and build-selection plane now page around the player's current
+world position instead of staying fixed to the origin-area patch.
+
 The `v1.5.36` APK replaces core road suppression with one shared tiled road
 plan. Generation, traffic, and the minimap now use the same coordinates, while
 the standalone bird's-eye map validates every terrain and object cell. The

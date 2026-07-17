@@ -4,19 +4,34 @@
 
 ### Added
 
-- Added custom names for player-built houses, including automatic names for new houses and a responsive selected-house editor.
-- Added a real house placement preview, stronger door details, and a yellow front-door direction arrow.
-- Added deterministic store, persistence, Local Party, interior, UI, and mobile Playwright coverage for house names and rotation.
+- Nothing yet.
 
 ### Changed
 
-- The Build Mode Rotate control now rotates a selected placed item or the next placement when nothing is selected.
-- Built-house names now appear as interior titles and synchronize with Local Party build objects.
+- Nothing yet.
 
 ### Fixed
 
-- Fixed the featureless build preview making it impossible to determine which direction a house door would face.
-- Fixed placed houses having no way to change their orientation or name after placement.
+- Nothing yet.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.47-build-grid] - 2026-07-17
+
+### Added
+
+- Added deterministic unit coverage for the Build Mode grid overlay following the player across the procedural map.
+
+### Changed
+
+- Build Mode now pages the visible grid around the player's current world position instead of keeping it fixed at the origin.
+- The invisible build-selection plane now follows the same grid page as the visible build overlay.
+
+### Fixed
+
+- Fixed the Build Mode grid only appearing over one origin-area patch while the player was building elsewhere on the map.
 
 ### Known Issues
 

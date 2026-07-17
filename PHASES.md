@@ -1,5 +1,12 @@
 # Build Phases
 
+## Post-phase build grid paging
+
+- [x] Move the Build Mode grid overlay with the player across procedural map pages.
+- [x] Keep the invisible build selection plane aligned to the visible grid.
+- [x] Add unit coverage for far-map build grid placement.
+- [x] Package and release the Android debug APK for the build-grid paging fix.
+
 ## Post-phase house direction and naming
 
 - [x] Render the real house and visible door in the placement preview.
