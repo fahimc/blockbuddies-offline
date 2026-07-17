@@ -1,61 +1,159 @@
-import { CheckCircle2, Clock, Gift } from 'lucide-react'
+import { CheckCircle2, ChevronDown, ChevronUp, Clock, Gift } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { questDefinitions } from '../data/quests'
+import type { QuestId } from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { Panel } from './Panel'
+
+type QuestTab = 'active' | 'daily' | 'completed'
+
+const questTabs: { id: QuestTab; label: string }[] = [
+  { id: 'active', label: 'Active' },
+  { id: 'daily', label: 'Daily' },
+  { id: 'completed', label: 'Completed' },
+]
 
 export function QuestPanel() {
   const progress = useGameStore((state) => state.questProgress)
   const startQuest = useGameStore((state) => state.startQuest)
+  const [activeTab, setActiveTab] = useState<QuestTab>('active')
+  const [expandedQuestId, setExpandedQuestId] =
+    useState<QuestId>('meet-three-buddies')
+
+  const quests = useMemo(
+    () =>
+      questDefinitions.map((quest) => {
+        const item = progress.find((entry) => entry.id === quest.id)
+        const current = Math.min(quest.target, item?.progress ?? 0)
+        return {
+          quest,
+          item,
+          current,
+          percent: Math.round((current / quest.target) * 100),
+          started: Boolean(item?.started),
+          completed: Boolean(item?.completed),
+        }
+      }),
+    [progress],
+  )
+
+  const visibleQuests = quests.filter((entry) => {
+    if (activeTab === 'completed') return entry.completed
+    if (activeTab === 'daily')
+      return entry.quest.category === 'daily' && !entry.completed
+    return entry.quest.category !== 'daily' && !entry.completed
+  })
+  const completedCount = quests.filter((entry) => entry.completed).length
 
   return (
     <Panel title="Quest Log">
-      <div className="bb-tabs mb-3 grid grid-cols-3 gap-1 rounded-xl bg-sky-950/10 p-1">
-        <span className="bb-tab-active">Active</span>
-        <span>Daily</span>
-        <span>Completed</span>
+      <div className="bb-tabs bb-quest-tabs mb-3">
+        {questTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={activeTab === tab.id ? 'bb-tab-active' : undefined}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
-      <div className="space-y-2">
-        {questDefinitions.map((quest) => {
-          const item = progress.find((entry) => entry.id === quest.id)
-          const percent = item ? Math.round((item.progress / quest.target) * 100) : 0
-          return (
-            <article key={quest.id} className="bb-quest-row">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-b from-sky-400 to-blue-600 text-white shadow">
-                {item?.completed ? <CheckCircle2 size={22} aria-hidden /> : <Clock size={22} aria-hidden />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-black text-slate-950">{quest.title}</h3>
-                    <p className="truncate text-xs font-bold text-slate-500">{quest.description}</p>
+
+      <div className="bb-quest-list">
+        {visibleQuests.length > 0 ? (
+          visibleQuests.map(
+            ({ quest, current, percent, started, completed }) => {
+              const expanded = expandedQuestId === quest.id
+              return (
+                <article
+                  key={quest.id}
+                  className={`bb-quest-card ${expanded ? 'expanded' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="bb-quest-summary"
+                    onClick={() => setExpandedQuestId(quest.id)}
+                    aria-expanded={expanded}
+                    aria-controls={`quest-details-${quest.id}`}
+                  >
+                    <span className="bb-quest-icon">
+                      {completed ? (
+                        <CheckCircle2 size={23} aria-hidden />
+                      ) : (
+                        <Clock size={23} aria-hidden />
+                      )}
+                    </span>
+                    <span className="bb-quest-copy">
+                      <span className="bb-quest-title">{quest.title}</span>
+                      <span className="bb-quest-description">
+                        {quest.description}
+                      </span>
+                    </span>
+                    <span className="bb-quest-reward">
+                      <Gift size={14} aria-hidden /> {quest.reward}
+                    </span>
+                    {expanded ? (
+                      <ChevronUp
+                        className="bb-quest-chevron"
+                        size={20}
+                        aria-hidden
+                      />
+                    ) : (
+                      <ChevronDown
+                        className="bb-quest-chevron"
+                        size={20}
+                        aria-hidden
+                      />
+                    )}
+                  </button>
+
+                  <div className="bb-quest-progress-row">
+                    <div className="bb-quest-progress">
+                      <span style={{ width: `${Math.min(100, percent)}%` }} />
+                    </div>
+                    <strong>
+                      {current}/{quest.target}
+                    </strong>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-300 px-2 py-1 text-xs font-black text-slate-950">
-                    <Gift size={14} /> {quest.reward}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-gradient-to-r from-lime-400 to-emerald-500" style={{ width: `${Math.min(100, percent)}%` }} />
-                  </div>
-                  <span className="text-xs font-black text-slate-600">
-                    {item?.progress ?? 0}/{quest.target}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled={item?.started || item?.completed}
-                onClick={() => startQuest(quest.id)}
-                className="bb-small-action"
-              >
-                {item?.completed ? 'Complete' : item?.started ? 'Started' : 'Start'}
-              </button>
-            </article>
+
+                  {expanded ? (
+                    <div
+                      id={`quest-details-${quest.id}`}
+                      className="bb-quest-details"
+                    >
+                      <p>{quest.howTo}</p>
+                      <small>{quest.tip}</small>
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    className="bb-small-action bb-quest-action"
+                    disabled={completed}
+                    onClick={() => {
+                      if (!started && !completed) startQuest(quest.id)
+                      setExpandedQuestId(quest.id)
+                    }}
+                  >
+                    {completed ? 'Done' : started ? 'Details' : 'Start'}
+                  </button>
+                </article>
+              )
+            },
           )
-        })}
+        ) : (
+          <div className="bb-quest-empty" role="status">
+            {activeTab === 'completed'
+              ? 'Complete quests to see them here.'
+              : 'No quests in this tab right now.'}
+          </div>
+        )}
       </div>
-      <p className="mt-3 rounded-xl bg-slate-100 px-3 py-2 text-center text-xs font-black text-slate-500">
-        New quests in: 12h 36m
+
+      <p className="bb-quest-footer">
+        {completedCount}/{quests.length} quests complete - more town tasks unlock
+        as you play.
       </p>
     </Panel>
   )

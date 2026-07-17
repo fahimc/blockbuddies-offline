@@ -14,7 +14,11 @@ import { getLocation } from '../data/world'
 import { findBadge } from '../data/badges'
 import { createInitialBot, updateBot } from '../ai/botBrain'
 import { selectDialogue, type DialogueContext } from '../ai/dialogue'
-import { advanceQuest, createQuestProgress } from '../ai/quests'
+import {
+  advanceQuest as advanceQuestProgress,
+  createQuestProgress,
+  mergeQuestProgress,
+} from '../ai/quests'
 import { applyItem, purchaseItem } from '../ai/inventory'
 import { completeTogether, touchMemory } from '../ai/relationship'
 import { finishObby, obbyStart, startObby, updateCheckpoint } from '../ai/obby'
@@ -499,6 +503,62 @@ function initialQuestProgress() {
   return createQuestProgress(questDefinitions)
 }
 
+function normalizeQuestProgress(progress?: QuestProgress[]) {
+  return mergeQuestProgress(questDefinitions, progress)
+}
+
+const locationQuestIds: Partial<Record<LocationId, QuestId>> = {
+  park: 'visit-park',
+  school: 'visit-school',
+  shop: 'visit-shop',
+}
+
+const miniGameQuestIds: Partial<Record<MiniGameId, QuestId>> = {
+  'coin-rush': 'play-coin-rush',
+  'delivery-dash': 'deliver-a-package',
+  'hide-and-seek': 'find-hidden-buddies',
+}
+
+function applyQuestAdvance(
+  state: Pick<GameState, 'questProgress' | 'coins'>,
+  id: QuestId,
+  amount: number,
+) {
+  const definition = questDefinitions.find((quest) => quest.id === id)
+  if (!definition) {
+    return {
+      questProgress: state.questProgress,
+      coins: state.coins,
+      completed: false,
+      changed: false,
+      message: undefined,
+    }
+  }
+
+  const normalizedProgress = normalizeQuestProgress(state.questProgress)
+  let completed = false
+  let changed =
+    normalizedProgress.length !== state.questProgress.length ||
+    normalizedProgress.some((quest, index) => quest !== state.questProgress[index])
+  const questProgress = normalizedProgress.map((quest) => {
+    if (quest.id !== id) return quest
+    const result = advanceQuestProgress(quest, definition, amount)
+    if (result.progress !== quest) changed = true
+    completed = result.completedNow
+    return result.progress
+  })
+  const coins = completed ? state.coins + definition.reward : state.coins
+  return {
+    questProgress,
+    coins,
+    completed,
+    changed,
+    message: completed
+      ? systemMessage(`${definition.title} complete! +${definition.reward} coins`)
+      : undefined,
+  }
+}
+
 const initialObby: ObbyState = {
   active: false,
   checkpoint: obbyStart,
@@ -646,6 +706,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         ],
       }
     })
+    get().advanceQuest('use-town-map', 1)
+    const locationQuestId = locationQuestIds[destination.id]
+    if (locationQuestId) get().advanceQuest(locationQuestId, 1)
     return true
   },
   resetToSquare: () =>
@@ -871,6 +934,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         ],
       }))
       get().awardBadge('social-buddy')
+      get().advanceQuest('message-a-buddy', 1)
       return
     }
     const reply = botReplyForPreset(preset.id)
@@ -916,6 +980,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ],
     }))
     get().awardBadge('social-buddy')
+    get().advanceQuest('message-a-buddy', 1)
   },
 
   receiveLocalPartyMessage: (message) =>
@@ -937,36 +1002,35 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   startQuest: (id) =>
-    set((state) => ({
-      questProgress: state.questProgress.map((quest) =>
-        quest.id === id ? { ...quest, started: true } : quest,
-      ),
-      chat: [...state.chat.slice(-60), systemMessage('Quest started')],
-    })),
+    set((state) => {
+      let changed = false
+      const questProgress = normalizeQuestProgress(state.questProgress).map(
+        (quest) => {
+          if (quest.id !== id || quest.started || quest.completed) return quest
+          changed = true
+          return { ...quest, started: true }
+        },
+      )
+      if (!changed) return state
+      const definition = questDefinitions.find((quest) => quest.id === id)
+      return {
+        questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${definition?.title ?? 'Quest'} started`),
+        ],
+      }
+    }),
 
   advanceQuest: (id, amount) =>
     set((state) => {
-      const definition = questDefinitions.find((quest) => quest.id === id)
-      if (!definition) return state
-      let coins = state.coins
-      let completed = false
-      const questProgress = state.questProgress.map((quest) => {
-        if (quest.id !== id) return quest
-        const result = advanceQuest(quest, definition, amount)
-        completed = result.completedNow
-        if (completed) coins += definition.reward
-        return result.progress
-      })
+      const result = applyQuestAdvance(state, id, amount)
+      if (!result.changed) return state
       return {
-        coins,
-        questProgress,
-        chat: completed
-          ? [
-              ...state.chat.slice(-60),
-              systemMessage(
-                `${definition.title} complete! +${definition.reward} coins`,
-              ),
-            ]
+        coins: result.coins,
+        questProgress: result.questProgress,
+        chat: result.message
+          ? [...state.chat.slice(-60), result.message]
           : state.chat,
       }
     }),
@@ -1010,6 +1074,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setPlayerEmote: (playerEmote) => {
     set({ playerEmote, sleeping: false, interactionPrompt: undefined })
     if (playerEmote !== 'none') {
+      get().advanceQuest('try-an-emote', 1)
       set((state) => ({
         chat: [
           ...state.chat.slice(-60),
@@ -1023,55 +1088,70 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
   setSleeping: (sleeping) =>
-    set((state) =>
-      state.sleeping === sleeping
-        ? state
-        : {
-            sleeping,
-            seatedSeatId: sleeping ? undefined : state.seatedSeatId,
-            activeVehicleId: sleeping ? undefined : state.activeVehicleId,
-            playerEmote: sleeping ? 'none' : state.playerEmote,
-            interactionPrompt: sleeping ? 'wake' : undefined,
-            chat: [
-              ...state.chat.slice(-60),
-              systemMessage(sleeping ? 'You are sleeping' : 'You woke up'),
-            ],
-          },
-    ),
+    set((state) => {
+      if (state.sleeping === sleeping) return state
+      const questResult = sleeping
+        ? applyQuestAdvance(state, 'sleep-in-bed', 1)
+        : undefined
+      return {
+        sleeping,
+        seatedSeatId: sleeping ? undefined : state.seatedSeatId,
+        activeVehicleId: sleeping ? undefined : state.activeVehicleId,
+        playerEmote: sleeping ? 'none' : state.playerEmote,
+        interactionPrompt: sleeping ? 'wake' : undefined,
+        coins: questResult?.coins ?? state.coins,
+        questProgress: questResult?.questProgress ?? state.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(sleeping ? 'You are sleeping' : 'You woke up'),
+          ...(questResult?.message ? [questResult.message] : []),
+        ],
+      }
+    }),
   setSeatedSeat: (seatedSeatId) =>
-    set((state) =>
-      state.seatedSeatId === seatedSeatId
-        ? state
-        : {
-            seatedSeatId,
-            sleeping: false,
-            activeVehicleId: seatedSeatId ? undefined : state.activeVehicleId,
-            playerEmote: seatedSeatId ? 'none' : state.playerEmote,
-            interactionPrompt: seatedSeatId ? 'stand' : undefined,
-            chat: [
-              ...state.chat.slice(-60),
-              systemMessage(seatedSeatId ? 'You sat down' : 'You stood up'),
-            ],
-          },
-    ),
+    set((state) => {
+      if (state.seatedSeatId === seatedSeatId) return state
+      const questResult = seatedSeatId
+        ? applyQuestAdvance(state, 'take-a-seat', 1)
+        : undefined
+      return {
+        seatedSeatId,
+        sleeping: false,
+        activeVehicleId: seatedSeatId ? undefined : state.activeVehicleId,
+        playerEmote: seatedSeatId ? 'none' : state.playerEmote,
+        interactionPrompt: seatedSeatId ? 'stand' : undefined,
+        coins: questResult?.coins ?? state.coins,
+        questProgress: questResult?.questProgress ?? state.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(seatedSeatId ? 'You sat down' : 'You stood up'),
+          ...(questResult?.message ? [questResult.message] : []),
+        ],
+      }
+    }),
   setActiveVehicle: (activeVehicleId) =>
-    set((state) =>
-      state.activeVehicleId === activeVehicleId
-        ? state
-        : {
-            activeVehicleId,
-            sleeping: false,
-            seatedSeatId: undefined,
-            playerEmote: 'none',
-            interactionPrompt: activeVehicleId ? 'exit-vehicle' : undefined,
-            chat: [
-              ...state.chat.slice(-60),
-              systemMessage(
-                activeVehicleId ? 'You started driving' : 'You left the car',
-              ),
-            ],
-          },
-    ),
+    set((state) => {
+      if (state.activeVehicleId === activeVehicleId) return state
+      const questResult = activeVehicleId
+        ? applyQuestAdvance(state, 'drive-a-car', 1)
+        : undefined
+      return {
+        activeVehicleId,
+        sleeping: false,
+        seatedSeatId: undefined,
+        playerEmote: 'none',
+        interactionPrompt: activeVehicleId ? 'exit-vehicle' : undefined,
+        coins: questResult?.coins ?? state.coins,
+        questProgress: questResult?.questProgress ?? state.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(
+            activeVehicleId ? 'You started driving' : 'You left the car',
+          ),
+          ...(questResult?.message ? [questResult.message] : []),
+        ],
+      }
+    }),
   setInteractionPrompt: (interactionPrompt) =>
     set((state) =>
       state.interactionPrompt === interactionPrompt
@@ -1157,7 +1237,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
         : { buildRotation }
     }),
-  placeBlock: () =>
+  placeBlock: () => {
+    const previousCount = get().placedBlocks.length
     set((state) => {
       if (state.activeInterior) {
         return {
@@ -1216,8 +1297,12 @@ export const useGameStore = create<GameState>((set, get) => ({
           ? state.earnedBadges
           : [...state.earnedBadges, 'builder'],
       }
-    }),
-  placeMapStamp: () =>
+    })
+    if (get().placedBlocks.length > previousCount)
+      get().advanceQuest('build-first-piece', 1)
+  },
+  placeMapStamp: () => {
+    const previousCount = get().placedBlocks.length
     set((state) => {
       if (state.activeInterior) {
         return {
@@ -1274,7 +1359,10 @@ export const useGameStore = create<GameState>((set, get) => ({
           ? state.earnedBadges
           : [...state.earnedBadges, 'builder'],
       }
-    }),
+    })
+    if (get().placedBlocks.length > previousCount)
+      get().advanceQuest('build-first-piece', 1)
+  },
   removeLastBlock: () =>
     set((state) => {
       const removedId = state.placedBlocks.at(-1)?.id
@@ -1534,20 +1622,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   completeObby: (now) =>
     set((state) => {
       const result = finishObby(state.obby, now)
+      const questResult = applyQuestAdvance(
+        {
+          questProgress: state.questProgress,
+          coins: state.coins + result.reward,
+        },
+        'beginner-obby',
+        1,
+      )
       return {
         obby: result.state,
-        coins: state.coins + result.reward,
+        coins: questResult.coins,
         earnedBadges: state.earnedBadges.includes('obby-rookie')
           ? state.earnedBadges
           : [...state.earnedBadges, 'obby-rookie'],
-        questProgress: state.questProgress.map((quest) =>
-          quest.id === 'beginner-obby'
-            ? { ...quest, started: true, completed: true, progress: 1 }
-            : quest,
-        ),
+        questProgress: questResult.questProgress,
         chat: [
           ...state.chat.slice(-60),
           systemMessage(`Obby complete! +${result.reward} coins`),
+          ...(questResult.message ? [questResult.message] : []),
         ],
       }
     }),
@@ -1631,9 +1724,23 @@ export const useGameStore = create<GameState>((set, get) => ({
               ),
             ]
           : []
+      const questResult =
+        result.completedNow && activeId && miniGameQuestIds[activeId]
+          ? applyQuestAdvance(
+              {
+                questProgress: state.questProgress,
+                coins: state.coins + result.coinsAwarded + result.reward,
+              },
+              miniGameQuestIds[activeId],
+              1,
+            )
+          : undefined
       return {
         miniGame: result.state,
-        coins: state.coins + result.coinsAwarded + result.reward,
+        coins:
+          questResult?.coins ??
+          state.coins + result.coinsAwarded + result.reward,
+        questProgress: questResult?.questProgress ?? state.questProgress,
         earnedBadges:
           result.completedNow && !state.earnedBadges.includes('mini-game-star')
             ? [...state.earnedBadges, 'mini-game-star']
@@ -1642,6 +1749,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...state.chat.slice(-60),
           ...collectedMessages,
           ...completedMessages,
+          ...(questResult?.message ? [questResult.message] : []),
           ...failedMessages,
         ],
       }
@@ -1792,7 +1900,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         unlockedItems: save.unlockedItems ?? state.unlockedItems,
         earnedBadges: save.earnedBadges ?? state.earnedBadges,
         placedBlocks: save.placedBlocks ?? state.placedBlocks,
-        questProgress: save.questProgress ?? state.questProgress,
+        questProgress: normalizeQuestProgress(
+          save.questProgress ?? state.questProgress,
+        ),
         botMemory: save.botMemory ?? state.botMemory,
         settings: { ...state.settings, ...save.settings },
         obby: { ...state.obby, bestTime: save.obbyBestTime },

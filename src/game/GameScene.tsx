@@ -2528,6 +2528,8 @@ function PlayerController({
     const nearby = nearestLocation([position.current.x, 0, position.current.z])
     setNearbyLocation(nearby)
     if (nearby === 'park') advanceQuest('visit-park', 1)
+    if (nearby === 'school') advanceQuest('visit-school', 1)
+    if (nearby === 'shop') advanceQuest('visit-shop', 1)
     if (nearby === 'obby' && (keys.interact || touch.interact) && !obby.active)
       beginObby(performance.now())
     if (nearby === 'shop' && (keys.interact || touch.interact))

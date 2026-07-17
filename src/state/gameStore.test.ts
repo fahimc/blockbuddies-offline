@@ -3,9 +3,12 @@ import {
   coinRushTargets,
   createInitialMiniGame,
   deliveryDashTargets,
+  hideAndSeekTargets,
   miniGameDefinition,
 } from '../ai/miniGames'
+import { createQuestProgress } from '../ai/quests'
 import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
+import { questDefinitions } from '../data/quests'
 import { getLocation } from '../data/world'
 import { buildPlacementClearsPlayer } from '../ai/buildMode'
 import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
@@ -317,6 +320,36 @@ describe('saved game friends', () => {
 })
 
 describe('quest progression', () => {
+  it('completes every quest through the central reward path once', () => {
+    useGameStore.setState({
+      questProgress: createQuestProgress(questDefinitions),
+      chat: [],
+      coins: 0,
+    })
+
+    questDefinitions.forEach((definition) => {
+      const beforeCoins = useGameStore.getState().coins
+      useGameStore.getState().advanceQuest(definition.id, definition.target)
+      const completed = useGameStore
+        .getState()
+        .questProgress.find((quest) => quest.id === definition.id)
+
+      expect(completed).toMatchObject({
+        started: true,
+        completed: true,
+        progress: definition.target,
+      })
+      expect(useGameStore.getState().coins).toBe(
+        beforeCoins + definition.reward,
+      )
+
+      useGameStore.getState().advanceQuest(definition.id, definition.target)
+      expect(useGameStore.getState().coins).toBe(
+        beforeCoins + definition.reward,
+      )
+    })
+  })
+
   it('auto-starts quests when natural gameplay progress happens', () => {
     useGameStore.setState({
       questProgress: useGameStore
@@ -337,6 +370,99 @@ describe('quest progression', () => {
       .questProgress.find((entry) => entry.id === 'visit-park')
     expect(quest).toMatchObject({ started: true, completed: true, progress: 1 })
     expect(useGameStore.getState().coins).toBeGreaterThan(0)
+  })
+
+  it('completes common gameplay quests from map, message, emote, seat, sleep, drive, and build actions', () => {
+    useGameStore.setState((state) => ({
+      questProgress: createQuestProgress(questDefinitions),
+      chat: [],
+      coins: 0,
+      miniGame: createInitialMiniGame(),
+      obby: { ...state.obby, active: false },
+      activeInterior: undefined,
+      activeVehicleId: undefined,
+      seatedSeatId: undefined,
+      sleeping: false,
+      playerPosition: [67, 0, 54],
+      playerYaw: Math.PI,
+      selectedBuildPiece: 'block',
+      placedBlocks: [],
+    }))
+
+    useGameStore.getState().travelToLocation('school')
+    useGameStore.getState().sendPredefinedMessage('luna', 'greeting-001')
+    useGameStore.getState().setPlayerEmote('wave')
+    useGameStore.getState().setSeatedSeat('test-seat')
+    useGameStore.getState().setSleeping(true)
+    useGameStore.getState().setActiveVehicle('test-car')
+    useGameStore.setState({ playerPosition: [67, 0, 54], playerYaw: Math.PI })
+    useGameStore.getState().placeBlock()
+
+    const progressById = new Map(
+      useGameStore.getState().questProgress.map((quest) => [quest.id, quest]),
+    )
+    ;[
+      'use-town-map',
+      'visit-school',
+      'message-a-buddy',
+      'try-an-emote',
+      'take-a-seat',
+      'sleep-in-bed',
+      'drive-a-car',
+      'build-first-piece',
+    ].forEach((id) => {
+      expect(progressById.get(id as typeof questDefinitions[number]['id'])).toMatchObject({
+        completed: true,
+      })
+    })
+  })
+
+  it('completes adventure quests when their mini-games are won', () => {
+    const scenarios = [
+      {
+        gameId: 'coin-rush' as const,
+        questId: 'play-coin-rush' as const,
+        targets: coinRushTargets,
+      },
+      {
+        gameId: 'delivery-dash' as const,
+        questId: 'deliver-a-package' as const,
+        targets: deliveryDashTargets,
+      },
+      {
+        gameId: 'hide-and-seek' as const,
+        questId: 'find-hidden-buddies' as const,
+        targets: hideAndSeekTargets,
+      },
+    ]
+
+    scenarios.forEach(({ gameId, questId, targets }, index) => {
+      useGameStore.setState((state) => ({
+        questProgress: createQuestProgress(questDefinitions),
+        chat: [],
+        coins: 0,
+        miniGame: createInitialMiniGame(),
+        activeInterior: undefined,
+        obby: { ...state.obby, active: false },
+      }))
+
+      const startAt = 10_000 + index * 100_000
+      useGameStore.getState().startMiniGame(gameId, startAt)
+      targets.forEach((target, targetIndex) => {
+        useGameStore
+          .getState()
+          .tickMiniGame(startAt + 500 + targetIndex * 500, target.position)
+      })
+
+      const quest = useGameStore
+        .getState()
+        .questProgress.find((entry) => entry.id === questId)
+      expect(quest).toMatchObject({ completed: true, progress: 1 })
+      expect(useGameStore.getState().coins).toBeGreaterThanOrEqual(
+        questDefinitions.find((definition) => definition.id === questId)!
+          .reward,
+      )
+    })
   })
 })
 
@@ -404,7 +530,12 @@ describe('direct message inbox', () => {
     ])
     expect(thread?.messages[1]?.read).toBe(false)
     expect(useGameStore.getState().chat.map((message) => message.text)).toEqual(
-      ['Want to play a mini game?', 'Hi!', 'Badge earned: Social Buddy'],
+      [
+        'Want to play a mini game?',
+        'Hi!',
+        'Badge earned: Social Buddy',
+        'Send a buddy message complete! +20 coins',
+      ],
     )
     expect(useGameStore.getState().earnedBadges).toContain('social-buddy')
   })
@@ -537,7 +668,9 @@ describe('local party shared build persistence', () => {
       ),
     ).toBe(true)
     expect(useGameStore.getState().selectedBuildBlockId).toBe(placed.id)
-    expect(useGameStore.getState().chat.at(-1)?.text).toBe('World piece placed')
+    expect(useGameStore.getState().chat.map((message) => message.text)).toEqual(
+      ['World piece placed', 'Build your first piece complete! +35 coins'],
+    )
     expect(useGameStore.getState().earnedBadges).toContain('builder')
   })
 
@@ -738,7 +871,7 @@ describe('mini game store flow', () => {
     })
 
     expect(useGameStore.getState().miniGame.status).toBe('completed')
-    expect(useGameStore.getState().coins).toBe(43)
+    expect(useGameStore.getState().coins).toBe(88)
     expect(useGameStore.getState().miniGame.points).toBe(130)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
     expect(
@@ -800,7 +933,10 @@ describe('map fast travel', () => {
       interact: false,
       run: false,
     })
-    expect(state.chat.at(-1)?.text).toBe('Travelled to Skill School')
+    expect(state.chat.map((message) => message.text)).toContain(
+      'Travelled to Skill School',
+    )
+    expect(state.chat.at(-1)?.text).toBe('Visit Skill School complete! +20 coins')
 
     useGameStore.getState().setPlayer([0, 0, 4], 0, sequence)
     expect(useGameStore.getState().playerPosition).toEqual(

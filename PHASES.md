@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase quest log expansion
+
+- [x] Replace truncated quest rows with expandable mobile-friendly quest cards.
+- [x] Add how-to instructions, tips, rewards, progress, and Active/Daily/Completed tabs.
+- [x] Add common quest loops for exploring, messaging, building, driving, sitting, sleeping, emotes, obby, and mini-games.
+- [x] Migrate saved quest progress so returning players receive the expanded quest list.
+- [x] Add unit, component, and Playwright coverage for quest details and reward completion.
+- [x] Package and release Android debug APK for the quest update.
+
 ## Post-phase splash, audio, and world message icons
 
 - [x] Center the mobile splash logo and Start button against the real viewport with visual regression coverage.

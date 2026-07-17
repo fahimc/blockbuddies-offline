@@ -114,15 +114,16 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 8,
       bestPoints: 130,
     })
-    expect(snapshot.coins).toBe(43)
+    expect(snapshot.coins).toBe(88)
     expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
     expect(snapshot.chatTexts).toContain('Coin Rush complete! 130 pts, +35 coins')
+    expect(snapshot.chatTexts).toContain('Win Coin Rush complete! +45 coins')
     expect(snapshot.chatTexts).toContain('Badge earned: Mini Game Star')
     expect(snapshot.chatTexts).toContain('Nice run in Coin Rush!')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
     await expect(
-      page.locator('.desktop-hud').getByText('43').first(),
+      page.locator('.desktop-hud').getByText('88').first(),
     ).toBeVisible()
   })
 
@@ -182,8 +183,9 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 4,
       bestPoints: 105,
     })
-    expect(finished.coins).toBe(64)
+    expect(finished.coins).toBe(114)
     expect(finished.chatTexts).toContain('Delivery Dash complete! 105 pts, +40 coins')
+    expect(finished.chatTexts).toContain('Finish Delivery Dash complete! +50 coins')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
 
@@ -204,8 +206,10 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 3,
       bestPoints: 100,
     })
-    expect(finished.coins).toBe(50)
+    expect(finished.coins).toBe(125)
     expect(finished.chatTexts).toContain('Hide & Seek complete! 100 pts, +50 coins')
+    expect(finished.chatTexts).toContain('Visit Skill School complete! +20 coins')
+    expect(finished.chatTexts).toContain('Win Hide & Seek complete! +55 coins')
 
     await openMiniGamesPanel(page)
     await expect(page.getByText('Best 3/3')).toBeVisible()

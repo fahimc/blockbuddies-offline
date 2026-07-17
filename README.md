@@ -70,8 +70,12 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Local fake multiplayer messaging with a buddy inbox, unread badges, visible
   in-world Message buttons above characters, speech bubbles, join messages, and
   100 kid-safe predefined message presets.
-- Five starter quests, rewards, coin pickups, local progress saving, and bot
+- Expanded Quest Log with tappable mobile cards, full how-to instructions,
+  Active/Daily/Completed tabs, rewards, local progress saving, and bot
   reactions.
+- Kid-friendly quest loops cover exploring, messaging buddies, collecting coins,
+  obby, building, driving, sitting, sleeping, emotes, Coin Rush, Delivery Dash,
+  and Hide & Seek.
 - Beginner obby with checkpoints, finish reward, restart/start control, and bot
   cheering.
 - Original offline mini-games: Coin Rush, Delivery Dash, and Hide & Seek with

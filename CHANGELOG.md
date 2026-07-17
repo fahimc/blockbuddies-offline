@@ -18,6 +18,29 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.55-quest-log-expansion] - 2026-07-17
+
+### Added
+
+- Added expandable Quest Log cards with full objective text, how-to instructions, tips, progress, rewards, and Active/Daily/Completed tabs.
+- Added common kid-friendly quest loops for school, shop, fast travel, buddy messages, building, driving, sitting, sleeping, emotes, Coin Rush, Delivery Dash, and Hide & Seek.
+- Added quest migration coverage so returning saves receive the expanded quest list.
+- Added unit, component, and Playwright coverage for quest instructions, all quest rewards, action-triggered quests, and mini-game quest completion.
+
+### Changed
+
+- Updated quest rewards to flow through one central completion path so displayed rewards match paid coins.
+- Updated Android and package version metadata to `1.5.55` / `10555`.
+
+### Fixed
+
+- Fixed Quest Log text truncation on mobile by replacing the cramped row layout with tappable expanding cards.
+- Fixed Beginner Obby completion bypassing the central quest reward system.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.54-splash-audio-message-icons] - 2026-07-17
 
 ### Added

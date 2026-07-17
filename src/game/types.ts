@@ -86,9 +86,21 @@ export type MessageThread = {
 export type QuestId =
   | 'meet-three-buddies'
   | 'visit-park'
+  | 'visit-school'
+  | 'visit-shop'
+  | 'use-town-map'
+  | 'message-a-buddy'
   | 'beginner-obby'
   | 'collect-10-coins'
   | 'find-toy'
+  | 'build-first-piece'
+  | 'drive-a-car'
+  | 'take-a-seat'
+  | 'sleep-in-bed'
+  | 'try-an-emote'
+  | 'play-coin-rush'
+  | 'deliver-a-package'
+  | 'find-hidden-buddies'
 
 export type QuestProgress = {
   id: QuestId
@@ -101,6 +113,9 @@ export type QuestDefinition = {
   id: QuestId
   title: string
   description: string
+  howTo: string
+  tip: string
+  category: 'starter' | 'daily' | 'adventure'
   target: number
   reward: number
 }

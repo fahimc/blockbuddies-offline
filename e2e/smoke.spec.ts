@@ -68,6 +68,7 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
 
   for (const item of [
     { button: 'Town Map', heading: 'Town Map' },
+    { button: 'Quests', heading: 'Quest Log' },
     { button: 'Leaderboard', heading: 'Leaderboard' },
     { button: 'Badges', heading: 'Badges' },
     { button: 'Mini Games', heading: 'Mini Games' },
@@ -88,6 +89,13 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
     if (item.button === 'Town Map') {
       await expect(page.getByTestId('town-map')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Travel to Spawn Plaza' })).toBeVisible()
+    }
+    if (item.button === 'Quests') {
+      await expect(page.getByText('Meet three buddies')).toBeVisible()
+      await page.locator('.bb-quest-summary').filter({ hasText: 'Visit Skill School' }).click()
+      await expect(page.getByText('Walk to Skill School or use the Town Map to travel there.')).toBeVisible()
+      await page.getByRole('button', { name: 'Daily' }).click()
+      await expect(page.getByText('Drive a car')).toBeVisible()
     }
     if (item.button === 'Mini Games') {
       await expect(page.getByRole('button', { name: 'Play Coin Rush' })).toBeVisible()
