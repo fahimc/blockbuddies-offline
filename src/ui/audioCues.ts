@@ -8,6 +8,10 @@ export type AudioCue =
   | 'screen-start'
   | 'customizer-change'
   | 'chat'
+  | 'message-open'
+  | 'message-send'
+  | 'message-receive'
+  | 'error'
   | 'quest-complete'
   | 'badge'
   | 'unlock'
@@ -47,6 +51,10 @@ export type AudioSnapshot = {
   unlockedItemCount: number
   lastChatId?: string
   lastChatKind?: 'system' | 'bot' | 'player'
+  lastChatText?: string
+  selectedMessageThreadId?: string
+  directMessageCount: number
+  unreadMessageCount: number
   avatarSignature: string
   obbyActive: boolean
   obbyFinished: boolean
@@ -111,11 +119,38 @@ export function selectAudioCues(previous: AudioSnapshot, current: AudioSnapshot)
   ) {
     cues.push('chat')
   }
+  if (
+    current.lastChatId &&
+    current.lastChatId !== previous.lastChatId &&
+    current.lastChatKind === 'system' &&
+    isErrorSystemMessage(current.lastChatText)
+  ) {
+    cues.push('error')
+  }
+
+  if (
+    current.selectedMessageThreadId &&
+    current.selectedMessageThreadId !== previous.selectedMessageThreadId
+  ) {
+    cues.push('message-open')
+  }
+  if (current.directMessageCount > previous.directMessageCount) {
+    cues.push(
+      current.unreadMessageCount > previous.unreadMessageCount
+        ? 'message-receive'
+        : 'message-send',
+    )
+  }
 
   if (current.activeInteriorId && current.activeInteriorId !== previous.activeInteriorId) cues.push('travel')
   if (current.openPanel && current.openPanel !== previous.openPanel) cues.push('panel')
 
   return cues
+}
+
+function isErrorSystemMessage(text: string | undefined) {
+  if (!text) return false
+  return /\b(cannot|can't|no room|need|finish|leave|blocked|unavailable|failed)\b/i.test(text)
 }
 
 export function selectMusicMode(snapshot: AudioSnapshot): MusicMode {

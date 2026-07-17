@@ -67,9 +67,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Third-person blocky player with desktop movement and mobile touch controls.
 - Eight AI-simulated buddies with usernames, profiles, schedules, moods, goals,
   state transitions, and visible actions.
-- Local fake multiplayer messaging with a buddy inbox, unread badges, clickable
-  character threads, speech bubbles, join messages, and 100 kid-safe predefined
-  message presets.
+- Local fake multiplayer messaging with a buddy inbox, unread badges, visible
+  in-world Message buttons above characters, speech bubbles, join messages, and
+  100 kid-safe predefined message presets.
 - Five starter quests, rewards, coin pickups, local progress saving, and bot
   reactions.
 - Beginner obby with checkpoints, finish reward, restart/start control, and bot
@@ -82,9 +82,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
   pickup coins, glowing mesh pickups, and completion scoring.
 - Game-wide procedural music and WebAudio sound effects cover menu transitions,
-  customization, buddy messages, quests, badges, shop unlocks, emotes, seats, beds,
-  build mode, obby, vehicles, and mini-games while respecting the audio/music
-  settings toggles.
+  customization, buddy messages, inbox opens, replies, errors, quests, badges,
+  shop unlocks, emotes, seats, beds, build mode, obby, vehicles, and mini-games
+  while respecting the audio/music settings toggles.
 - Delivery Dash is a mapped delivery route with a parcel pickup, ordered
   drop-offs, active minimap/town-map markers, per-stop coin rewards, and time
   bonuses.

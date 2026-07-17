@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { Edges, useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { Armchair, BedDouble, CarFront } from 'lucide-react'
+import { Armchair, BedDouble, CarFront, MessageCircle } from 'lucide-react'
 import {
   useEffect,
   useMemo,
@@ -2721,6 +2721,7 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         hat={player.avatar.hat !== 'none'}
         action={player.action}
       />
+      <FloatingMessageButton label={player.name} onOpen={openPlayerMessages} />
     </group>
   )
 }
@@ -2820,6 +2821,7 @@ function BotAvatar({
           </div>
         </Html>
       ) : null}
+      <FloatingMessageButton label={username} onOpen={() => openMessageThread(bot.id)} />
     </group>
   )
 }
@@ -2924,7 +2926,39 @@ function SavedFriendAvatar({
         hat={friend.avatar.hat !== 'none'}
         action="walk"
       />
+      <FloatingMessageButton label={friend.name} onOpen={openThread} />
     </group>
+  )
+}
+
+function FloatingMessageButton({
+  label,
+  onOpen,
+}: {
+  label: string
+  onOpen: () => void
+}) {
+  return (
+    <Html center position={[0, 3.85, 0]} zIndexRange={worldActionZIndexRange}>
+      <button
+        type="button"
+        className="bb-world-message-button"
+        aria-label={`Message ${label}`}
+        title={`Message ${label}`}
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onOpen()
+        }}
+        onClick={(event) => {
+          event.stopPropagation()
+          onOpen()
+        }}
+      >
+        <MessageCircle size={15} aria-hidden />
+        <span>Message</span>
+      </button>
+    </Html>
   )
 }
 

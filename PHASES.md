@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase splash, audio, and world message icons
+
+- [x] Center the mobile splash logo and Start button against the real viewport with visual regression coverage.
+- [x] Add richer procedural sound effects for messages, build actions, vehicles, and error feedback.
+- [x] Add floating Message buttons above NPCs, saved friends, and local-party players.
+- [x] Add Playwright smoke coverage for tapping an in-world buddy message icon.
+- [x] Package and release Android debug APK for the splash/audio/message update.
+
 ## Post-phase splash flex layout
 
 - [x] Replace competing splash grid-row rules with a flex-centered Start area.

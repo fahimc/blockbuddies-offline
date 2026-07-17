@@ -283,6 +283,23 @@ test('opens the town map and fast travels to a key place', async ({ page }) => {
   }).toEqual({ x: -21, z: 17.5, grounded: true, teleported: true })
 })
 
+test('opens messages from an in-world buddy message icon', async ({ page }) => {
+  await page.goto('/')
+  await completeStartFlow(page, 'MessageTester')
+  await page.getByRole('button', { name: 'Start Playing' }).click()
+
+  const messageButton = page.getByRole('button', { name: /^Message / }).first()
+  await expect(messageButton).toBeVisible()
+  const contactName = (await messageButton.getAttribute('aria-label'))?.replace(
+    /^Message\s+/,
+    '',
+  )
+  await messageButton.evaluate((button) => (button as HTMLButtonElement).click())
+  await expect(
+    page.getByRole('heading', { name: contactName ?? /Messages|Buddy Chat/ }),
+  ).toBeVisible()
+})
+
 test('travels to the planned build and civic districts', async ({ page }) => {
   await page.goto('/')
   await completeStartFlow(page, 'TownPlanner')

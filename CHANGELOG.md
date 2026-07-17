@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.54-splash-audio-message-icons] - 2026-07-17
+
+### Added
+
+- Added richer message, build, vehicle, and error sound effects to make gameplay feedback feel more like a finished game.
+- Added visible floating Message buttons above NPCs, saved friends, and local-party players so players can tap a character to open a predefined-message thread.
+- Added smoke coverage for opening buddy messages from an in-world message icon.
+
+### Changed
+
+- Repositioned the portrait splash Start/logo container with absolute viewport centering and stricter visual regression geometry checks.
+- Updated Android and package version metadata to `1.5.54` / `10554`.
+
+### Fixed
+
+- Fixed the mobile splash logo and Start button drifting above the true viewport center on browser and Android-style mobile viewports.
+- Fixed in-world message affordances being hidden behind the drag/camera layer.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.53-hosted-web-party] - 2026-07-17
 
 ### Added

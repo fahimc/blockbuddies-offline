@@ -19,6 +19,22 @@ export function GameAudio() {
   const earnedBadgeCount = useGameStore((state) => state.earnedBadges.length)
   const unlockedItemCount = useGameStore((state) => state.unlockedItems.length)
   const lastChat = useGameStore((state) => state.chat.at(-1))
+  const selectedMessageThreadId = useGameStore((state) => state.selectedMessageThreadId)
+  const directMessageCount = useGameStore((state) =>
+    state.messageThreads.reduce(
+      (total, thread) => total + thread.messages.length,
+      0,
+    ),
+  )
+  const unreadMessageCount = useGameStore((state) =>
+    state.messageThreads.reduce(
+      (total, thread) =>
+        total +
+        thread.messages.filter((message) => message.from === 'bot' && !message.read)
+          .length,
+      0,
+    ),
+  )
   const avatar = useGameStore((state) => state.avatar)
   const obby = useGameStore((state) => state.obby)
   const miniGame = useGameStore((state) => state.miniGame)
@@ -40,6 +56,10 @@ export function GameAudio() {
       unlockedItemCount,
       lastChatId: lastChat?.id,
       lastChatKind: lastChat?.kind,
+      lastChatText: lastChat?.text,
+      selectedMessageThreadId,
+      directMessageCount,
+      unreadMessageCount,
       avatarSignature: JSON.stringify(avatar),
       obbyActive: obby.active,
       obbyFinished: obby.finished,
@@ -58,6 +78,8 @@ export function GameAudio() {
       earnedBadgeCount,
       lastChat?.id,
       lastChat?.kind,
+      lastChat?.text,
+      directMessageCount,
       miniGame.eventSequence,
       miniGame.score,
       miniGame.status,
@@ -68,7 +90,9 @@ export function GameAudio() {
       playerEmote,
       screen,
       seatedSeatId,
+      selectedMessageThreadId,
       sleeping,
+      unreadMessageCount,
       unlockedItemCount,
     ],
   )
@@ -119,6 +143,20 @@ function playCue(cue: AudioCue) {
     case 'chat':
       playTone([520, 670], 0.025, 0.028, 'sine')
       break
+    case 'message-open':
+      playTone([392, 523], 0.035, 0.035, 'triangle')
+      break
+    case 'message-send':
+      playTone([588, 740, 880], 0.03, 0.034, 'sine')
+      break
+    case 'message-receive':
+      playTone([659, 523, 784], 0.035, 0.045, 'triangle')
+      playNoiseBurst(0.035, 0.018, 900)
+      break
+    case 'error':
+      playTone([196, 165], 0.08, 0.045, 'square')
+      playNoiseBurst(0.06, 0.018, 250)
+      break
     case 'quest-complete':
       playTone([523, 659, 784, 988], 0.065, 0.072)
       break
@@ -148,9 +186,11 @@ function playCue(cue: AudioCue) {
       break
     case 'build-place':
       playTone([165, 220, 330], 0.04, 0.05, 'square')
+      playNoiseBurst(0.04, 0.018, 420)
       break
     case 'build-remove':
       playTone([330, 220], 0.045, 0.045, 'square')
+      playNoiseBurst(0.045, 0.016, 260)
       break
     case 'obby-start':
       playTone([392, 587, 784], 0.07, 0.065, 'triangle')
@@ -160,9 +200,11 @@ function playCue(cue: AudioCue) {
       break
     case 'vehicle-enter':
       playTone([110, 147, 196, 294], 0.06, 0.055, 'sawtooth')
+      playNoiseBurst(0.08, 0.02, 120)
       break
     case 'vehicle-exit':
       playTone([294, 196], 0.065, 0.04, 'sawtooth')
+      playNoiseBurst(0.045, 0.014, 180)
       break
     case 'mini-game-start':
       playTone([392, 523, 659], 0.075, 0.07)
@@ -176,6 +218,35 @@ function playCue(cue: AudioCue) {
     case 'mini-game-fail':
       playTone([220, 196], 0.11, 0.05, 'square')
       break
+  }
+}
+
+function playNoiseBurst(durationSeconds: number, volume: number, lowpassFrequency: number) {
+  try {
+    const context = getAudioContext()
+    if (!context) return
+    if (context.state === 'suspended') void context.resume()
+    const sampleCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds))
+    const buffer = context.createBuffer(1, sampleCount, context.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let index = 0; index < sampleCount; index += 1) {
+      data[index] = (Math.random() * 2 - 1) * (1 - index / sampleCount)
+    }
+    const source = context.createBufferSource()
+    const filter = context.createBiquadFilter()
+    const gain = context.createGain()
+    filter.type = 'lowpass'
+    filter.frequency.value = lowpassFrequency
+    gain.gain.setValueAtTime(volume, context.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + durationSeconds)
+    source.buffer = buffer
+    source.connect(filter)
+    filter.connect(gain)
+    gain.connect(context.destination)
+    source.start()
+    source.stop(context.currentTime + durationSeconds)
+  } catch {
+    // Some mobile WebViews block audio until after a direct user gesture.
   }
 }
 

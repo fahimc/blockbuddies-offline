@@ -17,9 +17,13 @@ test.describe('mobile visual regression', () => {
     const areaCentreX = areaBox.x + areaBox.width / 2
     const cardCentreY = cardBox.y + cardBox.height / 2
     const cardCentreX = cardBox.x + cardBox.width / 2
+    const viewport = page.viewportSize()
+    if (!viewport) throw new Error('Expected viewport')
 
     expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
     expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
+    expect(Math.abs(cardCentreY - viewport.height / 2)).toBeLessThan(4)
+    expect(Math.abs(cardCentreX - viewport.width / 2)).toBeLessThan(4)
     await expect(page).toHaveScreenshot('splash-portrait.png', screenshotOptions)
   })
 
@@ -45,6 +49,8 @@ test.describe('mobile visual regression', () => {
 
       expect(Math.abs(cardCentreY - areaCentreY)).toBeLessThan(2)
       expect(Math.abs(cardCentreX - areaCentreX)).toBeLessThan(2)
+      expect(Math.abs(cardCentreY - viewport.height / 2)).toBeLessThan(4)
+      expect(Math.abs(cardCentreX - viewport.width / 2)).toBeLessThan(4)
       expect(logoBox.x + logoBox.width / 2).toBeCloseTo(areaCentreX, 0)
       expect(buttonBox.x + buttonBox.width / 2).toBeCloseTo(areaCentreX, 0)
       expect(buttonBox.y).toBeGreaterThan(logoBox.y + logoBox.height)

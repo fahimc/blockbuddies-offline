@@ -12,6 +12,8 @@ const base: AudioSnapshot = {
   completedQuestCount: 0,
   earnedBadgeCount: 0,
   unlockedItemCount: 0,
+  directMessageCount: 0,
+  unreadMessageCount: 0,
   avatarSignature: 'default',
   obbyActive: false,
   obbyFinished: false,
@@ -45,6 +47,17 @@ describe('audio cue selection', () => {
     expect(selectAudioCues(base, { ...base, avatarSignature: 'changed' })).toContain('customizer-change')
     expect(selectAudioCues(base, { ...base, playerEmote: 'wave' })).toContain('emote')
     expect(selectAudioCues(base, { ...base, lastChatId: 'chat-1', lastChatKind: 'player' })).toContain('chat')
+    expect(selectAudioCues(base, { ...base, selectedMessageThreadId: 'luna' })).toContain('message-open')
+    expect(selectAudioCues(base, { ...base, directMessageCount: 1 })).toContain('message-send')
+    expect(selectAudioCues(base, { ...base, directMessageCount: 1, unreadMessageCount: 1 })).toContain('message-receive')
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        lastChatId: 'error-1',
+        lastChatKind: 'system',
+        lastChatText: 'House cannot be placed on road',
+      }),
+    ).toContain('error')
     expect(selectAudioCues(base, { ...base, completedQuestCount: 1 })).toContain('quest-complete')
     expect(selectAudioCues(base, { ...base, earnedBadgeCount: 2 })).toContain('badge')
     expect(selectAudioCues(base, { ...base, unlockedItemCount: 1 })).toContain('unlock')
