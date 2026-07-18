@@ -104,6 +104,7 @@ import {
 } from './movement'
 import { avatarSleepRotation } from './sleepPose'
 import { avatarTrailPieces } from './avatarTrail'
+import { petAccessoryModel, type PetAccessoryPart } from './pets'
 import {
   avatarSelectionHitboxPosition,
   avatarSelectionHitboxSize,
@@ -145,7 +146,6 @@ import {
 } from './vehicles'
 import type {
   AvatarBottomStyle,
-  AvatarSettings,
   AvatarFaceStyle,
   AvatarHairStyle,
   AvatarOutfitStyle,
@@ -155,6 +155,7 @@ import type {
   BuildPieceId,
   InteriorKind,
   InteriorVisit,
+  SavedFriend,
   ShopItemId,
   Vec3,
 } from './types'
@@ -307,6 +308,7 @@ function OutdoorWorld() {
       />
       <Bots />
       <SavedFriendPlayers />
+      <RemoteSavedFriendPlayers />
       <LocalPartyPlayers />
       <ObbyCourse />
       <CoinField />
@@ -1885,6 +1887,7 @@ function PlayerController({
   const settings = useGameStore((state) => state.settings)
   const activeInterior = useGameStore((state) => state.activeInterior)
   const placedBlocks = useGameStore((state) => state.placedBlocks)
+  const savedFriends = useGameStore((state) => state.savedFriends)
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
   const remotePlacedBlocks = useMemo(
     () =>
@@ -2546,6 +2549,7 @@ function PlayerController({
           emote: seatedSeatId ? 'sit' : playerEmote,
           interiorId: activeInterior?.id,
           placedBlocks,
+          savedFriends,
         }),
       )
       lastPartyBroadcastAt.current = performance.now()
@@ -2960,20 +2964,56 @@ function SavedFriendPlayers() {
   )
 }
 
+function RemoteSavedFriendPlayers() {
+  const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
+  const remoteFriends = useMemo(
+    () =>
+      Object.values(remotePlayerRecord).flatMap((owner, ownerIndex) =>
+        (owner.savedFriends ?? [])
+          .filter((friend) => friend.inWorld)
+          .map((friend, friendIndex) => ({
+            ownerId: owner.id,
+            friend,
+            index: ownerIndex * 12 + friendIndex + 4,
+          })),
+      ),
+    [remotePlayerRecord],
+  )
+
+  return (
+    <>
+      {remoteFriends.map(({ ownerId, friend, index }) => (
+        <SavedFriendAvatar
+          key={`${ownerId}:${friend.id}`}
+          friend={friend}
+          index={index}
+          messageTargetId={`remote-friend:${ownerId}:${friend.id}`}
+          messageThreadId={`local-party-friend:${ownerId}:${friend.id}`}
+        />
+      ))}
+    </>
+  )
+}
+
 function SavedFriendAvatar({
   friend,
   index,
+  messageTargetId,
+  messageThreadId,
 }: {
-  friend: { id: string; name: string; avatar: AvatarSettings; route: string[] }
+  friend: Pick<SavedFriend, 'id' | 'name' | 'avatar' | 'route'>
   index: number
+  messageTargetId?: string
+  messageThreadId?: string
 }) {
   const group = useRef<THREE.Group>(null)
   const { selectedMessageTargetId, selectMessageTarget } =
     useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
-  const messageTargetId = `friend:${friend.id}`
-  const isSelected = selectedMessageTargetId === messageTargetId
-  const selectFriend = () => selectMessageTarget(messageTargetId)
+  const targetId = messageTargetId ?? `friend:${friend.id}`
+  const threadId = messageThreadId ?? friend.id
+  const isSelected = selectedMessageTargetId === targetId
+  const selectFriend = () => selectMessageTarget(targetId)
   const target = useRef(new THREE.Vector3())
   const position = useRef(new THREE.Vector3())
   const route = friend.route.length ? friend.route : ['spawn']
@@ -3001,7 +3041,7 @@ function SavedFriendAvatar({
       group.current.rotation.y = Math.atan2(dx, dz)
   })
 
-  const openThread = () => openMessageThread(friend.id, friend.name)
+  const openThread = () => openMessageThread(threadId, friend.name)
 
   return (
     <group
@@ -3854,16 +3894,13 @@ function AvatarAccessory({
   }
 
   if (value.includes('pet')) {
+    const petModel = petAccessoryModel(value, accentColor, secondaryColor)
+    if (!petModel) return null
     return (
-      <group position={[0.72, 0.34, 0.25]}>
-        <mesh castShadow position={[0, 0.34, 0]}>
-          <boxGeometry args={[0.28, 0.32, 0.22]} />
-          <meshStandardMaterial color={secondaryColor} roughness={0.7} />
-        </mesh>
-        <mesh castShadow position={[0, 0.63, 0.03]}>
-          <boxGeometry args={[0.22, 0.2, 0.18]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.7} />
-        </mesh>
+      <group position={petModel.position}>
+        {petModel.parts.map((part) => (
+          <PetAccessoryPartMesh key={part.id} part={part} />
+        ))}
       </group>
     )
   }
@@ -3872,6 +3909,29 @@ function AvatarAccessory({
     <mesh castShadow position={[0, 1.97, 0.36]}>
       <boxGeometry args={[0.62, 0.12, 0.04]} />
       <meshStandardMaterial color="#111827" roughness={0.5} />
+    </mesh>
+  )
+}
+
+function PetAccessoryPartMesh({ part }: { part: PetAccessoryPart }) {
+  return (
+    <mesh
+      castShadow
+      position={part.position}
+      rotation={part.rotation}
+      scale={part.scale}
+    >
+      {part.shape === 'sphere' ? (
+        <sphereGeometry args={[0.5, 12, 8]} />
+      ) : (
+        <boxGeometry args={[1, 1, 1]} />
+      )}
+      <meshStandardMaterial
+        color={part.color}
+        emissive={part.emissive}
+        emissiveIntensity={part.emissiveIntensity ?? 0}
+        roughness={0.58}
+      />
     </mesh>
   )
 }

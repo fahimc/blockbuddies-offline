@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.65-local-party-friends-pets] - 2026-07-18
+
+### Added
+
+- Added Local Party snapshot support for synced created friend/NPC characters.
+- Added richer in-world pet models for Puppy Pal and Mini Bot with distinct body parts.
+- Added unit and Playwright regression coverage for synced Local Party created friends and pet model quality.
+
+### Changed
+
+- Local Party player snapshots now carry bounded, sanitized saved-friend data alongside build objects and emotes.
+- Updated Android and package version metadata to `1.5.65` / `10565`.
+
+### Fixed
+
+- Fixed created friend/NPC characters not appearing for other connected Local Party players.
+- Fixed pet accessories appearing as low-detail placeholder blocks in the world.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.64-local-party-emotes] - 2026-07-18
 
 ### Added

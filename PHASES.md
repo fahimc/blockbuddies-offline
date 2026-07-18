@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase local party created friends and pets
+
+- [x] Sync created saved-friend/NPC characters through Local Party snapshots.
+- [x] Render remote created friends from connected players in the outdoor town.
+- [x] Keep synced friend data bounded and sanitized before network broadcast.
+- [x] Replace placeholder pet accessories with richer Puppy Pal and Mini Bot models.
+- [x] Add unit and Playwright regression coverage for synced friends and pet model quality.
+- [x] Package and release Android debug APK for the local-party friends and pets update.
+
 ## Post-phase local party emote sync
 
 - [x] Add Local Party snapshot support for sanitized player emotes.

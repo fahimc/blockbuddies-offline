@@ -107,6 +107,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   and exclusive occupancy cells before release.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
+- Pet accessories include richer in-world Puppy Pal and Mini Bot models with
+  distinct heads, bodies, ears/screens, legs, tails or antenna pieces.
 - The mobile customizer follows a four-column flex guide with separate preview,
   category, catalog/control, and Save/Next rows for portrait phone screens.
 - Character setup includes explicit Save Character controls, automatic saving
@@ -129,6 +131,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Saved custom friends can be created from the Buddies menu, added back into
   the town, shown on the mini-map/full map, persisted locally, and messaged
   through predefined inbox threads.
+- Created friends are shared into Local Party sessions so connected players can
+  see the custom NPCs you add to the town.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
   live synced player avatars, movement, build objects, and emotes.
@@ -323,6 +327,9 @@ Debug APK output:
 
 The `v1.5.64` APK syncs player emotes in Local Party sessions, so connected
 players can see Wave, Cheer, Dance, and Sit actions on remote avatars.
+
+The `v1.5.65` APK syncs created friend/NPC characters into Local Party sessions
+and replaces placeholder pet blocks with richer Puppy Pal and Mini Bot models.
 
 The `v1.5.62` APK clarifies quest completion by showing labelled how-to and tip
 details on every expanded quest, signs the purple school building as

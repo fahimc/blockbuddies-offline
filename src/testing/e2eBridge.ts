@@ -44,6 +44,7 @@ export type BlockBuddiesE2EBridge = {
     playerId: string,
     playerName: string,
   ) => GameplayE2ESnapshot
+  createLocalPartyFriend: (name?: string) => LocalPartyE2ESnapshot
   sendSelectedPredefinedMessage: (presetId: string) => GameplayE2ESnapshot
   getLocalPartySnapshot: () => LocalPartyE2ESnapshot
   getGameplaySnapshot: () => GameplayE2ESnapshot
@@ -119,6 +120,7 @@ export function installE2EBridge() {
     completeMiniGameRoute,
     broadcastLocalPartySnapshot,
     openLocalPartyMessageThread,
+    createLocalPartyFriend,
     sendSelectedPredefinedMessage,
     getLocalPartySnapshot,
     getGameplaySnapshot,
@@ -478,6 +480,7 @@ function broadcastLocalPartySnapshot(
       emote: emote ?? game.playerEmote,
       interiorId: game.activeInterior?.id,
       placedBlocks: placedBlocks ?? game.placedBlocks,
+      savedFriends: game.savedFriends,
     }),
   )
   return getLocalPartySnapshot()
@@ -489,6 +492,17 @@ function openLocalPartyMessageThread(
 ): GameplayE2ESnapshot {
   useGameStore.getState().openMessageThread(playerId, playerName)
   return getGameplaySnapshot()
+}
+
+function createLocalPartyFriend(name = 'Party Pal'): LocalPartyE2ESnapshot {
+  const game = useGameStore.getState()
+  game.createSavedFriend(name, {
+    ...game.avatar,
+    shirtColor: '#a78bfa',
+    accentColor: '#facc15',
+    accessory: 'pet-bot',
+  })
+  return broadcastLocalPartySnapshot()
 }
 
 function sendSelectedPredefinedMessage(presetId: string): GameplayE2ESnapshot {

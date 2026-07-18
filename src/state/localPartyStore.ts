@@ -4,9 +4,12 @@ import type {
   AvatarSettings,
   BotRuntime,
   BuildBlock,
+  LocationId,
   PlayerEmote,
+  SavedFriend,
   Vec3,
 } from '../game/types'
+import { worldLocations } from '../data/world'
 import { sanitizeBuildPieceName } from '../data/buildPieces'
 import {
   discoverSignalRooms,
@@ -55,6 +58,7 @@ export type LocalPartySnapshot = {
   role?: LocalPartyRole
   hostId?: string
   placedBlocks?: BuildBlock[]
+  savedFriends?: SavedFriend[]
   updatedAt: number
 }
 
@@ -137,6 +141,10 @@ const compactPartyCodePrefix = 'BBP1.'
 const signalBusName = 'blockbuddies-local-party-signal'
 const signalStorageKey = 'blockbuddies-local-party-signal'
 const maxSyncedBuildBlocks = 96
+const maxSyncedSavedFriends = 12
+const validLocationIds = new Set<LocationId>(
+  worldLocations.map((location) => location.id),
+)
 
 export function sanitizePartyName(input: string) {
   const cleaned = input.replace(/[^\w -]/g, '').replace(/\s+/g, ' ').trim().slice(0, 18)
@@ -225,6 +233,7 @@ export function makePartySnapshot(snapshot: LocalPartySnapshotInput): LocalParty
     emote: sanitizePartyEmote(snapshot.emote),
     interiorId: snapshot.interiorId,
     placedBlocks: sanitizeBuildBlocks(snapshot.placedBlocks),
+    savedFriends: sanitizePartySavedFriends(snapshot.savedFriends),
     updatedAt: snapshot.updatedAt ?? Date.now(),
   }
 }
@@ -264,6 +273,67 @@ function sanitizeBuildBlocks(blocks: BuildBlock[] | undefined): BuildBlock[] | u
     position: [Number(block.position[0]) || 0, Number(block.position[1]) || 0, Number(block.position[2]) || 0],
     color: /^#[0-9a-f]{3,8}$/i.test(block.color) ? block.color : '#60a5fa',
     rotation: Number.isFinite(block.rotation) ? block.rotation : 0,
+  }))
+}
+
+function sanitizeHexColor(color: unknown, fallback: string) {
+  return typeof color === 'string' && /^#[0-9a-f]{3,8}$/i.test(color)
+    ? color
+    : fallback
+}
+
+function sanitizePartyAvatar(avatar: AvatarSettings | undefined): AvatarSettings {
+  return {
+    bodyColor: sanitizeHexColor(avatar?.bodyColor, '#9a5b43'),
+    shirtColor: sanitizeHexColor(avatar?.shirtColor, '#5eead4'),
+    hairColor: sanitizeHexColor(avatar?.hairColor, '#3b1f12'),
+    hairStyle: avatar?.hairStyle,
+    face: avatar?.face,
+    eyeColor: sanitizeHexColor(avatar?.eyeColor, '#111827'),
+    accentColor: sanitizeHexColor(avatar?.accentColor, '#0b74ff'),
+    secondaryColor: sanitizeHexColor(avatar?.secondaryColor, '#ffffff'),
+    pantsColor: sanitizeHexColor(avatar?.pantsColor, '#111827'),
+    topStyle: avatar?.topStyle,
+    outfitStyle: avatar?.outfitStyle,
+    bottomStyle: avatar?.bottomStyle,
+    shoeStyle: avatar?.shoeStyle,
+    shoeColor: sanitizeHexColor(avatar?.shoeColor, '#f8fafc'),
+    avatarSource: String(avatar?.avatarSource ?? 'Local Party Friend').slice(0, 64),
+    hat: avatar?.hat ?? 'none',
+    accessory: avatar?.accessory ?? 'none',
+    trail: avatar?.trail ?? 'none',
+  }
+}
+
+function fallbackFriendRoute(index: number): LocationId[] {
+  return index % 2 === 0
+    ? ['spawn', 'park', 'shop', 'houses']
+    : ['spawn', 'school', 'obby', 'park']
+}
+
+function sanitizeFriendRoute(route: unknown, index: number): LocationId[] {
+  if (!Array.isArray(route)) return fallbackFriendRoute(index)
+  const sanitized = route
+    .filter(
+      (location): location is LocationId =>
+        typeof location === 'string' &&
+        validLocationIds.has(location as LocationId),
+    )
+    .slice(0, 6)
+  return sanitized.length > 0 ? sanitized : fallbackFriendRoute(index)
+}
+
+function sanitizePartySavedFriends(
+  friends: SavedFriend[] | undefined,
+): SavedFriend[] | undefined {
+  if (!friends?.length) return undefined
+  return friends.slice(0, maxSyncedSavedFriends).map((friend, index) => ({
+    id: String(friend.id).slice(0, 64),
+    name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
+    avatar: sanitizePartyAvatar(friend.avatar),
+    inWorld: Boolean(friend.inWorld),
+    route: sanitizeFriendRoute(friend.route, index),
+    createdAt: Number.isFinite(friend.createdAt) ? friend.createdAt : Date.now(),
   }))
 }
 

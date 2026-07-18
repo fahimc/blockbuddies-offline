@@ -149,6 +149,45 @@ describe('local party helpers', () => {
     })
   })
 
+  it('syncs bounded sanitized created friend characters', () => {
+    const snapshot = makePartySnapshot({
+      id: 'local-friends',
+      name: 'Friend Maker',
+      position: [1, 0, 2],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      savedFriends: Array.from({ length: 14 }, (_, index) => ({
+        id: `friend-${index}`,
+        name: index === 11 ? '  Party <Pal>!!!  ' : `Friend ${index}`,
+        avatar: {
+          ...avatar,
+          bodyColor: index === 11 ? 'brown' : '#9a5b43',
+          shirtColor: '#a78bfa',
+          accessory: 'pet-bot',
+        },
+        inWorld: index !== 2,
+        route: index === 11 ? ['road' as never, 'school'] : ['spawn', 'park'],
+        createdAt: 100 + index,
+      })),
+      updatedAt: 100,
+    })
+
+    expect(snapshot.savedFriends).toHaveLength(12)
+    expect(snapshot.savedFriends?.at(-1)).toMatchObject({
+      id: 'friend-11',
+      name: 'Party Pal',
+      inWorld: true,
+      route: ['school'],
+      avatar: expect.objectContaining({
+        bodyColor: '#9a5b43',
+        shirtColor: '#a78bfa',
+        accessory: 'pet-bot',
+      }),
+    })
+    expect(snapshot.savedFriends?.[2].inWorld).toBe(false)
+  })
+
   it('elects a live explicit host before falling back to deterministic failover', () => {
     const host = makePartySnapshot({
       id: 'local-host',

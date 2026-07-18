@@ -12,6 +12,12 @@ type LocalPartySnapshot = {
     name: string
     position: [number, number, number]
     emote: string
+    savedFriends?: {
+      id: string
+      name: string
+      inWorld: boolean
+      route: string[]
+    }[]
     placedBlocks?: { id: string; kind?: string; position: [number, number, number]; color: string; rotation?: number }[]
   }[]
   lastEvent: string
@@ -123,6 +129,16 @@ test.describe('local party multiplayer', () => {
       .toBe('dance')
     await expect(host.getByText('Local players connected: 1')).toBeVisible()
     await expect(host.locator('.bb-party-card').locator('span', { hasText: 'GuestBuddy' })).toBeVisible()
+
+    await guest.evaluate(() => window.__blockBuddiesE2E!.createLocalPartyFriend('Party Pal'))
+    await expect
+      .poll(async () => {
+        const guestRemote = (await partySnapshot(host)).remotePlayers.find((player) => player.name === 'GuestBuddy')
+        return guestRemote?.savedFriends?.map((friend) => `${friend.name}:${friend.inWorld}`) ?? []
+      }, {
+        timeout: 15_000,
+      })
+      .toContain('Party Pal:true')
 
     await host.evaluate(() =>
       window.__blockBuddiesE2E!.broadcastLocalPartySnapshot([-3, 0, 5], [
