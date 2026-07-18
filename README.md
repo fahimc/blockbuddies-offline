@@ -131,7 +131,7 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   through predefined inbox threads.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
 - Local Party nearby multiplayer with manual WebRTC invite/answer codes and
-  live synced player avatars.
+  live synced player avatars, movement, build objects, and emotes.
 - Local Party invite and answer codes have Copy and Share buttons, using native
   device sharing when available and clipboard fallback otherwise.
 - Local Party codes use compact compressed `BBP1` signals, Paste buttons, shared
@@ -320,6 +320,9 @@ $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
+
+The `v1.5.64` APK syncs player emotes in Local Party sessions, so connected
+players can see Wave, Cheer, Dance, and Sit actions on remote avatars.
 
 The `v1.5.62` APK clarifies quest completion by showing labelled how-to and tip
 details on every expanded quest, signs the purple school building as

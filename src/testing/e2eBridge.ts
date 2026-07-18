@@ -4,6 +4,7 @@ import type {
   MessageThread,
   MiniGameId,
   MiniGameRuntime,
+  PlayerEmote,
   QuestProgress,
   Vec3,
 } from '../game/types'
@@ -37,6 +38,7 @@ export type BlockBuddiesE2EBridge = {
   broadcastLocalPartySnapshot: (
     position?: Vec3,
     placedBlocks?: BuildBlock[],
+    emote?: PlayerEmote,
   ) => LocalPartyE2ESnapshot
   openLocalPartyMessageThread: (
     playerId: string,
@@ -459,8 +461,10 @@ function getSnapshot(): MiniGameE2ESnapshot {
 function broadcastLocalPartySnapshot(
   position?: Vec3,
   placedBlocks?: BuildBlock[],
+  emote?: PlayerEmote,
 ): LocalPartyE2ESnapshot {
   if (placedBlocks) useGameStore.setState({ placedBlocks })
+  if (emote) useGameStore.setState({ playerEmote: emote })
   const game = useGameStore.getState()
   const party = useLocalPartyStore.getState()
   party.broadcastSnapshot(
@@ -471,6 +475,7 @@ function broadcastLocalPartySnapshot(
       yaw: game.playerYaw,
       avatar: game.avatar,
       action: 'run',
+      emote: emote ?? game.playerEmote,
       interiorId: game.activeInterior?.id,
       placedBlocks: placedBlocks ?? game.placedBlocks,
     }),

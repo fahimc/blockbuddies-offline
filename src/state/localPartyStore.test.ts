@@ -79,6 +79,7 @@ describe('local party helpers', () => {
       yaw: 1.2,
       avatar,
       action: 'run',
+      emote: 'dance',
       updatedAt: 100,
     })
 
@@ -89,8 +90,34 @@ describe('local party helpers', () => {
       yaw: 1.2,
       avatar,
       action: 'run',
+      emote: 'dance',
       updatedAt: 100,
     })
+  })
+
+  it('defaults missing or invalid synced emotes to none', () => {
+    const missingEmoteSnapshot = makePartySnapshot({
+      id: 'local-quiet',
+      name: 'Quiet',
+      position: [0, 0, 0],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      updatedAt: 100,
+    })
+    const invalidEmoteSnapshot = makePartySnapshot({
+      id: 'local-spin',
+      name: 'Spin',
+      position: [0, 0, 0],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      emote: 'spin' as never,
+      updatedAt: 100,
+    })
+
+    expect(missingEmoteSnapshot.emote).toBe('none')
+    expect(invalidEmoteSnapshot.emote).toBe('none')
   })
 
   it('syncs a bounded sanitized set of built world objects', () => {

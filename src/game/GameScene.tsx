@@ -2543,6 +2543,7 @@ function PlayerController({
                 ? 'run'
                 : 'walk'
               : 'idle',
+          emote: seatedSeatId ? 'sit' : playerEmote,
           interiorId: activeInterior?.id,
           placedBlocks,
         }),
@@ -2819,6 +2820,7 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         username={player.name}
         hat={player.avatar.hat !== 'none'}
         action={player.action}
+        emote={player.emote}
         isSelected={isSelected}
         onSelect={selectPlayer}
       />

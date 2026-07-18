@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate'
-import type { AvatarSettings, BotRuntime, Vec3, BuildBlock } from '../game/types'
+import type {
+  AvatarSettings,
+  BotRuntime,
+  BuildBlock,
+  PlayerEmote,
+  Vec3,
+} from '../game/types'
 import { sanitizeBuildPieceName } from '../data/buildPieces'
 import {
   discoverSignalRooms,
@@ -44,11 +50,20 @@ export type LocalPartySnapshot = {
   yaw: number
   avatar: AvatarSettings
   action: BotRuntime['action']
+  emote: PlayerEmote
   interiorId?: string
   role?: LocalPartyRole
   hostId?: string
   placedBlocks?: BuildBlock[]
   updatedAt: number
+}
+
+type LocalPartySnapshotInput = Omit<
+  LocalPartySnapshot,
+  'updatedAt' | 'emote'
+> & {
+  updatedAt?: number
+  emote?: PlayerEmote
 }
 
 export type LocalPartyDirectMessage = {
@@ -202,15 +217,25 @@ export function decodePartySignal(code: string) {
   }
 }
 
-export function makePartySnapshot(snapshot: Omit<LocalPartySnapshot, 'updatedAt'> & { updatedAt?: number }): LocalPartySnapshot {
+export function makePartySnapshot(snapshot: LocalPartySnapshotInput): LocalPartySnapshot {
   return {
     ...snapshot,
     name: sanitizePartyName(snapshot.name),
     position: [snapshot.position[0], snapshot.position[1], snapshot.position[2]],
+    emote: sanitizePartyEmote(snapshot.emote),
     interiorId: snapshot.interiorId,
     placedBlocks: sanitizeBuildBlocks(snapshot.placedBlocks),
     updatedAt: snapshot.updatedAt ?? Date.now(),
   }
+}
+
+function sanitizePartyEmote(emote: unknown): PlayerEmote {
+  return emote === 'wave' ||
+    emote === 'cheer' ||
+    emote === 'dance' ||
+    emote === 'sit'
+    ? emote
+    : 'none'
 }
 
 export function isRemoteFresh(snapshot: LocalPartySnapshot, now = Date.now(), ttlMs = 5000) {
@@ -265,7 +290,13 @@ function parsePartyMessage(data: unknown): LocalPartyMessage | undefined {
         isRecord(snapshot.avatar) &&
         typeof snapshot.action === 'string'
       ) {
-        return { type: 'snapshot', snapshot: snapshot as LocalPartySnapshot }
+        return {
+          type: 'snapshot',
+          snapshot: {
+            ...(snapshot as LocalPartySnapshot),
+            emote: sanitizePartyEmote(snapshot.emote),
+          },
+        }
       }
     }
     if (message.type === 'direct_message' && isRecord(message.message)) {

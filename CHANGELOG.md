@@ -18,6 +18,25 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.64-local-party-emotes] - 2026-07-18
+
+### Added
+
+- Added unit and Playwright regression coverage for Local Party emote synchronization.
+
+### Changed
+
+- Local Party player snapshots now include sanitized emote state alongside movement, avatar, interior, and build data.
+- Updated Android and package version metadata to `1.5.64` / `10564`.
+
+### Fixed
+
+- Fixed local players not seeing each other's Wave, Cheer, Dance, and Sit emotes during Local Party sessions.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.63-beginner-obby-course] - 2026-07-18
 
 ### Added

@@ -625,6 +625,7 @@ describe('direct message inbox', () => {
           yaw: 0,
           avatar: defaultAvatar,
           action: 'idle',
+          emote: 'none',
           updatedAt: Date.now(),
         },
       },

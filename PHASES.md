@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase local party emote sync
+
+- [x] Add Local Party snapshot support for sanitized player emotes.
+- [x] Broadcast the local player's active emote state during Local Party updates.
+- [x] Render remote Local Party avatars with their synced emote.
+- [x] Add unit and Playwright regression coverage for remote emote visibility.
+- [x] Package and release Android debug APK for the local-party emote sync fix.
+
 ## Post-phase beginner obby course
 
 - [x] Replace the four-pad obby prop with a full beginner obstacle course.
