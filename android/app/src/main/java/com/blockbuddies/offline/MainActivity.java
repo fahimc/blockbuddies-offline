@@ -10,7 +10,6 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
-import android.webkit.WebStorage;
 import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
@@ -22,7 +21,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(LocalSignalPlugin.class);
-        clearStaleWebViewDataForThisBuild();
+        clearStaleWebViewCachesForThisBuild();
         super.onCreate(savedInstanceState);
         enterImmersiveMode();
     }
@@ -73,13 +72,14 @@ public class MainActivity extends BridgeActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
     }
 
-    private void clearStaleWebViewDataForThisBuild() {
+    private void clearStaleWebViewCachesForThisBuild() {
         String buildKey = getInstalledBuildKey();
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         if (buildKey.equals(prefs.getString(WEB_CACHE_BUILD_KEY, ""))) {
             return;
         }
 
+        // Keep persistent browser storage intact: IndexedDB/localForage contains saved game state.
         try {
             WebView webView = new WebView(this);
             webView.clearCache(true);
@@ -88,12 +88,6 @@ public class MainActivity extends BridgeActivity {
             webView.destroy();
         } catch (Exception ignored) {
             // WebView can be unavailable in some test contexts.
-        }
-
-        try {
-            WebStorage.getInstance().deleteAllData();
-        } catch (Exception ignored) {
-            // Best-effort cleanup for stale service worker/cache storage.
         }
 
         try {

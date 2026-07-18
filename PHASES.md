@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase update-safe persistence
+
+- [x] Stop Android startup cleanup from deleting WebView persistent storage.
+- [x] Preserve IndexedDB/localForage save data across APK version updates.
+- [x] Keep stale WebView bundle cache cleanup so updated app UI still refreshes.
+- [x] Add regression coverage for the native Android persistence policy.
+- [x] Package and release Android debug APK for the save-persistence fix.
+
 ## Post-phase customizer edge fit
 
 - [x] Fix Saved Characters strip clipping so Add New and saved avatars fit their container.
@@ -385,7 +393,7 @@
 
 ## Post-phase responsive APK cleanup
 
-- [x] Add native Android WebView cache/storage cleanup before Capacitor loads
+- [x] Add native Android WebView bundle cache cleanup before Capacitor loads
 - [x] Bump Android debug APK version metadata to 1.3.4 / 10304
 - [x] Tighten short landscape splash/menu sizing for phone viewports
 - [x] Keep chat behind the mobile chat icon and hide desktop HUD/chat on landscape phones

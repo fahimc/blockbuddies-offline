@@ -320,10 +320,10 @@ Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
 
-The `v1.3.4` and later debug APKs clear stale Android WebView cache/storage once for this
-app version before the Capacitor web bundle loads. This is intentional so older
-installed debug APKs cannot keep showing the pre-refresh menu or always-open
-chat UI from an old service worker.
+The `v1.3.4` and later debug APKs clear stale Android WebView bundle caches
+once for this app version before the Capacitor web bundle loads. This is
+intentional so older installed debug APKs cannot keep showing the pre-refresh
+menu or always-open chat UI from an old service worker.
 
 The `v1.3.5` APK also enters immersive sticky fullscreen so Android status and
 navigation bars do not shrink the game viewport. If a user swipes the bars back,
@@ -525,6 +525,12 @@ The `v1.5.59` APK fixes remaining mobile customizer edge clipping. Saved
 Characters cards, Emotes category buttons, and footer action buttons now stay
 inside their assigned phone-width containers.
 
+The `v1.5.60` APK preserves game saves across future app updates. Native
+startup no longer deletes Android WebView persistent storage, so
+IndexedDB/localForage data for saved characters, NPC friends, quests, messages,
+coins, settings, and built worlds stays intact while stale bundle caches are
+still refreshed.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the
@@ -640,9 +646,9 @@ Roblox-inspired prototype.
   moderation, voice chat, creator marketplace publishing, and cloud social graph
   are intentionally out of scope for this offline prototype.
 - If an older Android debug APK showed old cached visuals after an update,
-  install `v1.3.4-responsive-cache-fix` or later; native startup clears stale
-  WebView service worker/cache storage before rendering. That cleanup can reset
-  local WebView save data on the upgrade where it runs.
+  install `v1.5.60-preserve-game-saves` or later; native startup now clears
+  stale bundle caches without deleting WebView persistent game storage. Saves
+  already wiped by older debug APK updates cannot be restored automatically.
 
 ## Credits
 

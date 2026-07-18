@@ -18,6 +18,26 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.60-preserve-game-saves] - 2026-07-18
+
+### Added
+
+- Added Android persistence policy regression coverage so native startup cannot delete WebView game storage again.
+
+### Changed
+
+- Updated Android startup cleanup to refresh stale WebView bundle caches without clearing persistent IndexedDB/localForage data.
+- Updated Android and package version metadata to `1.5.60` / `10560`.
+
+### Fixed
+
+- Fixed app updates wiping saved characters, NPC friends, quests, messages, coins, settings, and built worlds.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+- Saves already wiped by older debug APK startup cleanup cannot be restored automatically.
+
 ## [v1.5.59-customizer-fit-edges] - 2026-07-18
 
 ### Added
