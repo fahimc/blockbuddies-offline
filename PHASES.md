@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase full pet collection
+
+- [x] Add Puppy Pal, Kitten Pal, Bunny Hop, Panda Cub, Forest Fox, Pond Duck, Piggy Pal, Monkey Buddy, Ruby Dragon, Dino Chomp, Star Unicorn, and Mini Bot to the pet catalog.
+- [x] Build distinct blocky in-world pet models with animal-specific parts.
+- [x] Replace generic pet item previews with compact animal preview cards.
+- [x] Keep pets isolated to the Pets catalog tab instead of duplicating through Effects.
+- [x] Add unit regression coverage for selectable pets and model quality.
+- [x] Package and release Android debug APK for the full pet collection update.
+
 ## Post-phase local party created friends and pets
 
 - [x] Sync created saved-friend/NPC characters through Local Party snapshots.

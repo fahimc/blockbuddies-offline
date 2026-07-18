@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.66-full-pet-collection] - 2026-07-19
+
+### Added
+
+- Added the full blocky pet collection: Puppy Pal, Kitten Pal, Bunny Hop, Panda Cub, Forest Fox, Pond Duck, Piggy Pal, Monkey Buddy, Ruby Dragon, Dino Chomp, Star Unicorn, and Mini Bot.
+- Added distinct in-world voxel models for every pet, including animal-specific parts such as bunny ears, panda bamboo, duck bill, dragon wings, dino spikes, unicorn horn, kitten whiskers, and bot screen details.
+- Added pet catalog regression coverage so every renderer pet is selectable and every selectable pet has a detailed model.
+
+### Changed
+
+- Pet accessory cards now show compact animal previews instead of the generic accessory icon.
+- The Accessories Effects tab no longer duplicates pet, backpack, headphone, glasses, or visor items.
+- Updated Android and package version metadata to `1.5.66` / `10566`.
+
+### Fixed
+
+- Fixed the pet catalog only offering Puppy Pal and Mini Bot when the requested design includes a larger animal collection.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.65-local-party-friends-pets] - 2026-07-18
 
 ### Added

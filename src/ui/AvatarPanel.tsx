@@ -52,6 +52,7 @@ import type {
   PlayerEmote,
   SavedAvatarStyle,
 } from '../game/types'
+import { petAccessoryId, type PetAccessoryId } from '../game/pets'
 import { useGameStore } from '../state/gameStore'
 import { GameAvatarPreview } from './GameAvatarPreview'
 
@@ -1155,10 +1156,15 @@ function catalogItemMatchesTab(item: CustomizationItem, tab: string) {
       String(item.patch.accessory ?? '').includes('backpack') ||
       String(item.patch.accessory ?? '').includes('pack')
     )
-  if (tab === 'Pets') return String(item.patch.accessory ?? '').includes('pet')
+  if (tab === 'Pets')
+    return Boolean(petAccessoryId(String(item.patch.accessory ?? '')))
   if (tab === 'Effects')
     return (
       item.kind === 'accessory' &&
+      !petAccessoryId(String(item.patch.accessory ?? '')) &&
+      !String(item.patch.accessory ?? '').includes('headphones') &&
+      !String(item.patch.accessory ?? '').includes('backpack') &&
+      !String(item.patch.accessory ?? '').includes('pack') &&
       !['glasses-star', 'visor-neon'].includes(
         String(item.patch.accessory ?? ''),
       )
@@ -1258,6 +1264,17 @@ function ItemPreview({
         }
       />
     )
+  if (item.kind === 'accessory') {
+    const petId = petAccessoryId(String(item.patch.accessory ?? ''))
+    if (petId)
+      return (
+        <PetItemPreview
+          petId={petId}
+          color={item.color ?? '#e5e7eb'}
+          accent={item.accent ?? '#22d3ee'}
+        />
+      )
+  }
   return (
     <span
       className={`bb-item-accessory ${item.kind}`}
@@ -1269,6 +1286,79 @@ function ItemPreview({
       }
     />
   )
+}
+
+function PetItemPreview({
+  petId,
+  color,
+  accent,
+}: {
+  petId: PetAccessoryId
+  color: string
+  accent: string
+}) {
+  const detail = petPreviewDetail[petId] ?? '#ffffff'
+  const dark = petPreviewDark[petId] ?? '#111827'
+  return (
+    <span
+      className={`bb-item-pet ${petId}`}
+      style={
+        {
+          '--pet-color': color,
+          '--pet-accent': accent,
+          '--pet-detail': detail,
+          '--pet-dark': dark,
+        } as CSSProperties
+      }
+      aria-hidden
+    >
+      <span className="pet-tail" />
+      <span className="pet-body" />
+      <span className="pet-belly" />
+      <span className="pet-head" />
+      <span className="pet-ear left" />
+      <span className="pet-ear right" />
+      <span className="pet-horn" />
+      <span className="pet-snout" />
+      <span className="pet-eye left" />
+      <span className="pet-eye right" />
+      <span className="pet-leg one" />
+      <span className="pet-leg two" />
+      <span className="pet-wing left" />
+      <span className="pet-wing right" />
+      <span className="pet-extra" />
+    </span>
+  )
+}
+
+const petPreviewDetail: Record<PetAccessoryId, string> = {
+  'pet-puppy': '#f5d0a3',
+  'pet-kitten': '#f8fafc',
+  'pet-bunny': '#fce7f3',
+  'pet-panda': '#111827',
+  'pet-fox': '#ffffff',
+  'pet-duck': '#facc15',
+  'pet-pig': '#f472b6',
+  'pet-monkey': '#d6a35a',
+  'pet-dragon': '#fde68a',
+  'pet-dino': '#fde68a',
+  'pet-unicorn': '#fbcfe8',
+  'pet-bot': '#0f172a',
+}
+
+const petPreviewDark: Record<PetAccessoryId, string> = {
+  'pet-puppy': '#7c3f16',
+  'pet-kitten': '#111827',
+  'pet-bunny': '#111827',
+  'pet-panda': '#111827',
+  'pet-fox': '#111827',
+  'pet-duck': '#f97316',
+  'pet-pig': '#831843',
+  'pet-monkey': '#5c2e10',
+  'pet-dragon': '#b91c1c',
+  'pet-dino': '#166534',
+  'pet-unicorn': '#7c3aed',
+  'pet-bot': '#64748b',
 }
 
 function isEquipped(

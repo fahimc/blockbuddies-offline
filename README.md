@@ -107,8 +107,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   and exclusive occupancy cells before release.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
-- Pet accessories include richer in-world Puppy Pal and Mini Bot models with
-  distinct heads, bodies, ears/screens, legs, tails or antenna pieces.
+- Pet accessories include a full blocky animal collection: Puppy Pal, Kitten
+  Pal, Bunny Hop, Panda Cub, Forest Fox, Pond Duck, Piggy Pal, Monkey Buddy,
+  Ruby Dragon, Dino Chomp, Star Unicorn, and Mini Bot. Each pet has a distinct
+  in-world voxel model and compact catalog preview.
 - The mobile customizer follows a four-column flex guide with separate preview,
   category, catalog/control, and Save/Next rows for portrait phone screens.
 - Character setup includes explicit Save Character controls, automatic saving
@@ -330,6 +332,11 @@ players can see Wave, Cheer, Dance, and Sit actions on remote avatars.
 
 The `v1.5.65` APK syncs created friend/NPC characters into Local Party sessions
 and replaces placeholder pet blocks with richer Puppy Pal and Mini Bot models.
+
+The `v1.5.66` APK expands pets into a full blocky collection with puppy,
+kitten, bunny, panda, fox, duck, pig, monkey, dragon, dinosaur, unicorn, and
+robot companions. The pet selector now shows animal previews and the equipped
+pet renders as a detailed voxel model in the 3D game.
 
 The `v1.5.62` APK clarifies quest completion by showing labelled how-to and tip
 details on every expanded quest, signs the purple school building as
