@@ -122,7 +122,9 @@ export function QuestPanel() {
                       id={`quest-details-${quest.id}`}
                       className="bb-quest-details"
                     >
+                      <strong>How to complete</strong>
                       <p>{quest.howTo}</p>
+                      <strong>Tip</strong>
                       <small>{quest.tip}</small>
                     </div>
                   ) : null}
@@ -152,8 +154,8 @@ export function QuestPanel() {
       </div>
 
       <p className="bb-quest-footer">
-        {completedCount}/{quests.length} quests complete - more town tasks unlock
-        as you play.
+        {completedCount}/{quests.length} quests complete - more town tasks
+        unlock as you play.
       </p>
     </Panel>
   )

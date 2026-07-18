@@ -372,7 +372,7 @@ describe('quest progression', () => {
     expect(useGameStore.getState().coins).toBeGreaterThan(0)
   })
 
-  it('completes common gameplay quests from map, message, emote, seat, sleep, drive, and build actions', () => {
+  it('completes common gameplay quests from location visits, map, message, emote, seat, sleep, drive, and build actions', () => {
     useGameStore.setState((state) => ({
       questProgress: createQuestProgress(questDefinitions),
       chat: [],
@@ -389,6 +389,8 @@ describe('quest progression', () => {
       placedBlocks: [],
     }))
 
+    useGameStore.getState().travelToLocation('park')
+    useGameStore.getState().travelToLocation('shop')
     useGameStore.getState().travelToLocation('school')
     useGameStore.getState().sendPredefinedMessage('luna', 'greeting-001')
     useGameStore.getState().setPlayerEmote('wave')
@@ -403,6 +405,8 @@ describe('quest progression', () => {
     )
     ;[
       'use-town-map',
+      'visit-park',
+      'visit-shop',
       'visit-school',
       'message-a-buddy',
       'try-an-emote',
@@ -411,7 +415,9 @@ describe('quest progression', () => {
       'drive-a-car',
       'build-first-piece',
     ].forEach((id) => {
-      expect(progressById.get(id as typeof questDefinitions[number]['id'])).toMatchObject({
+      expect(
+        progressById.get(id as (typeof questDefinitions)[number]['id']),
+      ).toMatchObject({
         completed: true,
       })
     })
@@ -936,7 +942,9 @@ describe('map fast travel', () => {
     expect(state.chat.map((message) => message.text)).toContain(
       'Travelled to Skill School',
     )
-    expect(state.chat.at(-1)?.text).toBe('Visit Skill School complete! +20 coins')
+    expect(state.chat.at(-1)?.text).toBe(
+      'Visit Skill School complete! +20 coins',
+    )
 
     useGameStore.getState().setPlayer([0, 0, 4], 0, sequence)
     expect(useGameStore.getState().playerPosition).toEqual(

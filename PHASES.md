@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase quest guidance and message selection
+
+- [x] Label every expanded quest with clear how-to and tip sections.
+- [x] Confirm every quest has a tested completion route and valid reward metadata.
+- [x] Make Skill School visibly exist in the world with matching travel/building coverage.
+- [x] Restore player/NPC tap selection so a Message icon appears only above the selected person.
+- [x] Add regression coverage for body-sized avatar selection targets and selected-message smoke flow.
+- [x] Package and release Android debug APK for the quest/message fix.
+
 ## Post-phase trail effects
 
 - [x] Replace the single-circle equipped trail placeholder in gameplay.

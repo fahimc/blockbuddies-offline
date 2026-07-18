@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.62-quest-message-fixes] - 2026-07-18
+
+### Added
+
+- Added quest-definition regression coverage so every quest has actionable how-to text, a tip, a reward, and a tested completion route.
+- Added body-sized player/NPC selection targets with smoke coverage for the selected-message icon flow.
+
+### Changed
+
+- Updated the Quest Log details to label "How to complete" and "Tip" clearly when a quest is expanded.
+- Updated Skill School in-world signage and quest instructions so the destination is visible and discoverable.
+- Updated Android and package version metadata to `1.5.62` / `10562`.
+
+### Fixed
+
+- Fixed the Skill School quest feeling impossible because the world building was only signed as `SCHOOL`.
+- Fixed the selected-message regression where the full-screen drag layer sat above player/NPC selection targets.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.61-trail-effects] - 2026-07-18
 
 ### Added

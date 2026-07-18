@@ -20,14 +20,56 @@ describe('QuestPanel', () => {
     const user = userEvent.setup()
     render(<QuestPanel />)
 
-    await user.click(screen.getByRole('button', { name: /Visit Skill School/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Visit Skill School/i }),
+    )
 
     expect(
-      screen.getByText('Walk to Skill School or use the Town Map to travel there.'),
+      screen.getByText(
+        'Walk to the purple building marked SKILL SCHOOL or use the Town Map to travel there.',
+      ),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('The school has desks, a teacher, and a whiteboard.'),
+      screen.getByText(
+        'Skill School is enterable and has desks, a teacher, and a whiteboard.',
+      ),
     ).toBeInTheDocument()
+    expect(screen.getByText('How to complete')).toBeInTheDocument()
+  })
+
+  it('reveals instructions and tips for every active and daily quest card', async () => {
+    const user = userEvent.setup()
+    render(<QuestPanel />)
+
+    const activeQuestIds = questDefinitions
+      .filter((quest) => quest.category !== 'daily')
+      .map((quest) => quest.id)
+    const dailyQuestIds = questDefinitions
+      .filter((quest) => quest.category === 'daily')
+      .map((quest) => quest.id)
+
+    for (const id of activeQuestIds) {
+      const quest = questDefinitions.find((item) => item.id === id)!
+      await user.click(
+        screen.getByRole('button', {
+          name: new RegExp(escapeRegExp(quest.title), 'i'),
+        }),
+      )
+      expect(screen.getByText(quest.howTo)).toBeInTheDocument()
+      expect(screen.getByText(quest.tip)).toBeInTheDocument()
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Daily' }))
+    for (const id of dailyQuestIds) {
+      const quest = questDefinitions.find((item) => item.id === id)!
+      await user.click(
+        screen.getByRole('button', {
+          name: new RegExp(escapeRegExp(quest.title), 'i'),
+        }),
+      )
+      expect(screen.getByText(quest.howTo)).toBeInTheDocument()
+      expect(screen.getByText(quest.tip)).toBeInTheDocument()
+    }
   })
 
   it('shows daily quests separately and completed quests in their tab', async () => {
@@ -49,3 +91,7 @@ describe('QuestPanel', () => {
     expect(screen.getByText('Visit the park')).toBeInTheDocument()
   })
 })
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}

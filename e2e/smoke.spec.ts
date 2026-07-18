@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 async function completeStartFlow(
   page: import('@playwright/test').Page,
@@ -149,7 +149,7 @@ test('opens Roblox-inspired offline feature panels', async ({ page }) => {
         .click()
       await expect(
         page.getByText(
-          'Walk to Skill School or use the Town Map to travel there.',
+          'Walk to the purple building marked SKILL SCHOOL or use the Town Map to travel there.',
         ),
       ).toBeVisible()
       await page.getByRole('button', { name: 'Daily' }).click()
@@ -459,20 +459,20 @@ test('opens messages from an in-world buddy message icon', async ({ page }) => {
   await page.goto('/')
   await completeStartFlow(page, 'MessageTester')
   await page.getByRole('button', { name: 'Start Playing' }).click()
+  await page.evaluate(() =>
+    window.__blockBuddiesE2E!.prepareMessageTargetInteraction(),
+  )
+  await page.waitForTimeout(900)
 
   await expect(page.getByRole('button', { name: /^Message / })).toHaveCount(0)
 
-  await page
-    .getByRole('button', { name: 'Select LunaBlocks' })
-    .evaluate((button) => (button as HTMLButtonElement).click())
+  await tapAvatarBodyFromNameplate(page, 'LunaBlocks')
   await expect(
     page.getByRole('button', { name: 'Message LunaBlocks' }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /^Message / })).toHaveCount(1)
 
-  await page
-    .getByRole('button', { name: 'Select MaxJumps' })
-    .evaluate((button) => (button as HTMLButtonElement).click())
+  await tapAvatarBodyFromNameplate(page, 'MaxJumps')
   await expect(
     page.getByRole('button', { name: 'Message LunaBlocks' }),
   ).toHaveCount(0)
@@ -483,6 +483,19 @@ test('opens messages from an in-world buddy message icon', async ({ page }) => {
   )
   await expect(page.getByRole('heading', { name: 'MaxJumps' })).toBeVisible()
 })
+
+async function tapAvatarBodyFromNameplate(page: Page, username: string) {
+  const nameplate = page.getByRole('button', { name: `Select ${username}` })
+  await expect(nameplate).toBeVisible()
+  const box = await nameplate.boundingBox()
+  if (!box) {
+    throw new Error(`Could not find ${username} nameplate bounds`)
+  }
+  expect(box.width).toBeGreaterThanOrEqual(72)
+  expect(box.height).toBeGreaterThanOrEqual(96)
+
+  await nameplate.evaluate((button) => (button as HTMLButtonElement).click())
+}
 
 test('travels to the planned build and civic districts', async ({ page }) => {
   await page.goto('/')

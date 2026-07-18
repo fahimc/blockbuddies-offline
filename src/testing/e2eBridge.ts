@@ -47,6 +47,7 @@ export type BlockBuddiesE2EBridge = {
   prepareHouseBedInteraction: () => GameplayE2ESnapshot
   prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
   prepareParkingInteraction: () => GameplayE2ESnapshot
+  prepareMessageTargetInteraction: (distance?: number) => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
@@ -116,6 +117,7 @@ export function installE2EBridge() {
     prepareHouseBedInteraction,
     prepareClassroomSeatInteraction,
     prepareParkingInteraction,
+    prepareMessageTargetInteraction,
     prepareMovementInteraction,
     prepareBuildModeInteraction,
     startObbyGame,
@@ -226,6 +228,56 @@ function prepareParkingInteraction() {
       ...game.touch,
       x: 0,
       y: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
+  })
+  return getGameplaySnapshot()
+}
+
+function prepareMessageTargetInteraction(distance = 5) {
+  const game = useGameStore.getState()
+  const teleportSequence = game.teleportSequence + 1
+  const playerPosition: Vec3 = [0, 0, 0]
+  const lateralOffset = Math.max(1.4, Math.min(2.4, Math.abs(distance) * 0.35))
+  const targetPositions: Record<string, Vec3> = {
+    luna: [-lateralOffset, 0, distance],
+    max: [lateralOffset, 0, distance],
+  }
+
+  useGameStore.setState({
+    activeInterior: undefined,
+    activeVehicleId: undefined,
+    playerPosition,
+    playerYaw: 0,
+    teleportSequence,
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: playerPosition,
+      yaw: 0,
+    },
+    bots: game.bots.map((bot) => {
+      const target = targetPositions[bot.id]
+      if (!target) return bot
+      return {
+        ...bot,
+        action: 'idle',
+        nextDecisionAt: Number.MAX_SAFE_INTEGER,
+        position: target,
+        target,
+        targetLocation: 'spawn',
+        state: 'idle',
+        speech: undefined,
+        speechUntil: 0,
+      }
+    }),
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
       jump: false,
       interact: false,
       run: false,

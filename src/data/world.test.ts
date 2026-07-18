@@ -1,20 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { createParkedVehicles, distanceToVehicle, vehicleInteractionRadius } from '../game/vehicles'
-import { proceduralBuildableParcelFor, proceduralTerrainAt } from './proceduralTownPlan'
+import {
+  createParkedVehicles,
+  distanceToVehicle,
+  vehicleInteractionRadius,
+} from '../game/vehicles'
+import { staticTownBuildings } from '../game/townPlacement'
+import {
+  proceduralBuildableParcelFor,
+  proceduralTerrainAt,
+} from './proceduralTownPlan'
 import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
   it('provides one grounded, nearby arrival point for every key location', () => {
     expect(worldLocations).toHaveLength(9)
-    expect(new Set(worldLocations.map((location) => location.id)).size).toBe(worldLocations.length)
+    expect(new Set(worldLocations.map((location) => location.id)).size).toBe(
+      worldLocations.length,
+    )
 
     worldLocations.forEach((location) => {
       expect(location.travelPosition[1]).toBe(0)
       if (location.id === 'builder') {
         expect(distance2d(location.position, location.travelPosition)).toBe(0)
       } else {
-        expect(distance2d(location.position, location.travelPosition)).toBeGreaterThan(2.5)
-        expect(distance2d(location.position, location.travelPosition)).toBeLessThan(6)
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeGreaterThan(2.5)
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeLessThan(6)
       }
       expect(Number.isFinite(location.travelYaw)).toBe(true)
     })
@@ -29,13 +43,20 @@ describe('world travel destinations', () => {
     )
 
     expect(parking.label).toBe('Buddy Parking')
-    expect(distance2d(parking.position, parking.travelPosition)).toBeGreaterThan(2.5)
-    expect(distance2d(parking.position, parking.travelPosition)).toBeLessThan(5.5)
+    expect(
+      distance2d(parking.position, parking.travelPosition),
+    ).toBeGreaterThan(2.5)
+    expect(distance2d(parking.position, parking.travelPosition)).toBeLessThan(
+      5.5,
+    )
     expect(nearestDistance).toBeLessThan(vehicleInteractionRadius)
   })
 
   it('keeps building destinations outside their occupied footprints', () => {
-    const buildingClearance: Record<'park' | 'shop' | 'school' | 'houses', number> = {
+    const buildingClearance: Record<
+      'park' | 'shop' | 'school' | 'houses',
+      number
+    > = {
       park: 3.8,
       shop: 4,
       school: 4.25,
@@ -44,14 +65,39 @@ describe('world travel destinations', () => {
 
     Object.entries(buildingClearance).forEach(([id, clearance]) => {
       const location = getLocation(id as keyof typeof buildingClearance)
-      expect(distance2d(location.position, location.travelPosition)).toBeGreaterThan(clearance)
+      expect(
+        distance2d(location.position, location.travelPosition),
+      ).toBeGreaterThan(clearance)
     })
+  })
+
+  it('keeps Skill School as a real travel destination with a matching school building', () => {
+    const school = getLocation('school')
+    const schoolBuilding = staticTownBuildings.find(
+      (building) => building.id === 'skill-school',
+    )
+
+    expect(school.label).toBe('Skill School')
+    expect(school.description).toContain('school')
+    expect(schoolBuilding).toMatchObject({
+      title: 'Skill School',
+      interiorKind: 'school',
+    })
+    expect(distance2d(school.position, schoolBuilding!.position)).toBe(0)
   })
 
   it('places Builder Meadows on a clear player-buildable ground parcel', () => {
     const builder = getLocation('builder')
 
-    expect(proceduralTerrainAt(builder.travelPosition[0], builder.travelPosition[2])).toBe('ground')
-    expect(proceduralBuildableParcelFor('LONDON-2026', builder.travelPosition, [1, 1, 1])).toBeDefined()
+    expect(
+      proceduralTerrainAt(builder.travelPosition[0], builder.travelPosition[2]),
+    ).toBe('ground')
+    expect(
+      proceduralBuildableParcelFor(
+        'LONDON-2026',
+        builder.travelPosition,
+        [1, 1, 1],
+      ),
+    ).toBeDefined()
   })
 })

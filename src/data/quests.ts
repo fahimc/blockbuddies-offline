@@ -5,7 +5,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'meet-three-buddies',
     title: 'Meet three buddies',
     description: 'Walk near three simulated buddies and say hi.',
-    howTo: 'Explore Spawn Plaza, the park, and the school. When you get close to a buddy, they count as met.',
+    howTo:
+      'Explore Spawn Plaza, the park, and the school. When you get close to a buddy, they count as met.',
     tip: 'Look for floating usernames and speech bubbles.',
     category: 'starter',
     target: 3,
@@ -25,8 +26,9 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'visit-school',
     title: 'Visit Skill School',
     description: 'Find the classroom and learning buddies.',
-    howTo: 'Walk to Skill School or use the Town Map to travel there.',
-    tip: 'The school has desks, a teacher, and a whiteboard.',
+    howTo:
+      'Walk to the purple building marked SKILL SCHOOL or use the Town Map to travel there.',
+    tip: 'Skill School is enterable and has desks, a teacher, and a whiteboard.',
     category: 'starter',
     target: 1,
     reward: 20,
@@ -45,7 +47,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'use-town-map',
     title: 'Use fast travel',
     description: 'Open the map and travel to a key place.',
-    howTo: 'Open Town Map from the menu or minimap, pick a destination, then tap Travel.',
+    howTo:
+      'Open Town Map from the menu or minimap, pick a destination, then tap Travel.',
     tip: 'Fast travel helps younger players reach quests quickly.',
     category: 'starter',
     target: 1,
@@ -55,8 +58,9 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'message-a-buddy',
     title: 'Send a buddy message',
     description: 'Use safe preset chat with any buddy.',
-    howTo: 'Tap the Message button above a character, pick a preset reply, and send it.',
-    tip: 'Unread replies appear on the inbox button.',
+    howTo:
+      'Tap a buddy or local player first, then tap the Message button above them, pick a preset reply, and send it.',
+    tip: 'Only the selected character shows a Message button, and unread replies appear on the inbox button.',
     category: 'daily',
     target: 1,
     reward: 20,
@@ -65,7 +69,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'beginner-obby',
     title: 'Complete the beginner obby',
     description: 'Finish the starter obstacle course.',
-    howTo: 'Go to Beginner Obby, start the course, jump across every platform, and reach the finish.',
+    howTo:
+      'Go to Beginner Obby, start the course, jump across every platform, and reach the finish.',
     tip: 'Falling restarts you from the latest checkpoint.',
     category: 'adventure',
     target: 1,
@@ -75,7 +80,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'collect-10-coins',
     title: 'Collect 10 coins',
     description: 'Pick up coins around town.',
-    howTo: 'Walk through yellow coin pickups in the town or play Coin Rush for extra coins.',
+    howTo:
+      'Walk through yellow coin pickups in the town or play Coin Rush for extra coins.',
     tip: 'Coins can be spent on character styles.',
     category: 'starter',
     target: 10,
@@ -95,7 +101,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'build-first-piece',
     title: 'Build your first piece',
     description: 'Place a block, road, house, or prop in Build Mode.',
-    howTo: 'Open Build Mode, choose an item from the drawer, stand on a valid grid cell, then place it.',
+    howTo:
+      'Open Build Mode, choose an item from the drawer, stand on a valid grid cell, then place it.',
     tip: 'Green grid cells are safer for building than roads.',
     category: 'daily',
     target: 1,
@@ -105,7 +112,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'drive-a-car',
     title: 'Drive a car',
     description: 'Get into a parked or traffic car and start driving.',
-    howTo: 'Go to Buddy Parking or tap a nearby Drive icon, then use the driving controls.',
+    howTo:
+      'Go to Buddy Parking or tap a nearby Drive icon, then use the driving controls.',
     tip: 'Cars need clear roads, so start in the parking lot.',
     category: 'daily',
     target: 1,
@@ -135,7 +143,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'try-an-emote',
     title: 'Try an emote',
     description: 'Wave, dance, or use another animation.',
-    howTo: 'Open Emotes from the menu or use the Emote button, then choose a move.',
+    howTo:
+      'Open Emotes from the menu or use the Emote button, then choose a move.',
     tip: 'Buddies react more naturally when you emote near them.',
     category: 'daily',
     target: 1,
@@ -145,7 +154,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'play-coin-rush',
     title: 'Win Coin Rush',
     description: 'Collect every event coin before the timer ends.',
-    howTo: 'Start Coin Rush from the mini-games panel or the green town pad, then follow the glowing coins.',
+    howTo:
+      'Start Coin Rush from the mini-games panel or the green town pad, then follow the glowing coins.',
     tip: 'The map shows event targets while the game is active.',
     category: 'adventure',
     target: 1,
@@ -155,7 +165,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'deliver-a-package',
     title: 'Finish Delivery Dash',
     description: 'Pick up a parcel and deliver it to every stop.',
-    howTo: 'Start Delivery Dash, collect the parcel, then follow the map markers in order.',
+    howTo:
+      'Start Delivery Dash, collect the parcel, then follow the map markers in order.',
     tip: 'Drop-offs pay coins during the route and again when the quest completes.',
     category: 'adventure',
     target: 1,
@@ -165,7 +176,8 @@ export const questDefinitions: QuestDefinition[] = [
     id: 'find-hidden-buddies',
     title: 'Win Hide & Seek',
     description: 'Find every hidden buddy before time runs out.',
-    howTo: 'Start Hide & Seek near the school and search the marked town areas.',
+    howTo:
+      'Start Hide & Seek near the school and search the marked town areas.',
     tip: 'Look behind buildings and around parks.',
     category: 'adventure',
     target: 1,

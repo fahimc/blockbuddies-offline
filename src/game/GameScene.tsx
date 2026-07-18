@@ -98,6 +98,10 @@ import {
 import { avatarSleepRotation } from './sleepPose'
 import { avatarTrailPieces } from './avatarTrail'
 import {
+  avatarSelectionHitboxPosition,
+  avatarSelectionHitboxSize,
+} from './avatarInteraction'
+import {
   coreActivityPositions,
   coreCoinPositions,
   footprintOverlapsAuthoredCore,
@@ -1519,7 +1523,11 @@ function Town() {
         />
       ))}
       <Storefront position={[12, 0, -7]} label="SHOP" color="#f97316" />
-      <Storefront position={[-21, 0, 22]} label="SCHOOL" color="#a78bfa" />
+      <Storefront
+        position={[-21, 0, 22]}
+        label="SKILL SCHOOL"
+        color="#a78bfa"
+      />
       <Storefront position={[18, 0, 21]} label="OBBY" color="#ef4444" />
       <Billboard position={[-11, 0, 2]} />
       <Benches />
@@ -2776,13 +2784,7 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
           selectPlayer()
         }}
       >
-        <boxGeometry
-          args={[
-            playerCollisionRadius * 3,
-            realScale.avatarHeight * 1.25,
-            playerCollisionRadius * 3,
-          ]}
-        />
+        <boxGeometry args={avatarSelectionHitboxSize} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       <BlockAvatar
@@ -3009,13 +3011,7 @@ function SavedFriendAvatar({
           selectFriend()
         }}
       >
-        <boxGeometry
-          args={[
-            playerCollisionRadius * 3,
-            realScale.avatarHeight * 1.25,
-            playerCollisionRadius * 3,
-          ]}
-        />
+        <boxGeometry args={avatarSelectionHitboxSize} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       <BlockAvatar
@@ -3210,29 +3206,52 @@ export function BlockAvatar({
   const nameClassName = `whitespace-nowrap rounded bg-slate-950/80 px-2 py-1 text-xs font-black text-white shadow transition ${isSelected ? 'ring-2 ring-sky-300 ring-offset-2 ring-offset-slate-950/20' : ''}`
   return (
     <group position={[0, sitDrop, 0]}>
-      {showName ? (
-        <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
-          {onSelect ? (
-            <button
-              type="button"
-              className={nameClassName}
-              aria-label={`Select ${username}`}
-              onPointerDown={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                onSelect()
-              }}
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                onSelect()
-              }}
-            >
+      {onSelect ? (
+        <mesh
+          position={avatarSelectionHitboxPosition}
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            onSelect()
+          }}
+          onClick={(event) => {
+            event.stopPropagation()
+            onSelect()
+          }}
+        >
+          <boxGeometry args={avatarSelectionHitboxSize} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      ) : null}
+      {showName && onSelect ? (
+        <Html
+          center
+          position={[0, 1.28, 0]}
+          zIndexRange={worldActionZIndexRange}
+        >
+          <button
+            type="button"
+            className="bb-avatar-select-target"
+            aria-label={`Select ${username}`}
+            onPointerDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onSelect()
+            }}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onSelect()
+            }}
+          >
+            <span className={`bb-avatar-name-pill ${nameClassName}`}>
               {username}
-            </button>
-          ) : (
-            <span className={nameClassName}>{username}</span>
-          )}
+            </span>
+          </button>
+        </Html>
+      ) : null}
+      {showName && !onSelect ? (
+        <Html center position={[0, 2.15, 0]} zIndexRange={worldHtmlZIndexRange}>
+          <span className={nameClassName}>{username}</span>
         </Html>
       ) : null}
       <group ref={body} position={[0, avatarBodyBaseY, 0]}>

@@ -60,6 +60,24 @@ canvas {
   touch-action: none;
 }
 
+.bb-avatar-select-target {
+  position: relative;
+  width: clamp(4.5rem, 12vw, 6rem);
+  height: clamp(6rem, 18vw, 8.5rem);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.bb-avatar-name-pill {
+  position: absolute;
+  top: -0.9rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .hud-button {
   display: grid;
   min-width: 2.5rem;
@@ -2551,6 +2569,13 @@ canvas {
   color: #475569;
   font-size: 0.72rem;
   font-weight: 900;
+}
+
+.bb-quest-details strong {
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  text-transform: uppercase;
 }
 
 .bb-quest-action {

@@ -321,6 +321,11 @@ Debug APK output:
 
 `android/app/build/outputs/apk/debug/app-debug.apk`
 
+The `v1.5.62` APK clarifies quest completion by showing labelled how-to and tip
+details on every expanded quest, signs the purple school building as
+`SKILL SCHOOL`, and restores body-sized player/NPC selection targets so the
+floating Message button appears only after selecting a person.
+
 The `v1.3.4` and later debug APKs clear stale Android WebView bundle caches
 once for this app version before the Capacitor web bundle loads. This is
 intentional so older installed debug APKs cannot keep showing the pre-refresh
