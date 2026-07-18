@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase customizer edge fit
+
+- [x] Fix Saved Characters strip clipping so Add New and saved avatars fit their container.
+- [x] Keep Emotes & Animations category buttons inside the available row width.
+- [x] Reduce footer action button overflow so Save, Customize, and Next keep side padding.
+- [x] Add mobile regression checks for child controls fitting inside their containers.
+- [x] Package and release Android debug APK for the customizer edge-fit update.
+
 ## Post-phase customizer flex redesign
 
 - [x] Rebuild the mobile Customization Hub around the four-column flex guide.

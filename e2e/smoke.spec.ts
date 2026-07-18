@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 
 async function completeStartFlow(
   page: import('@playwright/test').Page,
@@ -23,6 +23,24 @@ async function completeStartFlow(
   await expect(startGame).toBeInViewport()
   await nameInput.fill(name)
   await startGame.click()
+}
+
+async function expectChildrenFit(container: Locator, selector: string) {
+  const fit = await container.evaluate((element, childSelector) => {
+    const parentBox = element.getBoundingClientRect()
+    return Array.from(element.querySelectorAll(childSelector)).every(
+      (child) => {
+        const childBox = child.getBoundingClientRect()
+        return (
+          childBox.left >= parentBox.left - 0.5 &&
+          childBox.right <= parentBox.right + 0.5 &&
+          childBox.top >= parentBox.top - 0.5 &&
+          childBox.bottom <= parentBox.bottom + 0.5
+        )
+      },
+    )
+  }, selector)
+  expect(fit).toBe(true)
 }
 
 test('opens menu and navigates to game shell', async ({ page }) => {
@@ -569,6 +587,8 @@ test.describe('portrait splash layout', () => {
     expect(hubNameBox.y).toBeLessThan(hubSavedBox.y)
     expect(hubSavedBox.y).toBeLessThan(hubCategoryBox.y)
     expect(hubCategoryBox.width / hubBox.width).toBeGreaterThan(0.9)
+    await expectChildrenFit(hubSavedStrip, 'button')
+    await expectChildrenFit(hubCategories, 'button')
     await expect(
       hubCategories.getByRole('button', { name: 'Skin' }),
     ).toBeInViewport()
@@ -725,6 +745,7 @@ test.describe('portrait splash layout', () => {
     expect(stripBox.y).toBeGreaterThan(previewBox.y)
     expect(stripBox.width).toBeGreaterThan(stripBox.height)
     expect(stripBox.width / mainBox.width).toBeGreaterThan(0.86)
+    await expectChildrenFit(categoryStrip, 'button')
     expect(catalogBox.x).toBeGreaterThanOrEqual(0)
     expect(catalogBox.x + catalogBox.width).toBeLessThanOrEqual(720)
     const scrollWidth = await page.evaluate(

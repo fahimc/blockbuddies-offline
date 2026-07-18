@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.59-customizer-fit-edges] - 2026-07-18
+
+### Added
+
+- Added mobile regression checks that verify saved-character buttons, category buttons, and footer actions stay inside their assigned containers.
+
+### Changed
+
+- Tightened the portrait customizer footer width and button type scale so Save, Customize, and Next controls keep side padding on phone screens.
+- Converted the Emotes & Animations category strip to a bounded five-column grid instead of a horizontally overflowing flex row.
+- Updated Android and package version metadata to `1.5.59` / `10559`.
+
+### Fixed
+
+- Fixed the saved-character Add New card being clipped inside the Saved Characters strip.
+- Fixed emote category buttons overflowing off the right edge.
+- Fixed large footer CTA text pushing into the viewport edge.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.58-customizer-flex-redesign] - 2026-07-18
 
 ### Added

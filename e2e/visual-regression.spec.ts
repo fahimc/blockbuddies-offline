@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 test.describe('mobile visual regression', () => {
   test.use({
@@ -99,6 +99,9 @@ test.describe('mobile visual regression', () => {
       hubFooterBox.y,
     )
     expect(categoryBox.width / hubBox.width).toBeGreaterThan(0.92)
+    await expectChildrenFit(savedStrip, 'button')
+    await expectChildrenFit(categories, 'button')
+    await expectWithinViewport(footer, page)
     await expect(categories.getByRole('button', { name: 'Skin' })).toBeVisible()
     await expect(
       categories.getByRole('button', { name: 'Trails' }),
@@ -213,6 +216,11 @@ test.describe('mobile visual regression', () => {
     expect(emoteCatalog.y + emoteCatalog.height).toBeLessThanOrEqual(
       quickPreview.y,
     )
+    await expectChildrenFit(
+      emotes.getByRole('navigation', { name: 'Customization categories' }),
+      'button',
+    )
+    await expectWithinViewport(page.locator('.bb-customizer-footer'), page)
     await expect(page).toHaveScreenshot(
       'customizer-emotes-portrait.png',
       screenshotOptions,
@@ -232,4 +240,32 @@ async function requiredBox(locator: Locator) {
   expect(box).not.toBeNull()
   if (!box) throw new Error('Expected visible layout box')
   return box
+}
+
+async function expectChildrenFit(container: Locator, selector: string) {
+  const fit = await container.evaluate((element, childSelector) => {
+    const parentBox = element.getBoundingClientRect()
+    return Array.from(element.querySelectorAll(childSelector)).every(
+      (child) => {
+        const childBox = child.getBoundingClientRect()
+        return (
+          childBox.left >= parentBox.left - 0.5 &&
+          childBox.right <= parentBox.right + 0.5 &&
+          childBox.top >= parentBox.top - 0.5 &&
+          childBox.bottom <= parentBox.bottom + 0.5
+        )
+      },
+    )
+  }, selector)
+  expect(fit).toBe(true)
+}
+
+async function expectWithinViewport(locator: Locator, page: Page) {
+  const box = await requiredBox(locator)
+  const viewport = page.viewportSize()
+  if (!viewport) throw new Error('Expected viewport')
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.y).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
 }

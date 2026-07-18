@@ -521,6 +521,10 @@ The `v1.5.58` APK rebuilds the character customization screens around the
 four-column mobile guide, keeping the avatar preview, category buttons, item
 cards, and action buttons in separate responsive rows.
 
+The `v1.5.59` APK fixes remaining mobile customizer edge clipping. Saved
+Characters cards, Emotes category buttons, and footer action buttons now stay
+inside their assigned phone-width containers.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the
