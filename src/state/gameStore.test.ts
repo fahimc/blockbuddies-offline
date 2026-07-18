@@ -6,6 +6,7 @@ import {
   hideAndSeekTargets,
   miniGameDefinition,
 } from '../ai/miniGames'
+import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { createQuestProgress } from '../ai/quests'
 import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
 import { questDefinitions } from '../data/quests'
@@ -421,6 +422,41 @@ describe('quest progression', () => {
         completed: true,
       })
     })
+  })
+
+  it('completes the beginner obby course, gives the obby reward, and completes the quest once', () => {
+    useGameStore.setState((state) => ({
+      questProgress: createQuestProgress(questDefinitions),
+      chat: [],
+      coins: 0,
+      obby: { ...state.obby, active: false, finished: false },
+      earnedBadges: [],
+      playerPosition: [18, 0, 21],
+    }))
+
+    useGameStore.getState().beginObby(1_000)
+    obbyCheckpoints.forEach((checkpoint) => {
+      useGameStore.setState({ playerPosition: checkpoint })
+      useGameStore.getState().updateObby(2_000, obbyCheckpoints)
+    })
+    expect(useGameStore.getState().obby.checkpoint).toEqual(obbyFinish)
+
+    useGameStore.getState().completeObby(16_000)
+    expect(useGameStore.getState().obby).toMatchObject({
+      active: false,
+      finished: true,
+      bestTime: 15,
+    })
+    expect(useGameStore.getState().earnedBadges).toContain('obby-rookie')
+    expect(useGameStore.getState().coins).toBe(110)
+    expect(
+      useGameStore
+        .getState()
+        .questProgress.find((quest) => quest.id === 'beginner-obby'),
+    ).toMatchObject({ completed: true, progress: 1 })
+
+    useGameStore.getState().completeObby(20_000)
+    expect(useGameStore.getState().coins).toBe(110)
   })
 
   it('completes adventure quests when their mini-games are won', () => {

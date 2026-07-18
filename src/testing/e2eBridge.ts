@@ -4,8 +4,10 @@ import type {
   MessageThread,
   MiniGameId,
   MiniGameRuntime,
+  QuestProgress,
   Vec3,
 } from '../game/types'
+import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
 import {
@@ -51,6 +53,7 @@ export type BlockBuddiesE2EBridge = {
   prepareMovementInteraction: () => GameplayE2ESnapshot
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
+  completeObbyCourse: () => GameplayE2ESnapshot
   setDriveInput: (
     throttle: number,
     steer?: number,
@@ -76,6 +79,10 @@ export type GameplayE2ESnapshot = {
   selectedBuildPiece: string
   selectedBuildBlockId?: string
   obbyActive: boolean
+  obbyFinished: boolean
+  coins: number
+  earnedBadges: string[]
+  questProgress: QuestProgress[]
   miniGameStatus: string
   playerEmote: string
   chatTexts: string[]
@@ -121,6 +128,7 @@ export function installE2EBridge() {
     prepareMovementInteraction,
     prepareBuildModeInteraction,
     startObbyGame,
+    completeObbyCourse,
     setDriveInput,
     setMovementInput,
   }
@@ -167,6 +175,26 @@ function prepareBuildModeInteraction() {
 
 function startObbyGame() {
   useGameStore.getState().beginObby(performance.now())
+  return getGameplaySnapshot()
+}
+
+function completeObbyCourse() {
+  const startedAt = performance.now()
+  useGameStore.getState().beginObby(startedAt)
+  obbyCheckpoints.forEach((checkpoint, index) => {
+    useGameStore.setState({
+      playerPosition: checkpoint,
+      teleportTarget: undefined,
+    })
+    useGameStore
+      .getState()
+      .updateObby(startedAt + 500 + index * 500, obbyCheckpoints)
+  })
+  useGameStore.setState({
+    playerPosition: obbyFinish,
+    teleportTarget: undefined,
+  })
+  useGameStore.getState().completeObby(startedAt + 12_000)
   return getGameplaySnapshot()
 }
 
@@ -362,6 +390,10 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     selectedBuildPiece: game.selectedBuildPiece,
     selectedBuildBlockId: game.selectedBuildBlockId,
     obbyActive: game.obby.active,
+    obbyFinished: game.obby.finished,
+    coins: game.coins,
+    earnedBadges: game.earnedBadges,
+    questProgress: game.questProgress,
     miniGameStatus: game.miniGame.status,
     playerEmote: game.playerEmote,
     chatTexts: game.chat.map((message) => message.text),

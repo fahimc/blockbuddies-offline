@@ -402,6 +402,11 @@ function canConflict(
   secondId: string,
   objects: WorldTileObject[],
 ) {
+  if (
+    firstId.startsWith('authored:obby:') &&
+    secondId.startsWith('authored:obby:')
+  )
+    return false
   const first = objects.find((object) => object.id === firstId)
   const second = objects.find((object) => object.id === secondId)
   if (!first || !second) return false

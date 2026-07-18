@@ -15,7 +15,14 @@ import {
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
-import { obbyCheckpoints, obbyPlatforms } from '../ai/obby'
+import {
+  obbyCheckpoints,
+  obbyFinish,
+  obbyFinishRadius,
+  obbyPlatforms,
+  shouldResetObbyFall,
+  type ObbyPlatform,
+} from '../ai/obby'
 import {
   buildGridOverlayForPlayer,
   findBuildPlacementPosition,
@@ -2420,7 +2427,13 @@ function PlayerController({
       airborneRef.current = isAirborne
       setAirborne(isAirborne)
     }
-    if (position.current.y < -2 && obby.active) {
+    if (
+      shouldResetObbyFall(obby, [
+        position.current.x,
+        position.current.y,
+        position.current.z,
+      ])
+    ) {
       position.current.set(
         obby.checkpoint[0],
         obby.checkpoint[1],
@@ -2599,9 +2612,10 @@ function PlayerController({
       position.current.z,
     ])
     if (
-      distance2d([position.current.x, 0, position.current.z], [22, 0, 18]) <
-        1.8 &&
-      obby.active
+      obby.active &&
+      distance2d(groundPosition, [obbyFinish[0], 0, obbyFinish[2]]) <
+        obbyFinishRadius &&
+      Math.abs(position.current.y - obbyFinish[1]) < 0.9
     ) {
       completeObby(performance.now())
       bots.slice(0, 2).forEach((bot) => botReact(bot.id, 'questComplete'))
@@ -3866,22 +3880,63 @@ function ObbyCourse() {
 
   return (
     <group>
-      {obbyPlatforms.map(({ position, scale }, index) => (
+      {obbyPlatforms.map((platform, index) => (
         <mesh
-          key={position.join(',')}
+          key={`${platform.kind}-${index}-${platform.position.join(',')}`}
           castShadow
           receiveShadow
-          position={position}
-          scale={scale}
+          position={platform.position}
+          scale={platform.scale}
         >
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial
-            color={index === obbyPlatforms.length - 1 ? '#22c55e' : '#ef4444'}
-          />
+          <meshStandardMaterial color={obbyPlatformColor(platform)} />
         </mesh>
       ))}
+      {obbyPlatforms
+        .filter(
+          (platform) =>
+            platform.kind === 'checkpoint' || platform.kind === 'finish',
+        )
+        .map((platform) => (
+          <group
+            key={`marker-${platform.position.join(',')}`}
+            position={[
+              platform.position[0],
+              platform.position[1] + platform.scale[1] / 2 + 0.7,
+              platform.position[2],
+            ]}
+          >
+            <mesh castShadow position={[0, 0.55, 0]}>
+              <boxGeometry args={[0.08, 1.1, 0.08]} />
+              <meshStandardMaterial color="#0f172a" />
+            </mesh>
+            <mesh castShadow position={[0.38, 1, 0]}>
+              <boxGeometry args={[0.72, 0.38, 0.08]} />
+              <meshStandardMaterial
+                color={platform.kind === 'finish' ? '#22c55e' : '#facc15'}
+              />
+            </mesh>
+            <Html
+              center
+              position={[0.38, 1.45, 0]}
+              zIndexRange={worldHtmlZIndexRange}
+            >
+              <span className="rounded bg-slate-950 px-2 py-1 text-xs font-black text-white shadow">
+                {platform.kind === 'finish' ? 'FINISH' : 'CHECKPOINT'}
+              </span>
+            </Html>
+          </group>
+        ))}
     </group>
   )
+}
+
+function obbyPlatformColor(platform: ObbyPlatform) {
+  if (platform.kind === 'start') return '#3b82f6'
+  if (platform.kind === 'checkpoint') return '#facc15'
+  if (platform.kind === 'finish') return '#22c55e'
+  if (platform.kind === 'beam') return '#f97316'
+  return '#ef4444'
 }
 
 function CoinField() {

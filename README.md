@@ -76,8 +76,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Kid-friendly quest loops cover exploring, messaging buddies, collecting coins,
   obby, building, driving, sitting, sleeping, emotes, Coin Rush, Delivery Dash,
   and Hide & Seek.
-- Beginner obby with checkpoints, finish reward, restart/start control, and bot
-  cheering.
+- Beginner obby obstacle course with jump pads, balance beams, checkpoint flags,
+  finish reward, fall reset, restart/start control, and bot cheering.
 - Original offline mini-games: Coin Rush, Delivery Dash, and Hide & Seek with
   world start pads, score HUD, timed goals, local records, chat reactions, coin
   rewards, and a Mini Game Star badge.

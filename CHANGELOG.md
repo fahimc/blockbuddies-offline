@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.63-beginner-obby-course] - 2026-07-18
+
+### Added
+
+- Added a 12-piece Beginner Obby course with start pad, jump pads, balance beams, checkpoint flags, and a visible finish flag.
+- Added unit and browser regression coverage for reachable obby jumps, solid platform tops, fall recovery, and full quest completion.
+
+### Changed
+
+- Updated the obby finish logic to use the authored finish pad instead of an old hard-coded map coordinate.
+- Updated Android and package version metadata to `1.5.63` / `10563`.
+
+### Fixed
+
+- Fixed Beginner Obby being too short to feel like an obstacle course.
+- Fixed Beginner Obby being impossible to complete because reaching the actual final pad did not trigger the completion reward.
+- Fixed obby falls landing the player on the town ground instead of resetting to the latest checkpoint.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.62-quest-message-fixes] - 2026-07-18
 
 ### Added

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { obbyPlatforms } from '../ai/obby'
 import { realScale } from '../game/scale'
 import { createWorldTileMap } from './worldTileMap'
 
@@ -37,5 +38,18 @@ describe('world tile map', () => {
     )
 
     expect([...new Set(offenders)]).toEqual([])
+  })
+
+  it('keeps the elevated obby assembly visible without treating adjacent platforms as placement conflicts', () => {
+    const map = createWorldTileMap('LONDON-2026', 2)
+    const obbyObjects = map.objects.filter((object) =>
+      object.id.startsWith('authored:obby:'),
+    )
+    const obbyConflicts = map.diagnostics.filter((diagnostic) =>
+      diagnostic.objectIds.every((id) => id.startsWith('authored:obby:')),
+    )
+
+    expect(obbyObjects).toHaveLength(obbyPlatforms.length)
+    expect(obbyConflicts).toEqual([])
   })
 })

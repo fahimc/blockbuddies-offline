@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase beginner obby course
+
+- [x] Replace the four-pad obby prop with a full beginner obstacle course.
+- [x] Add start, jump, beam, checkpoint, and finish platform types.
+- [x] Use the authored finish pad for completion instead of a stale coordinate.
+- [x] Reset the player to the latest checkpoint when they fall below the course.
+- [x] Add unit and Playwright regression coverage for completing the obby.
+- [x] Package and release Android debug APK for the obby fix.
+
 ## Post-phase quest guidance and message selection
 
 - [x] Label every expanded quest with clear how-to and tip sections.
