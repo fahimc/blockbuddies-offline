@@ -18,6 +18,29 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.58-customizer-flex-redesign] - 2026-07-18
+
+### Added
+
+- Added mobile visual regression coverage for the Customization Hub, Body & Style, Clothing, Hats & Accessories, and Emotes & Animations screens.
+- Added unit coverage for the emote catalog's selected-state handling.
+
+### Changed
+
+- Rebuilt the mobile character customizer around the supplied four-column flex guide with centered preview panels, horizontal category rows, two-column catalogs, and paired Save/Next action rows.
+- Updated Playwright test configuration so local test runs can use `PLAYWRIGHT_PORT` when another Vite app is already running.
+- Updated Android and package version metadata to `1.5.58` / `10558`.
+
+### Fixed
+
+- Fixed character preview, category, catalog, and footer controls overlapping on portrait phones.
+- Fixed skin, clothing, accessory, and emote preview cards overflowing their containers.
+- Fixed the emote catalog treating every unselected emote as equipped.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.57-splash-top-anchor] - 2026-07-17
 
 ### Added

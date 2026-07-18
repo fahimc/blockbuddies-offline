@@ -106,6 +106,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   and exclusive occupancy cells before release.
 - Full-screen six-step avatar Customization Hub with Body & Style, Clothing,
   Hats & Accessories, Emotes & Animations, and Trails & Effects screens.
+- The mobile customizer follows a four-column flex guide with separate preview,
+  category, catalog/control, and Save/Next rows for portrait phone screens.
 - Character setup includes explicit Save Character controls, automatic saving
   when setup completes, saved-character selection, and editable player names.
 - Body & Style customizer uses a responsive phone grid for the character
@@ -514,6 +516,10 @@ one clear delete action on mobile.
 The `v1.5.57` APK positions the splash screen logo and Start button as a single
 call-to-action card anchored 30% down from the portrait viewport top. Mobile
 regression tests verify that anchor across several portrait heights.
+
+The `v1.5.58` APK rebuilds the character customization screens around the
+four-column mobile guide, keeping the avatar preview, category buttons, item
+cards, and action buttons in separate responsive rows.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

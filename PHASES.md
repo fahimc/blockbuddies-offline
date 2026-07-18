@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase customizer flex redesign
+
+- [x] Rebuild the mobile Customization Hub around the four-column flex guide.
+- [x] Keep preview panels, category rows, catalogs, and footer actions in separate responsive rows.
+- [x] Resize skin, clothing, accessory, and emote item previews inside their cards.
+- [x] Add visual regression coverage for hub, body, clothing, accessories, and emotes screens.
+- [x] Add unit regression coverage for emote equipped-state selection.
+- [x] Package and release Android debug APK for the customizer flex redesign.
+
 ## Post-phase splash top anchor
 
 - [x] Move the portrait splash logo/start card to a 30% viewport top anchor.

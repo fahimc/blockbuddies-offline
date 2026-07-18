@@ -47,18 +47,48 @@ import {
   mapBlockSkinProject,
   presetToAvatar,
 } from '../data/brickAvatar'
-import type { AvatarSettings, SavedAvatarStyle } from '../game/types'
+import type {
+  AvatarSettings,
+  PlayerEmote,
+  SavedAvatarStyle,
+} from '../game/types'
 import { useGameStore } from '../state/gameStore'
 import { GameAvatarPreview } from './GameAvatarPreview'
 
-const stepOrder: CustomizationStepId[] = ['hub', 'body', 'clothing', 'accessories', 'emotes', 'trails']
-const clothingTabs = ['Hero Skins', 'Tops', 'Hoodies', 'Shirts', 'Pants', 'Shoes']
-const accessoryTabs = ['All', 'Hats', 'Glasses', 'Headphones', 'Backpacks', 'Pets', 'Effects']
+const stepOrder: CustomizationStepId[] = [
+  'hub',
+  'body',
+  'clothing',
+  'accessories',
+  'emotes',
+  'trails',
+]
+const clothingTabs = [
+  'Hero Skins',
+  'Tops',
+  'Hoodies',
+  'Shirts',
+  'Pants',
+  'Shoes',
+]
+const accessoryTabs = [
+  'All',
+  'Hats',
+  'Glasses',
+  'Headphones',
+  'Backpacks',
+  'Pets',
+  'Effects',
+]
 const emoteTabs = ['All', 'Dances', 'Gestures', 'Sits', 'Actions']
 type BodySectionId = 'body' | 'hair' | 'face' | 'colours' | 'wardrobe'
 
 const bodySections: { id: BodySectionId; label: string; icon: ReactNode }[] = [
-  { id: 'body', label: 'Body & Style', icon: <UserRound size={28} aria-hidden /> },
+  {
+    id: 'body',
+    label: 'Body & Style',
+    icon: <UserRound size={28} aria-hidden />,
+  },
   { id: 'hair', label: 'Hair', icon: <Sparkles size={28} aria-hidden /> },
   { id: 'face', label: 'Face', icon: <Laugh size={28} aria-hidden /> },
   { id: 'colours', label: 'Colours', icon: <Palette size={28} aria-hidden /> },
@@ -81,16 +111,27 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
   const playerName = useGameStore((state) => state.playerName)
   const coins = useGameStore((state) => state.coins)
   const unlocked = useGameStore((state) => state.unlockedItems)
+  const playerEmote = useGameStore((state) => state.playerEmote)
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const setPlayerName = useGameStore((state) => state.setPlayerName)
   const updateAvatar = useGameStore((state) => state.updateAvatar)
-  const saveCurrentAvatarStyle = useGameStore((state) => state.saveCurrentAvatarStyle)
-  const applySavedAvatarStyle = useGameStore((state) => state.applySavedAvatarStyle)
-  const deleteSavedAvatarStyle = useGameStore((state) => state.deleteSavedAvatarStyle)
-  const selectCustomizationItem = useGameStore((state) => state.selectCustomizationItem)
+  const saveCurrentAvatarStyle = useGameStore(
+    (state) => state.saveCurrentAvatarStyle,
+  )
+  const applySavedAvatarStyle = useGameStore(
+    (state) => state.applySavedAvatarStyle,
+  )
+  const deleteSavedAvatarStyle = useGameStore(
+    (state) => state.deleteSavedAvatarStyle,
+  )
+  const selectCustomizationItem = useGameStore(
+    (state) => state.selectCustomizationItem,
+  )
   const stepIndex = stepOrder.indexOf(step)
   const stepInfo = customizationSteps[stepIndex]
-  const ownedCount = allCustomizationItems.filter((item) => !item.shopItemId || unlocked.includes(item.shopItemId)).length
+  const ownedCount = allCustomizationItems.filter(
+    (item) => !item.shopItemId || unlocked.includes(item.shopItemId),
+  ).length
 
   const selectItem = (item: CustomizationItem) => selectCustomizationItem(item)
   const next = () => {
@@ -116,7 +157,8 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
     setStep(stepOrder[Math.max(0, stepIndex - 1)])
   }
   const randomize = () => {
-    const preset = brickAvatarPresets[Math.floor(Math.random() * brickAvatarPresets.length)]
+    const preset =
+      brickAvatarPresets[Math.floor(Math.random() * brickAvatarPresets.length)]
     updateAvatar(presetToAvatar(preset))
   }
   const importProjectFile = async (file: File | undefined) => {
@@ -134,7 +176,10 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
     if (!file) return
     try {
       const patch = await sampleTextureAvatar(file)
-      updateAvatar({ ...patch, avatarSource: file.name.replace(/\.[^.]+$/, '') || 'Imported texture' })
+      updateAvatar({
+        ...patch,
+        avatarSource: file.name.replace(/\.[^.]+$/, '') || 'Imported texture',
+      })
       setImportStatus(`Sampled colours from ${file.name}`)
     } catch {
       setImportStatus('Could not read that texture')
@@ -147,7 +192,12 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
         <div className="bb-town-skyline" />
       </div>
       <header className="bb-customizer-topbar">
-        <button type="button" className="bb-customizer-back" onClick={previous} aria-label="Back">
+        <button
+          type="button"
+          className="bb-customizer-back"
+          onClick={previous}
+          aria-label="Back"
+        >
           <ArrowLeft size={30} aria-hidden />
         </button>
         <h2>{stepInfo.title}</h2>
@@ -204,12 +254,35 @@ export function AvatarPanel({ onBack, onComplete }: AvatarPanelProps = {}) {
             importStatus={importStatus}
           />
         ) : null}
-        {step === 'clothing' ? <ClothingStep avatar={avatar} onRandomize={randomize} onSelect={selectItem} /> : null}
-        {step === 'accessories' ? (
-          <AccessoriesStep avatar={avatar} ownedCount={ownedCount} onSelect={selectItem} unlocked={unlocked} />
+        {step === 'clothing' ? (
+          <ClothingStep
+            avatar={avatar}
+            onRandomize={randomize}
+            onSelect={selectItem}
+          />
         ) : null}
-        {step === 'emotes' ? <EmotesStep avatar={avatar} onSelect={selectItem} /> : null}
-        {step === 'trails' ? <TrailsStep avatar={avatar} onSelect={selectItem} unlocked={unlocked} /> : null}
+        {step === 'accessories' ? (
+          <AccessoriesStep
+            avatar={avatar}
+            ownedCount={ownedCount}
+            onSelect={selectItem}
+            unlocked={unlocked}
+          />
+        ) : null}
+        {step === 'emotes' ? (
+          <EmotesStep
+            avatar={avatar}
+            playerEmote={playerEmote}
+            onSelect={selectItem}
+          />
+        ) : null}
+        {step === 'trails' ? (
+          <TrailsStep
+            avatar={avatar}
+            onSelect={selectItem}
+            unlocked={unlocked}
+          />
+        ) : null}
       </main>
       <input
         ref={projectInputRef}
@@ -279,17 +352,61 @@ function HubStep({
     onBodySection(section)
     onStep('body')
   }
+  const categories: { label: string; icon: ReactNode; onClick: () => void }[] =
+    [
+      {
+        label: 'Skin',
+        icon: <UserRound size={31} />,
+        onClick: () => openBody('body'),
+      },
+      {
+        label: 'Hair',
+        icon: <Sparkles size={31} />,
+        onClick: () => openBody('hair'),
+      },
+      {
+        label: 'Face',
+        icon: <Laugh size={31} />,
+        onClick: () => openBody('face'),
+      },
+      {
+        label: 'Tops',
+        icon: <Shirt size={31} />,
+        onClick: () => onStep('clothing'),
+      },
+      {
+        label: 'Bottoms',
+        icon: <Footprints size={31} />,
+        onClick: () => onStep('clothing'),
+      },
+      {
+        label: 'Hats',
+        icon: <BadgePlus size={31} />,
+        onClick: () => onStep('accessories'),
+      },
+      {
+        label: 'Accessories',
+        icon: <Glasses size={31} />,
+        onClick: () => onStep('accessories'),
+      },
+      {
+        label: 'Emotes',
+        icon: <Laugh size={31} />,
+        onClick: () => onStep('emotes'),
+      },
+      {
+        label: 'Trails',
+        icon: <Sparkles size={31} />,
+        onClick: () => onStep('trails'),
+      },
+    ]
 
   return (
     <>
-      <div className="bb-hub-rail left">
-        <HubButton label="Skin" icon={<UserRound size={31} />} onClick={() => openBody('body')} />
-        <HubButton label="Hair" icon={<Sparkles size={31} />} onClick={() => openBody('hair')} />
-        <HubButton label="Face" icon={<Laugh size={31} />} onClick={() => openBody('face')} />
-        <HubButton label="Tops" icon={<Shirt size={31} />} onClick={() => onStep('clothing')} />
-        <HubButton label="Bottoms" icon={<Footprints size={31} />} onClick={() => onStep('clothing')} />
-      </div>
       <div className="bb-hub-stage">
+        <div className="bb-hub-preview">
+          <AvatarStage avatar={avatar} size="large" />
+        </div>
         <label className="bb-character-name-editor">
           <span>Character name</span>
           <input
@@ -299,23 +416,42 @@ function HubStep({
             aria-label="Character name"
           />
         </label>
-        <AvatarStage avatar={avatar} size="large" />
-        <section className="bb-saved-character-strip" aria-label="Saved characters">
+        <section
+          className="bb-saved-character-strip"
+          aria-label="Saved characters"
+        >
           <div>
             <strong>Saved Characters</strong>
-            <span>{savedAvatars.length} saved</span>
+            <span>{Math.min(savedAvatars.length, 8)} / 8</span>
           </div>
           {savedAvatars.length === 0 ? (
-            <p>Save this character, then pick it next time.</p>
+            <div>
+              <button
+                type="button"
+                className="bb-saved-character-add"
+                onClick={() => openBody('body')}
+              >
+                <BadgePlus size={25} aria-hidden />
+                <span>Add New</span>
+              </button>
+            </div>
           ) : (
             <div>
               {savedAvatars.slice(0, 6).map((style) => (
                 <div key={style.id} className="bb-saved-character-card">
-                  <button type="button" onClick={() => onApplySaved(style.id)} aria-label={`Use ${style.name}`}>
-                  <MiniAvatar avatar={style.avatar} />
-                  <span>{style.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onApplySaved(style.id)}
+                    aria-label={`Use ${style.name}`}
+                  >
+                    <MiniAvatar avatar={style.avatar} />
+                    <span>{style.name}</span>
                   </button>
-                  <button type="button" aria-label={`Delete ${style.name}`} onClick={() => onDeleteSaved(style.id)}>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${style.name}`}
+                    onClick={() => onDeleteSaved(style.id)}
+                  >
                     <Trash2 size={13} aria-hidden />
                   </button>
                 </div>
@@ -324,11 +460,18 @@ function HubStep({
           )}
         </section>
       </div>
-      <div className="bb-hub-rail right">
-        <HubButton label="Hats" icon={<BadgePlus size={31} />} onClick={() => onStep('accessories')} />
-        <HubButton label="Accessories" icon={<Glasses size={31} />} onClick={() => onStep('accessories')} />
-        <HubButton label="Emotes" icon={<Laugh size={31} />} onClick={() => onStep('emotes')} />
-        <HubButton label="Trails" icon={<Sparkles size={31} />} onClick={() => onStep('trails')} />
+      <div
+        className="bb-hub-category-grid"
+        aria-label="Customization categories"
+      >
+        {categories.map((category) => (
+          <HubButton
+            key={category.label}
+            label={category.label}
+            icon={category.icon}
+            onClick={category.onClick}
+          />
+        ))}
       </div>
     </>
   )
@@ -468,7 +611,10 @@ function BodySectionRail({
   onSection: (section: BodySectionId) => void
 }) {
   return (
-    <nav className="bb-custom-side-rail bb-body-section-rail" aria-label="Body customisation sections">
+    <nav
+      className="bb-custom-side-rail bb-body-section-rail"
+      aria-label="Body customisation sections"
+    >
       {bodySections.map((section) => (
         <button
           type="button"
@@ -512,7 +658,11 @@ function WardrobeControls({
         <h3>Brick Borough Presets</h3>
         <div className="bb-preset-grid">
           {brickAvatarPresets.map((preset) => (
-            <button type="button" key={preset.name} onClick={() => updateAvatar(presetToAvatar(preset))}>
+            <button
+              type="button"
+              key={preset.name}
+              onClick={() => updateAvatar(presetToAvatar(preset))}
+            >
               <span style={{ background: preset.primaryColor }} />
               <strong>{preset.name}</strong>
             </button>
@@ -547,7 +697,12 @@ function WardrobeControls({
       />
       <PalettePanel
         title="Top Colour"
-        colors={accentColors.concat(['#0b74ff', '#14b8a6', '#dc2626', '#7c3aed'])}
+        colors={accentColors.concat([
+          '#0b74ff',
+          '#14b8a6',
+          '#dc2626',
+          '#7c3aed',
+        ])}
         active={avatar.shirtColor}
         onPick={(shirtColor) => updateAvatar({ shirtColor })}
       />
@@ -555,7 +710,9 @@ function WardrobeControls({
         title="Trim Colour"
         colors={accentColors.concat(['#ffffff', '#111827', '#38bdf8'])}
         active={avatar.secondaryColor ?? avatar.accentColor ?? accentColors[0]}
-        onPick={(secondaryColor) => updateAvatar({ secondaryColor, accentColor: secondaryColor })}
+        onPick={(secondaryColor) =>
+          updateAvatar({ secondaryColor, accentColor: secondaryColor })
+        }
       />
       <SelectPanel
         title="Bottoms"
@@ -565,7 +722,14 @@ function WardrobeControls({
       />
       <PalettePanel
         title="Bottom Colour"
-        colors={['#111827', '#1d4ed8', '#334155', '#7c2d12', '#475569', '#f472b6']}
+        colors={[
+          '#111827',
+          '#1d4ed8',
+          '#334155',
+          '#7c2d12',
+          '#475569',
+          '#f472b6',
+        ]}
         active={avatar.pantsColor ?? '#111827'}
         onPick={(pantsColor) => updateAvatar({ pantsColor })}
       />
@@ -577,7 +741,14 @@ function WardrobeControls({
       />
       <PalettePanel
         title="Shoe Colour"
-        colors={['#f8fafc', '#111827', '#e5e7eb', '#ef4444', '#2563eb', '#facc15']}
+        colors={[
+          '#f8fafc',
+          '#111827',
+          '#e5e7eb',
+          '#ef4444',
+          '#2563eb',
+          '#facc15',
+        ]}
         active={avatar.shoeColor ?? '#f8fafc'}
         onPick={(shoeColor) => updateAvatar({ shoeColor })}
       />
@@ -594,7 +765,11 @@ function WardrobeControls({
                   <MiniAvatar avatar={style.avatar} />
                   <span>{style.name}</span>
                 </button>
-                <button type="button" onClick={() => onDeleteSaved(style.id)} aria-label={`Delete ${style.name}`}>
+                <button
+                  type="button"
+                  onClick={() => onDeleteSaved(style.id)}
+                  aria-label={`Delete ${style.name}`}
+                >
                   <Trash2 size={16} aria-hidden />
                 </button>
               </div>
@@ -622,7 +797,12 @@ function SelectPanel<T extends string>({
       <h3>{title}</h3>
       <div>
         {items.map((item) => (
-          <button type="button" key={item.id} className={item.id === active ? 'active' : ''} onClick={() => onPick(item.id)}>
+          <button
+            type="button"
+            key={item.id}
+            className={item.id === active ? 'active' : ''}
+            onClick={() => onPick(item.id)}
+          >
             {item.name.slice(0, 3)}
           </button>
         ))}
@@ -646,7 +826,11 @@ function ClothingStep({
         <UserRound size={28} aria-hidden />
         Preview
       </button>
-      <button type="button" className="bb-floating-tool left two" onClick={onRandomize}>
+      <button
+        type="button"
+        className="bb-floating-tool left two"
+        onClick={onRandomize}
+      >
         <Dice5 size={28} aria-hidden />
         Randomize
       </button>
@@ -657,7 +841,12 @@ function ClothingStep({
       <div className="bb-clothing-stage">
         <AvatarStage avatar={avatar} size="medium" />
       </div>
-      <CatalogPanel tabs={clothingTabs} items={[...heroSkinItems, ...clothingItems, ...pantsItems]} avatar={avatar} onSelect={onSelect} />
+      <CatalogPanel
+        tabs={clothingTabs}
+        items={[...heroSkinItems, ...clothingItems, ...pantsItems]}
+        avatar={avatar}
+        onSelect={onSelect}
+      />
     </>
   )
 }
@@ -687,15 +876,32 @@ function AccessoriesStep({
         <div>
           <Laugh size={28} aria-hidden />
           <span>Collection</span>
-          <strong>{ownedCount} / {allCustomizationItems.length}</strong>
+          <strong>
+            {ownedCount} / {allCustomizationItems.length}
+          </strong>
         </div>
       </div>
-      <CatalogPanel tabs={accessoryTabs} items={accessoryItems} avatar={avatar} onSelect={onSelect} unlocked={unlocked} dense />
+      <CatalogPanel
+        tabs={accessoryTabs}
+        items={accessoryItems}
+        avatar={avatar}
+        onSelect={onSelect}
+        unlocked={unlocked}
+        dense
+      />
     </>
   )
 }
 
-function EmotesStep({ avatar, onSelect }: { avatar: AvatarSettings; onSelect: (item: CustomizationItem) => void }) {
+function EmotesStep({
+  avatar,
+  playerEmote,
+  onSelect,
+}: {
+  avatar: AvatarSettings
+  playerEmote: PlayerEmote
+  onSelect: (item: CustomizationItem) => void
+}) {
   const previewItems = useMemo(() => emoteItems.slice(0, 5), [])
   return (
     <>
@@ -710,14 +916,30 @@ function EmotesStep({ avatar, onSelect }: { avatar: AvatarSettings; onSelect: (i
       />
       <div className="bb-emote-preview">
         <AvatarStage avatar={avatar} size="small" pose="wave" />
-        <div className="bb-preview-label">Preview<br />Wave</div>
+        <div className="bb-preview-label">
+          Preview
+          <br />
+          Wave
+        </div>
       </div>
-      <CatalogPanel tabs={emoteTabs} items={emoteItems} avatar={avatar} onSelect={onSelect} className="emote-grid" />
+      <CatalogPanel
+        tabs={emoteTabs}
+        items={emoteItems}
+        avatar={avatar}
+        playerEmote={playerEmote}
+        onSelect={onSelect}
+        className="emote-grid"
+      />
       <div className="bb-quick-preview">
         <strong>Quick Preview</strong>
         <div>
           {previewItems.map((item) => (
-            <button type="button" key={item.id} onClick={() => onSelect(item)} aria-label={`Preview ${item.name}`}>
+            <button
+              type="button"
+              key={item.id}
+              onClick={() => onSelect(item)}
+              aria-label={`Preview ${item.name}`}
+            >
               <MiniAvatar avatar={avatar} pose={item.emote ?? 'wave'} />
             </button>
           ))}
@@ -741,12 +963,26 @@ function TrailsStep({
       <div className="bb-trail-stage">
         <AvatarStage avatar={avatar} size="medium" showTrail />
       </div>
-      <CatalogPanel tabs={['All', 'Rainbow', 'Neon', 'Galaxy', 'Stars']} items={trailItems} avatar={avatar} onSelect={onSelect} unlocked={unlocked} />
+      <CatalogPanel
+        tabs={['All', 'Rainbow', 'Neon', 'Galaxy', 'Stars']}
+        items={trailItems}
+        avatar={avatar}
+        onSelect={onSelect}
+        unlocked={unlocked}
+      />
     </>
   )
 }
 
-function HubButton({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) {
+function HubButton({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string
+  icon: ReactNode
+  onClick: () => void
+}) {
   return (
     <button type="button" className="bb-hub-button" onClick={onClick}>
       {icon}
@@ -759,7 +995,11 @@ function SideRail({ items }: { items: [string, ReactNode][] }) {
   return (
     <nav className="bb-custom-side-rail" aria-label="Customization categories">
       {items.map(([label, icon], index) => (
-        <button type="button" key={label} className={index === 0 ? 'active' : ''}>
+        <button
+          type="button"
+          key={label}
+          className={index === 0 ? 'active' : ''}
+        >
           {icon}
           <span>{label}</span>
         </button>
@@ -814,7 +1054,12 @@ function MiniStrip({
       <h3>{title}</h3>
       <div>
         {items.map((item) => (
-          <button type="button" key={item.id} className={item.id === active ? 'active' : ''} onClick={() => onPick(item.patch)}>
+          <button
+            type="button"
+            key={item.id}
+            className={item.id === active ? 'active' : ''}
+            onClick={() => onPick(item.patch)}
+          >
             {item.name.slice(0, 2)}
           </button>
         ))}
@@ -827,6 +1072,7 @@ function CatalogPanel({
   tabs,
   items,
   avatar,
+  playerEmote = 'none',
   onSelect,
   unlocked = [],
   dense = false,
@@ -835,23 +1081,31 @@ function CatalogPanel({
   tabs: string[]
   items: CustomizationItem[]
   avatar: AvatarSettings
+  playerEmote?: PlayerEmote
   onSelect: (item: CustomizationItem) => void
   unlocked?: string[]
   dense?: boolean
   className?: string
 }) {
   const [activeTab, setActiveTab] = useState(tabs[0] ?? 'All')
-  const resolvedTab = tabs.includes(activeTab) ? activeTab : tabs[0] ?? 'All'
+  const resolvedTab = tabs.includes(activeTab) ? activeTab : (tabs[0] ?? 'All')
   const visibleItems = useMemo(
     () => items.filter((item) => catalogItemMatchesTab(item, resolvedTab)),
     [items, resolvedTab],
   )
 
   return (
-    <section className={`bb-custom-catalog ${dense ? 'dense' : ''} ${className}`}>
+    <section
+      className={`bb-custom-catalog ${dense ? 'dense' : ''} ${className}`}
+    >
       <div className="bb-custom-tabs">
         {tabs.map((tab) => (
-          <button type="button" key={tab} className={tab === resolvedTab ? 'active' : ''} onClick={() => setActiveTab(tab)}>
+          <button
+            type="button"
+            key={tab}
+            className={tab === resolvedTab ? 'active' : ''}
+            onClick={() => setActiveTab(tab)}
+          >
             {tab}
           </button>
         ))}
@@ -862,8 +1116,12 @@ function CatalogPanel({
             key={item.id}
             item={item}
             avatar={avatar}
-            owned={!item.shopItemId || item.cost === 0 || unlocked.includes(item.shopItemId)}
-            equipped={isEquipped(avatar, item)}
+            owned={
+              !item.shopItemId ||
+              item.cost === 0 ||
+              unlocked.includes(item.shopItemId)
+            }
+            equipped={isEquipped(avatar, item, playerEmote)}
             onSelect={() => onSelect(item)}
           />
         ))}
@@ -876,20 +1134,43 @@ function catalogItemMatchesTab(item: CustomizationItem, tab: string) {
   if (tab === 'All') return true
   if (tab === 'Hero Skins') return item.kind === 'skin'
   if (tab === 'Tops') return item.kind === 'top'
-  if (tab === 'Hoodies') return item.kind === 'top' && item.patch.outfitStyle === 'hoodie'
-  if (tab === 'Shirts') return item.kind === 'top' && item.patch.outfitStyle !== 'hoodie'
-  if (tab === 'Pants') return item.kind === 'pants' && item.patch.bottomStyle !== undefined
-  if (tab === 'Shoes') return item.kind === 'pants' && item.patch.shoeStyle !== undefined
+  if (tab === 'Hoodies')
+    return item.kind === 'top' && item.patch.outfitStyle === 'hoodie'
+  if (tab === 'Shirts')
+    return item.kind === 'top' && item.patch.outfitStyle !== 'hoodie'
+  if (tab === 'Pants')
+    return item.kind === 'pants' && item.patch.bottomStyle !== undefined
+  if (tab === 'Shoes')
+    return item.kind === 'pants' && item.patch.shoeStyle !== undefined
   if (tab === 'Hats') return item.kind === 'hat'
-  if (tab === 'Glasses') return item.patch.accessory === 'glasses-star' || item.patch.accessory === 'visor-neon'
-  if (tab === 'Headphones') return String(item.patch.accessory ?? '').includes('headphones')
-  if (tab === 'Backpacks') return String(item.patch.accessory ?? '').includes('backpack') || String(item.patch.accessory ?? '').includes('pack')
+  if (tab === 'Glasses')
+    return (
+      item.patch.accessory === 'glasses-star' ||
+      item.patch.accessory === 'visor-neon'
+    )
+  if (tab === 'Headphones')
+    return String(item.patch.accessory ?? '').includes('headphones')
+  if (tab === 'Backpacks')
+    return (
+      String(item.patch.accessory ?? '').includes('backpack') ||
+      String(item.patch.accessory ?? '').includes('pack')
+    )
   if (tab === 'Pets') return String(item.patch.accessory ?? '').includes('pet')
-  if (tab === 'Effects') return item.kind === 'accessory' && !['glasses-star', 'visor-neon'].includes(String(item.patch.accessory ?? ''))
+  if (tab === 'Effects')
+    return (
+      item.kind === 'accessory' &&
+      !['glasses-star', 'visor-neon'].includes(
+        String(item.patch.accessory ?? ''),
+      )
+    )
   if (tab === 'Dances') return item.name.toLowerCase().includes('dance')
-  if (tab === 'Gestures') return ['wave', 'cheer', 'thumbs-up', 'point', 'salute', 'laugh'].includes(item.id)
+  if (tab === 'Gestures')
+    return ['wave', 'cheer', 'thumbs-up', 'point', 'salute', 'laugh'].includes(
+      item.id,
+    )
   if (tab === 'Sits') return item.id === 'sit'
-  if (tab === 'Actions') return !['wave', 'dance', 'cheer', 'sit'].includes(item.id)
+  if (tab === 'Actions')
+    return !['wave', 'dance', 'cheer', 'sit'].includes(item.id)
   if (tab === 'Rainbow') return item.id.includes('rainbow')
   if (tab === 'Neon') return item.id.includes('neon')
   if (tab === 'Galaxy') return item.id.includes('galaxy')
@@ -911,7 +1192,11 @@ function ItemCard({
   onSelect: () => void
 }) {
   return (
-    <button type="button" className={`bb-custom-item ${equipped ? 'equipped' : ''}`} onClick={onSelect}>
+    <button
+      type="button"
+      className={`bb-custom-item ${equipped ? 'equipped' : ''}`}
+      onClick={onSelect}
+    >
       {equipped ? (
         <span className="bb-equipped-check">
           <Check size={18} aria-hidden />
@@ -921,7 +1206,9 @@ function ItemCard({
         <ItemPreview item={item} avatar={avatar} />
       </span>
       <strong>{item.name}</strong>
-      <span className={`rarity ${item.rarity.toLowerCase()}`}>{item.rarity}</span>
+      <span className={`rarity ${item.rarity.toLowerCase()}`}>
+        {item.rarity}
+      </span>
       <span className={owned ? 'price owned' : 'price'}>
         {equipped ? 'Equipped' : item.cost === 0 ? 'Free' : `${item.cost}`}
       </span>
@@ -929,17 +1216,76 @@ function ItemCard({
   )
 }
 
-function ItemPreview({ item, avatar }: { item: CustomizationItem; avatar: AvatarSettings }) {
-  if (item.kind === 'skin') return <MiniAvatar avatar={{ ...avatar, ...item.patch }} />
-  if (item.kind === 'emote') return <MiniAvatar avatar={avatar} pose={item.emote ?? 'wave'} />
-  if (item.kind === 'top') return <span className="bb-item-top" style={{ '--item-color': item.color, '--item-accent': item.accent ?? '#ffffff' } as CSSProperties} />
-  if (item.kind === 'pants') return <span className="bb-item-pants" style={{ '--item-color': item.color } as CSSProperties} />
-  if (item.kind === 'trail') return <span className="bb-item-trail" style={{ '--item-color': item.color, '--item-accent': item.accent ?? '#ffffff' } as CSSProperties} />
-  return <span className={`bb-item-accessory ${item.kind}`} style={{ '--item-color': item.color, '--item-accent': item.accent ?? '#ffffff' } as CSSProperties} />
+function ItemPreview({
+  item,
+  avatar,
+}: {
+  item: CustomizationItem
+  avatar: AvatarSettings
+}) {
+  if (item.kind === 'skin')
+    return <MiniAvatar avatar={{ ...avatar, ...item.patch }} />
+  if (item.kind === 'emote')
+    return <MiniAvatar avatar={avatar} pose={item.emote ?? 'wave'} />
+  if (item.kind === 'top')
+    return (
+      <span
+        className="bb-item-top"
+        style={
+          {
+            '--item-color': item.color,
+            '--item-accent': item.accent ?? '#ffffff',
+          } as CSSProperties
+        }
+      />
+    )
+  if (item.kind === 'pants')
+    return (
+      <span
+        className="bb-item-pants"
+        style={{ '--item-color': item.color } as CSSProperties}
+      />
+    )
+  if (item.kind === 'trail')
+    return (
+      <span
+        className="bb-item-trail"
+        style={
+          {
+            '--item-color': item.color,
+            '--item-accent': item.accent ?? '#ffffff',
+          } as CSSProperties
+        }
+      />
+    )
+  return (
+    <span
+      className={`bb-item-accessory ${item.kind}`}
+      style={
+        {
+          '--item-color': item.color,
+          '--item-accent': item.accent ?? '#ffffff',
+        } as CSSProperties
+      }
+    />
+  )
 }
 
-function isEquipped(avatar: AvatarSettings, item: CustomizationItem) {
-  return Object.entries(item.patch).every(([key, value]) => avatar[key as keyof AvatarSettings] === value)
+function isEquipped(
+  avatar: AvatarSettings,
+  item: CustomizationItem,
+  playerEmote: PlayerEmote = 'none',
+) {
+  if (item.kind === 'emote') {
+    if (playerEmote === 'none') return false
+    const firstMatchingEmote = emoteItems.find(
+      (candidate) => candidate.emote === playerEmote,
+    )
+    return item.emote === playerEmote && item.id === firstMatchingEmote?.id
+  }
+  return Object.entries(item.patch).every(
+    ([key, value]) => avatar[key as keyof AvatarSettings] === value,
+  )
 }
 
 function AvatarStage({
@@ -954,13 +1300,16 @@ function AvatarStage({
   showTrail?: boolean
 }) {
   const [previewYaw, setPreviewYaw] = useState(-0.2)
-  const dragRef = useRef<{ pointerId: number; x: number } | undefined>(undefined)
+  const dragRef = useRef<{ pointerId: number; x: number } | undefined>(
+    undefined,
+  )
 
   const stopDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
-    if (dragRef.current?.pointerId === event.pointerId) dragRef.current = undefined
+    if (dragRef.current?.pointerId === event.pointerId)
+      dragRef.current = undefined
   }
 
   return (
@@ -973,7 +1322,8 @@ function AvatarStage({
         onPointerDown={(event) => {
           if (event.pointerType === 'mouse' && event.button !== 0) return
           event.preventDefault()
-          if (event.nativeEvent.isTrusted) event.currentTarget.setPointerCapture?.(event.pointerId)
+          if (event.nativeEvent.isTrusted)
+            event.currentTarget.setPointerCapture?.(event.pointerId)
           dragRef.current = { pointerId: event.pointerId, x: event.clientX }
         }}
         onPointerMove={(event) => {
@@ -988,13 +1338,23 @@ function AvatarStage({
         onPointerCancel={stopDrag}
       >
         {showTrail ? <span className="bb-avatar-trail" /> : null}
-        <GameAvatarPreview avatar={avatar} pose={pose === 'idle' ? 'none' : pose} yaw={previewYaw} />
+        <GameAvatarPreview
+          avatar={avatar}
+          pose={pose === 'idle' ? 'none' : pose}
+          yaw={previewYaw}
+        />
       </div>
     </div>
   )
 }
 
-function MiniAvatar({ avatar, pose = 'idle' }: { avatar: AvatarSettings; pose?: string }) {
+function MiniAvatar({
+  avatar,
+  pose = 'idle',
+}: {
+  avatar: AvatarSettings
+  pose?: string
+}) {
   return (
     <span
       className={`bb-mini-avatar pose-${pose} hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'} outfit-${avatar.outfitStyle ?? 'hoodie'} bottom-${avatar.bottomStyle ?? 'jeans'} shoes-${avatar.shoeStyle ?? 'sneakers'}`}
@@ -1023,14 +1383,20 @@ function MiniAvatar({ avatar, pose = 'idle' }: { avatar: AvatarSettings; pose?: 
       <span className="arm right" />
       <span className="leg left" />
       <span className="leg right" />
-      {String(avatar.accessory ?? '').includes('hero-cape') ? <span className="cape" /> : null}
+      {String(avatar.accessory ?? '').includes('hero-cape') ? (
+        <span className="cape" />
+      ) : null}
       {avatar.hat !== 'none' ? <span className="hat" /> : null}
-      {avatar.accessory && avatar.accessory !== 'none' ? <span className="glasses" /> : null}
+      {avatar.accessory && avatar.accessory !== 'none' ? (
+        <span className="glasses" />
+      ) : null}
     </span>
   )
 }
 
-async function sampleTextureAvatar(file: File): Promise<Partial<AvatarSettings>> {
+async function sampleTextureAvatar(
+  file: File,
+): Promise<Partial<AvatarSettings>> {
   const image = await loadImage(file)
   const canvas = document.createElement('canvas')
   canvas.width = 64
@@ -1067,7 +1433,13 @@ function loadImage(file: File) {
   })
 }
 
-function averageColor(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
+function averageColor(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
   const data = context.getImageData(x, y, width, height).data
   let r = 0
   let g = 0
@@ -1085,5 +1457,7 @@ function averageColor(context: CanvasRenderingContext2D, x: number, y: number, w
 }
 
 function toHex(value: number) {
-  return Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0')
+  return Math.max(0, Math.min(255, Math.round(value)))
+    .toString(16)
+    .padStart(2, '0')
 }

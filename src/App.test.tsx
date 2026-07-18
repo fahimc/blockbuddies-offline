@@ -26,6 +26,8 @@ describe('App shell', () => {
       profileComplete: false,
       playerName: defaultPlayerName,
       avatar: defaultAvatar,
+      playerEmote: 'none',
+      unlockedItems: [],
     })
   })
 
@@ -53,5 +55,27 @@ describe('App shell', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Start' }))
 
     expect(screen.getByTestId('game-canvas')).toBeInTheDocument()
+  })
+
+  it('only marks the selected emote as equipped in the customizer', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Start' }))
+    await user.click(screen.getByRole('button', { name: 'Customize' }))
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Emotes & Animations' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Equipped')).not.toBeInTheDocument()
+
+    const [waveCard] = screen.getAllByRole('button', { name: /Wave/ })
+    await user.click(waveCard)
+
+    expect(useGameStore.getState().playerEmote).toBe('wave')
+    expect(screen.getAllByText('Equipped')).toHaveLength(1)
   })
 })

@@ -368,7 +368,7 @@ test.describe('narrow portrait customizer layout', () => {
     ).toBeVisible()
 
     const bodyCustomizer = page.locator('.bb-customizer-body')
-    const preview = bodyCustomizer.locator('.bb-avatar-turntable')
+    const preview = bodyCustomizer.locator('.bb-body-stage')
     const rail = bodyCustomizer.locator('.bb-body-section-rail')
     const controls = bodyCustomizer.locator('.bb-body-controls')
     const [previewBox, railBox, controlsBox] = await Promise.all([
@@ -539,24 +539,42 @@ test.describe('portrait splash layout', () => {
     ).toBeVisible()
     const hub = page.locator('.bb-customizer-hub')
     const hubStage = hub.locator('.bb-hub-stage')
-    const hubLeftRail = hub.locator('.bb-hub-rail.left')
-    const hubRightRail = hub.locator('.bb-hub-rail.right')
+    const hubPreview = hub.locator('.bb-hub-preview')
+    const hubNameEditor = hub.locator('.bb-character-name-editor')
+    const hubSavedStrip = hub.locator('.bb-saved-character-strip')
+    const hubCategories = hub.locator('.bb-hub-category-grid')
     await expect(hubStage.locator('.bb-game-avatar-preview')).toBeVisible()
-    const [hubBox, hubStageBox, hubLeftBox, hubRightBox] = await Promise.all([
-      hub.boundingBox(),
-      hubStage.boundingBox(),
-      hubLeftRail.boundingBox(),
-      hubRightRail.boundingBox(),
-    ])
+    const [hubBox, hubPreviewBox, hubNameBox, hubSavedBox, hubCategoryBox] =
+      await Promise.all([
+        hub.boundingBox(),
+        hubPreview.boundingBox(),
+        hubNameEditor.boundingBox(),
+        hubSavedStrip.boundingBox(),
+        hubCategories.boundingBox(),
+      ])
     expect(hubBox).not.toBeNull()
-    expect(hubStageBox).not.toBeNull()
-    expect(hubLeftBox).not.toBeNull()
-    expect(hubRightBox).not.toBeNull()
-    if (!hubBox || !hubStageBox || !hubLeftBox || !hubRightBox) return
-    expect(hubStageBox.y).toBeLessThan(hubLeftBox.y)
-    expect(hubLeftBox.y).toBeLessThan(hubRightBox.y)
-    expect(hubLeftBox.width / hubBox.width).toBeGreaterThan(0.86)
-    expect(hubRightBox.width / hubBox.width).toBeGreaterThan(0.86)
+    expect(hubPreviewBox).not.toBeNull()
+    expect(hubNameBox).not.toBeNull()
+    expect(hubSavedBox).not.toBeNull()
+    expect(hubCategoryBox).not.toBeNull()
+    if (
+      !hubBox ||
+      !hubPreviewBox ||
+      !hubNameBox ||
+      !hubSavedBox ||
+      !hubCategoryBox
+    )
+      return
+    expect(hubPreviewBox.y).toBeLessThan(hubNameBox.y)
+    expect(hubNameBox.y).toBeLessThan(hubSavedBox.y)
+    expect(hubSavedBox.y).toBeLessThan(hubCategoryBox.y)
+    expect(hubCategoryBox.width / hubBox.width).toBeGreaterThan(0.9)
+    await expect(
+      hubCategories.getByRole('button', { name: 'Skin' }),
+    ).toBeInViewport()
+    await expect(
+      hubCategories.getByRole('button', { name: 'Trails' }),
+    ).toBeInViewport()
     await expect(
       page.getByRole('button', { name: 'Customize' }),
     ).toBeInViewport()
