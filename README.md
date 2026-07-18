@@ -93,7 +93,8 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   drop-offs, active minimap/town-map markers, per-stop coin rewards, and time
   bonuses.
 - Coin shop, unlockable avatar items, body/shirt colours, hat placeholder, and
-  trail placeholder.
+  equipped avatar trails with colorful ribbon and spark effects in the live 3D
+  world.
 - Original superhero-style avatar skins with capes, chest emblems, suit trim,
   gloves, armour panels, and a dedicated Hero Skins tab in Clothing.
 - Layered grid-based town generation with shared road coordinates, terrain
@@ -530,6 +531,10 @@ startup no longer deletes Android WebView persistent storage, so
 IndexedDB/localForage data for saved characters, NPC friends, quests, messages,
 coins, settings, and built worlds stays intact while stale bundle caches are
 still refreshed.
+
+The `v1.5.61` APK replaces the old single-circle equipped trail placeholder
+with live 3D ribbon and spark trails for Spark, Rainbow, Neon, Galaxy, and Star
+trail items.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

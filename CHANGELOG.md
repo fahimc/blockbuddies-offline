@@ -18,6 +18,25 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.61-trail-effects] - 2026-07-18
+
+### Added
+
+- Added a reusable live avatar trail renderer with ribbon and spark pieces for Spark, Rainbow, Neon, Galaxy, and Star trails.
+- Added unit regression coverage to ensure trail items do not fall back to a single placeholder circle.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.61` / `10561`.
+
+### Fixed
+
+- Fixed equipped trail purchases appearing in the 3D world as only one colored circle instead of the colorful trail advertised by the shop/customizer.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.60-preserve-game-saves] - 2026-07-18
 
 ### Added

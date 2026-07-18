@@ -96,6 +96,7 @@ import {
   playerStrafeFromInput,
 } from './movement'
 import { avatarSleepRotation } from './sleepPose'
+import { avatarTrailPieces } from './avatarTrail'
 import {
   coreActivityPositions,
   coreCoinPositions,
@@ -2611,16 +2612,7 @@ function PlayerController({
 
   return (
     <group ref={group} position={playerPosition}>
-      {avatar.trail !== 'none' ? (
-        <mesh position={[0, 0.15, -0.8]}>
-          <sphereGeometry args={[0.18, 12, 12]} />
-          <meshStandardMaterial
-            color="#f0abfc"
-            emissive="#f0abfc"
-            emissiveIntensity={0.8}
-          />
-        </mesh>
-      ) : null}
+      <AvatarTrail trail={avatar.trail} />
       <BlockAvatar
         bodyColor={avatar.bodyColor}
         shirtColor={avatar.shirtColor}
@@ -2651,6 +2643,47 @@ function PlayerController({
                 : 'idle'
         }
       />
+    </group>
+  )
+}
+
+function AvatarTrail({ trail }: { trail: ShopItemId | 'none' }) {
+  const group = useRef<THREE.Group>(null)
+  const pieces = useMemo(() => avatarTrailPieces(trail), [trail])
+
+  useFrame(({ clock }) => {
+    if (!group.current) return
+    group.current.position.y = Math.sin(clock.elapsedTime * 3.8) * 0.025
+    group.current.children.forEach((child, index) => {
+      child.rotation.z += (index % 2 === 0 ? 1 : -1) * 0.006
+    })
+  })
+
+  if (pieces.length === 0) return null
+
+  return (
+    <group ref={group} position={[0, 0.08, -0.08]}>
+      {pieces.map((piece) => (
+        <mesh
+          key={piece.id}
+          position={piece.position}
+          rotation={piece.rotation}
+        >
+          {piece.kind === 'ribbon' ? (
+            <boxGeometry args={piece.size} />
+          ) : (
+            <octahedronGeometry args={[piece.size[0], 0]} />
+          )}
+          <meshStandardMaterial
+            color={piece.color}
+            emissive={piece.emissive}
+            emissiveIntensity={piece.kind === 'ribbon' ? 0.75 : 1.35}
+            transparent
+            opacity={piece.opacity}
+            roughness={0.35}
+          />
+        </mesh>
+      ))}
     </group>
   )
 }

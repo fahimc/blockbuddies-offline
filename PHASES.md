@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase trail effects
+
+- [x] Replace the single-circle equipped trail placeholder in gameplay.
+- [x] Render Spark, Rainbow, Neon, Galaxy, and Star trails as colorful 3D ribbons and sparks.
+- [x] Add regression coverage so trail items require multi-piece trail visuals.
+- [x] Update README and changelog for the trail-effect fix.
+- [x] Package and release Android debug APK for the trail-effect update.
+
 ## Post-phase update-safe persistence
 
 - [x] Stop Android startup cleanup from deleting WebView persistent storage.
