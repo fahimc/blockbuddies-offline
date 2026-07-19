@@ -145,6 +145,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Saved custom friends can be created from the Buddies menu, added back into
   the town, shown on the mini-map/full map, persisted locally, and messaged
   through predefined inbox threads.
+- The full map can select any created friend, set a target at a named
+  destination or arbitrary generated-world coordinate, and issue a
+  deterministic road-grid walk command or an instant teleport. The live
+  position is shared by the 3D world, mini-map, full map, saves, and Local
+  Party snapshots.
 - Created friends are shared into Local Party sessions so connected players can
   see the custom NPCs you add to the town.
 - Offline badges, leaderboard, emotes, build/place mode, and local server list.
@@ -590,6 +595,12 @@ and zoomable world map. Central Buddy Town stays at its established coordinates,
 while Football Stadium occupies deterministic chunk `(2, -2)` at world position
 `(90, -42)`. Predictive chunk prefetch, bounded caches, map detail levels, and
 instanced 3D rendering keep generated areas responsive as players travel.
+
+The `v1.5.71` APK adds map-controlled created characters. Select a character
+from the full map, tap any generated-world point or destination, then choose
+Walk there or Teleport. Walking follows deterministic road-grid waypoints, and
+the same timestamped position now drives the 3D avatar, mini-map marker, full
+map marker, local save, and Local Party sync.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

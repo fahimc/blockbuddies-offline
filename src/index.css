@@ -416,6 +416,14 @@ canvas {
   cursor: grabbing;
 }
 
+.bb-town-map.placing-character {
+  cursor: crosshair;
+}
+
+.bb-town-map.placing-character:active {
+  cursor: crosshair;
+}
+
 .bb-world-map-canvas {
   position: absolute;
   z-index: 0;
@@ -665,6 +673,39 @@ canvas {
   box-shadow: 0 0.3rem 0.7rem rgb(15 23 42 / 0.28);
 }
 
+button.bb-town-map-friend {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.bb-town-map-friend.saved > span {
+  position: absolute;
+  top: calc(100% + 0.24rem);
+  left: 50%;
+  max-width: 7rem;
+  overflow: hidden;
+  border-radius: 0.3rem;
+  background: rgb(15 23 42 / 0.88);
+  padding: 0.12rem 0.3rem;
+  color: white;
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.bb-town-map-friend.saved.selected {
+  z-index: 10;
+  outline: 0.2rem solid #facc15;
+  outline-offset: 0.12rem;
+}
+
 .bb-town-map-friend.local {
   width: 1.12rem;
   height: 1.12rem;
@@ -672,6 +713,28 @@ canvas {
   box-shadow:
     0 0 0 0.22rem rgb(34 197 94 / 0.18),
     0 0.3rem 0.75rem rgb(15 23 42 / 0.32);
+}
+
+.bb-town-map-character-target {
+  position: absolute;
+  z-index: 11;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 0.13rem solid white;
+  border-radius: 999px 999px 999px 0;
+  background: #ef4444;
+  color: white;
+  transform: translate(-50%, -75%) rotate(-45deg);
+  box-shadow:
+    0 0 0 0.22rem rgb(239 68 68 / 0.25),
+    0 0.4rem 0.8rem rgb(15 23 42 / 0.35);
+  pointer-events: none;
+}
+
+.bb-town-map-character-target > svg {
+  transform: rotate(45deg);
 }
 
 .bb-town-map-key {
@@ -701,9 +764,73 @@ canvas {
 
 .bb-map-destinations {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   min-height: 0;
   background: #f8fafc;
+}
+
+.bb-map-characters {
+  min-width: 0;
+  border-bottom: 0.08rem solid #dbe5f0;
+  background: #eef6ff;
+}
+
+.bb-map-characters .bb-map-destinations-heading {
+  border-bottom: 0;
+  padding-bottom: 0.35rem;
+}
+
+.bb-map-character-list {
+  display: flex;
+  gap: 0.38rem;
+  overflow-x: auto;
+  padding: 0 0.75rem 0.62rem;
+}
+
+.bb-map-character-list > button {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 8.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0.1rem solid #bfdbfe;
+  border-radius: 999px;
+  background: white;
+  padding: 0.25rem 0.48rem 0.25rem 0.28rem;
+  color: #1e3a5f;
+  font-size: 0.64rem;
+  box-shadow: 0 0.15rem 0.35rem rgb(15 23 42 / 0.08);
+}
+
+.bb-map-character-list > button > span {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  color: white;
+}
+
+.bb-map-character-list > button > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-map-character-list > button.selected {
+  border-color: #1673d1;
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 0.08rem #1673d1;
+}
+
+.bb-map-character-empty {
+  margin: 0;
+  padding: 0 0.75rem 0.65rem;
+  color: #64748b;
+  font-size: 0.64rem;
+  font-weight: 750;
 }
 
 .bb-map-destinations-heading {
@@ -853,6 +980,50 @@ canvas {
   white-space: nowrap;
 }
 
+.bb-map-character-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.bb-map-character-actions > button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 0.1rem solid #0f5ca8;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.72rem;
+  color: white;
+  font-size: 0.74rem;
+  font-weight: 950;
+  touch-action: manipulation;
+}
+
+.bb-map-character-actions > button:disabled {
+  cursor: not-allowed;
+  border-color: #94a3b8;
+  background: #94a3b8;
+  box-shadow: none;
+}
+
+.bb-map-walk-button {
+  background: linear-gradient(180deg, #3b9cf2, #1673d1);
+  box-shadow: 0 0.3rem 0.65rem rgb(22 115 209 / 0.22);
+}
+
+.bb-map-teleport-button {
+  background: linear-gradient(180deg, #a855f7, #7e22ce);
+  box-shadow: 0 0.3rem 0.65rem rgb(126 34 206 / 0.22);
+}
+
+.bb-map-character-actions > .bb-map-character-done {
+  border-color: #64748b;
+  background: white;
+  color: #475569;
+}
+
 .bb-map-travel-notice {
   grid-column: 1 / -1;
   margin: -0.2rem 0 0;
@@ -977,6 +1148,20 @@ canvas {
 
   .bb-map-travel-button {
     min-width: 8.8rem;
+  }
+
+  .bb-map-travel-bar.character-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .bb-map-character-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .bb-map-character-actions > button {
+    min-height: 2.45rem;
+    padding-inline: 0.48rem;
   }
 }
 

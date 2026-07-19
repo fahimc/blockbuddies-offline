@@ -7,11 +7,15 @@ import {
   Hammer,
   House,
   Map as MapIcon,
+  MapPin,
+  Move,
   Navigation,
   ShoppingBag,
   Sparkles,
   Trees,
+  UserRound,
   X,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -47,7 +51,12 @@ import {
   staticTownBuildings,
 } from '../game/townPlacement'
 import { parkingLot } from '../game/vehicles'
-import type { LocationId, Vec3 } from '../game/types'
+import type { LocationId, SavedFriend, Vec3 } from '../game/types'
+import {
+  savedFriendIsMoving,
+  savedFriendPositionAt,
+  snapSavedFriendDestination,
+} from '../game/savedFriendMovement'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
 import { miniMapPlayerRotation } from './miniMapMath'
@@ -56,6 +65,7 @@ import {
   panWorldMap,
   pointIsInsideMap,
   visibleWorldBounds,
+  worldPointAtMapPixel,
   worldMapPoint,
   zoomWorldMapAt,
   type WorldMapCamera,
@@ -101,10 +111,14 @@ export function MapPanel() {
   )
   const miniGame = useGameStore((state) => state.miniGame)
   const savedFriends = useGameStore((state) => state.savedFriends)
+  const moveSavedFriend = useGameStore((state) => state.moveSavedFriend)
+  const teleportSavedFriend = useGameStore((state) => state.teleportSavedFriend)
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
   const [selectedId, setSelectedId] = useState<LocationId>(
     nearbyLocation ?? 'spawn',
   )
+  const [selectedFriendId, setSelectedFriendId] = useState<string>()
+  const [friendTarget, setFriendTarget] = useState<Vec3>()
   const selected = useMemo(
     () =>
       worldLocations.find((location) => location.id === selectedId) ??
@@ -112,6 +126,9 @@ export function MapPanel() {
     [selectedId],
   )
   const mapPlayerPosition = activeInterior?.returnPosition ?? playerPosition
+  const selectedFriend = savedFriends.find(
+    (friend) => friend.id === selectedFriendId,
+  )
   const travelBlocked = obbyActive || miniGameRunning
   const activeTarget = activeMiniGameTarget(miniGame)
   const distanceMeters = Math.max(
@@ -120,6 +137,31 @@ export function MapPanel() {
       distance2d(mapPlayerPosition, selected.travelPosition) / unitsPerMeter,
     ),
   )
+  const friendTargetName = friendTarget
+    ? worldLocations.find(
+        (location) => distance2d(location.travelPosition, friendTarget) < 0.75,
+      )?.label
+    : undefined
+
+  useEffect(() => {
+    if (selectedFriendId && !selectedFriend) {
+      setSelectedFriendId(undefined)
+      setFriendTarget(undefined)
+    }
+  }, [selectedFriend, selectedFriendId])
+
+  const selectLocation = (id: LocationId) => {
+    setSelectedId(id)
+    if (!selectedFriendId) return
+    const location = worldLocations.find((entry) => entry.id === id)
+    if (location)
+      setFriendTarget(snapSavedFriendDestination(location.travelPosition))
+  }
+
+  const selectFriend = (friend: SavedFriend) => {
+    setSelectedFriendId(friend.id)
+    setFriendTarget(snapSavedFriendDestination(selected.travelPosition))
+  }
 
   return (
     <div
@@ -137,7 +179,7 @@ export function MapPanel() {
       >
         <header className="bb-map-header">
           <div>
-            <span className="bb-map-eyebrow">Fast Travel</span>
+            <span className="bb-map-eyebrow">Travel & character commands</span>
             <h2 id="world-map-title">
               <MapIcon size={24} aria-hidden />
               Town Map
@@ -163,12 +205,54 @@ export function MapPanel() {
             localPlayers={Object.values(remotePlayers).filter(
               (player) => !player.interiorId,
             )}
-            onSelect={setSelectedId}
+            selectedFriendId={selectedFriendId}
+            friendTarget={friendTarget}
+            onSelect={selectLocation}
+            onSelectFriend={(id) => {
+              const friend = savedFriends.find((entry) => entry.id === id)
+              if (friend) selectFriend(friend)
+            }}
+            onSetFriendTarget={setFriendTarget}
           />
 
           <nav className="bb-map-destinations" aria-label="Travel destinations">
+            <div className="bb-map-characters">
+              <div className="bb-map-destinations-heading">
+                <strong>Your characters</strong>
+                <span>{savedFriends.length || 'None yet'}</span>
+              </div>
+              {savedFriends.length ? (
+                <div className="bb-map-character-list">
+                  {savedFriends.map((friend) => (
+                    <button
+                      key={friend.id}
+                      type="button"
+                      className={
+                        selectedFriendId === friend.id ? 'selected' : undefined
+                      }
+                      onClick={() => selectFriend(friend)}
+                      aria-pressed={selectedFriendId === friend.id}
+                      aria-label={`Select ${friend.name} on map`}
+                    >
+                      <span
+                        style={{ backgroundColor: friend.avatar.shirtColor }}
+                      >
+                        <UserRound size={15} aria-hidden />
+                      </span>
+                      <strong>{friend.name}</strong>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="bb-map-character-empty">
+                  Make a character in Friends to command them here.
+                </p>
+              )}
+            </div>
             <div className="bb-map-destinations-heading">
-              <strong>Choose a place</strong>
+              <strong>
+                {selectedFriend ? 'Choose their target' : 'Choose a place'}
+              </strong>
               <span>{worldLocations.length} destinations</span>
             </div>
             <div className="bb-map-destination-list">
@@ -177,52 +261,113 @@ export function MapPanel() {
                   key={location.id}
                   location={location}
                   selected={location.id === selectedId}
-                  onSelect={setSelectedId}
+                  onSelect={selectLocation}
                 />
               ))}
             </div>
           </nav>
         </div>
 
-        <footer className="bb-map-travel-bar">
-          <div className="bb-map-travel-summary">
-            <span
-              className="bb-map-selected-icon"
-              style={{ backgroundColor: selected.color }}
-            >
-              <SelectedIcon location={selected} size={21} />
-            </span>
-            <span>
-              <strong>{selected.label}</strong>
-              <small>
-                {activeInterior
-                  ? `Leave ${activeInterior.title} and travel`
-                  : `${distanceMeters} m away`}{' '}
-                - {selected.description}
-              </small>
-            </span>
-          </div>
-          <button
-            type="button"
-            className="bb-map-travel-button"
-            disabled={travelBlocked}
-            onClick={() => travelToLocation(selected.id)}
-            aria-label={`Travel to ${selected.label}`}
-          >
-            <Navigation size={21} aria-hidden />
-            <span>
-              {travelBlocked
-                ? 'Activity in progress'
-                : `Travel to ${shortLabels[selected.id]}`}
-            </span>
-          </button>
-          {travelBlocked ? (
-            <p className="bb-map-travel-notice" role="status">
-              {activeTarget
-                ? `Active target: ${activeTarget.mapLabel ?? activeTarget.label}. Finish or cancel the active game before fast travel.`
-                : 'Finish or cancel the active game before using fast travel.'}
-            </p>
-          ) : null}
+        <footer
+          className={`bb-map-travel-bar ${selectedFriend ? 'character-mode' : ''}`}
+        >
+          {selectedFriend ? (
+            <>
+              <div className="bb-map-travel-summary">
+                <span
+                  className="bb-map-selected-icon"
+                  style={{ backgroundColor: selectedFriend.avatar.shirtColor }}
+                >
+                  <UserRound size={21} aria-hidden />
+                </span>
+                <span>
+                  <strong>{selectedFriend.name}</strong>
+                  <small>
+                    {friendTarget
+                      ? `Target: ${friendTargetName ?? `X ${friendTarget[0]}, Z ${friendTarget[2]}`}`
+                      : 'Tap anywhere on the map or choose a place'}
+                  </small>
+                </span>
+              </div>
+              <div className="bb-map-character-actions">
+                <button
+                  type="button"
+                  className="bb-map-walk-button"
+                  disabled={!friendTarget}
+                  onClick={() =>
+                    friendTarget &&
+                    moveSavedFriend(selectedFriend.id, friendTarget)
+                  }
+                  aria-label={`Send ${selectedFriend.name} walking to target`}
+                >
+                  <Move size={18} aria-hidden /> Walk there
+                </button>
+                <button
+                  type="button"
+                  className="bb-map-teleport-button"
+                  disabled={!friendTarget}
+                  onClick={() =>
+                    friendTarget &&
+                    teleportSavedFriend(selectedFriend.id, friendTarget)
+                  }
+                  aria-label={`Teleport ${selectedFriend.name} to target`}
+                >
+                  <Zap size={18} aria-hidden /> Teleport
+                </button>
+                <button
+                  type="button"
+                  className="bb-map-character-done"
+                  onClick={() => {
+                    setSelectedFriendId(undefined)
+                    setFriendTarget(undefined)
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bb-map-travel-summary">
+                <span
+                  className="bb-map-selected-icon"
+                  style={{ backgroundColor: selected.color }}
+                >
+                  <SelectedIcon location={selected} size={21} />
+                </span>
+                <span>
+                  <strong>{selected.label}</strong>
+                  <small>
+                    {activeInterior
+                      ? `Leave ${activeInterior.title} and travel`
+                      : `${distanceMeters} m away`}{' '}
+                    - {selected.description}
+                  </small>
+                </span>
+              </div>
+              <button
+                type="button"
+                className="bb-map-travel-button"
+                disabled={travelBlocked}
+                onClick={() => travelToLocation(selected.id)}
+                aria-label={`Travel to ${selected.label}`}
+              >
+                <Navigation size={21} aria-hidden />
+                <span>
+                  {travelBlocked
+                    ? 'Activity in progress'
+                    : `Travel to ${shortLabels[selected.id]}`}
+                </span>
+              </button>
+              {travelBlocked ? (
+                <p className="bb-map-travel-notice" role="status">
+                  {activeTarget
+                    ? `Active target: ${activeTarget.mapLabel ?? activeTarget.label}. Finish or cancel the active game before fast travel.`
+                    : 'Finish or cancel the active game before using fast travel.'}
+                </p>
+              ) : null}
+            </>
+          )}
         </footer>
       </section>
     </div>
@@ -236,7 +381,11 @@ function TownMap({
   activeTarget,
   savedFriends,
   localPlayers,
+  selectedFriendId,
+  friendTarget,
   onSelect,
+  onSelectFriend,
+  onSetFriendTarget,
 }: {
   selectedId: LocationId
   playerPosition: Vec3
@@ -247,20 +396,21 @@ function TownMap({
     position: Vec3
     kind?: string
   }
-  savedFriends: {
-    id: string
-    name: string
-    inWorld: boolean
-    route: LocationId[]
-  }[]
+  savedFriends: SavedFriend[]
   localPlayers: { id: string; name: string; position: Vec3 }[]
+  selectedFriendId?: string
+  friendTarget?: Vec3
   onSelect: (id: LocationId) => void
+  onSelectFriend: (id: string) => void
+  onSetFriendTarget: (target: Vec3) => void
 }) {
   const settings = useGameStore((state) => state.settings)
   const mapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const previousGesture = useRef<MapGesture | undefined>(undefined)
+  const pointerStarts = useRef(new Map<number, { x: number; y: number }>())
+  const draggedPointers = useRef(new Set<number>())
   const initialViewport = useMemo(() => ({ width: 640, height: 400 }), [])
   const [viewport, setViewport] = useState<WorldMapViewport>(initialViewport)
   const [camera, setCamera] = useState<WorldMapCamera>(() =>
@@ -270,6 +420,50 @@ function TownMap({
     ),
   )
   const fittedToElement = useRef(false)
+  const [friendClock, setFriendClock] = useState(() => Date.now())
+  const friendPositions = useMemo(
+    () =>
+      savedFriends
+        .filter((friend) => friend.inWorld)
+        .map((friend, index) => ({
+          friend,
+          position: savedFriendPositionAt(friend, friendClock, index),
+        })),
+    // The small clock update is intentionally the shared animation cadence for
+    // the DOM map; the 3D scene interpolates the same command every frame.
+    [savedFriends, friendClock],
+  )
+
+  useEffect(() => {
+    const isWalking = (now: number) =>
+      savedFriends.some(
+        (friend, index) =>
+          friend.inWorld && savedFriendIsMoving(friend, now, index),
+      )
+    if (!isWalking(Date.now())) return
+    const interval = window.setInterval(() => {
+      const now = Date.now()
+      setFriendClock(now)
+      if (!isWalking(now)) window.clearInterval(interval)
+    }, 180)
+    return () => window.clearInterval(interval)
+  }, [savedFriends])
+
+  useEffect(() => {
+    if (!selectedFriendId) return
+    const selectedIndex = savedFriends.findIndex(
+      (friend) => friend.id === selectedFriendId,
+    )
+    const friend = savedFriends[selectedIndex]
+    if (!friend) return
+    const position = savedFriendPositionAt(friend, Date.now(), selectedIndex)
+    setCamera((current) => ({
+      ...current,
+      centerX: position[0],
+      centerZ: position[2],
+      pixelsPerUnit: Math.max(4, current.pixelsPerUnit),
+    }))
+  }, [savedFriends, selectedFriendId])
 
   useEffect(() => {
     const element = mapRef.current
@@ -359,17 +553,69 @@ function TownMap({
       x: event.clientX,
       y: event.clientY,
     })
+    pointerStarts.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    })
+    draggedPointers.current.delete(event.pointerId)
+    if (pointers.current.size > 1)
+      pointers.current.forEach((_, pointerId) =>
+        draggedPointers.current.add(pointerId),
+      )
     previousGesture.current = mapGesture(pointers.current)
   }
 
   const pointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(event.pointerId)) return
     event.preventDefault()
+    const start = pointerStarts.current.get(event.pointerId)
+    if (
+      start &&
+      Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6
+    )
+      draggedPointers.current.add(event.pointerId)
     updateGesture(event)
   }
 
   const pointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pointerStart = pointerStarts.current.get(event.pointerId)
+    const wasDragged = draggedPointers.current.has(event.pointerId)
+    const wasSinglePointer = pointers.current.size === 1
     pointers.current.delete(event.pointerId)
+    pointerStarts.current.delete(event.pointerId)
+    draggedPointers.current.delete(event.pointerId)
+    previousGesture.current = mapGesture(pointers.current)
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    if (
+      selectedFriendId &&
+      pointerStart &&
+      !wasDragged &&
+      wasSinglePointer &&
+      Math.hypot(
+        event.clientX - pointerStart.x,
+        event.clientY - pointerStart.y,
+      ) <= 6
+    ) {
+      const bounds = event.currentTarget.getBoundingClientRect()
+      const worldPoint = worldPointAtMapPixel(
+        {
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        },
+        camera,
+        viewport,
+      )
+      onSetFriendTarget(
+        snapSavedFriendDestination([worldPoint.x, 0, worldPoint.z]),
+      )
+    }
+  }
+
+  const pointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId)
+    pointerStarts.current.delete(event.pointerId)
+    draggedPointers.current.delete(event.pointerId)
     previousGesture.current = mapGesture(pointers.current)
     if (event.currentTarget.hasPointerCapture?.(event.pointerId))
       event.currentTarget.releasePointerCapture?.(event.pointerId)
@@ -401,13 +647,13 @@ function TownMap({
   return (
     <div
       ref={mapRef}
-      className="bb-town-map"
+      className={`bb-town-map ${selectedFriendId ? 'placing-character' : ''}`}
       aria-label="Draggable BlockBuddies world map"
       data-testid="town-map"
       onPointerDown={pointerDown}
       onPointerMove={pointerMove}
       onPointerUp={pointerUp}
-      onPointerCancel={pointerUp}
+      onPointerCancel={pointerCancel}
       onWheel={wheel}
     >
       <canvas ref={canvasRef} className="bb-world-map-canvas" aria-hidden />
@@ -448,7 +694,11 @@ function TownMap({
           onClick={() =>
             setCamera(
               fitWorldMapPoints(
-                worldLocations.map((location) => location.position),
+                [
+                  ...worldLocations.map((location) => location.position),
+                  ...friendPositions.map((entry) => entry.position),
+                  ...(friendTarget ? [friendTarget] : []),
+                ],
                 viewport,
               ),
             )
@@ -492,16 +742,26 @@ function TownMap({
         title="You are here"
         aria-label="Your current position"
       />
-      {savedFriends
-        .filter((friend) => friend.inWorld)
-        .map((friend, index) => (
-          <span
-            key={friend.id}
-            className="bb-town-map-friend saved"
-            style={markerStyle(friendMapPosition(friend.route, index))}
-            title={friend.name}
-          />
-        ))}
+      {friendPositions.map(({ friend, position }) => (
+        <button
+          key={friend.id}
+          type="button"
+          className={`bb-town-map-friend saved ${selectedFriendId === friend.id ? 'selected' : ''}`}
+          style={{
+            ...markerStyle(position),
+            backgroundColor: friend.avatar.shirtColor,
+          }}
+          title={`${friend.name}${savedFriendIsMoving(friend) ? ' (walking)' : ''}`}
+          aria-label={`Select ${friend.name} on map`}
+          aria-pressed={selectedFriendId === friend.id}
+          data-testid={`map-friend-${friend.id}`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onSelectFriend(friend.id)}
+        >
+          <UserRound size={11} aria-hidden />
+          <span>{friend.name}</span>
+        </button>
+      ))}
       {localPlayers.map((player) => (
         <span
           key={player.id}
@@ -520,8 +780,21 @@ function TownMap({
           {activeTarget.mapLabel ?? activeTarget.label}
         </span>
       ) : null}
+      {friendTarget && selectedFriendId ? (
+        <span
+          className="bb-town-map-character-target"
+          style={markerStyle(friendTarget)}
+          data-testid="map-character-target"
+          title={`Character target: X ${friendTarget[0]}, Z ${friendTarget[2]}`}
+        >
+          <MapPin size={18} aria-hidden />
+        </span>
+      ) : null}
       <span className="bb-town-map-key">
-        <span /> Drag to explore / pinch or wheel to zoom
+        <span />{' '}
+        {selectedFriendId
+          ? 'Tap to set target / drag to explore'
+          : 'Drag to explore / pinch or wheel to zoom'}
       </span>
     </div>
   )
@@ -889,16 +1162,6 @@ function fillWorldRect(
     width * camera.pixelsPerUnit,
     depth * camera.pixelsPerUnit,
   )
-}
-
-function friendMapPosition(route: LocationId[], index: number): Vec3 {
-  const routeIds = route.length ? route : ['spawn']
-  const location =
-    worldLocations.find(
-      (entry) => entry.id === routeIds[index % routeIds.length],
-    ) ?? worldLocations[0]
-  const offset = (index % 4) * 0.9
-  return [location.position[0] + offset, 0, location.position[2] - offset]
 }
 
 function DestinationButton({

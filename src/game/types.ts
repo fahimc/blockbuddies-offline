@@ -257,12 +257,22 @@ export type SavedAvatarStyle = {
   createdAt: number
 }
 
+export type SavedFriendMovement = {
+  mode: 'walk'
+  startedAt: number
+  speed: number
+  waypoints: Vec3[]
+  destination: Vec3
+}
+
 export type SavedFriend = {
   id: string
   name: string
   avatar: AvatarSettings
   inWorld: boolean
   route: LocationId[]
+  position?: Vec3
+  movement?: SavedFriendMovement
   createdAt: number
 }
 

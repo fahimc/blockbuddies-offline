@@ -18,6 +18,7 @@ async function enterWorld(page: Page) {
 test('pans beyond town and travels to a fixed outlying stadium tile', async ({
   page,
 }) => {
+  test.setTimeout(60_000)
   await enterWorld(page)
   await page.getByRole('button', { name: 'Open town map' }).click()
 

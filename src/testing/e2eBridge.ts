@@ -6,6 +6,7 @@ import type {
   MiniGameRuntime,
   PlayerEmote,
   QuestProgress,
+  SavedFriend,
   Vec3,
 } from '../game/types'
 import { obbyCheckpoints, obbyFinish } from '../ai/obby'
@@ -93,6 +94,7 @@ export type GameplayE2ESnapshot = {
   chatTexts: string[]
   placedBlocks: BuildBlock[]
   messageThreads: MessageThread[]
+  savedFriends: SavedFriend[]
   nearbyFootballBallId?: string
   footballActionSequence: number
   footballActionKind?: string
@@ -450,6 +452,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     chatTexts: game.chat.map((message) => message.text),
     placedBlocks: game.placedBlocks,
     messageThreads: game.messageThreads,
+    savedFriends: game.savedFriends,
     nearbyFootballBallId: game.nearbyFootballBallId,
     footballActionSequence: game.footballActionSequence,
     footballActionKind: game.footballActionKind,

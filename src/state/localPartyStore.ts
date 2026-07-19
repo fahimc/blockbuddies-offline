@@ -10,6 +10,11 @@ import type {
   Vec3,
 } from '../game/types'
 import { worldLocations } from '../data/world'
+import {
+  fallbackSavedFriendPosition,
+  normalizeSavedFriendPosition,
+  sanitizeSavedFriendMovement,
+} from '../game/savedFriendMovement'
 import { sanitizeBuildPieceName } from '../data/buildPieces'
 import {
   discoverSignalRooms,
@@ -388,16 +393,44 @@ function sanitizePartySavedFriends(
   friends: SavedFriend[] | undefined,
 ): SavedFriend[] | undefined {
   if (!friends?.length) return undefined
-  return friends.slice(0, maxSyncedSavedFriends).map((friend, index) => ({
-    id: String(friend.id).slice(0, 64),
-    name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
-    avatar: sanitizePartyAvatar(friend.avatar),
-    inWorld: Boolean(friend.inWorld),
-    route: sanitizeFriendRoute(friend.route, index),
-    createdAt: Number.isFinite(friend.createdAt)
-      ? friend.createdAt
-      : Date.now(),
-  }))
+  return friends.slice(0, maxSyncedSavedFriends).map((friend, index) => {
+    const route = sanitizeFriendRoute(friend.route, index)
+    return {
+      id: String(friend.id).slice(0, 64),
+      name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
+      avatar: sanitizePartyAvatar(friend.avatar),
+      inWorld: Boolean(friend.inWorld),
+      route,
+      position: normalizeSavedFriendPosition(
+        friend.position,
+        fallbackSavedFriendPosition(route, index),
+      ),
+      movement: sanitizeSavedFriendMovement(friend.movement),
+      createdAt: Number.isFinite(friend.createdAt)
+        ? friend.createdAt
+        : Date.now(),
+    }
+  })
+}
+
+export function rebasePartySavedFriendClocks(
+  friends: SavedFriend[] | undefined,
+  senderUpdatedAt: number,
+  receivedAt: number,
+) {
+  if (!friends || !Number.isFinite(senderUpdatedAt)) return friends
+  return friends.map((friend) =>
+    friend.movement
+      ? {
+          ...friend,
+          movement: {
+            ...friend.movement,
+            startedAt:
+              receivedAt - (senderUpdatedAt - friend.movement.startedAt),
+          },
+        }
+      : friend,
+  )
 }
 
 function sendPartyMessage(message: LocalPartyMessage) {
@@ -700,12 +733,18 @@ function attachDataChannel(
     }
     if (message.type === 'snapshot') {
       if (message.snapshot.id === get().playerId) return
+      const receivedAt = Date.now()
       set((state) => ({
         remotePlayers: {
           ...state.remotePlayers,
           [message.snapshot.id]: makePartySnapshot({
             ...message.snapshot,
-            updatedAt: Date.now(),
+            savedFriends: rebasePartySavedFriendClocks(
+              message.snapshot.savedFriends,
+              message.snapshot.updatedAt,
+              receivedAt,
+            ),
+            updatedAt: receivedAt,
           }),
         },
       }))

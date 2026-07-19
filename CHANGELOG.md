@@ -18,6 +18,29 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.71-map-character-commands] - 2026-07-19
+
+### Added
+
+- Added a character-command mode to the infinite map with created-character selection, live named markers, arbitrary point targeting, destination shortcuts, walking, and instant teleport.
+- Added deterministic road-grid waypoint planning, timestamped movement interpolation, half-unit target snapping, and persisted/synced movement commands.
+- Added unit, component, Local Party sanitization, and mobile Playwright coverage for character movement and teleporting.
+
+### Changed
+
+- Made the 3D world, mini-map, full map, local saves, and Local Party snapshots consume one shared character position instead of simulating unrelated routes on separate clocks.
+- Cull created-character 3D avatars outside the active streamed world radius and stop full-map character animation updates after arrival.
+- Updated Android and package version metadata to `1.5.71` / `10571`.
+
+### Fixed
+
+- Fixed created characters appearing in different places on the 3D world, mini-map, and full map.
+- Fixed custom characters being visible only as decorative map dots with no way to select or position them.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.70-infinite-world-map] - 2026-07-19
 
 ### Added

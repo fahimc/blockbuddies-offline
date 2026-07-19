@@ -54,6 +54,21 @@ The registry is indexed by every intersecting chunk, not only the owner chunk.
 This lets wide features become visible as soon as any occupied tile enters the
 active streaming window while ensuring the authored assembly is created once.
 
+## Created Character Navigation
+
+Created characters use persisted, timestamped movement commands instead of
+renderer-owned animation clocks. A long trip is converted into a compact path
+through the deterministic horizontal and vertical road coordinates, followed
+by a short final approach to the selected half-unit map target. The full map,
+mini-map, and 3D scene calculate the same live position from those waypoints,
+start time, and speed. Teleport is a separate command that replaces the stored
+position immediately and clears any active walk.
+
+Targets may be named destinations or arbitrary points on the unbounded map.
+Commands and current positions are included in the normal local save and
+bounded Local Party friend snapshot, so reloading or connecting another player
+does not create a second, conflicting simulation.
+
 ## Placement Rules
 
 | Object           | Allowed terrain           | Additional rule                                                                |
@@ -98,6 +113,7 @@ Builder Meadows is available from the town map. It intentionally contains undeve
 - LRU-style limits retain at most 128 generated chunks and 12 composed world windows, preventing an infinite journey from creating infinite memory usage.
 - Procedural geometry with matching shape and material is emitted through instanced meshes instead of one draw call per object.
 - The full map draws nearby chunk detail only at useful zoom levels and falls back to terrain, road, feature, and chunk layers when zoomed out.
+- Created-character map markers update on a low fixed cadence only while a character is moving, while distant 3D character avatars are culled outside the streamed world radius.
 - Roads, ground, parks, and sidewalks remain simple tiled boxes or planes.
 - Placement is resolved once per generated chunk instead of running random collision searches every frame.
 - The plan exposes buildable parcel metadata for future editing tools without adding rendered geometry.

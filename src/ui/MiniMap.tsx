@@ -4,10 +4,20 @@ import { activeMiniGameTarget } from '../ai/miniGameProgress'
 import { worldLocations } from '../data/world'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
-import { createTrafficVehicles, makeTrafficLanes, trafficPositionAtTime, type TrafficLane } from '../game/traffic'
+import {
+  createTrafficVehicles,
+  makeTrafficLanes,
+  trafficPositionAtTime,
+  type TrafficLane,
+} from '../game/traffic'
 import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
-import { miniMapPlayerRotation, miniMapPointPercent, miniMapRoadPercent } from './miniMapMath'
+import { savedFriendPositionAt } from '../game/savedFriendMovement'
+import {
+  miniMapPlayerRotation,
+  miniMapPointPercent,
+  miniMapRoadPercent,
+} from './miniMapMath'
 import {
   centralAvenue,
   horizontalRoadCentersBetween,
@@ -26,9 +36,14 @@ export function MiniMap() {
   const miniGame = useGameStore((state) => state.miniGame)
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
   const lanes = useMemo(() => makeTrafficLanes(), [])
-  const laneById = useMemo(() => new Map<string, TrafficLane>(lanes.map((lane) => [lane.id, lane])), [lanes])
+  const laneById = useMemo(
+    () => new Map<string, TrafficLane>(lanes.map((lane) => [lane.id, lane])),
+    [lanes],
+  )
   const vehicles = useMemo(() => createTrafficVehicles(lanes, 8), [lanes])
-  const [trafficClock, setTrafficClock] = useState(() => performance.now() / 1000)
+  const [trafficClock, setTrafficClock] = useState(
+    () => performance.now() / 1000,
+  )
   const roads = useMemo(() => roadLinesFor(playerPosition), [playerPosition])
 
   useEffect(() => {
@@ -42,31 +57,70 @@ export function MiniMap() {
   const traffic = vehicles.flatMap((vehicle) => {
     const lane = laneById.get(vehicle.laneId)
     if (!lane) return []
-    return [{ id: vehicle.id, color: vehicle.color, position: trafficPositionAtTime(lane, vehicle, trafficClock).position }]
+    return [
+      {
+        id: vehicle.id,
+        color: vehicle.color,
+        position: trafficPositionAtTime(lane, vehicle, trafficClock).position,
+      },
+    ]
   })
   const activeTarget = activeMiniGameTarget(miniGame)
-  const localFriends = Object.values(remotePlayers).filter((player) => !player.interiorId)
+  const localFriends = Object.values(remotePlayers).filter(
+    (player) => !player.interiorId,
+  )
   const savedFriendMarkers = savedFriends
     .filter((friend) => friend.inWorld)
     .map((friend, index) => ({
       id: friend.id,
       name: friend.name,
-      position: friendPositionAt(friend.route, index, Date.now()),
+      position: savedFriendPositionAt(friend, Date.now(), index),
     }))
 
   if (activeInterior) {
     return (
-      <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">
-        <button type="button" className="bb-mini-map-open" onClick={() => setOpenPanel('map')} aria-label="Open town map">
+      <aside
+        className="bb-mini-map"
+        aria-label="Mini map"
+        data-testid="mini-map"
+      >
+        <button
+          type="button"
+          className="bb-mini-map-open"
+          onClick={() => setOpenPanel('map')}
+          aria-label="Open town map"
+        >
           <span className="bb-mini-map-title">
             <MapIcon size={14} aria-hidden />
             <span>Inside - Open Map</span>
           </span>
           <span className="bb-mini-map-surface">
-            <span className="bb-mini-map-road horizontal" style={{ top: '83%', height: '11%', left: '39%', right: 'auto', width: '22%' }} />
-            <span className="bb-mini-map-location" style={{ left: '50%', top: '83%', backgroundColor: '#38bdf8' }} title="Exit" />
-            <span className="bb-mini-map-location" style={{ left: '50%', top: '34%', backgroundColor: '#facc15' }} title={activeInterior.title} />
-            <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
+            <span
+              className="bb-mini-map-road horizontal"
+              style={{
+                top: '83%',
+                height: '11%',
+                left: '39%',
+                right: 'auto',
+                width: '22%',
+              }}
+            />
+            <span
+              className="bb-mini-map-location"
+              style={{ left: '50%', top: '83%', backgroundColor: '#38bdf8' }}
+              title="Exit"
+            />
+            <span
+              className="bb-mini-map-location"
+              style={{ left: '50%', top: '34%', backgroundColor: '#facc15' }}
+              title={activeInterior.title}
+            />
+            <span
+              className="bb-mini-map-player"
+              style={{
+                transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)`,
+              }}
+            />
           </span>
         </button>
       </aside>
@@ -75,39 +129,80 @@ export function MiniMap() {
 
   return (
     <aside className="bb-mini-map" aria-label="Mini map" data-testid="mini-map">
-      <button type="button" className="bb-mini-map-open" onClick={() => setOpenPanel('map')} aria-label="Open town map">
+      <button
+        type="button"
+        className="bb-mini-map-open"
+        onClick={() => setOpenPanel('map')}
+        aria-label="Open town map"
+      >
         <span className="bb-mini-map-title">
           <MapIcon size={14} aria-hidden />
           <span>Open Map</span>
         </span>
         <span className="bb-mini-map-surface">
           {roads.map((road) => (
-            <span key={road.id} className={`bb-mini-map-road ${road.orientation}`} style={road.style} />
-          ))}
-          {worldLocations.filter((location) => isOnMap(location.position, playerPosition)).map((location) => (
             <span
-              key={location.id}
-              className="bb-mini-map-location"
-              style={{ ...pointStyle(location.position, playerPosition), backgroundColor: location.color }}
-              title={location.label}
+              key={road.id}
+              className={`bb-mini-map-road ${road.orientation}`}
+              style={road.style}
             />
           ))}
-          {traffic.filter((vehicle) => isOnMap(vehicle.position, playerPosition)).map((vehicle) => (
-            <span
-              key={vehicle.id}
-              className="bb-mini-map-traffic"
-              style={{ ...pointStyle(vehicle.position, playerPosition), backgroundColor: vehicle.color }}
-            />
-          ))}
-          {bots.filter((bot) => isOnMap(bot.position, playerPosition)).slice(0, 8).map((bot) => (
-            <span key={bot.id} className="bb-mini-map-bot" style={pointStyle(bot.position, playerPosition)} title={bot.id} />
-          ))}
-          {savedFriendMarkers.filter((friend) => isOnMap(friend.position, playerPosition)).map((friend) => (
-            <span key={friend.id} className="bb-mini-map-friend saved" style={pointStyle(friend.position, playerPosition)} title={friend.name} />
-          ))}
-          {localFriends.filter((friend) => isOnMap(friend.position, playerPosition)).map((friend) => (
-            <span key={friend.id} className="bb-mini-map-friend local" style={pointStyle(friend.position, playerPosition)} title={friend.name} />
-          ))}
+          {worldLocations
+            .filter((location) => isOnMap(location.position, playerPosition))
+            .map((location) => (
+              <span
+                key={location.id}
+                className="bb-mini-map-location"
+                style={{
+                  ...pointStyle(location.position, playerPosition),
+                  backgroundColor: location.color,
+                }}
+                title={location.label}
+              />
+            ))}
+          {traffic
+            .filter((vehicle) => isOnMap(vehicle.position, playerPosition))
+            .map((vehicle) => (
+              <span
+                key={vehicle.id}
+                className="bb-mini-map-traffic"
+                style={{
+                  ...pointStyle(vehicle.position, playerPosition),
+                  backgroundColor: vehicle.color,
+                }}
+              />
+            ))}
+          {bots
+            .filter((bot) => isOnMap(bot.position, playerPosition))
+            .slice(0, 8)
+            .map((bot) => (
+              <span
+                key={bot.id}
+                className="bb-mini-map-bot"
+                style={pointStyle(bot.position, playerPosition)}
+                title={bot.id}
+              />
+            ))}
+          {savedFriendMarkers
+            .filter((friend) => isOnMap(friend.position, playerPosition))
+            .map((friend) => (
+              <span
+                key={friend.id}
+                className="bb-mini-map-friend saved"
+                style={pointStyle(friend.position, playerPosition)}
+                title={friend.name}
+              />
+            ))}
+          {localFriends
+            .filter((friend) => isOnMap(friend.position, playerPosition))
+            .map((friend) => (
+              <span
+                key={friend.id}
+                className="bb-mini-map-friend local"
+                style={pointStyle(friend.position, playerPosition)}
+                title={friend.name}
+              />
+            ))}
           {activeTarget ? (
             <span
               className={`bb-mini-map-objective ${activeTarget.kind ?? 'dropoff'}`}
@@ -116,21 +211,16 @@ export function MiniMap() {
               title={activeTarget.mapLabel ?? activeTarget.label}
             />
           ) : null}
-          <span className="bb-mini-map-player" style={{ transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)` }} />
+          <span
+            className="bb-mini-map-player"
+            style={{
+              transform: `translate(-50%, -50%) rotate(${miniMapPlayerRotation(playerYaw)}rad)`,
+            }}
+          />
         </span>
       </button>
     </aside>
   )
-}
-
-function friendPositionAt(route: string[], index: number, now: number): Vec3 {
-  const routeIds = route.length ? route : ['spawn']
-  const slot = Math.floor(now / 9000 + index) % routeIds.length
-  const location = worldLocations.find((entry) => entry.id === routeIds[slot])
-  const wobble = (index % 3) * 1.1
-  return location
-    ? [location.position[0] + wobble, 0, location.position[2] - wobble]
-    : [0, 0, 0]
 }
 
 function roadLinesFor(center: Vec3) {
@@ -139,7 +229,11 @@ function roadLinesFor(center: Vec3) {
   const maxX = center[0] + mapRange / 2
   const minZ = center[2] - mapRange / 2
   const maxZ = center[2] + mapRange / 2
-  const lines: { id: string; orientation: 'vertical' | 'horizontal'; style: Record<string, string> }[] = []
+  const lines: {
+    id: string
+    orientation: 'vertical' | 'horizontal'
+    style: Record<string, string>
+  }[] = []
 
   for (const roadX of verticalRoadCentersBetween(minX, maxX)) {
     lines.push({
@@ -186,7 +280,10 @@ function roadLinesFor(center: Vec3) {
 }
 
 function isOnMap(position: Vec3, center: Vec3) {
-  return Math.abs(position[0] - center[0]) <= mapRange / 2 && Math.abs(position[2] - center[2]) <= mapRange / 2
+  return (
+    Math.abs(position[0] - center[0]) <= mapRange / 2 &&
+    Math.abs(position[2] - center[2]) <= mapRange / 2
+  )
 }
 
 function pointStyle(position: Vec3, center: Vec3) {

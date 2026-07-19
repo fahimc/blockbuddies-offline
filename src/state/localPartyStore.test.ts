@@ -7,6 +7,7 @@ import {
   extractPartyCode,
   isRemoteFresh,
   makePartySnapshot,
+  rebasePartySavedFriendClocks,
   sanitizePartyName,
 } from './localPartyStore'
 import type { AvatarSettings } from '../game/types'
@@ -64,7 +65,9 @@ describe('local party helpers', () => {
   })
 
   it('extracts compact codes from shared text', () => {
-    expect(extractPartyCode('Host invite code\nBBP1.ABC_def-123\nOpen BlockBuddies')).toBe('BBP1.ABC_def-123')
+    expect(
+      extractPartyCode('Host invite code\nBBP1.ABC_def-123\nOpen BlockBuddies'),
+    ).toBe('BBP1.ABC_def-123')
   })
 
   it('rejects invalid party codes', () => {
@@ -168,6 +171,20 @@ describe('local party helpers', () => {
         },
         inWorld: index !== 2,
         route: index === 11 ? ['road' as never, 'school'] : ['spawn', 'park'],
+        position: index === 11 ? [12.3, 9, -4.7] : undefined,
+        movement:
+          index === 11
+            ? {
+                mode: 'walk' as const,
+                startedAt: 90,
+                speed: 99,
+                waypoints: [
+                  [12, 0, -5],
+                  [54, 0, 9],
+                ],
+                destination: [54, 4, 9],
+              }
+            : undefined,
         createdAt: 100 + index,
       })),
       updatedAt: 100,
@@ -179,6 +196,12 @@ describe('local party helpers', () => {
       name: 'Party Pal',
       inWorld: true,
       route: ['school'],
+      position: [12.3, 0, -4.7],
+      movement: expect.objectContaining({
+        mode: 'walk',
+        speed: 8,
+        destination: [54, 0, 9],
+      }),
       avatar: expect.objectContaining({
         bodyColor: '#9a5b43',
         shirtColor: '#a78bfa',
@@ -186,6 +209,43 @@ describe('local party helpers', () => {
       }),
     })
     expect(snapshot.savedFriends?.[2].inWorld).toBe(false)
+  })
+
+  it('rebases synced character movement to the receiving device clock', () => {
+    const friend = makePartySnapshot({
+      id: 'local-clock',
+      name: 'Clock',
+      position: [0, 0, 0],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      savedFriends: [
+        {
+          id: 'walker',
+          name: 'Walker',
+          avatar,
+          inWorld: true,
+          route: ['spawn'],
+          position: [0, 0, 0],
+          movement: {
+            mode: 'walk',
+            startedAt: 1_000,
+            speed: 3,
+            waypoints: [
+              [0, 0, 0],
+              [30, 0, 0],
+            ],
+            destination: [30, 0, 0],
+          },
+          createdAt: 1,
+        },
+      ],
+      updatedAt: 6_000,
+    }).savedFriends
+
+    const rebased = rebasePartySavedFriendClocks(friend, 6_000, 106_000)
+
+    expect(rebased?.[0].movement?.startedAt).toBe(101_000)
   })
 
   it('elects a live explicit host before falling back to deterministic failover', () => {
@@ -212,8 +272,20 @@ describe('local party helpers', () => {
       updatedAt: 1000,
     })
 
-    expect(electLocalPartyHost('local-zzz', { [host.id]: host, [guest.id]: guest }, 1100)).toBe('local-host')
-    expect(electLocalPartyHost('local-zzz', { [host.id]: host, [guest.id]: guest }, 7001)).toBe('local-zzz')
+    expect(
+      electLocalPartyHost(
+        'local-zzz',
+        { [host.id]: host, [guest.id]: guest },
+        1100,
+      ),
+    ).toBe('local-host')
+    expect(
+      electLocalPartyHost(
+        'local-zzz',
+        { [host.id]: host, [guest.id]: guest },
+        7001,
+      ),
+    ).toBe('local-zzz')
   })
 
   it('marks remote players stale after the local party ttl', () => {

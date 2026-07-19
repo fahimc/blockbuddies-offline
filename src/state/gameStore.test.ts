@@ -318,6 +318,40 @@ describe('saved game friends', () => {
       rotation: Math.PI / 2,
     })
   })
+
+  it('persists deterministic walk commands and supports instant map teleport', () => {
+    useGameStore.setState({
+      playerName: 'Fahim',
+      avatar: defaultAvatar,
+      savedFriends: [],
+      messageThreads: [],
+      chat: [],
+    })
+    useGameStore.getState().createSavedFriend('Map Walker', defaultAvatar)
+    const friend = useGameStore.getState().savedFriends[0]
+
+    useGameStore
+      .getState()
+      .moveSavedFriend(friend.id, getLocation('football').travelPosition)
+
+    const walking = useGameStore.getState().savedFriends[0]
+    expect(walking.movement).toMatchObject({
+      mode: 'walk',
+      destination: [90, 0, -33],
+    })
+    expect(walking.movement?.waypoints).toContainEqual([54, 0, 9])
+    expect(makeSaveSnapshot(useGameStore.getState()).savedFriends[0]).toEqual(
+      walking,
+    )
+
+    useGameStore.getState().teleportSavedFriend(friend.id, [-72.24, 5, 54.26])
+
+    expect(useGameStore.getState().savedFriends[0]).toMatchObject({
+      inWorld: true,
+      position: [-72, 0, 54.5],
+      movement: undefined,
+    })
+  })
 })
 
 describe('quest progression', () => {

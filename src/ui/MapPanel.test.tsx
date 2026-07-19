@@ -16,6 +16,7 @@ describe('MapPanel', () => {
       playerYaw: 0,
       obby: { ...state.obby, active: false },
       miniGame: createInitialMiniGame(),
+      savedFriends: [],
       touch: {
         ...state.touch,
         x: 0,
@@ -75,5 +76,40 @@ describe('MapPanel', () => {
       screen.getByRole('button', { name: 'Centre map on player' }),
     )
     expect(screen.getByText('X 0 / Z 4')).toBeVisible()
+  })
+
+  it('selects a created character and sends them walking or teleports them', async () => {
+    const user = userEvent.setup()
+    useGameStore.getState().createSavedFriend('Map Walker')
+    const friend = useGameStore.getState().savedFriends[0]
+    render(<MapPanel />)
+
+    await user.click(
+      screen.getAllByRole('button', {
+        name: 'Select Map Walker on map',
+      })[0],
+    )
+    await user.click(screen.getByTestId('map-marker-football'))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Send Map Walker walking to target',
+      }),
+    )
+
+    expect(useGameStore.getState().savedFriends[0].movement).toMatchObject({
+      mode: 'walk',
+      destination: [90, 0, -33],
+    })
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Teleport Map Walker to target',
+      }),
+    )
+    expect(useGameStore.getState().savedFriends[0]).toMatchObject({
+      position: [90, 0, -33],
+      movement: undefined,
+    })
+    expect(screen.getByTestId(`map-friend-${friend.id}`)).toBeVisible()
   })
 })

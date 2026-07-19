@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase map-controlled created characters
+
+- [x] Give every created character one persisted world position and deterministic movement command.
+- [x] Add road-grid waypoint planning, target snapping, travel timing, and instant teleport logic.
+- [x] Add character selection, arbitrary map-point targeting, named destination targeting, and live map markers.
+- [x] Share the same live position across the 3D world, mini-map, full map, local saves, and Local Party snapshots.
+- [x] Cull distant character avatars with the streamed world radius and stop map updates after arrival.
+- [x] Add unit, component, network sanitization, and mobile browser regression coverage.
+- [x] Package and release the Android debug APK for map-controlled characters.
+
 ## Post-phase infinite world map and deterministic streaming
 
 - [x] Preserve every established Central Buddy Town destination coordinate.

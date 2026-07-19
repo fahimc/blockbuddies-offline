@@ -184,6 +184,7 @@ import type {
   ShopItemId,
   Vec3,
 } from './types'
+import { savedFriendPositionAt } from './savedFriendMovement'
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 const worldActionZIndexRange: [number, number] = [26, 25]
@@ -3491,7 +3492,10 @@ function SavedFriendAvatar({
   messageTargetId,
   messageThreadId,
 }: {
-  friend: Pick<SavedFriend, 'id' | 'name' | 'avatar' | 'route'>
+  friend: Pick<
+    SavedFriend,
+    'id' | 'name' | 'avatar' | 'route' | 'position' | 'movement'
+  >
   index: number
   messageTargetId?: string
   messageThreadId?: string
@@ -3504,31 +3508,25 @@ function SavedFriendAvatar({
   const threadId = messageThreadId ?? friend.id
   const isSelected = selectedMessageTargetId === targetId
   const selectFriend = () => selectMessageTarget(targetId)
-  const target = useRef(new THREE.Vector3())
-  const position = useRef(new THREE.Vector3())
-  const route = friend.route.length ? friend.route : ['spawn']
+  const initialPosition = savedFriendPositionAt(friend, Date.now(), index)
 
-  useFrame((_, delta) => {
-    const routeIndex =
-      Math.floor(performance.now() / 10000 + index) % route.length
-    const location =
-      worldLocations.find((entry) => entry.id === route[routeIndex]) ??
-      worldLocations[0]
-    const offset = (index % 4) * 0.9
-    target.current.set(
-      location.position[0] + offset,
-      avatarGroundOffset,
-      location.position[2] - offset,
-    )
-    if (position.current.lengthSq() === 0) position.current.copy(target.current)
-    const previous = position.current.clone()
-    position.current.lerp(target.current, 1 - Math.exp(-delta * 0.45))
+  useFrame(() => {
+    const now = Date.now()
+    const next = savedFriendPositionAt(friend, now, index)
+    const previous = savedFriendPositionAt(friend, now - 32, index)
     if (!group.current) return
-    group.current.position.copy(position.current)
-    const dx = position.current.x - previous.x
-    const dz = position.current.z - previous.z
+    group.current.position.set(next[0], avatarGroundOffset, next[2])
+    const dx = next[0] - previous[0]
+    const dz = next[2] - previous[2]
     if (Math.hypot(dx, dz) > 0.002)
       group.current.rotation.y = Math.atan2(dx, dz)
+    const game = useGameStore.getState()
+    const streamRadius = (game.settings.worldViewDistance + 1.5) * 36
+    group.current.visible =
+      Math.hypot(
+        next[0] - game.playerPosition[0],
+        next[2] - game.playerPosition[2],
+      ) <= streamRadius
   })
 
   const openThread = () => openMessageThread(threadId, friend.name)
@@ -3536,11 +3534,7 @@ function SavedFriendAvatar({
   return (
     <group
       ref={group}
-      position={[
-        worldLocations[index % worldLocations.length].position[0],
-        avatarGroundOffset,
-        worldLocations[index % worldLocations.length].position[2],
-      ]}
+      position={[initialPosition[0], avatarGroundOffset, initialPosition[2]]}
       onPointerDown={(event) => {
         event.stopPropagation()
         selectFriend()

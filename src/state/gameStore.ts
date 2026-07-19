@@ -68,6 +68,15 @@ import type {
   ShopItemId,
   Vec3,
 } from '../game/types'
+import {
+  createSavedFriendMovement,
+  fallbackSavedFriendPosition,
+  normalizeSavedFriendPosition,
+  sanitizeSavedFriendMovement,
+  savedFriendPositionAt,
+  savedFriendTravelSeconds,
+  snapSavedFriendDestination,
+} from '../game/savedFriendMovement'
 
 export type GameSave = {
   profileComplete: boolean
@@ -207,6 +216,8 @@ type GameState = GameSave & {
   deleteSavedAvatarStyle: (id: string) => void
   createSavedFriend: (name?: string, avatar?: AvatarSettings) => void
   toggleSavedFriendInWorld: (id: string) => void
+  moveSavedFriend: (id: string, destination: Vec3) => void
+  teleportSavedFriend: (id: string, destination: Vec3) => void
   deleteSavedFriend: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
@@ -417,15 +428,21 @@ function sanitizeSavedFriends(
   friends: SavedFriend[] | undefined,
 ): SavedFriend[] {
   if (!friends?.length) return []
-  return friends.slice(0, 12).map((friend, index) => ({
-    ...friend,
-    name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
-    avatar: normalizeSavedAvatar(friend.avatar) ?? defaultAvatar,
-    route: friend.route?.length
+  return friends.slice(0, 12).map((friend, index) => {
+    const route = friend.route?.length
       ? friend.route
-      : friendRoutes[index % friendRoutes.length],
-    inWorld: Boolean(friend.inWorld),
-  }))
+      : (friendRoutes[index % friendRoutes.length] ?? ['spawn'])
+    const fallback = fallbackSavedFriendPosition(route, index)
+    return {
+      ...friend,
+      name: sanitizePartyName(friend.name || `Friend ${index + 1}`),
+      avatar: normalizeSavedAvatar(friend.avatar) ?? defaultAvatar,
+      route,
+      position: normalizeSavedFriendPosition(friend.position, fallback),
+      movement: sanitizeSavedFriendMovement(friend.movement),
+      inWorld: Boolean(friend.inWorld),
+    }
+  })
 }
 
 function ensureMessageThreads(threads?: MessageThread[]): MessageThread[] {
@@ -1547,6 +1564,9 @@ export const useGameStore = create<GameState>((set, get) => ({
           name ?? `${state.playerName} Friend ${state.savedFriends.length + 1}`,
         ) || `Friend ${state.savedFriends.length + 1}`
       const baseAvatar = normalizeSavedAvatar(avatarOverride) ?? state.avatar
+      const route = friendRoutes[
+        state.savedFriends.length % friendRoutes.length
+      ] ?? ['spawn']
       const friend: SavedFriend = {
         id: makeId('saved-friend'),
         name: friendName,
@@ -1563,7 +1583,8 @@ export const useGameStore = create<GameState>((set, get) => ({
               : state.avatar.accentColor),
         },
         inWorld: true,
-        route: friendRoutes[state.savedFriends.length % friendRoutes.length],
+        route,
+        position: fallbackSavedFriendPosition(route, state.savedFriends.length),
         createdAt: Date.now(),
       }
       return {
@@ -1585,6 +1606,57 @@ export const useGameStore = create<GameState>((set, get) => ({
         friend.id === id ? { ...friend, inWorld: !friend.inWorld } : friend,
       ),
     })),
+  moveSavedFriend: (id, destination) =>
+    set((state) => {
+      const now = Date.now()
+      let movedFriend: SavedFriend | undefined
+      let travelSeconds = 0
+      const savedFriends = state.savedFriends.map((friend, index) => {
+        if (friend.id !== id) return friend
+        const position = savedFriendPositionAt(friend, now, index)
+        const movement = createSavedFriendMovement(
+          { ...friend, position },
+          destination,
+          now,
+          index,
+        )
+        travelSeconds = savedFriendTravelSeconds(movement)
+        movedFriend = friend
+        return { ...friend, inWorld: true, position, movement }
+      })
+      if (!movedFriend) return state
+      return {
+        savedFriends,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(
+            `${movedFriend.name} is walking to the map target (about ${travelSeconds}s)`,
+          ),
+        ],
+      }
+    }),
+  teleportSavedFriend: (id, destination) =>
+    set((state) => {
+      const target = snapSavedFriendDestination(destination)
+      const friend = state.savedFriends.find((entry) => entry.id === id)
+      if (!friend) return state
+      return {
+        savedFriends: state.savedFriends.map((entry) =>
+          entry.id === id
+            ? {
+                ...entry,
+                inWorld: true,
+                position: target,
+                movement: undefined,
+              }
+            : entry,
+        ),
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${friend.name} teleported to the map target`),
+        ],
+      }
+    }),
   deleteSavedFriend: (id) =>
     set((state) => ({
       savedFriends: state.savedFriends.filter((friend) => friend.id !== id),
