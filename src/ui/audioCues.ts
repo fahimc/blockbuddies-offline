@@ -31,8 +31,13 @@ export type AudioCue =
   | 'mini-game-collect'
   | 'mini-game-complete'
   | 'mini-game-fail'
+  | 'football-kick'
+  | 'football-skill'
+  | 'football-goal'
 
-export type MusicMode = 'menu' | 'customizer' | 'town' | 'interior' | 'driving' | 'mini-game'
+export type MusicMode =
+  'menu' | 'customizer' | 'town' | 'interior' | 'driving' | 'mini-game'
+export type FootballAudioAction = 'kick' | 'skill' | 'goal'
 
 export type AudioSnapshot = {
   audioEnabled: boolean
@@ -61,18 +66,28 @@ export type AudioSnapshot = {
   miniGameEventSequence: number
   miniGameScore: number
   miniGameStatus: MiniGameStatus
+  footballActionSequence: number
+  footballActionKind?: FootballAudioAction
 }
 
-export function selectAudioCues(previous: AudioSnapshot, current: AudioSnapshot): AudioCue[] {
+export function selectAudioCues(
+  previous: AudioSnapshot,
+  current: AudioSnapshot,
+): AudioCue[] {
   if (!current.audioEnabled) return []
 
   const cues: AudioCue[] = []
   if (current.screen !== previous.screen) {
-    if (current.screen === 'setup-avatar' || current.screen === 'setup-name' || current.screen === 'game') {
+    if (
+      current.screen === 'setup-avatar' ||
+      current.screen === 'setup-name' ||
+      current.screen === 'game'
+    ) {
       cues.push('screen-start')
     }
   }
-  if (current.avatarSignature !== previous.avatarSignature) cues.push('customizer-change')
+  if (current.avatarSignature !== previous.avatarSignature)
+    cues.push('customizer-change')
 
   if (
     current.miniGameEventSequence !== previous.miniGameEventSequence &&
@@ -81,27 +96,54 @@ export function selectAudioCues(previous: AudioSnapshot, current: AudioSnapshot)
     cues.push('mini-game-start')
   } else if (current.miniGameScore > previous.miniGameScore) {
     cues.push('mini-game-collect')
-  } else if (previous.miniGameStatus === 'running' && current.miniGameStatus === 'completed') {
+  } else if (
+    previous.miniGameStatus === 'running' &&
+    current.miniGameStatus === 'completed'
+  ) {
     cues.push('mini-game-complete')
-  } else if (previous.miniGameStatus === 'running' && current.miniGameStatus === 'failed') {
+  } else if (
+    previous.miniGameStatus === 'running' &&
+    current.miniGameStatus === 'failed'
+  ) {
     cues.push('mini-game-fail')
   }
 
   if (current.coins > previous.coins) cues.push('coin')
-  if (current.completedQuestCount > previous.completedQuestCount) cues.push('quest-complete')
+  if (
+    current.footballActionSequence !== previous.footballActionSequence &&
+    current.footballActionKind
+  ) {
+    cues.push(
+      current.footballActionKind === 'goal'
+        ? 'football-goal'
+        : current.footballActionKind === 'skill'
+          ? 'football-skill'
+          : 'football-kick',
+    )
+  }
+  if (current.completedQuestCount > previous.completedQuestCount)
+    cues.push('quest-complete')
   if (current.earnedBadgeCount > previous.earnedBadgeCount) cues.push('badge')
-  if (current.unlockedItemCount > previous.unlockedItemCount) cues.push('unlock')
+  if (current.unlockedItemCount > previous.unlockedItemCount)
+    cues.push('unlock')
 
   if (current.obbyActive && !previous.obbyActive) cues.push('obby-start')
   if (current.obbyFinished && !previous.obbyFinished) cues.push('obby-complete')
 
-  if (current.activeVehicleId && current.activeVehicleId !== previous.activeVehicleId) {
+  if (
+    current.activeVehicleId &&
+    current.activeVehicleId !== previous.activeVehicleId
+  ) {
     cues.push('vehicle-enter')
   } else if (previous.activeVehicleId && !current.activeVehicleId) {
     cues.push('vehicle-exit')
   }
 
-  if (current.playerEmote !== previous.playerEmote && current.playerEmote !== 'none') cues.push('emote')
+  if (
+    current.playerEmote !== previous.playerEmote &&
+    current.playerEmote !== 'none'
+  )
+    cues.push('emote')
   if (current.sleeping && !previous.sleeping) cues.push('sleep')
   if (!current.sleeping && previous.sleeping) cues.push('wake')
   if (current.seatedSeatId && current.seatedSeatId !== previous.seatedSeatId) {
@@ -110,8 +152,10 @@ export function selectAudioCues(previous: AudioSnapshot, current: AudioSnapshot)
     cues.push('stand')
   }
   if (current.buildMode !== previous.buildMode) cues.push('build-toggle')
-  if (current.placedBlockCount > previous.placedBlockCount) cues.push('build-place')
-  if (current.placedBlockCount < previous.placedBlockCount) cues.push('build-remove')
+  if (current.placedBlockCount > previous.placedBlockCount)
+    cues.push('build-place')
+  if (current.placedBlockCount < previous.placedBlockCount)
+    cues.push('build-remove')
   if (
     current.lastChatId &&
     current.lastChatId !== previous.lastChatId &&
@@ -142,22 +186,30 @@ export function selectAudioCues(previous: AudioSnapshot, current: AudioSnapshot)
     )
   }
 
-  if (current.activeInteriorId && current.activeInteriorId !== previous.activeInteriorId) cues.push('travel')
-  if (current.openPanel && current.openPanel !== previous.openPanel) cues.push('panel')
+  if (
+    current.activeInteriorId &&
+    current.activeInteriorId !== previous.activeInteriorId
+  )
+    cues.push('travel')
+  if (current.openPanel && current.openPanel !== previous.openPanel)
+    cues.push('panel')
 
   return cues
 }
 
 function isErrorSystemMessage(text: string | undefined) {
   if (!text) return false
-  return /\b(cannot|can't|no room|need|finish|leave|blocked|unavailable|failed)\b/i.test(text)
+  return /\b(cannot|can't|no room|need|finish|leave|blocked|unavailable|failed)\b/i.test(
+    text,
+  )
 }
 
 export function selectMusicMode(snapshot: AudioSnapshot): MusicMode {
   if (snapshot.miniGameStatus === 'running') return 'mini-game'
   if (snapshot.activeVehicleId) return 'driving'
   if (snapshot.activeInteriorId) return 'interior'
-  if (snapshot.screen === 'setup-avatar' || snapshot.screen === 'setup-name') return 'customizer'
+  if (snapshot.screen === 'setup-avatar' || snapshot.screen === 'setup-name')
+    return 'customizer'
   if (snapshot.screen === 'menu') return 'menu'
   return 'town'
 }

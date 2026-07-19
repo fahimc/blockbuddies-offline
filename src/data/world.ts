@@ -75,9 +75,19 @@ export const worldLocations: WorldLocation[] = [
     color: '#2563eb',
   },
   {
+    id: 'football',
+    label: 'Football Pitch',
+    description: 'Kick footballs, practise skills, and score goals for coins.',
+    position: [17, 0, -24],
+    travelPosition: [17, 0, -18.2],
+    travelYaw: Math.PI,
+    color: '#16a34a',
+  },
+  {
     id: 'builder',
     label: 'Builder Meadows',
-    description: 'An open parcel district for roads, homes, and custom creations.',
+    description:
+      'An open parcel district for roads, homes, and custom creations.',
     position: [67, 0, 54],
     travelPosition: [67, 0, 54],
     travelYaw: Math.PI,
@@ -95,7 +105,9 @@ export const worldLocations: WorldLocation[] = [
 ]
 
 export function getLocation(id: LocationId) {
-  return worldLocations.find((location) => location.id === id) ?? worldLocations[0]
+  return (
+    worldLocations.find((location) => location.id === id) ?? worldLocations[0]
+  )
 }
 
 export function distance2d(a: Vec3, b: Vec3) {

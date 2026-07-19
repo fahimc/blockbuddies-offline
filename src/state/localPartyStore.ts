@@ -33,7 +33,8 @@ import {
   type HostedRoomInfo,
 } from '../network/hostedSignal'
 
-export type LocalPartyStatus = 'idle' | 'hosting' | 'joining' | 'connecting' | 'connected' | 'error'
+export type LocalPartyStatus =
+  'idle' | 'hosting' | 'joining' | 'connecting' | 'connected' | 'error'
 export type LocalPartyRole = 'host' | 'guest'
 export type LocalPartySignalType = 'offer' | 'answer'
 
@@ -125,7 +126,9 @@ type LocalPartyState = {
 }
 
 type LocalPartySetter = (
-  partial: Partial<LocalPartyState> | ((state: LocalPartyState) => Partial<LocalPartyState>),
+  partial:
+    | Partial<LocalPartyState>
+    | ((state: LocalPartyState) => Partial<LocalPartyState>),
 ) => void
 
 const localPlayerId = `local-${Math.random().toString(36).slice(2, 8)}`
@@ -147,7 +150,11 @@ const validLocationIds = new Set<LocationId>(
 )
 
 export function sanitizePartyName(input: string) {
-  const cleaned = input.replace(/[^\w -]/g, '').replace(/\s+/g, ' ').trim().slice(0, 18)
+  const cleaned = input
+    .replace(/[^\w -]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 18)
   return cleaned || 'LocalBuddy'
 }
 
@@ -161,21 +168,29 @@ function encodeUtf8Base64(text: string) {
 function decodeUtf8Base64(code: string) {
   const binary = atob(code.replace(/\s+/g, ''))
   const bytes = new Uint8Array(binary.length)
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  for (let index = 0; index < binary.length; index += 1)
+    bytes[index] = binary.charCodeAt(index)
   return new TextDecoder().decode(bytes)
 }
 
 function encodeBase64Url(bytes: Uint8Array) {
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '')
 }
 
 function decodeBase64Url(code: string) {
-  const padded = code.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(code.length / 4) * 4, '=')
+  const padded = code
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+    .padEnd(Math.ceil(code.length / 4) * 4, '=')
   const binary = atob(padded)
   const bytes = new Uint8Array(binary.length)
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  for (let index = 0; index < binary.length; index += 1)
+    bytes[index] = binary.charCodeAt(index)
   return bytes
 }
 
@@ -191,12 +206,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function assertPartySignal(value: unknown): asserts value is LocalPartySignal {
-  if (!isRecord(value)) throw new Error('Invite code is not a local party signal.')
+  if (!isRecord(value))
+    throw new Error('Invite code is not a local party signal.')
   if (value.v !== 1) throw new Error('Invite code version is not supported.')
-  if (value.type !== 'offer' && value.type !== 'answer') throw new Error('Invite code type is not supported.')
-  if (typeof value.from !== 'string' || typeof value.name !== 'string') throw new Error('Invite code is missing a player.')
-  if ('sessionId' in value && typeof value.sessionId !== 'string') throw new Error('Invite code session is invalid.')
-  if (!isRecord(value.sdp) || (value.sdp.type !== 'offer' && value.sdp.type !== 'answer') || typeof value.sdp.sdp !== 'string') {
+  if (value.type !== 'offer' && value.type !== 'answer')
+    throw new Error('Invite code type is not supported.')
+  if (typeof value.from !== 'string' || typeof value.name !== 'string')
+    throw new Error('Invite code is missing a player.')
+  if ('sessionId' in value && typeof value.sessionId !== 'string')
+    throw new Error('Invite code session is invalid.')
+  if (
+    !isRecord(value.sdp) ||
+    (value.sdp.type !== 'offer' && value.sdp.type !== 'answer') ||
+    typeof value.sdp.sdp !== 'string'
+  ) {
     throw new Error('Invite code does not include a WebRTC session.')
   }
 }
@@ -214,7 +237,11 @@ export function decodePartySignal(code: string) {
   const cleanCode = extractPartyCode(code)
   try {
     const json = cleanCode.startsWith(compactPartyCodePrefix)
-      ? strFromU8(unzlibSync(decodeBase64Url(cleanCode.slice(compactPartyCodePrefix.length))))
+      ? strFromU8(
+          unzlibSync(
+            decodeBase64Url(cleanCode.slice(compactPartyCodePrefix.length)),
+          ),
+        )
       : decodeUtf8Base64(cleanCode)
     const parsed: unknown = JSON.parse(json)
     assertPartySignal(parsed)
@@ -225,11 +252,17 @@ export function decodePartySignal(code: string) {
   }
 }
 
-export function makePartySnapshot(snapshot: LocalPartySnapshotInput): LocalPartySnapshot {
+export function makePartySnapshot(
+  snapshot: LocalPartySnapshotInput,
+): LocalPartySnapshot {
   return {
     ...snapshot,
     name: sanitizePartyName(snapshot.name),
-    position: [snapshot.position[0], snapshot.position[1], snapshot.position[2]],
+    position: [
+      snapshot.position[0],
+      snapshot.position[1],
+      snapshot.position[2],
+    ],
     emote: sanitizePartyEmote(snapshot.emote),
     interiorId: snapshot.interiorId,
     placedBlocks: sanitizeBuildBlocks(snapshot.placedBlocks),
@@ -242,27 +275,46 @@ function sanitizePartyEmote(emote: unknown): PlayerEmote {
   return emote === 'wave' ||
     emote === 'cheer' ||
     emote === 'dance' ||
-    emote === 'sit'
+    emote === 'sit' ||
+    emote === 'kickups'
     ? emote
     : 'none'
 }
 
-export function isRemoteFresh(snapshot: LocalPartySnapshot, now = Date.now(), ttlMs = 5000) {
+export function isRemoteFresh(
+  snapshot: LocalPartySnapshot,
+  now = Date.now(),
+  ttlMs = 5000,
+) {
   return now - snapshot.updatedAt <= ttlMs
 }
 
-export function electLocalPartyHost(localId: string, remotePlayers: Record<string, LocalPartySnapshot>, now = Date.now()) {
-  const freshRemotePlayers = Object.values(remotePlayers).filter((player) => isRemoteFresh(player, now))
+export function electLocalPartyHost(
+  localId: string,
+  remotePlayers: Record<string, LocalPartySnapshot>,
+  now = Date.now(),
+) {
+  const freshRemotePlayers = Object.values(remotePlayers).filter((player) =>
+    isRemoteFresh(player, now),
+  )
   const explicitRemoteHosts = freshRemotePlayers
     .filter((player) => player.role === 'host')
     .map((player) => player.hostId ?? player.id)
-  if (explicitRemoteHosts.length > 0) return explicitRemoteHosts.sort((left, right) => left.localeCompare(right))[0]
+  if (explicitRemoteHosts.length > 0)
+    return explicitRemoteHosts.sort((left, right) =>
+      left.localeCompare(right),
+    )[0]
 
-  return [localId, ...freshRemotePlayers.map((player) => player.id)]
-    .sort((left, right) => left.localeCompare(right))[0] ?? localId
+  return (
+    [localId, ...freshRemotePlayers.map((player) => player.id)].sort(
+      (left, right) => left.localeCompare(right),
+    )[0] ?? localId
+  )
 }
 
-function sanitizeBuildBlocks(blocks: BuildBlock[] | undefined): BuildBlock[] | undefined {
+function sanitizeBuildBlocks(
+  blocks: BuildBlock[] | undefined,
+): BuildBlock[] | undefined {
   if (!blocks?.length) return undefined
   return blocks.slice(-maxSyncedBuildBlocks).map((block) => ({
     id: String(block.id).slice(0, 64),
@@ -270,7 +322,11 @@ function sanitizeBuildBlocks(blocks: BuildBlock[] | undefined): BuildBlock[] | u
     ...(sanitizeBuildPieceName(block.name)
       ? { name: sanitizeBuildPieceName(block.name) }
       : {}),
-    position: [Number(block.position[0]) || 0, Number(block.position[1]) || 0, Number(block.position[2]) || 0],
+    position: [
+      Number(block.position[0]) || 0,
+      Number(block.position[1]) || 0,
+      Number(block.position[2]) || 0,
+    ],
     color: /^#[0-9a-f]{3,8}$/i.test(block.color) ? block.color : '#60a5fa',
     rotation: Number.isFinite(block.rotation) ? block.rotation : 0,
   }))
@@ -282,7 +338,9 @@ function sanitizeHexColor(color: unknown, fallback: string) {
     : fallback
 }
 
-function sanitizePartyAvatar(avatar: AvatarSettings | undefined): AvatarSettings {
+function sanitizePartyAvatar(
+  avatar: AvatarSettings | undefined,
+): AvatarSettings {
   return {
     bodyColor: sanitizeHexColor(avatar?.bodyColor, '#9a5b43'),
     shirtColor: sanitizeHexColor(avatar?.shirtColor, '#5eead4'),
@@ -298,7 +356,10 @@ function sanitizePartyAvatar(avatar: AvatarSettings | undefined): AvatarSettings
     bottomStyle: avatar?.bottomStyle,
     shoeStyle: avatar?.shoeStyle,
     shoeColor: sanitizeHexColor(avatar?.shoeColor, '#f8fafc'),
-    avatarSource: String(avatar?.avatarSource ?? 'Local Party Friend').slice(0, 64),
+    avatarSource: String(avatar?.avatarSource ?? 'Local Party Friend').slice(
+      0,
+      64,
+    ),
     hat: avatar?.hat ?? 'none',
     accessory: avatar?.accessory ?? 'none',
     trail: avatar?.trail ?? 'none',
@@ -333,7 +394,9 @@ function sanitizePartySavedFriends(
     avatar: sanitizePartyAvatar(friend.avatar),
     inWorld: Boolean(friend.inWorld),
     route: sanitizeFriendRoute(friend.route, index),
-    createdAt: Number.isFinite(friend.createdAt) ? friend.createdAt : Date.now(),
+    createdAt: Number.isFinite(friend.createdAt)
+      ? friend.createdAt
+      : Date.now(),
   }))
 }
 
@@ -347,7 +410,8 @@ function parsePartyMessage(data: unknown): LocalPartyMessage | undefined {
     const message: unknown = JSON.parse(data)
     if (!isRecord(message) || typeof message.type !== 'string') return undefined
     if (message.type === 'hello' || message.type === 'bye') {
-      if (typeof message.id === 'string' && typeof message.name === 'string') return { type: message.type, id: message.id, name: message.name }
+      if (typeof message.id === 'string' && typeof message.name === 'string')
+        return { type: message.type, id: message.id, name: message.name }
       return undefined
     }
     if (message.type === 'snapshot' && isRecord(message.snapshot)) {
@@ -437,11 +501,15 @@ function startLanAnswerPolling(set: LocalPartySetter) {
   }, 1200)
 }
 
-function startHostedAnswerPolling(set: LocalPartySetter, get: () => LocalPartyState) {
+function startHostedAnswerPolling(
+  set: LocalPartySetter,
+  get: () => LocalPartyState,
+) {
   stopHostedAnswerPolling()
   hostedAnswerPoll = window.setInterval(() => {
     const state = get()
-    if (!state.hostedRoom || state.role !== 'host' || state.answerCodeInput) return
+    if (!state.hostedRoom || state.role !== 'host' || state.answerCodeInput)
+      return
     void getHostedAnswers(state.hostedRoom.roomName, state.playerId)
       .then((answers) => {
         const answer = answers.at(-1)
@@ -468,14 +536,21 @@ function publishSignal(signal: LocalPartySignal) {
   const message = { app: signalBusName, signal }
   signalChannel?.postMessage(message)
   try {
-    localStorage.setItem(signalStorageKey, JSON.stringify({ ...message, sentAt: Date.now() }))
+    localStorage.setItem(
+      signalStorageKey,
+      JSON.stringify({ ...message, sentAt: Date.now() }),
+    )
   } catch {
     // Storage handoff is best effort; manual copy/share remains the fallback.
   }
 }
 
-function isSignalBusMessage(value: unknown): value is { app: string; signal: LocalPartySignal } {
-  return isRecord(value) && value.app === signalBusName && isRecord(value.signal)
+function isSignalBusMessage(
+  value: unknown,
+): value is { app: string; signal: LocalPartySignal } {
+  return (
+    isRecord(value) && value.app === signalBusName && isRecord(value.signal)
+  )
 }
 
 function stopListeningForSignals() {
@@ -513,7 +588,8 @@ function listenForJoinAnswer(sessionId: string, set: LocalPartySetter) {
       }
     }
     window.addEventListener('storage', storageListener)
-    stopSignalStorageListener = () => window.removeEventListener('storage', storageListener)
+    stopSignalStorageListener = () =>
+      window.removeEventListener('storage', storageListener)
   }
 }
 
@@ -532,16 +608,22 @@ function waitForIceGathering(connection: RTCPeerConnection) {
 }
 
 function requireWebRtc() {
-  if (typeof RTCPeerConnection === 'undefined') throw new Error('Local party needs WebRTC support on this device.')
+  if (typeof RTCPeerConnection === 'undefined')
+    throw new Error('Local party needs WebRTC support on this device.')
 }
 
-function createPeerConnection(set: LocalPartySetter, attachChannel: (nextChannel: RTCDataChannel) => void) {
+function createPeerConnection(
+  set: LocalPartySetter,
+  attachChannel: (nextChannel: RTCDataChannel) => void,
+) {
   requireWebRtc()
   const connection = new RTCPeerConnection({ iceServers: [] })
   connection.ondatachannel = (event) => attachChannel(event.channel)
   connection.onconnectionstatechange = () => {
-    if (connection.connectionState === 'connected') set({ status: 'connected', error: undefined })
-    if (connection.connectionState === 'failed') set({ status: 'error', error: 'Local party connection failed.' })
+    if (connection.connectionState === 'connected')
+      set({ status: 'connected', error: undefined })
+    if (connection.connectionState === 'failed')
+      set({ status: 'error', error: 'Local party connection failed.' })
     if (connection.connectionState === 'disconnected') promoteLocalHost(set)
   }
   return connection
@@ -565,14 +647,19 @@ function promoteLocalHost(set: LocalPartySetter) {
   })
 }
 
-function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, get: () => LocalPartyState) {
+function attachDataChannel(
+  nextChannel: RTCDataChannel,
+  set: LocalPartySetter,
+  get: () => LocalPartyState,
+) {
   channel = nextChannel
   channel.onopen = () => {
     const state = get()
     stopLanAnswerPolling()
     stopHostedAnswerPolling()
     void stopSignalHost()
-    if (state.hostedRoom && state.role === 'host') void closeHostedRoom(state.hostedRoom.roomName, state.playerId)
+    if (state.hostedRoom && state.role === 'host')
+      void closeHostedRoom(state.hostedRoom.roomName, state.playerId)
     set({
       status: 'connected',
       lanHost: undefined,
@@ -582,22 +669,32 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
       error: undefined,
       lastEvent: 'Local player connected.',
     })
-    sendPartyMessage({ type: 'hello', id: state.playerId, name: state.playerName })
+    sendPartyMessage({
+      type: 'hello',
+      id: state.playerId,
+      name: state.playerName,
+    })
   }
   channel.onclose = () => promoteLocalHost(set)
-  channel.onerror = () => set({ status: 'error', error: 'Local party data channel failed.' })
+  channel.onerror = () =>
+    set({ status: 'error', error: 'Local party data channel failed.' })
   channel.onmessage = (event) => {
     const message = parsePartyMessage(event.data)
     if (!message) return
     if (message.type === 'hello') {
-      set({ lastEvent: `${sanitizePartyName(message.name)} joined your local party.` })
+      set({
+        lastEvent: `${sanitizePartyName(message.name)} joined your local party.`,
+      })
       return
     }
     if (message.type === 'bye') {
       set((state) => {
         const remotePlayers = { ...state.remotePlayers }
         delete remotePlayers[message.id]
-        return { remotePlayers, lastEvent: `${sanitizePartyName(message.name)} left your local party.` }
+        return {
+          remotePlayers,
+          lastEvent: `${sanitizePartyName(message.name)} left your local party.`,
+        }
       })
       return
     }
@@ -606,7 +703,10 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
       set((state) => ({
         remotePlayers: {
           ...state.remotePlayers,
-          [message.snapshot.id]: makePartySnapshot({ ...message.snapshot, updatedAt: Date.now() }),
+          [message.snapshot.id]: makePartySnapshot({
+            ...message.snapshot,
+            updatedAt: Date.now(),
+          }),
         },
       }))
       return
@@ -614,7 +714,9 @@ function attachDataChannel(nextChannel: RTCDataChannel, set: LocalPartySetter, g
     if (message.type === 'direct_message') {
       if (message.message.toId !== get().playerId) return
       set((state) => ({
-        incomingDirectMessages: state.incomingDirectMessages.some((item) => item.id === message.message.id)
+        incomingDirectMessages: state.incomingDirectMessages.some(
+          (item) => item.id === message.message.id,
+        )
           ? state.incomingDirectMessages
           : [...state.incomingDirectMessages.slice(-40), message.message],
         lastEvent: `${sanitizePartyName(message.message.fromName)} sent you a message.`,
@@ -644,28 +746,44 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   setAnswerCodeInput: (answerCodeInput) => set({ answerCodeInput }),
   discoverRooms: async () => {
     if (!isLocalSignalSupported()) {
-      set({ error: 'Room discovery needs the Android APK. Use manual codes on web.', lastEvent: 'Manual code fallback is available below.' })
+      set({
+        error: 'Room discovery needs the Android APK. Use manual codes on web.',
+        lastEvent: 'Manual code fallback is available below.',
+      })
       return
     }
     try {
-      set({ lanSearching: true, error: undefined, lastEvent: 'Searching for LAN rooms.' })
+      set({
+        lanSearching: true,
+        error: undefined,
+        lastEvent: 'Searching for LAN rooms.',
+      })
       const lanRooms = await discoverSignalRooms()
       set({
         lanRooms,
         lanSearching: false,
-        lastEvent: lanRooms.length > 0 ? `Found ${lanRooms.length} room${lanRooms.length === 1 ? '' : 's'}.` : 'No LAN rooms found yet.',
+        lastEvent:
+          lanRooms.length > 0
+            ? `Found ${lanRooms.length} room${lanRooms.length === 1 ? '' : 's'}.`
+            : 'No LAN rooms found yet.',
       })
     } catch (error) {
       set({
         lanSearching: false,
-        error: error instanceof Error ? error.message : 'Could not discover LAN rooms.',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Could not discover LAN rooms.',
         lastEvent: 'Room discovery failed. Manual codes still work.',
       })
     }
   },
   startRoomHost: async () => {
     if (!isLocalSignalSupported()) {
-      set({ error: 'Room hosting needs the Android APK. Use manual codes on web.', lastEvent: 'Manual code fallback is available below.' })
+      set({
+        error: 'Room hosting needs the Android APK. Use manual codes on web.',
+        lastEvent: 'Manual code fallback is available below.',
+      })
       return
     }
     try {
@@ -687,12 +805,19 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         remotePlayers: {},
         lastEvent: 'Starting LAN room.',
       })
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
-      attachDataChannel(peer.createDataChannel('blockbuddies-local-party'), set, get)
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
+      attachDataChannel(
+        peer.createDataChannel('blockbuddies-local-party'),
+        set,
+        get,
+      )
       const offer = await peer.createOffer()
       await peer.setLocalDescription(offer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Room invite could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Room invite could not be created.')
       const sessionId = createSessionId()
       const inviteCode = encodePartySignal({
         v: 1,
@@ -714,7 +839,11 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       stopLanAnswerPolling()
       await stopSignalHost()
       closePeer()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start LAN room.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error ? error.message : 'Could not start LAN room.',
+      })
     }
   },
   joinRoom: async (room) => {
@@ -738,12 +867,15 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       const offerCode = await getSignalOffer(room)
       const invite = decodePartySignal(offerCode)
       if (invite.type !== 'offer') throw new Error('Room invite was not valid.')
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
       await peer.setRemoteDescription(invite.sdp)
       const answer = await peer.createAnswer()
       await peer.setLocalDescription(answer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Join answer could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Join answer could not be created.')
       const signal = {
         v: 1 as const,
         type: 'answer' as const,
@@ -761,12 +893,20 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       })
     } catch (error) {
       closePeer()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join LAN room.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error ? error.message : 'Could not join LAN room.',
+      })
     }
   },
   startHostedRoom: async () => {
     if (!isHostedSignalSupported()) {
-      set({ error: 'Web rooms are available in the Netlify web app. Use Host Room in the Android APK.', lastEvent: 'Hosted web rooms are unavailable here.' })
+      set({
+        error:
+          'Web rooms are available in the Netlify web app. Use Host Room in the Android APK.',
+        lastEvent: 'Hosted web rooms are unavailable here.',
+      })
       return
     }
     try {
@@ -789,12 +929,19 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         remotePlayers: {},
         lastEvent: 'Opening web party room.',
       })
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
-      attachDataChannel(peer.createDataChannel('blockbuddies-local-party'), set, get)
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
+      attachDataChannel(
+        peer.createDataChannel('blockbuddies-local-party'),
+        set,
+        get,
+      )
       const offer = await peer.createOffer()
       await peer.setLocalDescription(offer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Web room invite could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Web room invite could not be created.')
       const sessionId = createSessionId()
       const inviteCode = encodePartySignal({
         v: 1,
@@ -804,7 +951,12 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         sessionId,
         sdp: peer.localDescription.toJSON(),
       })
-      const hostedRoom = await createHostedRoom(get().roomName, inviteCode, get().playerId, get().playerName)
+      const hostedRoom = await createHostedRoom(
+        get().roomName,
+        inviteCode,
+        get().playerId,
+        get().playerName,
+      )
       startHostedAnswerPolling(set, get)
       set({
         inviteCode,
@@ -815,12 +967,20 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     } catch (error) {
       stopHostedAnswerPolling()
       closePeer()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start web room.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error ? error.message : 'Could not start web room.',
+      })
     }
   },
   joinHostedRoom: async () => {
     if (!isHostedSignalSupported()) {
-      set({ error: 'Web rooms are available in the Netlify web app. Use Find Rooms in the Android APK.', lastEvent: 'Hosted web rooms are unavailable here.' })
+      set({
+        error:
+          'Web rooms are available in the Netlify web app. Use Find Rooms in the Android APK.',
+        lastEvent: 'Hosted web rooms are unavailable here.',
+      })
       return
     }
     try {
@@ -843,13 +1003,17 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       })
       const hostedRoom = await getHostedRoom(get().roomName)
       const invite = decodePartySignal(hostedRoom.offerCode)
-      if (invite.type !== 'offer') throw new Error('Web room invite was not valid.')
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
+      if (invite.type !== 'offer')
+        throw new Error('Web room invite was not valid.')
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
       await peer.setRemoteDescription(invite.sdp)
       const answer = await peer.createAnswer()
       await peer.setLocalDescription(answer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Join answer could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Join answer could not be created.')
       const signal = {
         v: 1 as const,
         type: 'answer' as const,
@@ -859,16 +1023,29 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         sdp: peer.localDescription.toJSON(),
       }
       const answerCode = encodePartySignal(signal)
-      await sendHostedAnswer(hostedRoom.roomName, answerCode, get().playerId, get().playerName)
+      await sendHostedAnswer(
+        hostedRoom.roomName,
+        answerCode,
+        get().playerId,
+        get().playerName,
+      )
       set({
         status: 'connecting',
-        hostedRoom: { roomName: hostedRoom.roomName, hostName: hostedRoom.hostName, expiresAt: hostedRoom.expiresAt },
+        hostedRoom: {
+          roomName: hostedRoom.roomName,
+          hostName: hostedRoom.hostName,
+          expiresAt: hostedRoom.expiresAt,
+        },
         answerCode,
         lastEvent: `Join request sent to ${sanitizePartyName(hostedRoom.hostName)}. Waiting for host approval.`,
       })
     } catch (error) {
       closePeer()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join web room.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error ? error.message : 'Could not join web room.',
+      })
     }
   },
   startHost: async () => {
@@ -891,12 +1068,19 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         error: undefined,
         remotePlayers: {},
       })
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
-      attachDataChannel(peer.createDataChannel('blockbuddies-local-party'), set, get)
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
+      attachDataChannel(
+        peer.createDataChannel('blockbuddies-local-party'),
+        set,
+        get,
+      )
       const offer = await peer.createOffer()
       await peer.setLocalDescription(offer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Host invite could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Host invite could not be created.')
       const sessionId = createSessionId()
       listenForJoinAnswer(sessionId, set)
       set({
@@ -915,7 +1099,13 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       stopListeningForSignals()
       stopLanAnswerPolling()
       stopHostedAnswerPolling()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not start local party.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Could not start local party.',
+      })
     }
   },
   startJoin: async () => {
@@ -926,7 +1116,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       await stopSignalHost()
       closePeer()
       const invite = decodePartySignal(get().joinCodeInput)
-      if (invite.type !== 'offer') throw new Error('Paste a host invite code first.')
+      if (invite.type !== 'offer')
+        throw new Error('Paste a host invite code first.')
       set({
         status: 'joining',
         role: 'guest',
@@ -937,12 +1128,15 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         remotePlayers: {},
         lastEvent: 'Joining local party.',
       })
-      peer = createPeerConnection(set, (nextChannel) => attachDataChannel(nextChannel, set, get))
+      peer = createPeerConnection(set, (nextChannel) =>
+        attachDataChannel(nextChannel, set, get),
+      )
       await peer.setRemoteDescription(invite.sdp)
       const answer = await peer.createAnswer()
       await peer.setLocalDescription(answer)
       await waitForIceGathering(peer)
-      if (!peer.localDescription) throw new Error('Join answer could not be created.')
+      if (!peer.localDescription)
+        throw new Error('Join answer could not be created.')
       const signal = {
         v: 1 as const,
         type: 'answer' as const,
@@ -964,31 +1158,58 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       stopListeningForSignals()
       stopLanAnswerPolling()
       stopHostedAnswerPolling()
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not join local party.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Could not join local party.',
+      })
     }
   },
   acceptAnswer: async () => {
     try {
-      if (!peer || get().role !== 'host') throw new Error('Start hosting before accepting an answer.')
+      if (!peer || get().role !== 'host')
+        throw new Error('Start hosting before accepting an answer.')
       const answer = decodePartySignal(get().answerCodeInput)
-      if (answer.type !== 'answer') throw new Error('Paste a join answer code first.')
+      if (answer.type !== 'answer')
+        throw new Error('Paste a join answer code first.')
       stopHostedAnswerPolling()
-      set({ status: 'connecting', error: undefined, lastEvent: `Connecting to ${sanitizePartyName(answer.name)}.` })
+      set({
+        status: 'connecting',
+        error: undefined,
+        lastEvent: `Connecting to ${sanitizePartyName(answer.name)}.`,
+      })
       await peer.setRemoteDescription(answer.sdp)
-      set({ pendingLanAnswerName: undefined, pendingHostedAnswerName: undefined, answerCodeInput: '' })
+      set({
+        pendingLanAnswerName: undefined,
+        pendingHostedAnswerName: undefined,
+        answerCodeInput: '',
+      })
     } catch (error) {
-      set({ status: 'error', error: error instanceof Error ? error.message : 'Could not accept local party answer.' })
+      set({
+        status: 'error',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Could not accept local party answer.',
+      })
     }
   },
   disconnect: () => {
     const state = get()
-    sendPartyMessage({ type: 'bye', id: state.playerId, name: state.playerName })
+    sendPartyMessage({
+      type: 'bye',
+      id: state.playerId,
+      name: state.playerName,
+    })
     closePeer()
     stopListeningForSignals()
     stopLanAnswerPolling()
     stopHostedAnswerPolling()
     void stopSignalHost()
-    if (state.hostedRoom && state.role === 'host') void closeHostedRoom(state.hostedRoom.roomName, state.playerId)
+    if (state.hostedRoom && state.role === 'host')
+      void closeHostedRoom(state.hostedRoom.roomName, state.playerId)
     set({
       status: 'idle',
       role: undefined,
@@ -1007,7 +1228,10 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   },
   broadcastSnapshot: (snapshot) => {
     const state = get()
-    const hostId = state.role === 'host' ? state.playerId : electLocalPartyHost(state.playerId, state.remotePlayers)
+    const hostId =
+      state.role === 'host'
+        ? state.playerId
+        : electLocalPartyHost(state.playerId, state.remotePlayers)
     sendPartyMessage({
       type: 'snapshot',
       snapshot: makePartySnapshot({
@@ -1032,15 +1256,30 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   },
   pruneRemotePlayers: (now = Date.now()) =>
     set((state) => {
-      const remotePlayers = Object.fromEntries(Object.entries(state.remotePlayers).filter(([, player]) => isRemoteFresh(player, now)))
-      const hostId = state.role === 'host' ? state.playerId : electLocalPartyHost(state.playerId, remotePlayers, now)
-      const role = hostId === state.playerId && state.status !== 'idle' ? 'host' : state.role === 'host' ? 'guest' : state.role
-      const promoted = state.status === 'connected' && role === 'host' && state.role !== 'host'
+      const remotePlayers = Object.fromEntries(
+        Object.entries(state.remotePlayers).filter(([, player]) =>
+          isRemoteFresh(player, now),
+        ),
+      )
+      const hostId =
+        state.role === 'host'
+          ? state.playerId
+          : electLocalPartyHost(state.playerId, remotePlayers, now)
+      const role =
+        hostId === state.playerId && state.status !== 'idle'
+          ? 'host'
+          : state.role === 'host'
+            ? 'guest'
+            : state.role
+      const promoted =
+        state.status === 'connected' && role === 'host' && state.role !== 'host'
       return {
         remotePlayers,
         status: promoted ? 'hosting' : state.status,
         role,
-        lastEvent: promoted ? 'Host left. You are now hosting the local party.' : state.lastEvent,
+        lastEvent: promoted
+          ? 'Host left. You are now hosting the local party.'
+          : state.lastEvent,
       }
     }),
 }))

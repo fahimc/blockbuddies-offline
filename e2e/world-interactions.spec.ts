@@ -195,6 +195,73 @@ test.describe('mobile vehicle controls', () => {
   })
 })
 
+test.describe('mobile football pitch controls', () => {
+  test.use({
+    viewport: { width: 720, height: 1280 },
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('shows football HUD actions, performs kick-ups, and rewards a goal', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000)
+    await completeStartFlow(page, 'Footballer')
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareFootballInteraction(),
+    )
+
+    await expect(
+      page.getByRole('button', { name: 'Hold to kick ball' }),
+    ).toBeVisible({
+      timeout: 15_000,
+    })
+    await page.getByRole('button', { name: 'Do football skills' }).click()
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerEmote,
+        ),
+      )
+      .toBe('kickups')
+
+    const before = await page.evaluate(
+      () => window.__blockBuddiesE2E!.getGameplaySnapshot().coins,
+    )
+    const kick = page.getByRole('button', { name: 'Hold to kick ball' })
+    await kick.dispatchEvent('pointerdown', {
+      pointerId: 31,
+      pointerType: 'touch',
+      clientX: 520,
+      clientY: 930,
+    })
+    await page.waitForTimeout(900)
+    await kick.dispatchEvent('pointerup', {
+      pointerId: 31,
+      pointerType: 'touch',
+      clientX: 520,
+      clientY: 930,
+    })
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () => window.__blockBuddiesE2E!.getGameplaySnapshot().coins,
+          ),
+        { timeout: 10_000 },
+      )
+      .toBeGreaterThan(before)
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+        ),
+      )
+      .toContain('Goal at Football Pitch! +12 coins')
+  })
+})
+
 test('starts the obby on top of its solid platform and allows movement', async ({
   page,
 }) => {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { selectAudioCues, selectMusicMode, type AudioSnapshot } from './audioCues'
+import {
+  selectAudioCues,
+  selectMusicMode,
+  type AudioSnapshot,
+} from './audioCues'
 
 const base: AudioSnapshot = {
   audioEnabled: true,
@@ -20,14 +24,23 @@ const base: AudioSnapshot = {
   miniGameEventSequence: 0,
   miniGameScore: 0,
   miniGameStatus: 'idle',
+  footballActionSequence: 0,
 }
 
 describe('audio cue selection', () => {
   it('plays UI, travel, and vehicle cues for world actions', () => {
-    expect(selectAudioCues(base, { ...base, openPanel: 'map' })).toContain('panel')
-    expect(selectAudioCues(base, { ...base, activeInteriorId: 'shop' })).toContain('travel')
-    expect(selectAudioCues(base, { ...base, activeVehicleId: 'sunny-car' })).toContain('vehicle-enter')
-    expect(selectAudioCues({ ...base, activeVehicleId: 'sunny-car' }, base)).toContain('vehicle-exit')
+    expect(selectAudioCues(base, { ...base, openPanel: 'map' })).toContain(
+      'panel',
+    )
+    expect(
+      selectAudioCues(base, { ...base, activeInteriorId: 'shop' }),
+    ).toContain('travel')
+    expect(
+      selectAudioCues(base, { ...base, activeVehicleId: 'sunny-car' }),
+    ).toContain('vehicle-enter')
+    expect(
+      selectAudioCues({ ...base, activeVehicleId: 'sunny-car' }, base),
+    ).toContain('vehicle-exit')
   })
 
   it('plays coin and mini game cues without firing while muted', () => {
@@ -39,17 +52,66 @@ describe('audio cue selection', () => {
         miniGameStatus: 'running',
       }),
     ).toEqual(['mini-game-start'])
-    expect(selectAudioCues(base, { ...base, audioEnabled: false, coins: 1 })).toEqual([])
+    expect(
+      selectAudioCues(base, { ...base, audioEnabled: false, coins: 1 }),
+    ).toEqual([])
+  })
+
+  it('plays football cues for kick, skill, and goal actions', () => {
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        footballActionSequence: 1,
+        footballActionKind: 'kick',
+      }),
+    ).toContain('football-kick')
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        footballActionSequence: 1,
+        footballActionKind: 'skill',
+      }),
+    ).toContain('football-skill')
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        coins: 12,
+        footballActionSequence: 1,
+        footballActionKind: 'goal',
+      }),
+    ).toEqual(['coin', 'football-goal'])
   })
 
   it('plays richer cues for avatar, social, quest, and build actions', () => {
-    expect(selectAudioCues(base, { ...base, screen: 'setup-avatar' })).toContain('screen-start')
-    expect(selectAudioCues(base, { ...base, avatarSignature: 'changed' })).toContain('customizer-change')
-    expect(selectAudioCues(base, { ...base, playerEmote: 'wave' })).toContain('emote')
-    expect(selectAudioCues(base, { ...base, lastChatId: 'chat-1', lastChatKind: 'player' })).toContain('chat')
-    expect(selectAudioCues(base, { ...base, selectedMessageThreadId: 'luna' })).toContain('message-open')
-    expect(selectAudioCues(base, { ...base, directMessageCount: 1 })).toContain('message-send')
-    expect(selectAudioCues(base, { ...base, directMessageCount: 1, unreadMessageCount: 1 })).toContain('message-receive')
+    expect(
+      selectAudioCues(base, { ...base, screen: 'setup-avatar' }),
+    ).toContain('screen-start')
+    expect(
+      selectAudioCues(base, { ...base, avatarSignature: 'changed' }),
+    ).toContain('customizer-change')
+    expect(selectAudioCues(base, { ...base, playerEmote: 'wave' })).toContain(
+      'emote',
+    )
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        lastChatId: 'chat-1',
+        lastChatKind: 'player',
+      }),
+    ).toContain('chat')
+    expect(
+      selectAudioCues(base, { ...base, selectedMessageThreadId: 'luna' }),
+    ).toContain('message-open')
+    expect(selectAudioCues(base, { ...base, directMessageCount: 1 })).toContain(
+      'message-send',
+    )
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        directMessageCount: 1,
+        unreadMessageCount: 1,
+      }),
+    ).toContain('message-receive')
     expect(
       selectAudioCues(base, {
         ...base,
@@ -58,26 +120,56 @@ describe('audio cue selection', () => {
         lastChatText: 'House cannot be placed on road',
       }),
     ).toContain('error')
-    expect(selectAudioCues(base, { ...base, completedQuestCount: 1 })).toContain('quest-complete')
-    expect(selectAudioCues(base, { ...base, earnedBadgeCount: 2 })).toContain('badge')
-    expect(selectAudioCues(base, { ...base, unlockedItemCount: 1 })).toContain('unlock')
-    expect(selectAudioCues(base, { ...base, buildMode: true })).toContain('build-toggle')
-    expect(selectAudioCues(base, { ...base, placedBlockCount: 1 })).toContain('build-place')
-    expect(selectAudioCues({ ...base, placedBlockCount: 1 }, base)).toContain('build-remove')
+    expect(
+      selectAudioCues(base, { ...base, completedQuestCount: 1 }),
+    ).toContain('quest-complete')
+    expect(selectAudioCues(base, { ...base, earnedBadgeCount: 2 })).toContain(
+      'badge',
+    )
+    expect(selectAudioCues(base, { ...base, unlockedItemCount: 1 })).toContain(
+      'unlock',
+    )
+    expect(selectAudioCues(base, { ...base, buildMode: true })).toContain(
+      'build-toggle',
+    )
+    expect(selectAudioCues(base, { ...base, placedBlockCount: 1 })).toContain(
+      'build-place',
+    )
+    expect(selectAudioCues({ ...base, placedBlockCount: 1 }, base)).toContain(
+      'build-remove',
+    )
   })
 
   it('plays posture, obby, and context music cues', () => {
-    expect(selectAudioCues(base, { ...base, sleeping: true })).toContain('sleep')
+    expect(selectAudioCues(base, { ...base, sleeping: true })).toContain(
+      'sleep',
+    )
     expect(selectAudioCues({ ...base, sleeping: true }, base)).toContain('wake')
-    expect(selectAudioCues(base, { ...base, seatedSeatId: 'chair-1' })).toContain('sit')
-    expect(selectAudioCues({ ...base, seatedSeatId: 'chair-1' }, base)).toContain('stand')
-    expect(selectAudioCues(base, { ...base, obbyActive: true })).toContain('obby-start')
-    expect(selectAudioCues(base, { ...base, obbyFinished: true })).toContain('obby-complete')
+    expect(
+      selectAudioCues(base, { ...base, seatedSeatId: 'chair-1' }),
+    ).toContain('sit')
+    expect(
+      selectAudioCues({ ...base, seatedSeatId: 'chair-1' }, base),
+    ).toContain('stand')
+    expect(selectAudioCues(base, { ...base, obbyActive: true })).toContain(
+      'obby-start',
+    )
+    expect(selectAudioCues(base, { ...base, obbyFinished: true })).toContain(
+      'obby-complete',
+    )
 
     expect(selectMusicMode({ ...base, screen: 'menu' })).toBe('menu')
-    expect(selectMusicMode({ ...base, screen: 'setup-avatar' })).toBe('customizer')
-    expect(selectMusicMode({ ...base, activeInteriorId: 'shop' })).toBe('interior')
-    expect(selectMusicMode({ ...base, activeVehicleId: 'sunny-car' })).toBe('driving')
-    expect(selectMusicMode({ ...base, miniGameStatus: 'running' })).toBe('mini-game')
+    expect(selectMusicMode({ ...base, screen: 'setup-avatar' })).toBe(
+      'customizer',
+    )
+    expect(selectMusicMode({ ...base, activeInteriorId: 'shop' })).toBe(
+      'interior',
+    )
+    expect(selectMusicMode({ ...base, activeVehicleId: 'sunny-car' })).toBe(
+      'driving',
+    )
+    expect(selectMusicMode({ ...base, miniGameStatus: 'running' })).toBe(
+      'mini-game',
+    )
   })
 })

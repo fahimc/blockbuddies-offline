@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useGameStore } from '../state/gameStore'
-import { selectAudioCues, selectMusicMode, type AudioCue, type AudioSnapshot, type MusicMode } from './audioCues'
+import {
+  selectAudioCues,
+  selectMusicMode,
+  type AudioCue,
+  type AudioSnapshot,
+  type MusicMode,
+} from './audioCues'
 
 export function GameAudio() {
   const screen = useGameStore((state) => state.screen)
@@ -15,11 +21,15 @@ export function GameAudio() {
   const playerEmote = useGameStore((state) => state.playerEmote)
   const sleeping = useGameStore((state) => state.sleeping)
   const seatedSeatId = useGameStore((state) => state.seatedSeatId)
-  const completedQuestCount = useGameStore((state) => state.questProgress.filter((quest) => quest.completed).length)
+  const completedQuestCount = useGameStore(
+    (state) => state.questProgress.filter((quest) => quest.completed).length,
+  )
   const earnedBadgeCount = useGameStore((state) => state.earnedBadges.length)
   const unlockedItemCount = useGameStore((state) => state.unlockedItems.length)
   const lastChat = useGameStore((state) => state.chat.at(-1))
-  const selectedMessageThreadId = useGameStore((state) => state.selectedMessageThreadId)
+  const selectedMessageThreadId = useGameStore(
+    (state) => state.selectedMessageThreadId,
+  )
   const directMessageCount = useGameStore((state) =>
     state.messageThreads.reduce(
       (total, thread) => total + thread.messages.length,
@@ -30,14 +40,19 @@ export function GameAudio() {
     state.messageThreads.reduce(
       (total, thread) =>
         total +
-        thread.messages.filter((message) => message.from === 'bot' && !message.read)
-          .length,
+        thread.messages.filter(
+          (message) => message.from === 'bot' && !message.read,
+        ).length,
       0,
     ),
   )
   const avatar = useGameStore((state) => state.avatar)
   const obby = useGameStore((state) => state.obby)
   const miniGame = useGameStore((state) => state.miniGame)
+  const footballActionSequence = useGameStore(
+    (state) => state.footballActionSequence,
+  )
+  const footballActionKind = useGameStore((state) => state.footballActionKind)
   const snapshot: AudioSnapshot = useMemo(
     () => ({
       audioEnabled,
@@ -66,6 +81,8 @@ export function GameAudio() {
       miniGameEventSequence: miniGame.eventSequence,
       miniGameScore: miniGame.score,
       miniGameStatus: miniGame.status,
+      footballActionSequence,
+      footballActionKind,
     }),
     [
       activeInteriorId,
@@ -83,6 +100,8 @@ export function GameAudio() {
       miniGame.eventSequence,
       miniGame.score,
       miniGame.status,
+      footballActionKind,
+      footballActionSequence,
       obby.active,
       obby.finished,
       openPanel,
@@ -218,15 +237,33 @@ function playCue(cue: AudioCue) {
     case 'mini-game-fail':
       playTone([220, 196], 0.11, 0.05, 'square')
       break
+    case 'football-kick':
+      playTone([147, 196], 0.045, 0.05, 'square')
+      playNoiseBurst(0.035, 0.016, 520)
+      break
+    case 'football-skill':
+      playTone([440, 554, 659, 554], 0.04, 0.04, 'triangle')
+      break
+    case 'football-goal':
+      playTone([523, 659, 784, 1047, 1319], 0.065, 0.08)
+      playNoiseBurst(0.08, 0.02, 1200)
+      break
   }
 }
 
-function playNoiseBurst(durationSeconds: number, volume: number, lowpassFrequency: number) {
+function playNoiseBurst(
+  durationSeconds: number,
+  volume: number,
+  lowpassFrequency: number,
+) {
   try {
     const context = getAudioContext()
     if (!context) return
     if (context.state === 'suspended') void context.resume()
-    const sampleCount = Math.max(1, Math.floor(context.sampleRate * durationSeconds))
+    const sampleCount = Math.max(
+      1,
+      Math.floor(context.sampleRate * durationSeconds),
+    )
     const buffer = context.createBuffer(1, sampleCount, context.sampleRate)
     const data = buffer.getChannelData(0)
     for (let index = 0; index < sampleCount; index += 1) {
@@ -238,7 +275,10 @@ function playNoiseBurst(durationSeconds: number, volume: number, lowpassFrequenc
     filter.type = 'lowpass'
     filter.frequency.value = lowpassFrequency
     gain.gain.setValueAtTime(volume, context.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + durationSeconds)
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      context.currentTime + durationSeconds,
+    )
     source.buffer = buffer
     source.connect(filter)
     filter.connect(gain)
@@ -310,7 +350,8 @@ function playMusicBar(mode: MusicMode) {
       oscillator.start(at)
       oscillator.stop(at + noteGap)
     })
-    if (mode === 'driving' || mode === 'mini-game') playRhythmTick(context, start, notes.length, noteGap)
+    if (mode === 'driving' || mode === 'mini-game')
+      playRhythmTick(context, start, notes.length, noteGap)
   } catch {
     // Mobile browsers can block music until after the first direct user gesture.
   }
@@ -340,7 +381,12 @@ function musicVolume(mode: MusicMode) {
   return 0.024
 }
 
-function playRhythmTick(context: AudioContext, start: number, count: number, gap: number) {
+function playRhythmTick(
+  context: AudioContext,
+  start: number,
+  count: number,
+  gap: number,
+) {
   for (let index = 0; index < count; index += 2) {
     const oscillator = context.createOscillator()
     const gain = context.createGain()
@@ -360,7 +406,8 @@ function playRhythmTick(context: AudioContext, start: number, count: number, gap
 let sharedAudioContext: AudioContext | undefined
 
 function getAudioContext() {
-  if (sharedAudioContext && sharedAudioContext.state !== 'closed') return sharedAudioContext
+  if (sharedAudioContext && sharedAudioContext.state !== 'closed')
+    return sharedAudioContext
   const AudioContextClass = window.AudioContext ?? window.webkitAudioContext
   if (!AudioContextClass) return undefined
   sharedAudioContext = new AudioContextClass()

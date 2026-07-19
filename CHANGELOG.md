@@ -18,6 +18,27 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.67-football-pitch] - 2026-07-19
+
+### Added
+
+- Added a Football Pitch map destination with goals, marked pitch lines, two footballs, and a town-map travel entry.
+- Added contextual mobile football HUD actions that appear near a ball: hold-to-kick with a live power gauge and a Skills button for kick-ups.
+- Added football scoring rewards, chat feedback, WebAudio cues, and deterministic regression coverage for ball physics, scoring, HUD actions, and the mobile play flow.
+
+### Changed
+
+- Updated the mini-map destination list and game audio cue selection to include football interactions.
+- Updated Android and package version metadata to `1.5.67` / `10567`.
+
+### Fixed
+
+- Kept pitch placement clear of road/street props by adding football-pitch clearance rules for trees and lamp posts.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.66-full-pet-collection] - 2026-07-19
 
 ### Added

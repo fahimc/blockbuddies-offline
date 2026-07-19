@@ -4,10 +4,12 @@ import {
   BedDouble,
   CarFront,
   CircleStop,
+  CircleDot,
   Gauge,
   Hand,
   Music2,
   RotateCw,
+  Sparkles,
   X,
 } from 'lucide-react'
 import type { PointerEvent } from 'react'
@@ -40,11 +42,17 @@ export function TouchControls() {
   const setPlayerEmote = useGameStore((state) => state.setPlayerEmote)
   const interactionPrompt = useGameStore((state) => state.interactionPrompt)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const nearbyFootballBallId = useGameStore(
+    (state) => state.nearbyFootballBallId,
+  )
+  const requestWorldAction = useGameStore((state) => state.requestWorldAction)
   const joystickRef = useRef<HTMLDivElement>(null)
   const lookDragRef = useRef<
     { pointerId: number; x: number; y: number } | undefined
   >(undefined)
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
+  const [kickStartedAt, setKickStartedAt] = useState<number>()
+  const [kickPower, setKickPower] = useState(0)
 
   useEffect(
     () => () => {
@@ -52,6 +60,22 @@ export function TouchControls() {
     },
     [],
   )
+
+  useEffect(() => {
+    if (!kickStartedAt) return undefined
+    const updatePower = () => {
+      setKickPower(clamp((performance.now() - kickStartedAt) / 1100, 0, 1))
+    }
+    updatePower()
+    const interval = window.setInterval(updatePower, 45)
+    return () => window.clearInterval(interval)
+  }, [kickStartedAt])
+
+  useEffect(() => {
+    if (nearbyFootballBallId) return
+    setKickStartedAt(undefined)
+    setKickPower(0)
+  }, [nearbyFootballBallId])
 
   useEffect(() => {
     if (!buildMode) return
@@ -177,6 +201,43 @@ export function TouchControls() {
               : interactionPrompt === 'exit-vehicle'
                 ? 'Exit car'
                 : 'Interact'
+  const showFootballActions =
+    Boolean(nearbyFootballBallId) &&
+    !buildMode &&
+    !activeVehicleId &&
+    miniGame.status !== 'running'
+  const startFootballKick = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    } catch {
+      // Some synthetic/WebView pointer events do not expose an active capture target.
+    }
+    setKickStartedAt(performance.now())
+    setKickPower(0.12)
+  }
+  const finishFootballKick = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    try {
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+    } catch {
+      // Matching the capture guard above keeps release safe in test/mobile shells.
+    }
+    if (nearbyFootballBallId)
+      requestWorldAction(
+        'football-kick',
+        nearbyFootballBallId,
+        clamp(kickPower || 0.12, 0.12, 1),
+      )
+    setKickStartedAt(undefined)
+    setKickPower(0)
+  }
+  const requestFootballSkill = () => {
+    if (!nearbyFootballBallId) return
+    requestWorldAction('football-skill', nearbyFootballBallId)
+  }
 
   return (
     <>
@@ -226,6 +287,38 @@ export function TouchControls() {
             lookDragRef.current = undefined
         }}
       />
+      {showFootballActions ? (
+        <div className="football-hud-panel pointer-events-auto absolute z-20">
+          <button
+            type="button"
+            className={`football-kick-button ${kickStartedAt ? 'charging' : ''}`}
+            aria-label="Hold to kick ball"
+            title="Hold to kick"
+            onPointerDown={startFootballKick}
+            onPointerUp={finishFootballKick}
+            onPointerCancel={finishFootballKick}
+          >
+            <CircleDot size={24} aria-hidden />
+            <span>Kick</span>
+          </button>
+          <button
+            type="button"
+            className="football-skill-button"
+            aria-label="Do football skills"
+            title="Skills"
+            onClick={requestFootballSkill}
+          >
+            <Sparkles size={22} aria-hidden />
+            <span>Skills</span>
+          </button>
+          <div
+            className={`football-power-gauge ${kickStartedAt ? 'visible' : ''}`}
+            aria-hidden={!kickStartedAt}
+          >
+            <span style={{ width: `${Math.round(kickPower * 100)}%` }} />
+          </div>
+        </div>
+      ) : null}
       <div className="touch-control-layer pointer-events-none absolute inset-x-0 bottom-3 z-20 hidden items-end justify-between px-5">
         <div
           ref={joystickRef}

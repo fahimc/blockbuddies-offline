@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase football pitch gameplay
+
+- [x] Add a Football Pitch destination with visible goals, pitch markings, and footballs.
+- [x] Show contextual Kick and Skills HUD buttons only when the player is next to a football.
+- [x] Add hold-to-kick power charging, skill kick-ups, ball movement, goal scoring, coin rewards, and football sound effects.
+- [x] Keep pitch and goal areas clear of blocking road props.
+- [x] Add unit, component, and Playwright regression coverage for football interactions.
+- [x] Package and release Android debug APK for the football pitch update.
+
 ## Post-phase full pet collection
 
 - [x] Add Puppy Pal, Kitten Pal, Bunny Hop, Panda Cub, Forest Fox, Pond Duck, Piggy Pal, Monkey Buddy, Ruby Dragon, Dino Chomp, Star Unicorn, and Mini Bot to the pet catalog.

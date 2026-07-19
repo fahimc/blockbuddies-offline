@@ -8,6 +8,7 @@ export type LocationId =
   | 'obby'
   | 'houses'
   | 'parking'
+  | 'football'
   | 'hall'
   | 'builder'
 
@@ -56,7 +57,8 @@ export type BotRuntime = {
   speechUntil: number
 }
 
-export type PlayerEmote = 'none' | 'wave' | 'cheer' | 'dance' | 'sit'
+export type PlayerEmote =
+  'none' | 'wave' | 'cheer' | 'dance' | 'sit' | 'kickups'
 
 export type ChatMessage = {
   id: string

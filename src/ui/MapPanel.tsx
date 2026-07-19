@@ -2,6 +2,7 @@ import {
   Flag,
   Building2,
   CarFront,
+  CircleDot,
   GraduationCap,
   Hammer,
   House,
@@ -32,6 +33,7 @@ const locationIcons: Record<LocationId, LucideIcon> = {
   obby: Flag,
   houses: House,
   parking: CarFront,
+  football: CircleDot,
   builder: Hammer,
   hall: Building2,
 }
@@ -44,6 +46,7 @@ const shortLabels: Record<LocationId, string> = {
   obby: 'Obby',
   houses: 'Homes',
   parking: 'Parking',
+  football: 'Pitch',
   builder: 'Build',
   hall: 'Hall',
 }
@@ -56,22 +59,37 @@ export function MapPanel() {
   const activeInterior = useGameStore((state) => state.activeInterior)
   const nearbyLocation = useGameStore((state) => state.nearbyLocation)
   const obbyActive = useGameStore((state) => state.obby.active)
-  const miniGameRunning = useGameStore((state) => state.miniGame.status === 'running')
+  const miniGameRunning = useGameStore(
+    (state) => state.miniGame.status === 'running',
+  )
   const miniGame = useGameStore((state) => state.miniGame)
   const savedFriends = useGameStore((state) => state.savedFriends)
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
-  const [selectedId, setSelectedId] = useState<LocationId>(nearbyLocation ?? 'spawn')
+  const [selectedId, setSelectedId] = useState<LocationId>(
+    nearbyLocation ?? 'spawn',
+  )
   const selected = useMemo(
-    () => worldLocations.find((location) => location.id === selectedId) ?? worldLocations[0],
+    () =>
+      worldLocations.find((location) => location.id === selectedId) ??
+      worldLocations[0],
     [selectedId],
   )
   const mapPlayerPosition = activeInterior?.returnPosition ?? playerPosition
   const travelBlocked = obbyActive || miniGameRunning
   const activeTarget = activeMiniGameTarget(miniGame)
-  const distanceMeters = Math.max(1, Math.round(distance2d(mapPlayerPosition, selected.travelPosition) / unitsPerMeter))
+  const distanceMeters = Math.max(
+    1,
+    Math.round(
+      distance2d(mapPlayerPosition, selected.travelPosition) / unitsPerMeter,
+    ),
+  )
 
   return (
-    <div className="bb-map-overlay" role="presentation" onPointerDown={() => setOpenPanel(undefined)}>
+    <div
+      className="bb-map-overlay"
+      role="presentation"
+      onPointerDown={() => setOpenPanel(undefined)}
+    >
       <section
         className="bb-map-panel"
         role="dialog"
@@ -88,7 +106,12 @@ export function MapPanel() {
               Town Map
             </h2>
           </div>
-          <button type="button" onClick={() => setOpenPanel(undefined)} aria-label="Close map" title="Close map">
+          <button
+            type="button"
+            onClick={() => setOpenPanel(undefined)}
+            aria-label="Close map"
+            title="Close map"
+          >
             <X size={22} aria-hidden />
           </button>
         </header>
@@ -100,7 +123,9 @@ export function MapPanel() {
             playerYaw={playerYaw}
             activeTarget={activeTarget}
             savedFriends={savedFriends}
-            localPlayers={Object.values(remotePlayers).filter((player) => !player.interiorId)}
+            localPlayers={Object.values(remotePlayers).filter(
+              (player) => !player.interiorId,
+            )}
             onSelect={setSelectedId}
           />
 
@@ -124,12 +149,20 @@ export function MapPanel() {
 
         <footer className="bb-map-travel-bar">
           <div className="bb-map-travel-summary">
-            <span className="bb-map-selected-icon" style={{ backgroundColor: selected.color }}>
+            <span
+              className="bb-map-selected-icon"
+              style={{ backgroundColor: selected.color }}
+            >
               <SelectedIcon location={selected} size={21} />
             </span>
             <span>
               <strong>{selected.label}</strong>
-              <small>{activeInterior ? `Leave ${activeInterior.title} and travel` : `${distanceMeters} m away`} - {selected.description}</small>
+              <small>
+                {activeInterior
+                  ? `Leave ${activeInterior.title} and travel`
+                  : `${distanceMeters} m away`}{' '}
+                - {selected.description}
+              </small>
             </span>
           </div>
           <button
@@ -140,7 +173,11 @@ export function MapPanel() {
             aria-label={`Travel to ${selected.label}`}
           >
             <Navigation size={21} aria-hidden />
-            <span>{travelBlocked ? 'Activity in progress' : `Travel to ${shortLabels[selected.id]}`}</span>
+            <span>
+              {travelBlocked
+                ? 'Activity in progress'
+                : `Travel to ${shortLabels[selected.id]}`}
+            </span>
           </button>
           {travelBlocked ? (
             <p className="bb-map-travel-notice" role="status">
@@ -167,13 +204,27 @@ function TownMap({
   selectedId: LocationId
   playerPosition: Vec3
   playerYaw: number
-  activeTarget?: { label: string; mapLabel?: string; position: Vec3; kind?: string }
-  savedFriends: { id: string; name: string; inWorld: boolean; route: LocationId[] }[]
+  activeTarget?: {
+    label: string
+    mapLabel?: string
+    position: Vec3
+    kind?: string
+  }
+  savedFriends: {
+    id: string
+    name: string
+    inWorld: boolean
+    route: LocationId[]
+  }[]
   localPlayers: { id: string; name: string; position: Vec3 }[]
   onSelect: (id: LocationId) => void
 }) {
   return (
-    <div className="bb-town-map" aria-label="BlockBuddies town map" data-testid="town-map">
+    <div
+      className="bb-town-map"
+      aria-label="BlockBuddies town map"
+      data-testid="town-map"
+    >
       <span className="bb-town-map-district north">Homes</span>
       <span className="bb-town-map-district west">Park side</span>
       <span className="bb-town-map-district east">Activity side</span>
@@ -187,7 +238,10 @@ function TownMap({
             key={location.id}
             type="button"
             className={`bb-town-map-marker ${selectedId === location.id ? 'selected' : ''}`}
-            style={{ ...townPointStyle(location.position), backgroundColor: location.color }}
+            style={{
+              ...townPointStyle(location.position),
+              backgroundColor: location.color,
+            }}
             onClick={() => onSelect(location.id)}
             aria-label={`Select ${location.label}`}
             aria-pressed={selectedId === location.id}
@@ -207,14 +261,16 @@ function TownMap({
         title="You are here"
         aria-label="Your current position"
       />
-      {savedFriends.filter((friend) => friend.inWorld).map((friend, index) => (
-        <span
-          key={friend.id}
-          className="bb-town-map-friend saved"
-          style={townPointStyle(friendMapPosition(friend.route, index))}
-          title={friend.name}
-        />
-      ))}
+      {savedFriends
+        .filter((friend) => friend.inWorld)
+        .map((friend, index) => (
+          <span
+            key={friend.id}
+            className="bb-town-map-friend saved"
+            style={townPointStyle(friendMapPosition(friend.route, index))}
+            title={friend.name}
+          />
+        ))}
       {localPlayers.map((player) => (
         <span
           key={player.id}
@@ -242,7 +298,10 @@ function TownMap({
 
 function friendMapPosition(route: LocationId[], index: number): Vec3 {
   const routeIds = route.length ? route : ['spawn']
-  const location = worldLocations.find((entry) => entry.id === routeIds[index % routeIds.length]) ?? worldLocations[0]
+  const location =
+    worldLocations.find(
+      (entry) => entry.id === routeIds[index % routeIds.length],
+    ) ?? worldLocations[0]
   const offset = (index % 4) * 0.9
   return [location.position[0] + offset, 0, location.position[2] - offset]
 }
@@ -272,7 +331,13 @@ function DestinationButton({
   )
 }
 
-function SelectedIcon({ location, size }: { location: WorldLocation; size: number }) {
+function SelectedIcon({
+  location,
+  size,
+}: {
+  location: WorldLocation
+  size: number
+}) {
   const Icon = locationIcons[location.id]
   return <Icon size={size} aria-hidden />
 }

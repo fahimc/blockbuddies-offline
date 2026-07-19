@@ -110,6 +110,22 @@ import {
   avatarSelectionHitboxSize,
 } from './avatarInteraction'
 import {
+  advanceFootballBall,
+  beginFootballSkill,
+  createFootballBalls,
+  footballBallInteractionRadius,
+  footballBallRadius,
+  footballGoalForBall,
+  footballGoalReward,
+  footballGoals,
+  footballKickVelocity,
+  footballPitch,
+  nearestFootballBall,
+  pointInFootballPitchClearance,
+  resetFootballBall,
+  type FootballBallRuntime,
+} from './football'
+import {
   coreActivityPositions,
   coreCoinPositions,
   footprintOverlapsAuthoredCore,
@@ -187,7 +203,11 @@ const staticCollisionObstacles: CollisionBox[] = [
     half: [scale[0] / 2 + 0.18, scale[1] / 2, scale[2] / 2 + 0.18] as Vec3,
   })),
   ...staticTreePositions
-    .filter((position) => !staticTreeBlocksParking(position))
+    .filter(
+      (position) =>
+        !staticTreeBlocksParking(position) &&
+        !staticTreeBlocksFootballPitch(position),
+    )
     .map((position, index) => ({
       id: `static-tree:${index}`,
       center: [
@@ -207,7 +227,11 @@ const staticCollisionObstacles: CollisionBox[] = [
     half: [1.2, 0.55, 0.45] as Vec3,
   })),
   ...staticLampPositions
-    .filter((position) => !staticLampBlocksParking(position))
+    .filter(
+      (position) =>
+        !staticLampBlocksParking(position) &&
+        !staticLampBlocksFootballPitch(position),
+    )
     .map((position, index) => ({
       id: `static-lamp:${index}`,
       center: [
@@ -279,6 +303,8 @@ function OutdoorWorld() {
   const trafficRuntime = useRef<TrafficVehicle[]>(initialTrafficVehicles)
   const parkedVehicles = useMemo(() => createParkedVehicles(), [])
   const drivableRuntime = useRef<DrivableVehicle[]>(parkedVehicles)
+  const footballs = useMemo(() => createFootballBalls(), [])
+  const footballRuntime = useRef<FootballBallRuntime[]>(footballs)
 
   useEffect(() => {
     trafficRuntime.current = initialTrafficVehicles
@@ -288,10 +314,15 @@ function OutdoorWorld() {
     drivableRuntime.current = parkedVehicles
   }, [parkedVehicles])
 
+  useEffect(() => {
+    footballRuntime.current = footballs
+  }, [footballs])
+
   return (
     <>
       <ProceduralBoroughWorld />
       <Town />
+      <FootballPitch balls={footballs} runtime={footballRuntime} />
       <SeatActionMarkers />
       <ParkingLot vehicles={parkedVehicles} runtime={drivableRuntime} />
       <TrafficVehicles
@@ -305,6 +336,7 @@ function OutdoorWorld() {
         trafficLanes={trafficLanes}
         trafficRuntime={trafficRuntime}
         drivableRuntime={drivableRuntime}
+        footballRuntime={footballRuntime}
       />
       <Bots />
       <SavedFriendPlayers />
@@ -472,6 +504,244 @@ function TrafficVehicleMesh({
     </group>
   )
 }
+
+function FootballPitch({
+  balls,
+  runtime,
+}: {
+  balls: FootballBallRuntime[]
+  runtime: MutableRefObject<FootballBallRuntime[]>
+}) {
+  const scoreFootballGoal = useGameStore((state) => state.scoreFootballGoal)
+
+  useFrame((_, delta) => {
+    const now = performance.now()
+    runtime.current = runtime.current.map((ball, index) => {
+      const next = advanceFootballBall(ball, Math.min(delta, 0.08), now)
+      const goal = footballGoalForBall(next)
+      if (!goal || now - (next.lastGoalAt ?? 0) < 1000) return next
+      scoreFootballGoal(footballGoalReward)
+      return { ...resetFootballBall(next, index), lastGoalAt: now }
+    })
+  })
+
+  return (
+    <group>
+      <mesh
+        receiveShadow
+        position={[footballPitch.center[0], 0.055, footballPitch.center[2]]}
+      >
+        <boxGeometry args={[footballPitch.width, 0.1, footballPitch.length]} />
+        <meshStandardMaterial color="#22c55e" roughness={0.86} />
+      </mesh>
+      <PitchLine position={[0, 0]} size={[footballPitch.width, 0.1]} />
+      <PitchLine position={[0, 0]} size={[0.1, footballPitch.length]} />
+      <PitchLine
+        position={[0, -footballPitch.length / 2]}
+        size={[footballPitch.width, 0.12]}
+      />
+      <PitchLine
+        position={[0, footballPitch.length / 2]}
+        size={[footballPitch.width, 0.12]}
+      />
+      <PitchLine
+        position={[-footballPitch.width / 2, 0]}
+        size={[0.12, footballPitch.length]}
+      />
+      <PitchLine
+        position={[footballPitch.width / 2, 0]}
+        size={[0.12, footballPitch.length]}
+      />
+      <mesh
+        position={[footballPitch.center[0], 0.12, footballPitch.center[2]]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <torusGeometry args={[1.5, 0.035, 8, 48]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.62} />
+      </mesh>
+      {footballGoals.map((goal) => (
+        <FootballGoal key={goal.id} goal={goal} />
+      ))}
+      <Html
+        center
+        position={[
+          footballPitch.center[0],
+          2.6,
+          footballPitch.center[2] + footballPitch.length / 2 + 1.4,
+        ]}
+        zIndexRange={worldHtmlZIndexRange}
+      >
+        <span className="pointer-events-none select-none whitespace-nowrap rounded-xl bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
+          Hold Kick for power - score goals for coins
+        </span>
+      </Html>
+      {balls.map((ball) => (
+        <FootballBallMesh key={ball.id} ball={ball} runtime={runtime} />
+      ))}
+    </group>
+  )
+}
+
+function PitchLine({
+  position,
+  size,
+}: {
+  position: [number, number]
+  size: [number, number]
+}) {
+  return (
+    <mesh
+      receiveShadow
+      position={[
+        footballPitch.center[0] + position[0],
+        0.12,
+        footballPitch.center[2] + position[1],
+      ]}
+    >
+      <boxGeometry args={[size[0], 0.04, size[1]]} />
+      <meshStandardMaterial color="#f8fafc" roughness={0.7} />
+    </mesh>
+  )
+}
+
+function FootballGoal({ goal }: { goal: (typeof footballGoals)[number] }) {
+  const direction = goal.id === 'north-goal' ? -1 : 1
+  const postZ = goal.center[2] + direction * 0.45
+  const postY = 0.9
+  const halfGoal = footballPitch.goalWidth / 2
+  return (
+    <group>
+      <mesh
+        receiveShadow
+        position={[goal.center[0], 0.08, goal.center[2] + direction * 0.45]}
+      >
+        <boxGeometry args={[footballPitch.goalWidth, 0.035, 0.78]} />
+        <meshStandardMaterial
+          color="#bbf7d0"
+          emissive="#22c55e"
+          emissiveIntensity={0.18}
+          transparent
+          opacity={0.46}
+        />
+      </mesh>
+      {[-halfGoal, halfGoal].map((x) => (
+        <mesh key={x} castShadow position={[goal.center[0] + x, postY, postZ]}>
+          <boxGeometry args={[0.18, 1.8, 0.18]} />
+          <meshStandardMaterial color="#f8fafc" roughness={0.52} />
+        </mesh>
+      ))}
+      <mesh castShadow position={[goal.center[0], postY * 2, postZ]}>
+        <boxGeometry args={[footballPitch.goalWidth + 0.18, 0.18, 0.18]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.52} />
+      </mesh>
+      <mesh
+        position={[goal.center[0], 0.95, postZ + direction * 0.42]}
+        rotation={[0, 0, 0]}
+      >
+        <boxGeometry args={[footballPitch.goalWidth, 1.65, 0.08]} />
+        <meshStandardMaterial
+          color="#dbeafe"
+          roughness={0.48}
+          transparent
+          opacity={0.36}
+        />
+      </mesh>
+      <Html
+        center
+        position={[goal.center[0], 2.35, postZ + direction * 0.15]}
+        zIndexRange={worldHtmlZIndexRange}
+      >
+        <span className="pointer-events-none select-none whitespace-nowrap rounded-lg bg-slate-950/88 px-3 py-1 text-xs font-black text-white shadow">
+          GOAL
+        </span>
+      </Html>
+    </group>
+  )
+}
+
+function FootballBallMesh({
+  ball,
+  runtime,
+}: {
+  ball: FootballBallRuntime
+  runtime: MutableRefObject<FootballBallRuntime[]>
+}) {
+  const group = useRef<THREE.Group>(null)
+  const [nearby, setNearby] = useState(false)
+
+  useFrame((_, delta) => {
+    const current = runtime.current.find((item) => item.id === ball.id) ?? ball
+    group.current?.position.set(
+      current.position[0],
+      current.position[1],
+      current.position[2],
+    )
+    if (group.current) {
+      const speed = Math.hypot(current.velocity[0], current.velocity[2])
+      group.current.rotation.x += speed * delta * 1.9
+      group.current.rotation.z += current.velocity[0] * delta * 0.9
+    }
+    const state = useGameStore.getState()
+    const nextNearby =
+      !state.activeInterior &&
+      !state.activeVehicleId &&
+      !state.buildMode &&
+      Math.hypot(
+        state.playerPosition[0] - current.position[0],
+        state.playerPosition[2] - current.position[2],
+      ) <= footballBallInteractionRadius
+    if (nextNearby !== nearby) setNearby(nextNearby)
+  })
+
+  return (
+    <group ref={group} position={ball.position}>
+      <mesh castShadow receiveShadow>
+        <icosahedronGeometry args={[footballBallRadius, 2]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.52} />
+      </mesh>
+      {footballPatchPositions.map((patch, index) => (
+        <mesh key={index} position={patch.position} scale={patch.scale}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#111827" roughness={0.6} />
+        </mesh>
+      ))}
+      {nearby ? (
+        <Html
+          center
+          position={[0, footballBallRadius + 0.82, 0]}
+          zIndexRange={worldHtmlZIndexRange}
+        >
+          <span className="pointer-events-none select-none whitespace-nowrap rounded-full bg-slate-950/90 px-3 py-1 text-xs font-black text-white shadow">
+            Ball
+          </span>
+        </Html>
+      ) : null}
+    </group>
+  )
+}
+
+const footballPatchPositions = [
+  {
+    position: [0, footballBallRadius * 0.95, 0] as Vec3,
+    scale: [0.24, 0.04, 0.24] as Vec3,
+  },
+  {
+    position: [footballBallRadius * 0.72, 0, 0] as Vec3,
+    scale: [0.08, 0.22, 0.22] as Vec3,
+  },
+  {
+    position: [-footballBallRadius * 0.72, 0, 0] as Vec3,
+    scale: [0.08, 0.22, 0.22] as Vec3,
+  },
+  {
+    position: [0, 0, footballBallRadius * 0.72] as Vec3,
+    scale: [0.22, 0.22, 0.08] as Vec3,
+  },
+  {
+    position: [0, 0, -footballBallRadius * 0.72] as Vec3,
+    scale: [0.22, 0.22, 0.08] as Vec3,
+  },
+]
 
 function ProceduralBoroughWorld() {
   const settings = useGameStore((state) => state.settings)
@@ -1543,7 +1813,11 @@ function Town() {
       <StreetLamps />
 
       {staticTreePositions
-        .filter((position) => !staticTreeBlocksParking(position))
+        .filter(
+          (position) =>
+            !staticTreeBlocksParking(position) &&
+            !staticTreeBlocksFootballPitch(position),
+        )
         .map((position) => (
           <Tree key={position.join(',')} position={position} />
         ))}
@@ -1780,7 +2054,11 @@ function StreetLamps() {
   return (
     <group>
       {staticLampPositions
-        .filter((position) => !staticLampBlocksParking(position))
+        .filter(
+          (position) =>
+            !staticLampBlocksParking(position) &&
+            !staticLampBlocksFootballPitch(position),
+        )
         .map((position) => (
           <group key={position.join(',')} position={position}>
             <mesh castShadow position={[0, realScale.lampHeight / 2, 0]}>
@@ -1827,10 +2105,12 @@ function PlayerController({
   trafficLanes = [],
   trafficRuntime,
   drivableRuntime,
+  footballRuntime,
 }: {
   trafficLanes?: TrafficLane[]
   trafficRuntime?: MutableRefObject<TrafficVehicle[]>
   drivableRuntime?: MutableRefObject<DrivableVehicle[]>
+  footballRuntime?: MutableRefObject<FootballBallRuntime[]>
 }) {
   const initialPlayerState = useGameStore.getState()
   const initialPlayerPosition =
@@ -1883,6 +2163,9 @@ function PlayerController({
   const setActiveVehicle = useGameStore((state) => state.setActiveVehicle)
   const setInteractionPrompt = useGameStore(
     (state) => state.setInteractionPrompt,
+  )
+  const setNearbyFootballBall = useGameStore(
+    (state) => state.setNearbyFootballBall,
   )
   const settings = useGameStore((state) => state.settings)
   const activeInterior = useGameStore((state) => state.activeInterior)
@@ -2061,6 +2344,20 @@ function PlayerController({
               ) <= 2.3,
           )
         : undefined
+    const requestedFootballBall =
+      hasWorldRequest &&
+      footballRuntime &&
+      (request?.type === 'football-kick' || request?.type === 'football-skill')
+        ? footballRuntime.current.find(
+            (ball) =>
+              ball.id === request.id &&
+              distance2d(
+                [position.current.x, 0, position.current.z],
+                ball.position,
+              ) <=
+                footballBallInteractionRadius + 0.5,
+          )
+        : undefined
     const nearestSeat = nearestSeatTarget(
       [position.current.x, 0, position.current.z],
       seatTargets,
@@ -2198,7 +2495,41 @@ function PlayerController({
         requestedSeat ?? (!hasWorldRequest ? nearestSeat : undefined)
       const vehicleToUse =
         requestedVehicle ?? (!hasWorldRequest ? nearestVehicle : undefined)
-      if (requestedSeat || (!hasWorldRequest && seatToUse && !nearBed)) {
+      if (
+        requestedFootballBall &&
+        request?.type === 'football-kick' &&
+        footballRuntime
+      ) {
+        const index = footballRuntime.current.findIndex(
+          (ball) => ball.id === requestedFootballBall.id,
+        )
+        if (index >= 0) {
+          footballRuntime.current[index] = {
+            ...requestedFootballBall,
+            skillUntil: undefined,
+            skillAnchor: undefined,
+            velocity: footballKickVelocity(yaw.current, request.power ?? 0.35),
+          }
+          useGameStore.getState().recordFootballAction('kick')
+        }
+      } else if (
+        requestedFootballBall &&
+        request?.type === 'football-skill' &&
+        footballRuntime
+      ) {
+        const index = footballRuntime.current.findIndex(
+          (ball) => ball.id === requestedFootballBall.id,
+        )
+        if (index >= 0) {
+          footballRuntime.current[index] = beginFootballSkill(
+            requestedFootballBall,
+            [position.current.x, 0, position.current.z],
+            performance.now(),
+          )
+          useGameStore.getState().recordFootballAction('skill')
+          useGameStore.getState().setPlayerEmote('kickups')
+        }
+      } else if (requestedSeat || (!hasWorldRequest && seatToUse && !nearBed)) {
         currentSeat = seatToUse
         if (currentSeat) {
           seatedThisFrame = currentSeat.id
@@ -2400,6 +2731,13 @@ function PlayerController({
             drivableRuntime.current,
           )
         : undefined
+    const promptFootballBall =
+      !activeInterior && footballRuntime
+        ? nearestFootballBall(
+            [position.current.x, 0, position.current.z],
+            footballRuntime.current,
+          )
+        : undefined
     setInteractionPrompt(
       activeVehicleThisFrame
         ? 'exit-vehicle'
@@ -2416,6 +2754,15 @@ function PlayerController({
                 : worldActionsEnabled && promptVehicle
                   ? 'enter-vehicle'
                   : undefined,
+    )
+    setNearbyFootballBall(
+      worldActionsEnabled &&
+        !activeVehicleThisFrame &&
+        !seatedThisFrame &&
+        !sleepingThisFrame &&
+        promptFootballBall
+        ? promptFootballBall.id
+        : undefined,
     )
 
     if (effectiveMoving !== movingRef.current) {
@@ -2560,10 +2907,12 @@ function PlayerController({
       performance.now() - lastInteriorTransitionAt.current > 850
     if (activeVehicleThisFrame || seatedThisFrame || sleepingThisFrame) {
       setNearbyLocation(undefined)
+      setNearbyFootballBall(undefined)
       return
     }
     if (activeInterior) {
       setNearbyLocation(undefined)
+      setNearbyFootballBall(undefined)
       if (
         transitionReady &&
         (effectiveMoving || keys.interact || touch.interact) &&
@@ -3147,7 +3496,7 @@ type BlockAvatarProps = {
   username: string
   showName?: boolean
   hat?: boolean
-  emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit' | 'sleep'
+  emote?: 'none' | 'wave' | 'cheer' | 'dance' | 'sit' | 'kickups' | 'sleep'
   action?: BotRuntime['action']
   isSelected?: boolean
   onSelect?: () => void
@@ -3191,6 +3540,7 @@ export function BlockAvatar({
     const currentEmote = emoteRef.current
     const sleeping = currentEmote === 'sleep'
     const sitting = currentEmote === 'sit'
+    const kickups = currentEmote === 'kickups'
     const walking = currentAction === 'walk' || currentAction === 'run'
     const strideSpeed = currentAction === 'run' ? 11 : 7.5
     const stride = walking
@@ -3210,25 +3560,43 @@ export function BlockAvatar({
         : 0
     const danceTilt =
       currentEmote === 'dance' ? Math.sin(clock.elapsedTime * 5.2) * 0.22 : 0
+    const kickLeg = kickups
+      ? -0.95 + Math.sin(clock.elapsedTime * 14) * 0.18
+      : 0
+    const supportLeg = kickups ? Math.sin(clock.elapsedTime * 7) * 0.08 : 0
 
     if (body.current) {
       body.current.rotation.x = sleeping ? avatarSleepRotation[0] : 0
       body.current.rotation.y = sleeping ? avatarSleepRotation[1] : 0
-      body.current.rotation.z = sleeping ? 0 : danceTilt
+      body.current.rotation.z = sleeping || kickups ? 0 : danceTilt
       body.current.position.y =
         avatarBodyBaseY +
         (sleeping
           ? 0.08
-          : currentAction === 'jump'
-            ? 0.1
-            : Math.abs(stride) * 0.025 + idle)
+          : kickups
+            ? Math.abs(Math.sin(clock.elapsedTime * 8)) * 0.045
+            : currentAction === 'jump'
+              ? 0.1
+              : Math.abs(stride) * 0.025 + idle)
     }
     if (leftLeg.current) {
-      leftLeg.current.rotation.x = sleeping ? 0 : sitting ? -1.35 : stride
+      leftLeg.current.rotation.x = sleeping
+        ? 0
+        : sitting
+          ? -1.35
+          : kickups
+            ? kickLeg
+            : stride
       leftLeg.current.rotation.z = sleeping || sitting ? 0 : sideStride
     }
     if (rightLeg.current) {
-      rightLeg.current.rotation.x = sleeping ? 0 : sitting ? -1.35 : -stride
+      rightLeg.current.rotation.x = sleeping
+        ? 0
+        : sitting
+          ? -1.35
+          : kickups
+            ? supportLeg
+            : -stride
       rightLeg.current.rotation.z = sleeping || sitting ? 0 : -sideStride
     }
     if (leftArm.current) {
@@ -3236,7 +3604,9 @@ export function BlockAvatar({
         ? -0.12
         : sitting
           ? -0.18
-          : wave || -stride * 0.72
+          : kickups
+            ? -0.35
+            : wave || -stride * 0.72
       leftArm.current.rotation.z = sleeping
         ? -0.08
         : walking
@@ -3248,7 +3618,9 @@ export function BlockAvatar({
         ? 0.12
         : sitting
           ? -0.18
-          : cheer || stride * 0.72
+          : kickups
+            ? 0.3
+            : cheer || stride * 0.72
       rightArm.current.rotation.z = sleeping
         ? 0.08
         : walking
@@ -4097,6 +4469,13 @@ function staticTreeBlocksParking(position: Vec3) {
   })
 }
 
+function staticTreeBlocksFootballPitch(position: Vec3) {
+  return pointInFootballPitchClearance(
+    position,
+    buildPieceDimensions.tree.footprint / 2 + 0.45,
+  )
+}
+
 function staticLampBlocksParking(position: Vec3) {
   return collisionBoxOverlapsParkingClearance({
     id: 'static-lamp-visual',
@@ -4107,6 +4486,13 @@ function staticLampBlocksParking(position: Vec3) {
       buildPieceDimensions.lamp.footprint / 2,
     ],
   })
+}
+
+function staticLampBlocksFootballPitch(position: Vec3) {
+  return pointInFootballPitchClearance(
+    position,
+    buildPieceDimensions.lamp.footprint / 2 + 0.35,
+  )
 }
 
 function DeliveryDashTarget({

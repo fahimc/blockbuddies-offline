@@ -17,6 +17,8 @@ describe('TouchControls', () => {
       buildMode: false,
       selectedBuildBlockId: undefined,
       activeVehicleId: undefined,
+      nearbyFootballBallId: undefined,
+      worldActionRequest: undefined,
       playerEmote: 'none',
       miniGame: { ...state.miniGame, status: 'idle', activeId: undefined },
     }))
@@ -161,5 +163,27 @@ describe('TouchControls', () => {
     expect(
       screen.queryByRole('button', { name: 'Toggle emotes' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('shows football actions near a ball and sends kick power plus skill requests', () => {
+    useGameStore.setState({ nearbyFootballBallId: 'football-main' })
+    render(<TouchControls />)
+
+    const kick = screen.getByRole('button', { name: 'Hold to kick ball' })
+    const skills = screen.getByRole('button', { name: 'Do football skills' })
+
+    fireEvent.pointerDown(kick, { pointerId: 7 })
+    fireEvent.pointerUp(kick, { pointerId: 7 })
+    expect(useGameStore.getState().worldActionRequest).toMatchObject({
+      type: 'football-kick',
+      id: 'football-main',
+    })
+    expect(useGameStore.getState().worldActionRequest?.power).toBeGreaterThan(0)
+
+    fireEvent.click(skills)
+    expect(useGameStore.getState().worldActionRequest).toMatchObject({
+      type: 'football-skill',
+      id: 'football-main',
+    })
   })
 })

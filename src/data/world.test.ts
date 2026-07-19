@@ -13,7 +13,7 @@ import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
   it('provides one grounded, nearby arrival point for every key location', () => {
-    expect(worldLocations).toHaveLength(9)
+    expect(worldLocations).toHaveLength(10)
     expect(new Set(worldLocations.map((location) => location.id)).size).toBe(
       worldLocations.length,
     )
@@ -84,6 +84,16 @@ describe('world travel destinations', () => {
       interiorKind: 'school',
     })
     expect(distance2d(school.position, schoolBuilding!.position)).toBe(0)
+  })
+
+  it('adds Football Pitch as a discoverable playable destination', () => {
+    const football = getLocation('football')
+
+    expect(football.label).toBe('Football Pitch')
+    expect(football.description).toContain('score goals')
+    expect(distance2d(football.position, football.travelPosition)).toBeLessThan(
+      6,
+    )
   })
 
   it('places Builder Meadows on a clear player-buildable ground parcel', () => {

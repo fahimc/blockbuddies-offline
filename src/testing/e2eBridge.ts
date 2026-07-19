@@ -11,6 +11,7 @@ import type {
 import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
+import { footballPitch } from '../game/football'
 import {
   createParkedVehicles,
   drivableVehicleCollisionBoxes,
@@ -55,6 +56,7 @@ export type BlockBuddiesE2EBridge = {
   prepareMessageTargetInteraction: (distance?: number) => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
+  prepareFootballInteraction: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
   completeObbyCourse: () => GameplayE2ESnapshot
   setDriveInput: (
@@ -91,6 +93,9 @@ export type GameplayE2ESnapshot = {
   chatTexts: string[]
   placedBlocks: BuildBlock[]
   messageThreads: MessageThread[]
+  nearbyFootballBallId?: string
+  footballActionSequence: number
+  footballActionKind?: string
 }
 
 export type LocalPartyE2ESnapshot = {
@@ -131,6 +136,7 @@ export function installE2EBridge() {
     prepareMessageTargetInteraction,
     prepareMovementInteraction,
     prepareBuildModeInteraction,
+    prepareFootballInteraction,
     startObbyGame,
     completeObbyCourse,
     setDriveInput,
@@ -172,6 +178,47 @@ function prepareBuildModeInteraction() {
       sequence: teleportSequence,
       position: playerPosition,
       yaw: 0,
+    },
+  })
+  return getGameplaySnapshot()
+}
+
+function prepareFootballInteraction() {
+  const game = useGameStore.getState()
+  const teleportSequence = game.teleportSequence + 1
+  const playerPosition: Vec3 = [
+    footballPitch.center[0],
+    0,
+    footballPitch.center[2] + 1.25,
+  ]
+  useGameStore.setState({
+    activeInterior: undefined,
+    buildMode: false,
+    openPanel: undefined,
+    playerPosition,
+    playerYaw: Math.PI,
+    teleportSequence,
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: playerPosition,
+      yaw: Math.PI,
+      resetView: true,
+    },
+    sleeping: false,
+    seatedSeatId: undefined,
+    activeVehicleId: undefined,
+    interactionPrompt: undefined,
+    nearbyFootballBallId: undefined,
+    worldActionRequest: undefined,
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
     },
   })
   return getGameplaySnapshot()
@@ -403,6 +450,9 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     chatTexts: game.chat.map((message) => message.text),
     placedBlocks: game.placedBlocks,
     messageThreads: game.messageThreads,
+    nearbyFootballBallId: game.nearbyFootballBallId,
+    footballActionSequence: game.footballActionSequence,
+    footballActionKind: game.footballActionKind,
   }
 }
 

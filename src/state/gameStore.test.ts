@@ -1124,9 +1124,40 @@ describe('world interaction state', () => {
     const first = useGameStore.getState().worldActionRequest
     useGameStore.getState().requestWorldAction('vehicle', 'car-a')
     const second = useGameStore.getState().worldActionRequest
+    useGameStore.getState().requestWorldAction('football-kick', 'ball-a', 0.75)
+    const third = useGameStore.getState().worldActionRequest
 
     expect(first).toMatchObject({ type: 'seat', id: 'seat-a' })
     expect(second).toMatchObject({ type: 'vehicle', id: 'car-a' })
     expect(second!.sequence).toBeGreaterThan(first!.sequence)
+    expect(third).toMatchObject({
+      type: 'football-kick',
+      id: 'ball-a',
+      power: 0.75,
+    })
+    expect(third!.sequence).toBeGreaterThan(second!.sequence)
+  })
+
+  it('tracks nearby football HUD state and scores goals through the normal coin path', () => {
+    useGameStore.setState({
+      coins: 0,
+      nearbyFootballBallId: undefined,
+      footballActionSequence: 0,
+      footballActionKind: undefined,
+      chat: [],
+      questProgress: [],
+    })
+
+    useGameStore.getState().setNearbyFootballBall('football-main')
+    useGameStore.getState().recordFootballAction('kick')
+    useGameStore.getState().scoreFootballGoal(12)
+
+    expect(useGameStore.getState().nearbyFootballBallId).toBe('football-main')
+    expect(useGameStore.getState().footballActionKind).toBe('goal')
+    expect(useGameStore.getState().footballActionSequence).toBe(2)
+    expect(useGameStore.getState().coins).toBe(42)
+    expect(
+      useGameStore.getState().chat.map((message) => message.text),
+    ).toContain('Goal at Football Pitch! +12 coins')
   })
 })

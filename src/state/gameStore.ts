@@ -101,10 +101,13 @@ export type InteractionPrompt =
   'sleep' | 'wake' | 'sit' | 'stand' | 'enter-vehicle' | 'exit-vehicle'
 
 export type WorldActionRequest = {
-  type: 'seat' | 'vehicle'
+  type: 'seat' | 'vehicle' | 'football-kick' | 'football-skill'
   id: string
   sequence: number
+  power?: number
 }
+
+export type FootballActionKind = 'kick' | 'skill' | 'goal'
 
 type TeleportTarget = {
   sequence: number
@@ -163,6 +166,9 @@ type GameState = GameSave & {
   activeVehicleId?: string
   interactionPrompt?: InteractionPrompt
   worldActionRequest?: WorldActionRequest
+  nearbyFootballBallId?: string
+  footballActionSequence: number
+  footballActionKind?: FootballActionKind
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
   selectedBuildBlockId?: string
@@ -208,7 +214,14 @@ type GameState = GameSave & {
   setSeatedSeat: (seatId?: string) => void
   setActiveVehicle: (vehicleId?: string) => void
   setInteractionPrompt: (prompt?: InteractionPrompt) => void
-  requestWorldAction: (type: WorldActionRequest['type'], id: string) => void
+  setNearbyFootballBall: (ballId?: string) => void
+  requestWorldAction: (
+    type: WorldActionRequest['type'],
+    id: string,
+    power?: number,
+  ) => void
+  recordFootballAction: (kind: FootballActionKind) => void
+  scoreFootballGoal: (reward: number) => void
   setBuildMode: (enabled: boolean) => void
   setSelectedBuildPiece: (piece: BuildPieceId) => void
   setSelectedBuildBlock: (blockId?: string) => void
@@ -539,7 +552,9 @@ function applyQuestAdvance(
   let completed = false
   let changed =
     normalizedProgress.length !== state.questProgress.length ||
-    normalizedProgress.some((quest, index) => quest !== state.questProgress[index])
+    normalizedProgress.some(
+      (quest, index) => quest !== state.questProgress[index],
+    )
   const questProgress = normalizedProgress.map((quest) => {
     if (quest.id !== id) return quest
     const result = advanceQuestProgress(quest, definition, amount)
@@ -554,7 +569,9 @@ function applyQuestAdvance(
     completed,
     changed,
     message: completed
-      ? systemMessage(`${definition.title} complete! +${definition.reward} coins`)
+      ? systemMessage(
+          `${definition.title} complete! +${definition.reward} coins`,
+        )
       : undefined,
   }
 }
@@ -614,6 +631,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   seatedSeatId: undefined,
   activeVehicleId: undefined,
   worldActionRequest: undefined,
+  nearbyFootballBallId: undefined,
+  footballActionSequence: 0,
+  footballActionKind: undefined,
   buildMode: false,
   selectedBuildPiece: 'block',
   selectedBuildBlockId: undefined,
@@ -1158,14 +1178,37 @@ export const useGameStore = create<GameState>((set, get) => ({
         ? state
         : { interactionPrompt },
     ),
-  requestWorldAction: (type, id) =>
+  setNearbyFootballBall: (nearbyFootballBallId) =>
+    set((state) =>
+      state.nearbyFootballBallId === nearbyFootballBallId
+        ? state
+        : { nearbyFootballBallId },
+    ),
+  requestWorldAction: (type, id, power) =>
     set((state) => ({
       worldActionRequest: {
         type,
         id,
         sequence: (state.worldActionRequest?.sequence ?? 0) + 1,
+        power,
       },
     })),
+  recordFootballAction: (footballActionKind) =>
+    set((state) => ({
+      footballActionKind,
+      footballActionSequence: state.footballActionSequence + 1,
+    })),
+  scoreFootballGoal: (reward) => {
+    get().addCoins(reward)
+    set((state) => ({
+      footballActionKind: 'goal',
+      footballActionSequence: state.footballActionSequence + 1,
+      chat: [
+        ...state.chat.slice(-60),
+        systemMessage(`Goal at Football Pitch! +${reward} coins`),
+      ],
+    }))
+  },
 
   setBuildMode: (buildMode) =>
     set((state) =>
@@ -1850,6 +1893,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       activeVehicleId: undefined,
       interactionPrompt: undefined,
       worldActionRequest: undefined,
+      nearbyFootballBallId: undefined,
+      footballActionSequence: 0,
+      footballActionKind: undefined,
       touch: {
         x: 0,
         y: 0,
