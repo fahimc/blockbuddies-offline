@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase Delivery Dash reward settlement
+
+- [x] Audit Delivery Dash route, completion, and associated quest rewards.
+- [x] Settle mini-game coins and quest rewards in one state transaction.
+- [x] Advance coin quests and badges from mini-game earnings consistently.
+- [x] Show a final reward receipt with the paid amount and resulting balance.
+- [x] Prevent duplicate payout after completion while preserving repeat-run game rewards.
+- [x] Add store, quest, and browser regression coverage.
+- [x] Package and release the Android debug APK for the reward settlement fix.
+
 ## Post-phase mobile map pinch recovery
 
 - [x] Reproduce the blank-map crash with real two-touch browser input.

@@ -916,6 +916,61 @@ describe('mini game store flow', () => {
     ).toContain('Park drop-off collected! +20 pts, +8 coins, +5s (2/4)')
   })
 
+  it('settles every Delivery Dash reward once and still pays repeat wins', () => {
+    useGameStore.setState({
+      miniGame: createInitialMiniGame(),
+      activeInterior: undefined,
+      coins: 0,
+      questProgress: createQuestProgress(questDefinitions),
+      earnedBadges: [],
+      chat: [],
+    })
+
+    useGameStore.getState().startMiniGame('delivery-dash', 1_000)
+    deliveryDashTargets.forEach((target, index) => {
+      useGameStore
+        .getState()
+        .tickMiniGame(2_000 + index * 1_000, target.position)
+    })
+
+    const firstWin = useGameStore.getState()
+    expect(firstWin.miniGame.status).toBe('completed')
+    expect(firstWin.coins).toBe(144)
+    expect(firstWin.earnedBadges).toEqual(
+      expect.arrayContaining(['coin-starter', 'mini-game-star']),
+    )
+    expect(
+      firstWin.questProgress.find((quest) => quest.id === 'collect-10-coins'),
+    ).toMatchObject({ completed: true, progress: 10 })
+    expect(
+      firstWin.questProgress.find((quest) => quest.id === 'deliver-a-package'),
+    ).toMatchObject({ completed: true, progress: 1 })
+    expect(firstWin.chat.map((message) => message.text)).toEqual(
+      expect.arrayContaining([
+        'Collect 10 coins complete! +30 coins',
+        'Finish Delivery Dash complete! +50 coins',
+        'Delivery Dash rewards paid: +98 coins (balance 144)',
+      ]),
+    )
+
+    useGameStore
+      .getState()
+      .tickMiniGame(10_000, deliveryDashTargets[3].position)
+    expect(useGameStore.getState().coins).toBe(144)
+
+    useGameStore.getState().startMiniGame('delivery-dash', 20_000)
+    deliveryDashTargets.forEach((target, index) => {
+      useGameStore
+        .getState()
+        .tickMiniGame(21_000 + index * 1_000, target.position)
+    })
+
+    expect(useGameStore.getState().coins).toBe(208)
+    expect(
+      useGameStore.getState().chat.map((message) => message.text),
+    ).toContain('Delivery Dash rewards paid: +48 coins (balance 208)')
+  })
+
   it('starts a mini game, completes it, and awards coins plus a badge', () => {
     useGameStore.setState({
       miniGame: createInitialMiniGame(),
@@ -923,6 +978,7 @@ describe('mini game store flow', () => {
       openPanel: 'minigames',
       buildMode: true,
       coins: 0,
+      questProgress: createQuestProgress(questDefinitions),
       earnedBadges: [],
       chat: [],
       playerPosition: [0, 0, 0],
@@ -948,7 +1004,7 @@ describe('mini game store flow', () => {
     })
 
     expect(useGameStore.getState().miniGame.status).toBe('completed')
-    expect(useGameStore.getState().coins).toBe(88)
+    expect(useGameStore.getState().coins).toBe(118)
     expect(useGameStore.getState().miniGame.points).toBe(130)
     expect(useGameStore.getState().earnedBadges).toContain('mini-game-star')
     expect(

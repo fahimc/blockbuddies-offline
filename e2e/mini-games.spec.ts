@@ -9,7 +9,12 @@ type MiniGameSnapshot = {
     target: number
     records: Record<
       string,
-      { plays: number; bestScore: number; bestPoints?: number; bestTime?: number }
+      {
+        plays: number
+        bestScore: number
+        bestPoints?: number
+        bestTime?: number
+      }
     >
   }
   coins: number
@@ -80,13 +85,15 @@ test.describe('mini games end-to-end flow', () => {
     await completeStartFlow(page, 'CoinRunner')
 
     await startMiniGame(page, 'Play Coin Rush', /Coin Rush.*0\/8/)
+    await expect(page.getByTestId('mini-game-announcement')).toContainText(
+      'Coin Rush',
+    )
+    await expect(page.getByTestId('mini-game-announcement')).toContainText(
+      'All players',
+    )
     await expect(
-      page.getByTestId('mini-game-announcement'),
-    ).toContainText('Coin Rush')
-    await expect(
-      page.getByTestId('mini-game-announcement'),
-    ).toContainText('All players')
-    await expect(page.getByTestId('mini-game-announcement').locator('strong')).toContainText(/\d+s/)
+      page.getByTestId('mini-game-announcement').locator('strong'),
+    ).toContainText(/\d+s/)
     const started = await page.evaluate(() =>
       window.__blockBuddiesE2E!.getSnapshot(),
     )
@@ -114,16 +121,21 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 8,
       bestPoints: 130,
     })
-    expect(snapshot.coins).toBe(88)
+    expect(snapshot.coins).toBe(118)
     expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
-    expect(snapshot.chatTexts).toContain('Coin Rush complete! 130 pts, +35 coins')
+    expect(snapshot.chatTexts).toContain(
+      'Coin Rush complete! 130 pts, +35 coins',
+    )
     expect(snapshot.chatTexts).toContain('Win Coin Rush complete! +45 coins')
+    expect(snapshot.chatTexts).toContain(
+      'Coin Rush rewards paid: +111 coins (balance 118)',
+    )
     expect(snapshot.chatTexts).toContain('Badge earned: Mini Game Star')
     expect(snapshot.chatTexts).toContain('Nice run in Coin Rush!')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
     await expect(
-      page.locator('.desktop-hud').getByText('88').first(),
+      page.locator('.desktop-hud').getByText('118').first(),
     ).toBeVisible()
   })
 
@@ -134,19 +146,25 @@ test.describe('mini games end-to-end flow', () => {
     await completeStartFlow(page, 'DashRunner')
 
     await startMiniGame(page, 'Play Delivery Dash', /Delivery Dash.*0\/4/)
-    await expect(page.getByTestId('mini-game-hud')).toContainText('Pickup parcel')
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      'Pickup parcel',
+    )
     await expect(page.getByTestId('mini-map-objective')).toBeVisible()
     await page.getByRole('button', { name: 'Open town map' }).click()
-    await expect(page.getByTestId('town-map-objective')).toContainText('Pickup parcel')
+    await expect(page.getByTestId('town-map-objective')).toContainText(
+      'Pickup parcel',
+    )
     await expect(page.getByText('Active target: Pickup parcel')).toBeVisible()
     await page.getByRole('button', { name: 'Close map' }).click()
     await expect
       .poll(
         () =>
           page.evaluate(() =>
-            window.__blockBuddiesE2E!.getSnapshot().chatTexts.some((text) =>
-              text.startsWith('Delivery Dash: Pickup parcel'),
-            ),
+            window
+              .__blockBuddiesE2E!.getSnapshot()
+              .chatTexts.some((text) =>
+                text.startsWith('Delivery Dash: Pickup parcel'),
+              ),
           ),
         { timeout: 15_000 },
       )
@@ -157,24 +175,37 @@ test.describe('mini games end-to-end flow', () => {
     expect(pickup.miniGame.score).toBe(1)
     expect(pickup.miniGame.points).toBe(5)
     expect(pickup.coins).toBe(0)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*1\/4/)
-    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to Park')
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      /Delivery Dash.*1\/4/,
+    )
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      'Deliver to Park',
+    )
     expect(pickup.chatTexts).toContain('Parcel pickup collected! +5 pts (1/4)')
 
     const firstDropOff = await collectNextTarget(page)
     expect(firstDropOff.miniGame.score).toBe(2)
     expect(firstDropOff.miniGame.points).toBe(25)
     expect(firstDropOff.coins).toBe(8)
-    await expect(page.getByTestId('mini-game-hud')).toContainText(/Delivery Dash.*2\/4/)
-    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to School')
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      /Delivery Dash.*2\/4/,
+    )
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      'Deliver to School',
+    )
     expect(firstDropOff.chatTexts).toContain(
       'Park drop-off collected! +20 pts, +8 coins, +5s (2/4)',
     )
 
     const secondDropOff = await collectNextTarget(page)
     expect(secondDropOff.miniGame.score).toBe(3)
-    expect(secondDropOff.coins).toBe(16)
-    await expect(page.getByTestId('mini-game-hud')).toContainText('Deliver to Houses')
+    expect(secondDropOff.coins).toBe(46)
+    expect(secondDropOff.chatTexts).toContain(
+      'Collect 10 coins complete! +30 coins',
+    )
+    await expect(page.getByTestId('mini-game-hud')).toContainText(
+      'Deliver to Houses',
+    )
 
     const finished = await collectNextTarget(page)
     expect(finished.miniGame.status).toBe('completed')
@@ -183,9 +214,16 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 4,
       bestPoints: 105,
     })
-    expect(finished.coins).toBe(114)
-    expect(finished.chatTexts).toContain('Delivery Dash complete! 105 pts, +40 coins')
-    expect(finished.chatTexts).toContain('Finish Delivery Dash complete! +50 coins')
+    expect(finished.coins).toBe(144)
+    expect(finished.chatTexts).toContain(
+      'Delivery Dash complete! 105 pts, +40 coins',
+    )
+    expect(finished.chatTexts).toContain(
+      'Finish Delivery Dash complete! +50 coins',
+    )
+    expect(finished.chatTexts).toContain(
+      'Delivery Dash rewards paid: +98 coins (balance 144)',
+    )
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
 
@@ -206,9 +244,13 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 3,
       bestPoints: 100,
     })
-    expect(finished.coins).toBe(125)
-    expect(finished.chatTexts).toContain('Hide & Seek complete! 100 pts, +50 coins')
-    expect(finished.chatTexts).toContain('Visit Skill School complete! +20 coins')
+    expect(finished.coins).toBe(155)
+    expect(finished.chatTexts).toContain(
+      'Hide & Seek complete! 100 pts, +50 coins',
+    )
+    expect(finished.chatTexts).toContain(
+      'Visit Skill School complete! +20 coins',
+    )
     expect(finished.chatTexts).toContain('Win Hide & Seek complete! +55 coins')
 
     await openMiniGamesPanel(page)
@@ -256,7 +298,9 @@ test.describe('mobile mini game controls', () => {
     await startMiniGame(page, 'Play Coin Rush', /0\/8/)
     await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0/8')
     await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0p')
-    await expect(page.getByTestId('mini-game-announcement')).toContainText('Coin Rush')
+    await expect(page.getByTestId('mini-game-announcement')).toContainText(
+      'Coin Rush',
+    )
     await expect(
       page.getByRole('button', { name: 'Cancel', exact: true }),
     ).toBeVisible()
@@ -269,8 +313,8 @@ test.describe('mobile mini game controls', () => {
     expect(snapshot.miniGame.status).toBe('idle')
     expect(snapshot.coins).toBe(0)
     expect(
-      await page.evaluate(() =>
-        window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
+      await page.evaluate(
+        () => window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,
       ),
     ).toContain('Mini game cancelled')
     await expect(page.getByTestId('mini-game-hud-mobile')).toHaveCount(0)

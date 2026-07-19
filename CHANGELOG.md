@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.73-delivery-reward-settlement] - 2026-07-19
+
+### Added
+
+- Added an explicit mini-game payout receipt showing the coins paid by the final transaction and the resulting balance.
+- Added first-win, repeat-win, duplicate-award, coin-quest, and browser regressions for Delivery Dash rewards.
+
+### Changed
+
+- Routed mini-game target and completion coins through the same atomic coin-and-quest settlement used by normal gameplay earnings.
+- Made mini-game earnings advance the Collect 10 Coins quest and unlock the Coin Starter badge consistently.
+- Updated Android and package version metadata to `1.5.73` / `10573`.
+
+### Fixed
+
+- Fixed Delivery Dash rewards bypassing the shared coin-award path, which left the coin quest and badge state inconsistent and made the final payout difficult to verify.
+- Kept completed mini-game quests one-time-only while ensuring every repeated Delivery Dash win still pays its `24` route coins and `40` completion coins.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.72-map-pinch-recovery] - 2026-07-19
 
 ### Added

@@ -27,6 +27,7 @@ import {
   miniGameDefinition,
   startMiniGameSession,
   tickMiniGameSession,
+  type MiniGameTickResult,
 } from '../ai/miniGames'
 import {
   sanitizePartyName,
@@ -593,6 +594,64 @@ function applyQuestAdvance(
   }
 }
 
+type CoinEarningResult = {
+  coins: number
+  questProgress: QuestProgress[]
+  messages: ChatMessage[]
+}
+
+function applyCoinEarning(
+  state: Pick<GameState, 'questProgress' | 'coins'>,
+  amount: number,
+): CoinEarningResult {
+  const currentCoins = Number.isFinite(state.coins)
+    ? Math.max(0, state.coins)
+    : 0
+  const safeAmount = Number.isFinite(amount) ? amount : 0
+  const coins = Math.max(0, currentCoins + safeAmount)
+  if (safeAmount <= 0) {
+    return {
+      coins,
+      questProgress: state.questProgress,
+      messages: [],
+    }
+  }
+
+  const coinQuest = applyQuestAdvance(
+    { questProgress: state.questProgress, coins },
+    'collect-10-coins',
+    safeAmount,
+  )
+  return {
+    coins: coinQuest.coins,
+    questProgress: coinQuest.questProgress,
+    messages: coinQuest.message ? [coinQuest.message] : [],
+  }
+}
+
+function settleMiniGameEarnings(
+  state: Pick<GameState, 'questProgress' | 'coins'>,
+  activeId: MiniGameId | undefined,
+  result: MiniGameTickResult,
+): CoinEarningResult {
+  const earnedCoins = result.coinsAwarded + result.reward
+  let settlement = applyCoinEarning(state, earnedCoins)
+  const questId =
+    result.completedNow && activeId ? miniGameQuestIds[activeId] : undefined
+  if (!questId) return settlement
+
+  const miniGameQuest = applyQuestAdvance(settlement, questId, 1)
+  settlement = {
+    coins: miniGameQuest.coins,
+    questProgress: miniGameQuest.questProgress,
+    messages: [
+      ...settlement.messages,
+      ...(miniGameQuest.message ? [miniGameQuest.message] : []),
+    ],
+  }
+  return settlement
+}
+
 const initialObby: ObbyState = {
   active: false,
   checkpoint: obbyStart,
@@ -1073,9 +1132,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
 
   addCoins: (amount) => {
-    set((state) => ({ coins: Math.max(0, state.coins + amount) }))
+    set((state) => {
+      const earning = applyCoinEarning(state, amount)
+      return {
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat:
+          earning.messages.length > 0
+            ? [...state.chat.slice(-60), ...earning.messages]
+            : state.chat,
+      }
+    })
     if (get().coins >= 10) get().awardBadge('coin-starter')
-    if (amount > 0) get().advanceQuest('collect-10-coins', amount)
   },
 
   awardBadge: (id) =>
@@ -1804,7 +1872,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }),
 
-  tickMiniGame: (now, position) =>
+  tickMiniGame: (now, position) => {
     set((state) => {
       if (state.miniGame.status !== 'running') return state
       const activeId = state.miniGame.activeId
@@ -1839,23 +1907,19 @@ export const useGameStore = create<GameState>((set, get) => ({
               ),
             ]
           : []
-      const questResult =
-        result.completedNow && activeId && miniGameQuestIds[activeId]
-          ? applyQuestAdvance(
-              {
-                questProgress: state.questProgress,
-                coins: state.coins + result.coinsAwarded + result.reward,
-              },
-              miniGameQuestIds[activeId],
-              1,
-            )
-          : undefined
+      const earnings = settleMiniGameEarnings(state, activeId, result)
+      const rewardReceipt =
+        result.completedNow && definition
+          ? [
+              systemMessage(
+                `${definition.title} rewards paid: +${earnings.coins - state.coins} coins (balance ${earnings.coins})`,
+              ),
+            ]
+          : []
       return {
         miniGame: result.state,
-        coins:
-          questResult?.coins ??
-          state.coins + result.coinsAwarded + result.reward,
-        questProgress: questResult?.questProgress ?? state.questProgress,
+        coins: earnings.coins,
+        questProgress: earnings.questProgress,
         earnedBadges:
           result.completedNow && !state.earnedBadges.includes('mini-game-star')
             ? [...state.earnedBadges, 'mini-game-star']
@@ -1864,11 +1928,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...state.chat.slice(-60),
           ...collectedMessages,
           ...completedMessages,
-          ...(questResult?.message ? [questResult.message] : []),
+          ...earnings.messages,
+          ...rewardReceipt,
           ...failedMessages,
         ],
       }
-    }),
+    })
+    if (get().coins >= 10) get().awardBadge('coin-starter')
+  },
 
   cancelMiniGame: () =>
     set((state) => ({

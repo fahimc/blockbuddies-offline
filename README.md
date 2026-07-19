@@ -608,6 +608,12 @@ the event, reject invalid camera values, bound individual zoom updates, clean
 up lost pointers, and always restore neutral gameplay controls when the map
 closes.
 
+The `v1.5.73` APK settles Delivery Dash route coins, completion coins, and quest
+coins atomically. Mini-game earnings now update the coin quest and badge path
+consistently, the final transaction reports its paid amount and resulting
+balance, and repeat wins continue paying game rewards without repeating the
+one-time quest reward.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the
