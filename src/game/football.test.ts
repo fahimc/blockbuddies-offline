@@ -1,17 +1,37 @@
 import { describe, expect, it } from 'vitest'
+import { generateProceduralWorld } from '../data/proceduralWorld'
+import { proceduralTerrainAt } from '../data/proceduralTownPlan'
 import { coreTerrainZones } from './townPlacement'
 import { terrainAt } from './worldGrid'
 import {
   advanceFootballBall,
   createFootballBalls,
+  footballBallPatchFaces,
+  footballGoals,
   footballGoalForBall,
   footballKickVelocity,
   footballPitch,
+  footprintIntersectsFootballPitch,
   nearestFootballBall,
   pointInFootballPitchClearance,
 } from './football'
 
 describe('football pitch and ball logic', () => {
+  it('uses a long rectangular pitch with goals at the far ends of the long axis', () => {
+    expect(footballPitch.length).toBeGreaterThan(footballPitch.width)
+    expect(footballGoals).toHaveLength(2)
+    expect(
+      footballGoals.every(
+        (goal) => Math.abs(goal.center[0] - footballPitch.center[0]) < 0.001,
+      ),
+    ).toBe(true)
+    expect(
+      footballGoals.map((goal) =>
+        Math.abs(goal.center[2] - footballPitch.center[2]),
+      ),
+    ).toEqual([footballPitch.length / 2, footballPitch.length / 2])
+  })
+
   it('places the authored pitch on clear non-road terrain', () => {
     const samples = [
       footballPitch.center,
@@ -38,7 +58,53 @@ describe('football pitch and ball logic', () => {
     ] as const
 
     expect(
-      samples.every(([x, , z]) => terrainAt(x, z, coreTerrainZones) !== 'road'),
+      samples.every(
+        ([x, , z]) =>
+          terrainAt(x, z, coreTerrainZones) !== 'road' &&
+          proceduralTerrainAt(x, z) === 'ground',
+      ),
+    ).toBe(true)
+  })
+
+  it('keeps procedural scenery and build parcels out of the football field reservation', () => {
+    const world = generateProceduralWorld({
+      seed: 'LONDON-2026',
+      center: footballPitch.center,
+      viewDistance: 2,
+      night: false,
+    })
+
+    const sportsFieldBlockerKinds = new Set([
+      'building',
+      'door',
+      'roof',
+      'window',
+      'tree-trunk',
+      'tree-top',
+      'lamp-post',
+      'lamp-light',
+      'phone-box',
+      'landmark',
+    ])
+    const intrudingPieces = world.pieces.filter(
+      (piece) =>
+        sportsFieldBlockerKinds.has(piece.kind) &&
+        footprintIntersectsFootballPitch(piece.position, piece.scale),
+    )
+    const intrudingParcels = world.buildableParcels.filter((parcel) =>
+      footprintIntersectsFootballPitch(parcel.center, parcel.size),
+    )
+
+    expect(intrudingPieces).toEqual([])
+    expect(intrudingParcels).toEqual([])
+  })
+
+  it('describes round ball patches instead of square cube blocks', () => {
+    expect(footballBallPatchFaces).toHaveLength(5)
+    expect(
+      footballBallPatchFaces.every(
+        (patch) => patch.radius > 0 && patch.radius < footballPitch.width / 20,
+      ),
     ).toBe(true)
   })
 

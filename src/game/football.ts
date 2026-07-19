@@ -19,19 +19,53 @@ export type FootballGoal = {
   yaw: number
 }
 
+export type FootballBallPatch = {
+  position: Vec3
+  rotation: Vec3
+  radius: number
+}
+
 export const footballPitch = {
-  center: [17, 0, -24] as Vec3,
-  width: 14,
-  length: 10,
-  borderClearance: 1.8,
-  goalWidth: 4.2,
-  goalDepth: 1,
+  center: [36, 0, -43] as Vec3,
+  width: 11,
+  length: 20,
+  borderClearance: 3.5,
+  goalWidth: 5,
+  goalDepth: 1.2,
 }
 
 export const footballBallRadius = 0.36
 export const footballBallInteractionRadius = 2.1
 export const footballGoalReward = 12
 export const footballSkillDurationMs = 1600
+
+export const footballBallPatchFaces: FootballBallPatch[] = [
+  {
+    position: [0, footballBallRadius * 1.018, 0],
+    rotation: [-Math.PI / 2, 0, 0],
+    radius: footballBallRadius * 0.23,
+  },
+  {
+    position: [footballBallRadius * 1.018, 0, 0],
+    rotation: [0, Math.PI / 2, 0],
+    radius: footballBallRadius * 0.2,
+  },
+  {
+    position: [-footballBallRadius * 1.018, 0, 0],
+    rotation: [0, -Math.PI / 2, 0],
+    radius: footballBallRadius * 0.2,
+  },
+  {
+    position: [0, 0, footballBallRadius * 1.018],
+    rotation: [0, 0, 0],
+    radius: footballBallRadius * 0.2,
+  },
+  {
+    position: [0, 0, -footballBallRadius * 1.018],
+    rotation: [0, Math.PI, 0],
+    radius: footballBallRadius * 0.2,
+  },
+]
 
 export const footballGoals: FootballGoal[] = [
   {
@@ -207,13 +241,27 @@ export function resetFootballBall(
 }
 
 export function pointInFootballPitchClearance(position: Vec3, padding = 0) {
+  return footprintIntersectsFootballPitch(position, [0, 0, 0], padding)
+}
+
+export function footprintIntersectsFootballPitch(
+  center: Vec3,
+  size: Vec3,
+  padding = 0,
+) {
   const halfWidth =
-    footballPitch.width / 2 + footballPitch.borderClearance + padding
+    footballPitch.width / 2 +
+    footballPitch.borderClearance +
+    padding +
+    size[0] / 2
   const halfLength =
-    footballPitch.length / 2 + footballPitch.borderClearance + padding
+    footballPitch.length / 2 +
+    footballPitch.borderClearance +
+    padding +
+    size[2] / 2
   return (
-    Math.abs(position[0] - footballPitch.center[0]) <= halfWidth &&
-    Math.abs(position[2] - footballPitch.center[2]) <= halfLength
+    Math.abs(center[0] - footballPitch.center[0]) <= halfWidth &&
+    Math.abs(center[2] - footballPitch.center[2]) <= halfLength
   )
 }
 

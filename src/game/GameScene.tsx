@@ -113,6 +113,7 @@ import {
   advanceFootballBall,
   beginFootballSkill,
   createFootballBalls,
+  footballBallPatchFaces,
   footballBallInteractionRadius,
   footballBallRadius,
   footballGoalForBall,
@@ -696,13 +697,17 @@ function FootballBallMesh({
   return (
     <group ref={group} position={ball.position}>
       <mesh castShadow receiveShadow>
-        <icosahedronGeometry args={[footballBallRadius, 2]} />
+        <sphereGeometry args={[footballBallRadius, 24, 16]} />
         <meshStandardMaterial color="#f8fafc" roughness={0.52} />
       </mesh>
-      {footballPatchPositions.map((patch, index) => (
-        <mesh key={index} position={patch.position} scale={patch.scale}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#111827" roughness={0.6} />
+      {footballBallPatchFaces.map((patch, index) => (
+        <mesh key={index} position={patch.position} rotation={patch.rotation}>
+          <circleGeometry args={[patch.radius, 10]} />
+          <meshStandardMaterial
+            color="#111827"
+            roughness={0.62}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
       {nearby ? (
@@ -719,29 +724,6 @@ function FootballBallMesh({
     </group>
   )
 }
-
-const footballPatchPositions = [
-  {
-    position: [0, footballBallRadius * 0.95, 0] as Vec3,
-    scale: [0.24, 0.04, 0.24] as Vec3,
-  },
-  {
-    position: [footballBallRadius * 0.72, 0, 0] as Vec3,
-    scale: [0.08, 0.22, 0.22] as Vec3,
-  },
-  {
-    position: [-footballBallRadius * 0.72, 0, 0] as Vec3,
-    scale: [0.08, 0.22, 0.22] as Vec3,
-  },
-  {
-    position: [0, 0, footballBallRadius * 0.72] as Vec3,
-    scale: [0.22, 0.22, 0.08] as Vec3,
-  },
-  {
-    position: [0, 0, -footballBallRadius * 0.72] as Vec3,
-    scale: [0.22, 0.22, 0.08] as Vec3,
-  },
-]
 
 function ProceduralBoroughWorld() {
   const settings = useGameStore((state) => state.settings)

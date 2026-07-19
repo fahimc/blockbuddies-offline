@@ -18,6 +18,30 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.68-football-pitch-placement] - 2026-07-19
+
+### Added
+
+- Added regression coverage for football pitch proportions, long-axis goal placement, remote sports-field travel, and no generated blockers inside the field reservation.
+
+### Changed
+
+- Moved the Football Pitch out of the parking/civic cluster into a dedicated sports field area that players reach through map travel.
+- Rebuilt the pitch as a longer rectangular field with goals centered at the far ends of the long play axis.
+- Replaced cube-based football patches with round decal-style patches on a smooth sphere.
+- Expanded the full town map extent so outlying destinations such as the sports field and Builder Meadows are not clamped to the edge.
+- Updated Android and package version metadata to `1.5.68` / `10568`.
+
+### Fixed
+
+- Fixed the football pitch being drawn under parking/building content and too close to the car park.
+- Fixed procedural buildings, lamps, trees, and other blockers being able to appear inside the sports-field reservation.
+- Fixed the football appearing to have a black square stuck to it at close range.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.67-football-pitch] - 2026-07-19
 
 ### Added

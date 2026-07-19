@@ -210,6 +210,9 @@ test.describe('mobile football pitch controls', () => {
     await page.evaluate(() =>
       window.__blockBuddiesE2E!.prepareFootballInteraction(),
     )
+    const welcomeStart = page.getByRole('button', { name: 'Start Playing' })
+    if (await welcomeStart.isVisible().catch(() => false))
+      await welcomeStart.click()
 
     await expect(
       page.getByRole('button', { name: 'Hold to kick ball' }),

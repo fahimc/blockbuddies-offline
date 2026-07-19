@@ -83,7 +83,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   rewards, and a Mini Game Star badge.
 - Football Pitch is a town-map destination with goals, kickable footballs,
   contextual Kick and Skills buttons, a hold-to-kick power gauge, kick-ups, goal
-  rewards, chat feedback, and local sound effects.
+  rewards, chat feedback, and local sound effects. The pitch sits in its own
+  outlying sports field, uses long-rectangle proportions, and keeps generated
+  blockers out of the play area.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
@@ -564,6 +566,12 @@ trail items.
 The `v1.5.67` APK adds Football Pitch gameplay. Players can travel to the
 pitch, move beside a ball to reveal Kick and Skills controls, hold Kick to build
 power, release to shoot, perform kick-ups, and earn coins for scoring in a goal.
+
+The `v1.5.68` APK moves the Football Pitch into a dedicated sports field away
+from the car park and civic buildings. The field is now longer than it is wide,
+goals sit at the far ends of the play axis, procedural blockers are reserved
+out of the pitch area, and the football uses round surface patches instead of
+black cube patches.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

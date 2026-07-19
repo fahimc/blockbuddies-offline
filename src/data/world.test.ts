@@ -9,6 +9,7 @@ import {
   proceduralBuildableParcelFor,
   proceduralTerrainAt,
 } from './proceduralTownPlan'
+import { footballPitch } from '../game/football'
 import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
@@ -22,6 +23,13 @@ describe('world travel destinations', () => {
       expect(location.travelPosition[1]).toBe(0)
       if (location.id === 'builder') {
         expect(distance2d(location.position, location.travelPosition)).toBe(0)
+      } else if (location.id === 'football') {
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeGreaterThan(footballPitch.length / 2)
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeLessThan(footballPitch.length / 2 + 4)
       } else {
         expect(
           distance2d(location.position, location.travelPosition),
@@ -88,11 +96,14 @@ describe('world travel destinations', () => {
 
   it('adds Football Pitch as a discoverable playable destination', () => {
     const football = getLocation('football')
+    const parking = getLocation('parking')
 
     expect(football.label).toBe('Football Pitch')
     expect(football.description).toContain('score goals')
-    expect(distance2d(football.position, football.travelPosition)).toBeLessThan(
-      6,
+    expect(football.position).toEqual(footballPitch.center)
+    expect(football.position[2]).toBeLessThan(-30)
+    expect(distance2d(football.position, parking.position)).toBeGreaterThan(
+      footballPitch.length,
     )
   })
 

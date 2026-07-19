@@ -1,4 +1,5 @@
 import type { LocationId, Vec3 } from '../game/types'
+import { footballPitch } from '../game/football'
 
 export type WorldLocation = {
   id: LocationId
@@ -78,8 +79,12 @@ export const worldLocations: WorldLocation[] = [
     id: 'football',
     label: 'Football Pitch',
     description: 'Kick footballs, practise skills, and score goals for coins.',
-    position: [17, 0, -24],
-    travelPosition: [17, 0, -18.2],
+    position: footballPitch.center,
+    travelPosition: [
+      footballPitch.center[0],
+      0,
+      footballPitch.center[2] + footballPitch.length / 2 + 2.4,
+    ],
     travelYaw: Math.PI,
     color: '#16a34a',
   },

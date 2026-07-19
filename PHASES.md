@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase football pitch placement fix
+
+- [x] Move Football Pitch into its own outlying sports field area.
+- [x] Rebuild the pitch as a long rectangle with goals at the far ends of the play axis.
+- [x] Reserve the sports field from procedural buildings, lamps, trees, phone boxes, and landmarks.
+- [x] Replace square football patch blocks with round ball decals.
+- [x] Expand the full map extent for outlying destinations.
+- [x] Add regression coverage for pitch proportions, placement, procedural blockers, and ball patch data.
+- [x] Package and release Android debug APK for the football pitch placement fix.
+
 ## Post-phase football pitch gameplay
 
 - [x] Add a Football Pitch destination with visible goals, pitch markings, and footballs.
