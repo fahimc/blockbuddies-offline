@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   fitWorldMapPoints,
+  maximumMapZoomStep,
+  normalizeWorldMapCamera,
   panWorldMap,
   visibleWorldBounds,
   worldMapPoint,
@@ -51,5 +53,34 @@ describe('infinite world map camera', () => {
     expect(bounds.maxX).toBeGreaterThanOrEqual(90)
     expect(bounds.minZ).toBeLessThanOrEqual(-42)
     expect(bounds.maxZ).toBeGreaterThanOrEqual(54)
+  })
+
+  it('recovers from invalid camera and interrupted pinch values', () => {
+    const recovered = normalizeWorldMapCamera({
+      centerX: Number.NaN,
+      centerZ: Number.POSITIVE_INFINITY,
+      pixelsPerUnit: Number.NaN,
+    })
+    expect(recovered).toEqual(camera)
+    expect(panWorldMap(recovered, { x: Number.NaN, y: 10 })).toEqual(camera)
+    expect(
+      zoomWorldMapAt(recovered, viewport, { x: 300, y: 200 }, Number.NaN),
+    ).toEqual(camera)
+  })
+
+  it('bounds a single pinch update while preserving a finite camera', () => {
+    const zoomed = zoomWorldMapAt(
+      camera,
+      viewport,
+      { x: 300, y: 200 },
+      1_000_000,
+    )
+
+    expect(zoomed).toEqual({
+      centerX: 0,
+      centerZ: 0,
+      pixelsPerUnit: camera.pixelsPerUnit * maximumMapZoomStep,
+    })
+    expect(Object.values(zoomed).every(Number.isFinite)).toBe(true)
   })
 })

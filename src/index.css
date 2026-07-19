@@ -334,6 +334,8 @@ canvas {
     max(0.65rem, env(safe-area-inset-bottom))
     max(0.65rem, env(safe-area-inset-left));
   backdrop-filter: blur(0.22rem);
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .bb-map-panel {

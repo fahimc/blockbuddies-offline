@@ -602,6 +602,12 @@ Walk there or Teleport. Walking follows deterministic road-grid waypoints, and
 the same timestamped position now drives the 3D avatar, mini-map marker, full
 map marker, local save, and Local Party sync.
 
+The `v1.5.72` APK fixes an interrupted mobile map pinch crashing into a blank
+screen. Pinch calculations now capture element geometry before React releases
+the event, reject invalid camera values, bound individual zoom updates, clean
+up lost pointers, and always restore neutral gameplay controls when the map
+closes.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the

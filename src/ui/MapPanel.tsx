@@ -24,6 +24,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MutableRefObject,
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
 } from 'react'
@@ -62,6 +63,7 @@ import { useLocalPartyStore } from '../state/localPartyStore'
 import { miniMapPlayerRotation } from './miniMapMath'
 import {
   fitWorldMapPoints,
+  normalizeWorldMapCamera,
   panWorldMap,
   pointIsInsideMap,
   visibleWorldBounds,
@@ -100,6 +102,7 @@ const shortLabels: Record<LocationId, string> = {
 
 export function MapPanel() {
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
+  const setTouch = useGameStore((state) => state.setTouch)
   const travelToLocation = useGameStore((state) => state.travelToLocation)
   const playerPosition = useGameStore((state) => state.playerPosition)
   const playerYaw = useGameStore((state) => state.playerYaw)
@@ -163,11 +166,35 @@ export function MapPanel() {
     setFriendTarget(snapSavedFriendDestination(selected.travelPosition))
   }
 
+  const resetGameplayInput = useCallback(
+    () =>
+      setTouch({
+        x: 0,
+        y: 0,
+        lookX: 0,
+        lookY: 0,
+        jump: false,
+        interact: false,
+        run: false,
+      }),
+    [setTouch],
+  )
+
+  const closeMap = () => {
+    resetGameplayInput()
+    setOpenPanel(undefined)
+  }
+
+  useEffect(() => {
+    resetGameplayInput()
+    return resetGameplayInput
+  }, [resetGameplayInput])
+
   return (
     <div
       className="bb-map-overlay"
       role="presentation"
-      onPointerDown={() => setOpenPanel(undefined)}
+      onPointerDown={closeMap}
     >
       <section
         className="bb-map-panel"
@@ -187,7 +214,7 @@ export function MapPanel() {
           </div>
           <button
             type="button"
-            onClick={() => setOpenPanel(undefined)}
+            onClick={closeMap}
             aria-label="Close map"
             title="Close map"
           >
@@ -465,6 +492,46 @@ function TownMap({
     }))
   }, [savedFriends, selectedFriendId])
 
+  const resetMapPointers = useCallback(() => {
+    const element = mapRef.current
+    if (element)
+      pointers.current.forEach((_, pointerId) =>
+        safeReleasePointerCapture(element, pointerId),
+      )
+    pointers.current.clear()
+    pointerStarts.current.clear()
+    draggedPointers.current.clear()
+    previousGesture.current = undefined
+  }, [])
+
+  useEffect(() => {
+    const element = mapRef.current
+    if (!element) return
+    const preventNativeGesture = (event: Event) => event.preventDefault()
+    const resetWhenHidden = () => {
+      if (document.visibilityState !== 'visible') resetMapPointers()
+    }
+    element.addEventListener('gesturestart', preventNativeGesture, {
+      passive: false,
+    })
+    element.addEventListener('gesturechange', preventNativeGesture, {
+      passive: false,
+    })
+    element.addEventListener('gestureend', preventNativeGesture, {
+      passive: false,
+    })
+    window.addEventListener('blur', resetMapPointers)
+    document.addEventListener('visibilitychange', resetWhenHidden)
+    return () => {
+      element.removeEventListener('gesturestart', preventNativeGesture)
+      element.removeEventListener('gesturechange', preventNativeGesture)
+      element.removeEventListener('gestureend', preventNativeGesture)
+      window.removeEventListener('blur', resetMapPointers)
+      document.removeEventListener('visibilitychange', resetWhenHidden)
+      resetMapPointers()
+    }
+  }, [resetMapPointers])
+
   useEffect(() => {
     const element = mapRef.current
     if (!element) return
@@ -517,28 +584,42 @@ function TownMap({
   const updateGesture = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const point = { x: event.clientX, y: event.clientY }
+      if (!pointerPointIsFinite(point)) {
+        removeMapPointer(
+          event.pointerId,
+          event.currentTarget,
+          pointers,
+          pointerStarts,
+          draggedPointers,
+          previousGesture,
+        )
+        return
+      }
       pointers.current.set(event.pointerId, point)
       const nextGesture = mapGesture(pointers.current)
       const previous = previousGesture.current
       if (previous && nextGesture) {
+        const zoom =
+          previous.distance > 0 && nextGesture.distance > 0
+            ? (() => {
+                const bounds = event.currentTarget.getBoundingClientRect()
+                return {
+                  pixel: {
+                    x: nextGesture.center.x - bounds.left,
+                    y: nextGesture.center.y - bounds.top,
+                  },
+                  scale: nextGesture.distance / previous.distance,
+                }
+              })()
+            : undefined
         setCamera((current) => {
           let next = panWorldMap(current, {
             x: nextGesture.center.x - previous.center.x,
             y: nextGesture.center.y - previous.center.y,
           })
-          if (previous.distance > 0 && nextGesture.distance > 0) {
-            const bounds = event.currentTarget.getBoundingClientRect()
-            next = zoomWorldMapAt(
-              next,
-              viewport,
-              {
-                x: nextGesture.center.x - bounds.left,
-                y: nextGesture.center.y - bounds.top,
-              },
-              nextGesture.distance / previous.distance,
-            )
-          }
-          return next
+          if (zoom)
+            next = zoomWorldMapAt(next, viewport, zoom.pixel, zoom.scale)
+          return normalizeWorldMapCamera(next, current)
         })
       }
       previousGesture.current = nextGesture
@@ -547,16 +628,12 @@ function TownMap({
   )
 
   const pointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const point = { x: event.clientX, y: event.clientY }
+    if (!pointerPointIsFinite(point)) return
     event.preventDefault()
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-    pointers.current.set(event.pointerId, {
-      x: event.clientX,
-      y: event.clientY,
-    })
-    pointerStarts.current.set(event.pointerId, {
-      x: event.clientX,
-      y: event.clientY,
-    })
+    safeSetPointerCapture(event.currentTarget, event.pointerId)
+    pointers.current.set(event.pointerId, point)
+    pointerStarts.current.set(event.pointerId, point)
     draggedPointers.current.delete(event.pointerId)
     if (pointers.current.size > 1)
       pointers.current.forEach((_, pointerId) =>
@@ -581,12 +658,14 @@ function TownMap({
     const pointerStart = pointerStarts.current.get(event.pointerId)
     const wasDragged = draggedPointers.current.has(event.pointerId)
     const wasSinglePointer = pointers.current.size === 1
-    pointers.current.delete(event.pointerId)
-    pointerStarts.current.delete(event.pointerId)
-    draggedPointers.current.delete(event.pointerId)
-    previousGesture.current = mapGesture(pointers.current)
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId))
-      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    removeMapPointer(
+      event.pointerId,
+      event.currentTarget,
+      pointers,
+      pointerStarts,
+      draggedPointers,
+      previousGesture,
+    )
     if (
       selectedFriendId &&
       pointerStart &&
@@ -613,12 +692,22 @@ function TownMap({
   }
 
   const pointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    removeMapPointer(
+      event.pointerId,
+      event.currentTarget,
+      pointers,
+      pointerStarts,
+      draggedPointers,
+      previousGesture,
+    )
+  }
+
+  const pointerCaptureLost = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(event.pointerId)) return
     pointers.current.delete(event.pointerId)
     pointerStarts.current.delete(event.pointerId)
     draggedPointers.current.delete(event.pointerId)
     previousGesture.current = mapGesture(pointers.current)
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId))
-      event.currentTarget.releasePointerCapture?.(event.pointerId)
   }
 
   const wheel = (event: ReactWheelEvent<HTMLDivElement>) => {
@@ -654,6 +743,7 @@ function TownMap({
       onPointerMove={pointerMove}
       onPointerUp={pointerUp}
       onPointerCancel={pointerCancel}
+      onLostPointerCapture={pointerCaptureLost}
       onWheel={wheel}
     >
       <canvas ref={canvasRef} className="bb-world-map-canvas" aria-hidden />
@@ -801,25 +891,62 @@ function TownMap({
 }
 
 type MapGesture = {
-  center: { x: number; y: number }
+  center: PointerPoint
   distance: number
 }
 
-function mapGesture(
-  points: Map<number, { x: number; y: number }>,
-): MapGesture | undefined {
-  const items = [...points.values()]
+type PointerPoint = { x: number; y: number }
+
+function pointerPointIsFinite(point: PointerPoint) {
+  return Number.isFinite(point.x) && Number.isFinite(point.y)
+}
+
+function safeSetPointerCapture(element: HTMLDivElement, pointerId: number) {
+  try {
+    element.setPointerCapture?.(pointerId)
+  } catch {
+    // Android WebView can reject capture during an interrupted multi-touch handoff.
+  }
+}
+
+function safeReleasePointerCapture(element: HTMLDivElement, pointerId: number) {
+  try {
+    if (element.hasPointerCapture?.(pointerId))
+      element.releasePointerCapture?.(pointerId)
+  } catch {
+    // Capture may already belong to the browser after a pinch cancellation.
+  }
+}
+
+function removeMapPointer(
+  pointerId: number,
+  element: HTMLDivElement,
+  pointers: MutableRefObject<Map<number, PointerPoint>>,
+  pointerStarts: MutableRefObject<Map<number, PointerPoint>>,
+  draggedPointers: MutableRefObject<Set<number>>,
+  previousGesture: MutableRefObject<MapGesture | undefined>,
+) {
+  pointers.current.delete(pointerId)
+  pointerStarts.current.delete(pointerId)
+  draggedPointers.current.delete(pointerId)
+  previousGesture.current = mapGesture(pointers.current)
+  safeReleasePointerCapture(element, pointerId)
+}
+
+function mapGesture(points: Map<number, PointerPoint>): MapGesture | undefined {
+  const items = [...points.values()].filter(pointerPointIsFinite)
   if (items.length === 0) return undefined
   if (items.length === 1) return { center: items[0]!, distance: 0 }
   const first = items[0]!
   const second = items[1]!
-  return {
-    center: {
-      x: (first.x + second.x) / 2,
-      y: (first.y + second.y) / 2,
-    },
-    distance: Math.hypot(second.x - first.x, second.y - first.y),
+  const center = {
+    x: first.x + (second.x - first.x) / 2,
+    y: first.y + (second.y - first.y) / 2,
   }
+  const distance = Math.hypot(second.x - first.x, second.y - first.y)
+  return pointerPointIsFinite(center) && Number.isFinite(distance)
+    ? { center, distance }
+    : undefined
 }
 
 function drawInfiniteWorldMap(

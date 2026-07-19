@@ -18,6 +18,28 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.72-map-pinch-recovery] - 2026-07-19
+
+### Added
+
+- Added real two-touch browser regression coverage that interrupts a map pinch, closes the map, and confirms joystick movement resumes.
+- Added finite map-camera recovery, bounded per-event pinch scaling, capture-loss cleanup, and gesture cancellation on app blur or backgrounding.
+
+### Changed
+
+- Made the full map overlay exclusively own touch gestures so the browser or Android WebView cannot take over a pinch that crosses map controls.
+- Reset gameplay touch input whenever the map opens or closes.
+- Updated Android and package version metadata to `1.5.72` / `10572`.
+
+### Fixed
+
+- Fixed an asynchronous pinch update reading a released React pointer event, crashing the map into a blank screen.
+- Fixed interrupted multi-touch capture leaving stale pointers that could corrupt the next zoom or block returning to gameplay.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.71-map-character-commands] - 2026-07-19
 
 ### Added

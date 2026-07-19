@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase mobile map pinch recovery
+
+- [x] Reproduce the blank-map crash with real two-touch browser input.
+- [x] Remove asynchronous access to released React pointer events.
+- [x] Sanitize camera values and bound individual pinch zoom updates.
+- [x] Recover from pointer cancellation, lost capture, blur, and backgrounding.
+- [x] Restore neutral gameplay touch input whenever the map opens or closes.
+- [x] Add unit, component, and mobile browser recovery coverage.
+- [x] Package and release the Android debug APK for the map pinch recovery fix.
+
 ## Post-phase map-controlled created characters
 
 - [x] Give every created character one persisted world position and deterministic movement command.

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createInitialMiniGame } from '../ai/miniGames'
@@ -111,5 +111,76 @@ describe('MapPanel', () => {
       movement: undefined,
     })
     expect(screen.getByTestId(`map-friend-${friend.id}`)).toBeVisible()
+  })
+
+  it('recovers from an interrupted pinch and clears gameplay input on close', async () => {
+    const user = userEvent.setup()
+    render(<MapPanel />)
+    const map = screen.getByTestId('town-map')
+    Object.defineProperty(map, 'setPointerCapture', {
+      configurable: true,
+      value: () => {
+        throw new DOMException('Pointer capture was interrupted')
+      },
+    })
+    Object.defineProperty(map, 'hasPointerCapture', {
+      configurable: true,
+      value: () => false,
+    })
+
+    fireEvent.pointerDown(map, {
+      pointerId: 11,
+      pointerType: 'touch',
+      clientX: 120,
+      clientY: 180,
+    })
+    fireEvent.pointerDown(map, {
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: 220,
+      clientY: 180,
+    })
+    fireEvent.pointerMove(map, {
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: 300,
+      clientY: 180,
+    })
+    fireEvent.pointerCancel(map, {
+      pointerId: 12,
+      pointerType: 'touch',
+    })
+    fireEvent.lostPointerCapture(map, {
+      pointerId: 11,
+      pointerType: 'touch',
+    })
+
+    expect(document.body).not.toHaveTextContent('NaN')
+    expect(screen.getByRole('button', { name: 'Close map' })).toBeEnabled()
+
+    useGameStore.setState((state) => ({
+      touch: {
+        ...state.touch,
+        x: 1,
+        y: -1,
+        lookX: 50,
+        lookY: -50,
+        jump: true,
+        interact: true,
+        run: true,
+      },
+    }))
+    await user.click(screen.getByRole('button', { name: 'Close map' }))
+
+    expect(useGameStore.getState().openPanel).toBeUndefined()
+    expect(useGameStore.getState().touch).toMatchObject({
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    })
   })
 })
