@@ -1,5 +1,6 @@
 import type { LocationId, Vec3 } from '../game/types'
 import { footballPitch } from '../game/football'
+import { footballStadiumTravelPosition } from './worldFeatures'
 
 export type WorldLocation = {
   id: LocationId
@@ -80,11 +81,7 @@ export const worldLocations: WorldLocation[] = [
     label: 'Football Pitch',
     description: 'Kick footballs, practise skills, and score goals for coins.',
     position: footballPitch.center,
-    travelPosition: [
-      footballPitch.center[0],
-      0,
-      footballPitch.center[2] + footballPitch.length / 2 + 1.8,
-    ],
+    travelPosition: footballStadiumTravelPosition,
     travelYaw: Math.PI,
     color: '#16a34a',
   },
@@ -119,12 +116,4 @@ export function distance2d(a: Vec3, b: Vec3) {
   const dx = a[0] - b[0]
   const dz = a[2] - b[2]
   return Math.hypot(dx, dz)
-}
-
-export function clampToTown(position: Vec3): Vec3 {
-  return [
-    Math.max(-24, Math.min(24, position[0])),
-    Math.max(0, position[1]),
-    Math.max(-24, Math.min(24, position[2])),
-  ]
 }

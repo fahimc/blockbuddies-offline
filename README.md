@@ -81,11 +81,11 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Original offline mini-games: Coin Rush, Delivery Dash, and Hide & Seek with
   world start pads, score HUD, timed goals, local records, chat reactions, coin
   rewards, and a Mini Game Star badge.
-- Football Pitch is a town-map destination with goals, kickable footballs,
+- Football Stadium is a world-map destination with goals, kickable footballs,
   contextual Kick and Skills buttons, a hold-to-kick power gauge, kick-ups, goal
-  rewards, chat feedback, and local sound effects. The pitch is an authored
-  town feature beside the parking area, uses long-rectangle proportions, and
-  stays clear of car park placement.
+  rewards, chat feedback, local sound effects, and spectator stands. Its fixed
+  tile sits at world position `(90, -42)` outside Central Buddy Town, and its
+  reserved footprint stays clear of procedural placement.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
@@ -106,6 +106,13 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   tiles, sidewalks, zoning, parks, clear entrances, and player-buildable
   parcels. The generation and placement rules are documented in
   [`docs/WORLD_GENERATION.md`](docs/WORLD_GENERATION.md).
+- Unbounded full-world map with mouse/touch dragging, pinch and wheel zoom,
+  destination fitting, live coordinates, chunk-grid terrain, and lower-detail
+  drawing when zoomed out. Central Buddy Town keeps its established layout
+  while outlying features occupy deterministic world tiles.
+- Predictive world streaming uses player velocity to prefetch the next likely
+  chunks, bounded caches to cap memory growth, and instanced rendering to batch
+  repeated procedural geometry.
 - The 3D world, traffic, minimap, placement validation, and bird's-eye review
   page consume the same tiled road plan. Authored buildings, benches, activity
   pads, collectibles, parking, and obby pieces are validated against terrain
@@ -577,6 +584,12 @@ The `v1.5.69` APK restores the original town map scale and procedural borough
 generation after the outlying sports-field placement made the map messy. The
 Football Pitch now stays in the authored town footprint beside the parking area,
 without overlapping the car park, while keeping the round football visual.
+
+The `v1.5.70` APK replaces the fixed town overview with an unbounded draggable
+and zoomable world map. Central Buddy Town stays at its established coordinates,
+while Football Stadium occupies deterministic chunk `(2, -2)` at world position
+`(90, -42)`. Predictive chunk prefetch, bounded caches, map detail levels, and
+instanced 3D rendering keep generated areas responsive as players travel.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

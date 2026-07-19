@@ -18,6 +18,31 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.70-infinite-world-map] - 2026-07-19
+
+### Added
+
+- Added signed 36-unit chunk coordinates, six-chunk sectors, and a deterministic fixed-feature registry shared by generation, map rendering, placement validation, and streaming.
+- Added mouse/touch dragging, pinch/wheel zoom, player centring, destination fitting, coordinate readout, and zoom-based terrain detail to the full world map.
+- Added velocity-aware chunk prediction, idle prefetch, bounded LRU-style chunk/world caches, and instanced procedural geometry batches.
+- Added a streamed Football Stadium at fixed tile `(2, -2)` with a dedicated access road, spectator stands, and deterministic travel placement.
+
+### Changed
+
+- Kept every established Central Buddy Town destination at its prior coordinates while allowing the map and vehicles to continue beyond the former town boundary.
+- Moved the Football Pitch to world position `(90, -42)` outside the authored core and made the fixed-feature registry reserve its complete footprint before procedural objects are placed.
+- Updated Android and package version metadata to `1.5.70` / `10570`.
+
+### Fixed
+
+- Fixed the full map being a scaled, clamped picture of a small town instead of a navigable view of generated world space.
+- Fixed distant fixed activities being crowded into the central map just so their markers remained visible.
+- Fixed driving being stopped by the former 104-unit outer-world clamp.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.69-football-map-restore] - 2026-07-19
 
 ### Added

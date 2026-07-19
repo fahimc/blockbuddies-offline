@@ -7,10 +7,12 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type MutableRefObject,
+  type ReactNode,
 } from 'react'
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
@@ -28,9 +30,15 @@ import {
   findBuildPlacementPosition,
 } from '../ai/buildMode'
 import {
-  generateProceduralWorld,
+  getProceduralWorld,
+  prefetchProceduralWorld,
   type ProceduralPiece,
 } from '../data/proceduralWorld'
+import {
+  footballStadiumFootprint,
+  worldFeatureVisible,
+} from '../data/worldFeatures'
+import { predictChunkRequests } from '../data/worldStreaming'
 import { getBuildPiece } from '../data/buildPieces'
 import { worldLocations, distance2d } from '../data/world'
 import { nearestLocation, useGameStore } from '../state/gameStore'
@@ -322,10 +330,14 @@ function OutdoorWorld() {
   return (
     <>
       <ProceduralBoroughWorld />
-      <Town />
-      <FootballPitch balls={footballs} runtime={footballRuntime} />
+      <StreamedFeature featureId="central-buddy-town">
+        <Town />
+        <ParkingLot vehicles={parkedVehicles} runtime={drivableRuntime} />
+      </StreamedFeature>
+      <StreamedFeature featureId="football-stadium">
+        <FootballPitch balls={footballs} runtime={footballRuntime} />
+      </StreamedFeature>
       <SeatActionMarkers />
-      <ParkingLot vehicles={parkedVehicles} runtime={drivableRuntime} />
       <TrafficVehicles
         lanes={trafficLanes}
         vehicles={initialTrafficVehicles}
@@ -352,6 +364,34 @@ function OutdoorWorld() {
       <BuildModeOverlay />
     </>
   )
+}
+
+function StreamedFeature({
+  featureId,
+  children,
+}: {
+  featureId: string
+  children: ReactNode
+}) {
+  const settings = useGameStore((state) => state.settings)
+  const [visible, setVisible] = useState(() =>
+    worldFeatureVisible(
+      featureId,
+      useGameStore.getState().playerPosition,
+      settings.worldViewDistance,
+    ),
+  )
+
+  useFrame(() => {
+    const next = worldFeatureVisible(
+      featureId,
+      useGameStore.getState().playerPosition,
+      settings.worldViewDistance,
+    )
+    if (next !== visible) setVisible(next)
+  })
+
+  return visible ? children : null
 }
 
 function TrafficVehicles({
@@ -530,6 +570,19 @@ function FootballPitch({
     <group>
       <mesh
         receiveShadow
+        position={[footballPitch.center[0], 0.018, footballPitch.center[2]]}
+      >
+        <boxGeometry
+          args={[
+            footballStadiumFootprint.width,
+            0.08,
+            footballStadiumFootprint.depth,
+          ]}
+        />
+        <meshStandardMaterial color="#15803d" roughness={0.94} />
+      </mesh>
+      <mesh
+        receiveShadow
         position={[footballPitch.center[0], 0.055, footballPitch.center[2]]}
       >
         <boxGeometry args={[footballPitch.width, 0.1, footballPitch.length]} />
@@ -563,6 +616,8 @@ function FootballPitch({
       {footballGoals.map((goal) => (
         <FootballGoal key={goal.id} goal={goal} />
       ))}
+      <StadiumStand side={-1} />
+      <StadiumStand side={1} />
       <Html
         center
         position={[
@@ -578,6 +633,30 @@ function FootballPitch({
       </Html>
       {balls.map((ball) => (
         <FootballBallMesh key={ball.id} ball={ball} runtime={runtime} />
+      ))}
+    </group>
+  )
+}
+
+function StadiumStand({ side }: { side: -1 | 1 }) {
+  const x = footballPitch.center[0] + side * (footballPitch.width / 2 + 2.25)
+  return (
+    <group position={[x, 0, footballPitch.center[2]]}>
+      {[0, 1, 2].map((tier) => (
+        <mesh
+          key={tier}
+          castShadow
+          receiveShadow
+          position={[side * tier * 0.38, 0.3 + tier * 0.28, 0]}
+        >
+          <boxGeometry
+            args={[0.72, 0.46 + tier * 0.15, footballPitch.length + 3.8]}
+          />
+          <meshStandardMaterial
+            color={tier % 2 === 0 ? '#2563eb' : '#f8fafc'}
+            roughness={0.72}
+          />
+        </mesh>
       ))}
     </group>
   )
@@ -734,6 +813,11 @@ function ProceduralBoroughWorld() {
       z: Math.floor(playerPosition[2] / 36),
     }
   })
+  const motionSample = useRef({
+    position: useGameStore.getState().playerPosition,
+    time: performance.now(),
+    prefetchedAt: 0,
+  })
   useFrame(() => {
     const playerPosition = useGameStore.getState().playerPosition
     const nextChunk = {
@@ -741,10 +825,37 @@ function ProceduralBoroughWorld() {
       z: Math.floor(playerPosition[2] / 36),
     }
     if (nextChunk.x !== chunk.x || nextChunk.z !== chunk.z) setChunk(nextChunk)
+
+    const now = performance.now()
+    if (now - motionSample.current.prefetchedAt < 280) return
+    const elapsed = Math.max(0.001, (now - motionSample.current.time) / 1000)
+    const velocity: Vec3 = [
+      (playerPosition[0] - motionSample.current.position[0]) / elapsed,
+      0,
+      (playerPosition[2] - motionSample.current.position[2]) / elapsed,
+    ]
+    const predicted = predictChunkRequests({
+      position: playerPosition,
+      velocity,
+      viewDistance: settings.worldViewDistance,
+    }).find((request) => request.reason === 'predicted')
+    motionSample.current = {
+      position: playerPosition,
+      time: now,
+      prefetchedAt: now,
+    }
+    if (predicted) {
+      prefetchProceduralWorld({
+        seed: settings.worldSeed || 'LONDON-2026',
+        center: [predicted.cx * 36 + 18, 0, predicted.cz * 36 + 18],
+        viewDistance: settings.worldViewDistance,
+        night: settings.nightMode,
+      })
+    }
   })
   const world = useMemo(
     () =>
-      generateProceduralWorld({
+      getProceduralWorld({
         seed: settings.worldSeed || 'LONDON-2026',
         center: [chunk.x * 36 + 18, 0, chunk.z * 36 + 18],
         viewDistance: settings.worldViewDistance,
@@ -758,21 +869,26 @@ function ProceduralBoroughWorld() {
       settings.worldViewDistance,
     ],
   )
+  const renderPieces = useMemo(
+    () =>
+      world.pieces.filter(
+        (piece) =>
+          !proceduralPieceBlocksParking(piece) &&
+          !proceduralObjectInsideCoreTown(piece),
+      ),
+    [world.pieces],
+  )
 
   if (!settings.proceduralWorld) return null
 
   return (
     <group>
-      {world.pieces
-        .filter(
-          (piece) =>
-            !proceduralPieceBlocksParking(piece) &&
-            !proceduralObjectInsideCoreTown(piece),
-        )
-        .map((piece) => (
-          <ProceduralPieceMesh key={piece.id} piece={piece} />
-        ))}
-      <Html position={[0, 3.6, -31]} center zIndexRange={worldHtmlZIndexRange}>
+      <ProceduralWorldMeshes pieces={renderPieces} />
+      <Html
+        position={[chunk.x * 36 + 18, 3.6, chunk.z * 36 + 18]}
+        center
+        zIndexRange={worldHtmlZIndexRange}
+      >
         <span className="whitespace-nowrap rounded-lg bg-slate-950/80 px-3 py-1 text-xs font-black text-white shadow">
           {world.district} • {world.buildingCount} buildings
         </span>
@@ -781,7 +897,47 @@ function ProceduralBoroughWorld() {
   )
 }
 
-function ProceduralPieceMesh({ piece }: { piece: ProceduralPiece }) {
+type ProceduralGeometryKind =
+  'box' | 'tree-top' | 'lamp-light' | 'wheel' | 'shard'
+
+function proceduralGeometryKind(
+  piece: ProceduralPiece,
+): ProceduralGeometryKind {
+  if (piece.kind === 'tree-top') return 'tree-top'
+  if (piece.kind === 'lamp-light') return 'lamp-light'
+  if (piece.id === 'landmark:london-eye-ring') return 'wheel'
+  if (piece.id === 'landmark:shard') return 'shard'
+  return 'box'
+}
+
+function proceduralBatchKey(piece: ProceduralPiece) {
+  return [
+    proceduralGeometryKind(piece),
+    piece.kind,
+    piece.color,
+    piece.emissive ?? '',
+    piece.emissiveIntensity ?? 0,
+  ].join('|')
+}
+
+function ProceduralWorldMeshes({ pieces }: { pieces: ProceduralPiece[] }) {
+  const batches = useMemo(() => {
+    const grouped = new Map<string, ProceduralPiece[]>()
+    pieces.forEach((piece) => {
+      const key = proceduralBatchKey(piece)
+      grouped.set(key, [...(grouped.get(key) ?? []), piece])
+    })
+    return [...grouped.entries()]
+  }, [pieces])
+
+  return batches.map(([key, batch]) => (
+    <ProceduralInstanceBatch key={key} pieces={batch} />
+  ))
+}
+
+function ProceduralInstanceBatch({ pieces }: { pieces: ProceduralPiece[] }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null)
+  const piece = pieces[0]!
   const castsShadow =
     piece.kind === 'building' ||
     piece.kind === 'roof' ||
@@ -797,48 +953,45 @@ function ProceduralPieceMesh({ piece }: { piece: ProceduralPiece }) {
     transparent: piece.kind === 'water',
     opacity: piece.kind === 'water' ? 0.84 : 1,
   }
-  const rotation: Vec3 = piece.rotation ?? [0, 0, 0]
+  const geometry = proceduralGeometryKind(piece)
+
+  useLayoutEffect(() => {
+    const mesh = meshRef.current
+    if (!mesh) return
+    const transform = new THREE.Object3D()
+    pieces.forEach((instance, index) => {
+      const rotation = instance.rotation ?? [0, 0, 0]
+      transform.position.fromArray(instance.position)
+      transform.rotation.set(rotation[0], rotation[1], rotation[2])
+      transform.scale.fromArray(instance.scale)
+      transform.updateMatrix()
+      mesh.setMatrixAt(index, transform.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingBox()
+    mesh.computeBoundingSphere()
+  }, [pieces])
 
   return (
-    <group position={piece.position} rotation={rotation}>
-      {piece.kind === 'tree-top' ? (
-        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
-          <dodecahedronGeometry args={[0.5, 0]} />
-          <meshStandardMaterial {...materialProps} />
-        </mesh>
-      ) : null}
-      {piece.kind === 'lamp-light' ? (
-        <mesh castShadow={false} scale={piece.scale}>
-          <sphereGeometry args={[0.5, 14, 10]} />
-          <meshStandardMaterial {...materialProps} />
-        </mesh>
-      ) : null}
-      {piece.id === 'landmark:london-eye-ring' ? (
-        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
-          <torusGeometry args={[0.5, 0.035, 8, 36]} />
-          <meshStandardMaterial {...materialProps} />
-        </mesh>
-      ) : null}
-      {piece.id === 'landmark:shard' ? (
-        <mesh castShadow receiveShadow={receivesShadow} scale={piece.scale}>
-          <coneGeometry args={[0.5, 1, 4]} />
-          <meshStandardMaterial {...materialProps} />
-        </mesh>
-      ) : null}
-      {piece.kind !== 'tree-top' &&
-      piece.kind !== 'lamp-light' &&
-      piece.id !== 'landmark:london-eye-ring' &&
-      piece.id !== 'landmark:shard' ? (
-        <mesh
-          castShadow={castsShadow}
-          receiveShadow={receivesShadow}
-          scale={piece.scale}
-        >
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial {...materialProps} />
-        </mesh>
-      ) : null}
-    </group>
+    <instancedMesh
+      ref={meshRef}
+      args={[undefined, undefined, pieces.length]}
+      castShadow={castsShadow}
+      receiveShadow={receivesShadow}
+    >
+      {geometry === 'tree-top' ? (
+        <dodecahedronGeometry args={[0.5, 0]} />
+      ) : geometry === 'lamp-light' ? (
+        <sphereGeometry args={[0.5, 14, 10]} />
+      ) : geometry === 'wheel' ? (
+        <torusGeometry args={[0.5, 0.035, 8, 36]} />
+      ) : geometry === 'shard' ? (
+        <coneGeometry args={[0.5, 1, 4]} />
+      ) : (
+        <boxGeometry args={[1, 1, 1]} />
+      )}
+      <meshStandardMaterial {...materialProps} />
+    </instancedMesh>
   )
 }
 
@@ -1761,19 +1914,25 @@ function Town() {
       <SpawnPad />
       <Roads />
 
-      {worldLocations.map((location) => (
-        <group key={location.id} position={location.position}>
-          <Html
-            center
-            position={[0, 3.2, 0]}
-            zIndexRange={worldHtmlZIndexRange}
-          >
-            <span className="whitespace-nowrap rounded-lg bg-white/90 px-3 py-1 text-sm font-black text-slate-900 shadow">
-              {location.label}
-            </span>
-          </Html>
-        </group>
-      ))}
+      {worldLocations
+        .filter(
+          (location) =>
+            Math.abs(location.position[0]) <= 27 &&
+            Math.abs(location.position[2]) <= 27,
+        )
+        .map((location) => (
+          <group key={location.id} position={location.position}>
+            <Html
+              center
+              position={[0, 3.2, 0]}
+              zIndexRange={worldHtmlZIndexRange}
+            >
+              <span className="whitespace-nowrap rounded-lg bg-white/90 px-3 py-1 text-sm font-black text-slate-900 shadow">
+                {location.label}
+              </span>
+            </Html>
+          </group>
+        ))}
 
       {staticTownBuildings.map((building) => (
         <Building
@@ -2189,7 +2348,7 @@ function PlayerController({
   const proceduralPieces = useMemo(
     () =>
       settings.proceduralWorld
-        ? generateProceduralWorld({
+        ? getProceduralWorld({
             seed: settings.worldSeed || 'LONDON-2026',
             center: [collisionChunk.x * 36 + 18, 0, collisionChunk.z * 36 + 18],
             viewDistance: settings.worldViewDistance,

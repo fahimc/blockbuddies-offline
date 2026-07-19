@@ -16,7 +16,12 @@ import {
   type TerrainZone,
   type WorldObjectKind,
 } from '../game/worldGrid'
-import { footprintOverlapsAuthoredCore } from '../game/townPlacement'
+import {
+  footprintOverlapsBlockingWorldFeature,
+  getWorldFeature,
+  stadiumAccessRoadBounds,
+  worldGeneratorVersion,
+} from './worldFeatures'
 
 export type ProceduralPieceKind =
   | 'ground'
@@ -61,6 +66,14 @@ export type ProceduralWorld = {
   buildableParcels: PlannedParcel[]
 }
 
+export type ProceduralChunk = {
+  cx: number
+  cz: number
+  pieces: ProceduralPiece[]
+  buildingCount: number
+  buildableParcels: PlannedParcel[]
+}
+
 const chunkSize = proceduralChunkSize
 export const roadDriveCorridorPadding = realScale.carWidth / 2 + 0.5
 const doorSafeZoneRadius = 1.85
@@ -86,41 +99,149 @@ export function generateProceduralWorld({
   const buildableParcels: PlannedParcel[] = []
 
   for (const [cx, cz] of chunks) {
-    const chunk = generateChunk(seed, cx, cz, night)
+    const chunk = getProceduralChunk(seed, cx, cz, night)
     pieces.push(...chunk.pieces)
     buildableParcels.push(...chunk.buildableParcels)
   }
 
-  pieces.push(...buildLandmarks(night))
+  return {
+    pieces,
+    buildingCount: pieces.filter(
+      (placedPiece) =>
+        placedPiece.kind === 'building' &&
+        placedPiece.id.startsWith('building:'),
+    ).length,
+    district: districtFor(center),
+    buildableParcels,
+  }
+}
 
+const proceduralChunkCache = new Map<string, ProceduralChunk>()
+const proceduralWorldCache = new Map<string, ProceduralWorld>()
+const maximumCachedChunks = 128
+const maximumCachedWorlds = 12
+const pendingPrefetches = new Set<string>()
+
+export function getProceduralChunk(
+  seed: string,
+  cx: number,
+  cz: number,
+  night: boolean,
+): ProceduralChunk {
+  const key = `${worldGeneratorVersion}:${seed}:${cx}:${cz}:${Number(night)}`
+  const cached = proceduralChunkCache.get(key)
+  if (cached) {
+    proceduralChunkCache.delete(key)
+    proceduralChunkCache.set(key, cached)
+    return cached
+  }
+
+  const generated = generateProceduralChunk(seed, cx, cz, night)
+  proceduralChunkCache.set(key, generated)
+  trimCache(proceduralChunkCache, maximumCachedChunks)
+  return generated
+}
+
+export function getProceduralWorld(input: ProceduralWorldInput) {
+  const centerChunkX = Math.floor(input.center[0] / chunkSize)
+  const centerChunkZ = Math.floor(input.center[2] / chunkSize)
+  const key = `${worldGeneratorVersion}:${input.seed}:${centerChunkX}:${centerChunkZ}:${input.viewDistance}:${Number(input.night)}`
+  const cached = proceduralWorldCache.get(key)
+  if (cached) {
+    proceduralWorldCache.delete(key)
+    proceduralWorldCache.set(key, cached)
+    return cached
+  }
+  const generated = generateProceduralWorld(input)
+  proceduralWorldCache.set(key, generated)
+  trimCache(proceduralWorldCache, maximumCachedWorlds)
+  return generated
+}
+
+export function prefetchProceduralWorld(input: ProceduralWorldInput) {
+  const centerChunkX = Math.floor(input.center[0] / chunkSize)
+  const centerChunkZ = Math.floor(input.center[2] / chunkSize)
+  const key = `${worldGeneratorVersion}:${input.seed}:${centerChunkX}:${centerChunkZ}:${input.viewDistance}:${Number(input.night)}`
+  if (proceduralWorldCache.has(key) || pendingPrefetches.has(key)) return
+  pendingPrefetches.add(key)
+  const generate = () => {
+    pendingPrefetches.delete(key)
+    getProceduralWorld(input)
+  }
+  if (typeof window !== 'undefined') {
+    const scheduleIdle = (
+      window as Window & {
+        requestIdleCallback?: (
+          callback: () => void,
+          options?: { timeout: number },
+        ) => number
+      }
+    ).requestIdleCallback
+    if (scheduleIdle) scheduleIdle(generate, { timeout: 350 })
+    else globalThis.setTimeout(generate, 0)
+  } else {
+    generate()
+  }
+}
+
+function generateProceduralChunk(
+  seed: string,
+  cx: number,
+  cz: number,
+  night: boolean,
+): ProceduralChunk {
+  const chunk = generateChunk(seed, cx, cz, night)
+  const hall = getWorldFeature('clocktower-hall')
+  const featurePieces = [
+    ...(hall?.ownerChunk.cx === cx && hall.ownerChunk.cz === cz
+      ? buildLandmarks(night)
+      : []),
+    ...buildFeatureSurfaces(cx, cz),
+  ]
   const placedPieces = applyProceduralPlacementRules(
     removeDoorBlockerOverlaps(
-      removeSurfaceBlockerOverlaps(removeAuthoredCoreConflicts(pieces)),
+      removeSurfaceBlockerOverlaps(
+        removeWorldFeatureConflicts([...chunk.pieces, ...featurePieces]),
+      ),
     ),
   )
   const permanentStructures = placedPieces.filter(
     (placedPiece) =>
       placedPiece.kind === 'building' || placedPiece.kind === 'landmark',
   )
-
   return {
+    cx,
+    cz,
     pieces: placedPieces,
     buildingCount: placedPieces.filter(
       (placedPiece) =>
         placedPiece.kind === 'building' &&
         placedPiece.id.startsWith('building:'),
     ).length,
-    district: districtFor(center),
-    buildableParcels: buildableParcels.filter((parcel) =>
-      permanentStructures.every(
-        (structure) =>
-          !overlapsTopDown(
-            { position: parcel.center, scale: parcel.size },
-            structure,
-            0.25,
-          ),
-      ),
+    buildableParcels: chunk.buildableParcels.filter(
+      (parcel) =>
+        !footprintOverlapsBlockingWorldFeature(
+          parcel.center,
+          parcel.size,
+          0.25,
+        ) &&
+        permanentStructures.every(
+          (structure) =>
+            !overlapsTopDown(
+              { position: parcel.center, scale: parcel.size },
+              structure,
+              0.25,
+            ),
+        ),
     ),
+  }
+}
+
+function trimCache<K, V>(cache: Map<K, V>, maximum: number) {
+  while (cache.size > maximum) {
+    const oldest = cache.keys().next().value
+    if (oldest === undefined) return
+    cache.delete(oldest)
   }
 }
 
@@ -526,7 +647,7 @@ function isDriveCorridorBlocker(piece: ProceduralPiece) {
   )
 }
 
-function removeAuthoredCoreConflicts(pieces: ProceduralPiece[]) {
+function removeWorldFeatureConflicts(pieces: ProceduralPiece[]) {
   return pieces.filter((piece) => {
     if (piece.id.startsWith('landmark:')) return true
     if (
@@ -537,12 +658,61 @@ function removeAuthoredCoreConflicts(pieces: ProceduralPiece[]) {
       piece.kind === 'line'
     )
       return true
-    return !footprintOverlapsAuthoredCore(
+    return !footprintOverlapsBlockingWorldFeature(
       piece.position,
       orientedFootprintScale(piece),
       0.08,
     )
   })
+}
+
+function buildFeatureSurfaces(cx: number, cz: number): ProceduralPiece[] {
+  const stadium = getWorldFeature('football-stadium')
+  if (!stadium || stadium.ownerChunk.cx !== cx || stadium.ownerChunk.cz !== cz)
+    return []
+  const roadWidth = stadiumAccessRoadBounds.maxX - stadiumAccessRoadBounds.minX
+  const roadDepth = stadiumAccessRoadBounds.maxZ - stadiumAccessRoadBounds.minZ
+  const roadCenterZ =
+    (stadiumAccessRoadBounds.minZ + stadiumAccessRoadBounds.maxZ) / 2
+  const pavementWidth = Math.min(realScale.pavementWidth, 2.8)
+  return [
+    piece(
+      'feature:football-stadium:access-road',
+      'road',
+      [stadium.center[0], 0.018, roadCenterZ],
+      [roadWidth, 0.09, roadDepth],
+      '#94a3b8',
+    ),
+    piece(
+      'feature:football-stadium:access-line',
+      'line',
+      [stadium.center[0], 0.072, roadCenterZ],
+      [0.18, 0.025, roadDepth],
+      '#fde047',
+    ),
+    piece(
+      'feature:football-stadium:access-walk-west',
+      'pavement',
+      [
+        stadium.center[0] - roadWidth / 2 - pavementWidth / 2,
+        0.04,
+        roadCenterZ,
+      ],
+      [pavementWidth, 0.055, roadDepth],
+      '#e5e7eb',
+    ),
+    piece(
+      'feature:football-stadium:access-walk-east',
+      'pavement',
+      [
+        stadium.center[0] + roadWidth / 2 + pavementWidth / 2,
+        0.04,
+        roadCenterZ,
+      ],
+      [pavementWidth, 0.055, roadDepth],
+      '#e5e7eb',
+    ),
+  ]
 }
 
 function removeDoorBlockerOverlaps(pieces: ProceduralPiece[]) {

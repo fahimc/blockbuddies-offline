@@ -1,5 +1,16 @@
 # Build Phases
 
+## Post-phase infinite world map and deterministic streaming
+
+- [x] Preserve every established Central Buddy Town destination coordinate.
+- [x] Define signed 36-unit chunks, six-chunk sectors, and a fixed-feature tile registry.
+- [x] Place Football Stadium outside the central boundary and reserve its footprint before procedural placement.
+- [x] Replace the clamped overview with an unbounded drag, pinch, and wheel-zoom world map.
+- [x] Predict upcoming chunks from player velocity and prefetch them during idle time.
+- [x] Bound generated chunk caches, use distance-based map detail, and batch 3D procedural geometry with instancing.
+- [x] Remove the former outer driving clamp and add unit/browser regression coverage.
+- [x] Package and release the Android debug APK for the infinite world map update.
+
 ## Post-phase football map restore
 
 - [x] Restore the town map scale and procedural generation behavior from before the outlying sports-field regression.

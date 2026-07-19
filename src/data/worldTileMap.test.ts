@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { obbyPlatforms } from '../ai/obby'
 import { realScale } from '../game/scale'
-import { createWorldTileMap } from './worldTileMap'
+import { createWorldTileMap, worldTerrainAt } from './worldTileMap'
+import { footballStadiumCenter } from './worldFeatures'
 
 describe('world tile map', () => {
   it('builds deterministic terrain and object layers without forbidden placement', () => {
@@ -16,6 +17,19 @@ describe('world tile map', () => {
   it('provides roads wide enough for two vehicle lanes and clearance', () => {
     expect(realScale.roadTile).toBeGreaterThan(realScale.carWidth * 3.4)
     expect(realScale.roadTile).toBeGreaterThan(realScale.busWidth * 2.5)
+  })
+
+  it('places the fixed stadium in its registered tiles with an access road', () => {
+    const map = createWorldTileMap('LONDON-2026', 3)
+    const stadium = map.objects.find(
+      (object) => object.id === 'authored:football-stadium',
+    )
+
+    expect(stadium?.center).toEqual(footballStadiumCenter)
+    expect(
+      worldTerrainAt(footballStadiumCenter[0], footballStadiumCenter[2]),
+    ).toBe('park')
+    expect(worldTerrainAt(footballStadiumCenter[0], -58)).toBe('road')
   })
 
   it('never assigns a solid object to a road tile', () => {

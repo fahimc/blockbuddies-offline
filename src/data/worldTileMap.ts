@@ -21,6 +21,11 @@ import {
   type ProceduralPiece,
 } from './proceduralWorld'
 import { proceduralChunkSize, proceduralTerrainAt } from './proceduralTownPlan'
+import {
+  footballStadiumCenter,
+  footballStadiumFootprint,
+  terrainOverrideForWorldFeature,
+} from './worldFeatures'
 
 export type WorldTileTerrain = WorldTerrain | 'parking'
 export type WorldTileObjectKind =
@@ -183,6 +188,8 @@ export function worldTerrainAt(
   z: number,
   proceduralParks: ProceduralPiece[] = [],
 ): WorldTileTerrain {
+  const featureTerrain = terrainOverrideForWorldFeature(x, z)
+  if (featureTerrain) return featureTerrain
   const generatedTerrain = proceduralTerrainAt(x, z)
   if (generatedTerrain === 'road' || generatedTerrain === 'sidewalk')
     return generatedTerrain
@@ -295,6 +302,14 @@ function authoredMapObjects(): WorldTileObject[] {
         vehicle.position,
         [realScale.carLength, 1, realScale.carWidth],
       ),
+    ),
+    mapObject(
+      'authored:football-stadium',
+      'Football Stadium',
+      'landmark',
+      'authored',
+      footballStadiumCenter,
+      [footballStadiumFootprint.width, 1, footballStadiumFootprint.depth],
     ),
   ]
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { generateProceduralWorld } from '../data/proceduralWorld'
 import { proceduralTerrainAt } from '../data/proceduralTownPlan'
+import { getWorldFeature } from '../data/worldFeatures'
 import { parkingLot } from './vehicles'
 import { authoredCoreBounds, coreTerrainZones } from './townPlacement'
 import { terrainAt } from './worldGrid'
@@ -67,7 +68,7 @@ describe('football pitch and ball logic', () => {
     ).toBe(true)
   })
 
-  it('keeps the pitch inside the stable authored town map and clear of parking', () => {
+  it('places the pitch on its deterministic feature grid outside the authored core', () => {
     const pitchFootprint = {
       position: footballPitch.center,
       scale: [footballPitch.width, 1, footballPitch.length],
@@ -77,18 +78,12 @@ describe('football pitch and ball logic', () => {
       scale: [parkingLot.width, 1, parkingLot.depth],
     } as { position: [number, number, number]; scale: [number, number, number] }
 
-    expect(
-      footballPitch.center[0] - footballPitch.width / 2,
-    ).toBeGreaterThanOrEqual(authoredCoreBounds.minX)
-    expect(
-      footballPitch.center[0] + footballPitch.width / 2,
-    ).toBeLessThanOrEqual(authoredCoreBounds.maxX)
-    expect(
-      footballPitch.center[2] - footballPitch.length / 2,
-    ).toBeGreaterThanOrEqual(authoredCoreBounds.minZ)
-    expect(
-      footballPitch.center[2] + footballPitch.length / 2,
-    ).toBeLessThanOrEqual(authoredCoreBounds.maxZ)
+    const feature = getWorldFeature('football-stadium')
+    expect(feature?.center).toEqual(footballPitch.center)
+    expect(feature?.ownerChunk).toEqual({ cx: 2, cz: -2 })
+    expect(footballPitch.center[0] - footballPitch.width / 2).toBeGreaterThan(
+      authoredCoreBounds.maxX,
+    )
     expect(overlapsTopDown(pitchFootprint, parkingFootprint, 0.2)).toBe(false)
   })
 

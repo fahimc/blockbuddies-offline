@@ -23,15 +23,25 @@ describe('parking and drivable vehicles', () => {
 
     vehicles.forEach((vehicle) => {
       const box = drivableVehicleCollisionBox(vehicle)
-      expect(Math.abs(vehicle.position[0] - parkingLot.center[0]) + box.half[0]).toBeLessThan(parkingLot.width / 2)
-      expect(Math.abs(vehicle.position[2] - parkingLot.center[2]) + box.half[2]).toBeLessThan(parkingLot.depth / 2)
+      expect(
+        Math.abs(vehicle.position[0] - parkingLot.center[0]) + box.half[0],
+      ).toBeLessThan(parkingLot.width / 2)
+      expect(
+        Math.abs(vehicle.position[2] - parkingLot.center[2]) + box.half[2],
+      ).toBeLessThan(parkingLot.depth / 2)
     })
-    expect(Math.abs(vehicles[1].position[2] - vehicles[0].position[2])).toBeGreaterThan(realScale.carWidth)
+    expect(
+      Math.abs(vehicles[1].position[2] - vehicles[0].position[2]),
+    ).toBeGreaterThan(realScale.carWidth)
   })
 
   it('uses heading yaw for movement and converts it to the car mesh axis', () => {
     const vehicle = createParkedVehicles()[0]
-    const moved = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1)
+    const moved = advanceDrivableVehicle(
+      vehicle,
+      { throttle: 1, steer: 0, brake: false },
+      0.1,
+    )
 
     expect(moved.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(moved.speed).toBeGreaterThan(0)
@@ -40,10 +50,26 @@ describe('parking and drivable vehicles', () => {
 
   it('steers, reverses, and brakes without exceeding configured motion', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 5 }
-    const positiveSteer = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 1, brake: false }, 0.1)
-    const negativeSteer = advanceDrivableVehicle(vehicle, { throttle: 1, steer: -1, brake: false }, 0.1)
-    const reversed = advanceDrivableVehicle({ ...vehicle, speed: -2 }, { throttle: -1, steer: 0, brake: false }, 0.1)
-    const braked = advanceDrivableVehicle(vehicle, { throttle: 1, steer: 0, brake: true }, 0.1)
+    const positiveSteer = advanceDrivableVehicle(
+      vehicle,
+      { throttle: 1, steer: 1, brake: false },
+      0.1,
+    )
+    const negativeSteer = advanceDrivableVehicle(
+      vehicle,
+      { throttle: 1, steer: -1, brake: false },
+      0.1,
+    )
+    const reversed = advanceDrivableVehicle(
+      { ...vehicle, speed: -2 },
+      { throttle: -1, steer: 0, brake: false },
+      0.1,
+    )
+    const braked = advanceDrivableVehicle(
+      vehicle,
+      { throttle: 1, steer: 0, brake: true },
+      0.1,
+    )
 
     expect(positiveSteer.yaw).toBeGreaterThan(vehicle.yaw)
     expect(negativeSteer.yaw).toBeLessThan(vehicle.yaw)
@@ -53,16 +79,24 @@ describe('parking and drivable vehicles', () => {
 
   it('maps screen left and right controls to the expected car turn direction', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 5 }
-    const fromLeftControl = advanceDrivableVehicle(vehicle, {
-      throttle: 1,
-      steer: drivingSteerFromStrafe(-1),
-      brake: false,
-    }, 0.1)
-    const fromRightControl = advanceDrivableVehicle(vehicle, {
-      throttle: 1,
-      steer: drivingSteerFromStrafe(1),
-      brake: false,
-    }, 0.1)
+    const fromLeftControl = advanceDrivableVehicle(
+      vehicle,
+      {
+        throttle: 1,
+        steer: drivingSteerFromStrafe(-1),
+        brake: false,
+      },
+      0.1,
+    )
+    const fromRightControl = advanceDrivableVehicle(
+      vehicle,
+      {
+        throttle: 1,
+        steer: drivingSteerFromStrafe(1),
+        brake: false,
+      },
+      0.1,
+    )
 
     expect(fromLeftControl.yaw).toBeGreaterThan(vehicle.yaw)
     expect(fromRightControl.yaw).toBeLessThan(vehicle.yaw)
@@ -70,8 +104,16 @@ describe('parking and drivable vehicles', () => {
 
   it('maps player drive controls so forward drives through the car front and back reverses', () => {
     const vehicle = createParkedVehicles()[0]
-    const forward = advanceDrivableVehicle(vehicle, drivingInputFromControls(1, 0, false), 0.1)
-    const reverse = advanceDrivableVehicle(vehicle, drivingInputFromControls(-1, 0, false), 0.1)
+    const forward = advanceDrivableVehicle(
+      vehicle,
+      drivingInputFromControls(1, 0, false),
+      0.1,
+    )
+    const reverse = advanceDrivableVehicle(
+      vehicle,
+      drivingInputFromControls(-1, 0, false),
+      0.1,
+    )
 
     expect(forward.position[0]).toBeGreaterThan(vehicle.position[0])
     expect(forward.speed).toBeGreaterThan(0)
@@ -80,17 +122,28 @@ describe('parking and drivable vehicles', () => {
   })
 
   it('labels hijacked traffic cars as drivable HUD vehicles', () => {
-    expect(getDrivableVehicle('traffic-drive:traffic-1')?.label).toBe('Traffic Car')
+    expect(getDrivableVehicle('traffic-drive:traffic-1')?.label).toBe(
+      'Traffic Car',
+    )
   })
 
   it('stops against solid objects instead of passing through them', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 8 }
     const obstacle = {
       id: 'wall',
-      center: [vehicle.position[0] + realScale.carLength / 2 + 0.25, 1, vehicle.position[2]] as [number, number, number],
+      center: [
+        vehicle.position[0] + realScale.carLength / 2 + 0.25,
+        1,
+        vehicle.position[2],
+      ] as [number, number, number],
       half: [0.2, 1, 2] as [number, number, number],
     }
-    const stopped = advanceDrivableVehicleWithCollisions(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1, [obstacle])
+    const stopped = advanceDrivableVehicleWithCollisions(
+      vehicle,
+      { throttle: 1, steer: 0, brake: false },
+      0.1,
+      [obstacle],
+    )
 
     expect(stopped.position).toEqual(vehicle.position)
     expect(stopped.speed).toBe(0)
@@ -100,10 +153,19 @@ describe('parking and drivable vehicles', () => {
     const vehicle = { ...createParkedVehicles()[0], speed: 11 }
     const thinPost = {
       id: 'lamp-post',
-      center: [vehicle.position[0] + realScale.carLength / 2 + 0.8, 1.2, vehicle.position[2]] as [number, number, number],
+      center: [
+        vehicle.position[0] + realScale.carLength / 2 + 0.8,
+        1.2,
+        vehicle.position[2],
+      ] as [number, number, number],
       half: [0.08, 1.2, 0.08] as [number, number, number],
     }
-    const stopped = advanceDrivableVehicleWithCollisions(vehicle, { throttle: 1, steer: 0, brake: false }, 0.1, [thinPost])
+    const stopped = advanceDrivableVehicleWithCollisions(
+      vehicle,
+      { throttle: 1, steer: 0, brake: false },
+      0.1,
+      [thinPost],
+    )
 
     expect(stopped.position).toEqual(vehicle.position)
     expect(stopped.speed).toBe(0)
@@ -118,7 +180,11 @@ describe('parking and drivable vehicles', () => {
     }
     const roadSurface = {
       id: 'road:surface-at-intersection',
-      center: [vehicle.position[0] + 0.85, 0.04, vehicle.position[2]] as [number, number, number],
+      center: [vehicle.position[0] + 0.85, 0.04, vehicle.position[2]] as [
+        number,
+        number,
+        number,
+      ],
       half: [4, 0.06, 4] as [number, number, number],
     }
 
@@ -152,12 +218,39 @@ describe('parking and drivable vehicles', () => {
     expect(moved.speed).toBeGreaterThan(0)
   })
 
+  it('keeps driving and supports exits beyond the former outer world clamp', () => {
+    const vehicle = {
+      ...createParkedVehicles()[0],
+      position: [140, 0.07, -42] as [number, number, number],
+      yaw: Math.PI / 2,
+      speed: 8,
+    }
+
+    const moved = advanceDrivableVehicleWithCollisions(
+      vehicle,
+      drivingInputFromControls(1, 0, false),
+      0.1,
+      [],
+    )
+
+    expect(moved.position[0]).toBeGreaterThan(140)
+    expect(safeVehicleExitPosition(moved, [])?.[0]).toBeGreaterThan(140)
+  })
+
   it('reserves a wider clearance area around the parking bays and driveway', () => {
     expect(parkingClearancePadding).toBeGreaterThanOrEqual(2.5)
     const treeNearCarExit = {
       id: 'tree',
-      center: [parkingLot.center[0] + parkingLot.width / 2 + 1.7, 2, parkingLot.center[2]] as [number, number, number],
-      half: [realScale.treeCanopySize / 2, 2, realScale.treeCanopySize / 2] as [number, number, number],
+      center: [
+        parkingLot.center[0] + parkingLot.width / 2 + 1.7,
+        2,
+        parkingLot.center[2],
+      ] as [number, number, number],
+      half: [realScale.treeCanopySize / 2, 2, realScale.treeCanopySize / 2] as [
+        number,
+        number,
+        number,
+      ],
     }
 
     expect(collisionBoxOverlapsParkingClearance(treeNearCarExit)).toBe(true)
@@ -166,7 +259,11 @@ describe('parking and drivable vehicles', () => {
   it('measures interaction from the car body and finds a clear side exit', () => {
     const vehicle = createParkedVehicles()[0]
     const body = drivableVehicleCollisionBox(vehicle)
-    const besideCar: [number, number, number] = [vehicle.position[0], 0, vehicle.position[2] - realScale.carWidth / 2 - 0.5]
+    const besideCar: [number, number, number] = [
+      vehicle.position[0],
+      0,
+      vehicle.position[2] - realScale.carWidth / 2 - 0.5,
+    ]
     const exit = safeVehicleExitPosition(vehicle, [body])
 
     expect(distanceToVehicle(besideCar, vehicle)).toBeCloseTo(0.5)

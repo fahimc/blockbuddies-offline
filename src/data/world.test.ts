@@ -13,6 +13,34 @@ import { footballPitch } from '../game/football'
 import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
+  it('keeps every central-town destination at its established coordinates', () => {
+    expect(
+      Object.fromEntries(
+        worldLocations
+          .filter((location) =>
+            [
+              'spawn',
+              'park',
+              'shop',
+              'school',
+              'obby',
+              'houses',
+              'parking',
+            ].includes(location.id),
+          )
+          .map((location) => [location.id, location.position]),
+      ),
+    ).toEqual({
+      spawn: [0, 0, 0],
+      park: [-12, 0, -8],
+      shop: [12, 0, -7],
+      school: [-21, 0, 22],
+      obby: [18, 0, 21],
+      houses: [0, 0, 22],
+      parking: [14, 0, -17],
+    })
+  })
+
   it('provides one grounded, nearby arrival point for every key location', () => {
     expect(worldLocations).toHaveLength(10)
     expect(new Set(worldLocations.map((location) => location.id)).size).toBe(
@@ -94,15 +122,14 @@ describe('world travel destinations', () => {
     expect(distance2d(school.position, schoolBuilding!.position)).toBe(0)
   })
 
-  it('adds Football Pitch as a discoverable playable destination', () => {
+  it('adds the outlying Football Pitch as a discoverable grid destination', () => {
     const football = getLocation('football')
     const parking = getLocation('parking')
 
     expect(football.label).toBe('Football Pitch')
     expect(football.description).toContain('score goals')
     expect(football.position).toEqual(footballPitch.center)
-    expect(Math.abs(football.position[0])).toBeLessThanOrEqual(27)
-    expect(Math.abs(football.position[2])).toBeLessThanOrEqual(27)
+    expect(Math.abs(football.position[0])).toBeGreaterThan(27)
     expect(distance2d(football.position, parking.position)).toBeGreaterThan(
       footballPitch.width,
     )

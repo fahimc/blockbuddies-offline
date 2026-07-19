@@ -1,4 +1,5 @@
 import type { Vec3 } from './types'
+import { footballStadiumCenter } from '../data/worldFeatures'
 
 export type FootballBallRuntime = {
   id: string
@@ -26,7 +27,7 @@ export type FootballBallPatch = {
 }
 
 export const footballPitch = {
-  center: [23, 0, -20] as Vec3,
+  center: footballStadiumCenter,
   width: 8,
   length: 12,
   borderClearance: 1.6,
