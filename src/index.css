@@ -71,6 +71,15 @@ canvas {
   touch-action: manipulation;
 }
 
+.bb-avatar-select-target.draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.bb-avatar-select-target.draggable:active {
+  cursor: grabbing;
+}
+
 .bb-avatar-name-pill {
   position: absolute;
   top: -0.9rem;
@@ -1450,6 +1459,20 @@ button.bb-town-map-friend {
 
 .bb-world-message-button:active {
   transform: translateY(0.08rem) scale(0.98);
+}
+
+.bb-npc-drag-indicator {
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  border: 0.12rem solid rgb(255 255 255 / 0.9);
+  border-radius: 999px;
+  background: rgb(2 132 199 / 0.94);
+  padding: 0.42rem 0.72rem;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  box-shadow: 0 0.55rem 1rem rgb(15 23 42 / 0.3);
 }
 
 .game-hamburger-button {

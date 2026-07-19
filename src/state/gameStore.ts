@@ -119,6 +119,12 @@ export type WorldActionRequest = {
 
 export type FootballActionKind = 'kick' | 'skill' | 'goal'
 
+export type NpcDragTarget = {
+  kind: 'bot' | 'saved-friend'
+  id: string
+  pointerId: number
+}
+
 type TeleportTarget = {
   sequence: number
   position: Vec3
@@ -179,6 +185,7 @@ type GameState = GameSave & {
   nearbyFootballBallId?: string
   footballActionSequence: number
   footballActionKind?: FootballActionKind
+  npcDrag?: NpcDragTarget
   buildMode: boolean
   selectedBuildPiece: BuildPieceId
   selectedBuildBlockId?: string
@@ -199,6 +206,8 @@ type GameState = GameSave & {
   ) => void
   leaveInterior: () => InteriorVisit | undefined
   tickBots: (now: number) => void
+  setNpcDrag: (target?: NpcDragTarget) => void
+  placeBot: (id: string, destination: Vec3) => void
   botReact: (botId: string, context: DialogueContext) => void
   sendQuickReply: (text: string, context: DialogueContext) => void
   openMessageThread: (botId: string, contactName?: string) => void
@@ -219,6 +228,7 @@ type GameState = GameSave & {
   toggleSavedFriendInWorld: (id: string) => void
   moveSavedFriend: (id: string, destination: Vec3) => void
   teleportSavedFriend: (id: string, destination: Vec3) => void
+  placeSavedFriend: (id: string, destination: Vec3) => void
   deleteSavedFriend: (id: string) => void
   selectCustomizationItem: (item: CustomizationSelection) => void
   setPlayerEmote: (emote: PlayerEmote) => void
@@ -710,6 +720,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   nearbyFootballBallId: undefined,
   footballActionSequence: 0,
   footballActionKind: undefined,
+  npcDrag: undefined,
   buildMode: false,
   selectedBuildPiece: 'block',
   selectedBuildBlockId: undefined,
@@ -941,6 +952,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return {
         bots: state.bots.map((bot) => {
+          if (state.npcDrag?.kind === 'bot' && state.npcDrag.id === bot.id)
+            return bot
           const profile =
             botProfiles.find((item) => item.id === bot.id) ?? botProfiles[0]
           return updateBot({
@@ -951,6 +964,36 @@ export const useGameStore = create<GameState>((set, get) => ({
             random,
           })
         }),
+      }
+    }),
+
+  setNpcDrag: (npcDrag) => set({ npcDrag }),
+
+  placeBot: (id, destination) =>
+    set((state) => {
+      const bot = state.bots.find((entry) => entry.id === id)
+      if (!bot) return state
+      const target = normalizeSavedFriendPosition(destination, bot.position)
+      const profile = botProfiles.find((entry) => entry.id === id)
+      const now = typeof performance === 'undefined' ? 0 : performance.now()
+      return {
+        bots: state.bots.map((entry) =>
+          entry.id === id
+            ? {
+                ...entry,
+                state: 'idle',
+                position: target,
+                target,
+                action: 'idle',
+                goal: 'Placed by player',
+                nextDecisionAt: now + 3_000,
+              }
+            : entry,
+        ),
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${profile?.username ?? 'NPC'} moved here`),
+        ],
       }
     }),
 
@@ -1725,6 +1768,34 @@ export const useGameStore = create<GameState>((set, get) => ({
         ],
       }
     }),
+  placeSavedFriend: (id, destination) =>
+    set((state) => {
+      const friendIndex = state.savedFriends.findIndex(
+        (entry) => entry.id === id,
+      )
+      const friend = state.savedFriends[friendIndex]
+      if (!friend) return state
+      const target = normalizeSavedFriendPosition(
+        destination,
+        savedFriendPositionAt(friend, Date.now(), friendIndex),
+      )
+      return {
+        savedFriends: state.savedFriends.map((entry) =>
+          entry.id === id
+            ? {
+                ...entry,
+                inWorld: true,
+                position: target,
+                movement: undefined,
+              }
+            : entry,
+        ),
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`${friend.name} moved here`),
+        ],
+      }
+    }),
   deleteSavedFriend: (id) =>
     set((state) => ({
       savedFriends: state.savedFriends.filter((friend) => friend.id !== id),
@@ -2035,6 +2106,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       nearbyFootballBallId: undefined,
       footballActionSequence: 0,
       footballActionKind: undefined,
+      npcDrag: undefined,
       touch: {
         x: 0,
         y: 0,
@@ -2104,6 +2176,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         activeVehicleId: undefined,
         interactionPrompt: undefined,
         worldActionRequest: undefined,
+        npcDrag: undefined,
         loading: false,
       }
     }),

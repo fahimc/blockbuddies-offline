@@ -1,5 +1,6 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import type {
+  BotRuntime,
   BuildBlock,
   MessageThread,
   MiniGameId,
@@ -56,6 +57,7 @@ export type BlockBuddiesE2EBridge = {
   prepareParkingInteraction: () => GameplayE2ESnapshot
   prepareMessageTargetInteraction: (distance?: number) => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
+  prepareNpcDragInteraction: () => GameplayE2ESnapshot
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
   prepareFootballInteraction: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
@@ -95,6 +97,7 @@ export type GameplayE2ESnapshot = {
   placedBlocks: BuildBlock[]
   messageThreads: MessageThread[]
   savedFriends: SavedFriend[]
+  bots: BotRuntime[]
   nearbyFootballBallId?: string
   footballActionSequence: number
   footballActionKind?: string
@@ -137,6 +140,7 @@ export function installE2EBridge() {
     prepareParkingInteraction,
     prepareMessageTargetInteraction,
     prepareMovementInteraction,
+    prepareNpcDragInteraction,
     prepareBuildModeInteraction,
     prepareFootballInteraction,
     startObbyGame,
@@ -453,6 +457,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     placedBlocks: game.placedBlocks,
     messageThreads: game.messageThreads,
     savedFriends: game.savedFriends,
+    bots: game.bots,
     nearbyFootballBallId: game.nearbyFootballBallId,
     footballActionSequence: game.footballActionSequence,
     footballActionKind: game.footballActionKind,
@@ -556,6 +561,22 @@ function createLocalPartyFriend(name = 'Party Pal'): LocalPartyE2ESnapshot {
     accessory: 'pet-bot',
   })
   return broadcastLocalPartySnapshot()
+}
+
+function prepareNpcDragInteraction(): GameplayE2ESnapshot {
+  const game = useGameStore.getState()
+  if (!game.savedFriends.some((friend) => friend.name === 'Drag Buddy'))
+    game.createSavedFriend('Drag Buddy', {
+      ...game.avatar,
+      shirtColor: '#38bdf8',
+      accentColor: '#facc15',
+    })
+  const next = useGameStore.getState()
+  const friend = next.savedFriends.find((entry) => entry.name === 'Drag Buddy')
+  const bot = next.bots[0]
+  if (friend) next.placeSavedFriend(friend.id, [2, 0, 0])
+  if (bot) useGameStore.getState().placeBot(bot.id, [-2, 0, 0])
+  return getGameplaySnapshot()
 }
 
 function sendSelectedPredefinedMessage(presetId: string): GameplayE2ESnapshot {

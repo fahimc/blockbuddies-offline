@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Edges, useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Armchair, BedDouble, CarFront, MessageCircle } from 'lucide-react'
@@ -41,7 +41,11 @@ import {
 import { predictChunkRequests } from '../data/worldStreaming'
 import { getBuildPiece } from '../data/buildPieces'
 import { worldLocations, distance2d } from '../data/world'
-import { nearestLocation, useGameStore } from '../state/gameStore'
+import {
+  nearestLocation,
+  useGameStore,
+  type NpcDragTarget,
+} from '../state/gameStore'
 import {
   makePartySnapshot,
   useLocalPartyStore,
@@ -185,6 +189,11 @@ import type {
   Vec3,
 } from './types'
 import { savedFriendPositionAt } from './savedFriendMovement'
+import {
+  npcDragLift,
+  npcPointerHasDragged,
+  safeNpcDropPosition,
+} from './npcDrag'
 
 const worldHtmlZIndexRange: [number, number] = [4, 0]
 const worldActionZIndexRange: [number, number] = [26, 25]
@@ -204,6 +213,24 @@ function useMessageTargetSelection() {
       selectMessageTarget: () => undefined,
     }
   )
+}
+
+type NpcDragStart = NpcDragTarget & {
+  clientX: number
+  clientY: number
+  position: Vec3
+}
+
+type NpcDragControls = {
+  begin: (start: NpcDragStart) => void
+  previewFor: (kind: NpcDragTarget['kind'], id: string) => Vec3 | undefined
+  setHovering: (hovering: boolean) => void
+}
+
+const NpcDragContext = createContext<NpcDragControls | null>(null)
+
+function useNpcDrag() {
+  return useContext(NpcDragContext)
 }
 
 const staticCollisionObstacles: CollisionBox[] = [
@@ -269,6 +296,241 @@ const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map(
     }),
 )
 
+type ActiveNpcDrag = NpcDragStart & {
+  groundOffset: Vec3
+  startScreen: { x: number; y: number }
+  moved: boolean
+}
+
+function NpcDragProvider({ children }: { children: ReactNode }) {
+  const { camera, gl } = useThree()
+  const setNpcDrag = useGameStore((state) => state.setNpcDrag)
+  const placeBot = useGameStore((state) => state.placeBot)
+  const placeSavedFriend = useGameStore((state) => state.placeSavedFriend)
+  const dragRef = useRef<ActiveNpcDrag | undefined>(undefined)
+  const previewRef = useRef<Vec3 | undefined>(undefined)
+  const [active, setActive] = useState<NpcDragTarget>()
+  const raycaster = useMemo(() => new THREE.Raycaster(), [])
+  const groundPlane = useMemo(
+    () => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+    [],
+  )
+  const projectedPoint = useMemo(() => new THREE.Vector3(), [])
+
+  const groundAtScreenPoint = useCallback(
+    (clientX: number, clientY: number): Vec3 | undefined => {
+      const bounds = gl.domElement.getBoundingClientRect()
+      if (bounds.width <= 0 || bounds.height <= 0) return undefined
+      const pointer = new THREE.Vector2(
+        ((clientX - bounds.left) / bounds.width) * 2 - 1,
+        -((clientY - bounds.top) / bounds.height) * 2 + 1,
+      )
+      raycaster.setFromCamera(pointer, camera)
+      const point = raycaster.ray.intersectPlane(groundPlane, projectedPoint)
+      if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.z))
+        return undefined
+      return [point.x, 0, point.z]
+    },
+    [camera, gl.domElement, groundPlane, projectedPoint, raycaster],
+  )
+
+  const clearDrag = useCallback(() => {
+    dragRef.current = undefined
+    previewRef.current = undefined
+    setActive(undefined)
+    setNpcDrag(undefined)
+    gl.domElement.style.cursor = 'grab'
+  }, [gl.domElement, setNpcDrag])
+
+  const begin = useCallback(
+    (start: NpcDragStart) => {
+      if (
+        !Number.isFinite(start.clientX) ||
+        !Number.isFinite(start.clientY) ||
+        !Number.isFinite(start.pointerId)
+      )
+        return
+      const ground = groundAtScreenPoint(start.clientX, start.clientY)
+      const groundOffset: Vec3 = ground
+        ? [start.position[0] - ground[0], 0, start.position[2] - ground[2]]
+        : [0, 0, 0]
+      const target: NpcDragTarget = {
+        kind: start.kind,
+        id: start.id,
+        pointerId: start.pointerId,
+      }
+      dragRef.current = {
+        ...start,
+        position: [start.position[0], 0, start.position[2]],
+        groundOffset,
+        startScreen: { x: start.clientX, y: start.clientY },
+        moved: false,
+      }
+      previewRef.current = [start.position[0], 0, start.position[2]]
+      setActive(target)
+      setNpcDrag(target)
+      gl.domElement.style.cursor = 'grabbing'
+    },
+    [gl.domElement, groundAtScreenPoint, setNpcDrag],
+  )
+
+  useEffect(() => {
+    const move = (event: globalThis.PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag || drag.pointerId !== event.pointerId) return
+      if (
+        !drag.moved &&
+        !npcPointerHasDragged(drag.startScreen, {
+          x: event.clientX,
+          y: event.clientY,
+        })
+      )
+        return
+      drag.moved = true
+      const ground = groundAtScreenPoint(event.clientX, event.clientY)
+      if (!ground) return
+      if (event.cancelable) event.preventDefault()
+      previewRef.current = [
+        ground[0] + drag.groundOffset[0],
+        0,
+        ground[2] + drag.groundOffset[2],
+      ]
+    }
+    const finish = (event: globalThis.PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag || drag.pointerId !== event.pointerId) return
+      const preview = previewRef.current
+      if (drag.moved && preview) {
+        const target = safeNpcDropPosition(preview, npcDropObstaclesAt(preview))
+        if (drag.kind === 'bot') placeBot(drag.id, target)
+        else placeSavedFriend(drag.id, target)
+      }
+      clearDrag()
+    }
+    const cancel = (event: globalThis.PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag || drag.pointerId !== event.pointerId) return
+      clearDrag()
+    }
+    const cancelAll = () => {
+      if (dragRef.current) clearDrag()
+    }
+
+    window.addEventListener('pointermove', move, {
+      capture: true,
+      passive: false,
+    })
+    window.addEventListener('pointerup', finish, true)
+    window.addEventListener('pointercancel', cancel, true)
+    window.addEventListener('blur', cancelAll)
+    return () => {
+      window.removeEventListener('pointermove', move, true)
+      window.removeEventListener('pointerup', finish, true)
+      window.removeEventListener('pointercancel', cancel, true)
+      window.removeEventListener('blur', cancelAll)
+      clearDrag()
+    }
+  }, [clearDrag, groundAtScreenPoint, placeBot, placeSavedFriend])
+
+  const previewFor = useCallback((kind: NpcDragTarget['kind'], id: string) => {
+    const drag = dragRef.current
+    return drag?.kind === kind && drag.id === id
+      ? previewRef.current
+      : undefined
+  }, [])
+  const setHovering = useCallback(
+    (hovering: boolean) => {
+      if (dragRef.current) return
+      gl.domElement.style.cursor = hovering ? 'grab' : 'default'
+    },
+    [gl.domElement],
+  )
+  const controls = useMemo(
+    () => ({ begin, previewFor, setHovering }),
+    [begin, previewFor, setHovering],
+  )
+  const label = active
+    ? active.kind === 'bot'
+      ? (botProfiles.find((profile) => profile.id === active.id)?.username ??
+        'NPC')
+      : (useGameStore
+          .getState()
+          .savedFriends.find((friend) => friend.id === active.id)?.name ??
+        'NPC')
+    : undefined
+
+  return (
+    <NpcDragContext.Provider value={controls}>
+      {children}
+      {active && label ? (
+        <NpcDragIndicator previewRef={previewRef} label={label} />
+      ) : null}
+    </NpcDragContext.Provider>
+  )
+}
+
+function NpcDragIndicator({
+  previewRef,
+  label,
+}: {
+  previewRef: MutableRefObject<Vec3 | undefined>
+  label: string
+}) {
+  const group = useRef<THREE.Group>(null)
+  useFrame(() => {
+    const preview = previewRef.current
+    if (preview && group.current)
+      group.current.position.set(preview[0], 0.035, preview[2])
+  })
+  return (
+    <group ref={group}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.62, 0.82, 32]} />
+        <meshBasicMaterial color="#38bdf8" transparent opacity={0.86} />
+      </mesh>
+      <Html center position={[0, 3.45, 0]} zIndexRange={worldActionZIndexRange}>
+        <div
+          className="bb-npc-drag-indicator"
+          data-testid="npc-drag-indicator"
+          role="status"
+        >
+          Moving {label} - release to place
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+function npcDropObstaclesAt(position: Vec3) {
+  const game = useGameStore.getState()
+  const party = useLocalPartyStore.getState()
+  const remoteBlocks = Object.values(party.remotePlayers).flatMap(
+    (player) => player.placedBlocks ?? [],
+  )
+  const proceduralPieces = game.settings.proceduralWorld
+    ? getProceduralWorld({
+        seed: game.settings.worldSeed || 'LONDON-2026',
+        center: position,
+        viewDistance: 1,
+        night: game.settings.nightMode,
+      }).pieces.filter(
+        (piece) =>
+          !proceduralPieceBlocksParking(piece) &&
+          !proceduralObjectInsideCoreTown(piece),
+      )
+    : []
+  return [
+    ...staticCollisionObstacles,
+    ...activeObbyCollisionBoxes(game.obby.active),
+    ...parkingLotCollisionBoxes(),
+    ...proceduralPiecesToCollisionBoxes(proceduralPieces).filter(
+      (box) => !collisionBoxOverlapsParkingClearance(box),
+    ),
+    ...buildBlocksToCollisionBoxes(game.placedBlocks),
+    ...buildBlocksToCollisionBoxes(remoteBlocks),
+  ]
+}
+
 export function GameScene() {
   const activeInterior = useGameStore((state) => state.activeInterior)
   const [selectedMessageTargetId, setSelectedMessageTargetId] =
@@ -329,7 +591,7 @@ function OutdoorWorld() {
   }, [footballs])
 
   return (
-    <>
+    <NpcDragProvider>
       <ProceduralBoroughWorld />
       <StreamedFeature featureId="central-buddy-town">
         <Town />
@@ -363,7 +625,7 @@ function OutdoorWorld() {
       <PlacedBlocks />
       <RemotePlacedBlocks />
       <BuildModeOverlay />
-    </>
+    </NpcDragProvider>
   )
 }
 
@@ -3368,6 +3630,8 @@ function BotAvatar({
   color: string
   shirtColor: string
 }) {
+  const group = useRef<THREE.Group>(null)
+  const npcDrag = useNpcDrag()
   const { selectedMessageTargetId, selectMessageTarget } =
     useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
@@ -3383,8 +3647,31 @@ function BotAvatar({
   const dz = bot.target[2] - bot.position[2]
   const yaw =
     bot.action === 'walk' || bot.action === 'run' ? Math.atan2(dx, dz) : 0
+  const startBotDrag = (pointer: {
+    pointerId: number
+    clientX: number
+    clientY: number
+  }) =>
+    npcDrag?.begin({
+      kind: 'bot',
+      id: bot.id,
+      position: bot.position,
+      ...pointer,
+    })
+
+  useFrame(() => {
+    const preview = npcDrag?.previewFor('bot', bot.id)
+    if (!group.current) return
+    group.current.position.set(
+      preview?.[0] ?? bot.position[0],
+      avatarGroundOffset + (preview ? npcDragLift : jumpLift),
+      preview?.[2] ?? bot.position[2],
+    )
+  })
+
   return (
     <group
+      ref={group}
       position={[
         bot.position[0],
         avatarGroundOffset + jumpLift,
@@ -3394,11 +3681,14 @@ function BotAvatar({
       onPointerDown={(event) => {
         event.stopPropagation()
         selectBot()
+        startBotDrag(event)
       }}
       onClick={(event) => {
         event.stopPropagation()
         selectBot()
       }}
+      onPointerOver={() => npcDrag?.setHovering(true)}
+      onPointerOut={() => npcDrag?.setHovering(false)}
     >
       <BlockAvatar
         bodyColor={color}
@@ -3427,6 +3717,7 @@ function BotAvatar({
         action={bot.action}
         isSelected={isSelected}
         onSelect={selectBot}
+        onDragStart={startBotDrag}
       />
       {bot.speech && bot.speechUntil > Date.now() ? (
         <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
@@ -3501,16 +3792,43 @@ function SavedFriendAvatar({
   messageThreadId?: string
 }) {
   const group = useRef<THREE.Group>(null)
+  const npcDrag = useNpcDrag()
   const { selectedMessageTargetId, selectMessageTarget } =
     useMessageTargetSelection()
   const openMessageThread = useGameStore((state) => state.openMessageThread)
   const targetId = messageTargetId ?? `friend:${friend.id}`
   const threadId = messageThreadId ?? friend.id
   const isSelected = selectedMessageTargetId === targetId
+  const canDrag = !messageTargetId
   const selectFriend = () => selectMessageTarget(targetId)
   const initialPosition = savedFriendPositionAt(friend, Date.now(), index)
+  const startFriendDrag = (pointer: {
+    pointerId: number
+    clientX: number
+    clientY: number
+  }) => {
+    if (!canDrag) return
+    npcDrag?.begin({
+      kind: 'saved-friend',
+      id: friend.id,
+      position: savedFriendPositionAt(friend, Date.now(), index),
+      ...pointer,
+    })
+  }
 
   useFrame(() => {
+    const preview = canDrag
+      ? npcDrag?.previewFor('saved-friend', friend.id)
+      : undefined
+    if (preview && group.current) {
+      group.current.position.set(
+        preview[0],
+        avatarGroundOffset + npcDragLift,
+        preview[2],
+      )
+      group.current.visible = true
+      return
+    }
     const now = Date.now()
     const next = savedFriendPositionAt(friend, now, index)
     const previous = savedFriendPositionAt(friend, now - 32, index)
@@ -3538,10 +3856,17 @@ function SavedFriendAvatar({
       onPointerDown={(event) => {
         event.stopPropagation()
         selectFriend()
+        startFriendDrag(event)
       }}
       onClick={(event) => {
         event.stopPropagation()
         selectFriend()
+      }}
+      onPointerOver={() => {
+        if (canDrag) npcDrag?.setHovering(true)
+      }}
+      onPointerOut={() => {
+        if (canDrag) npcDrag?.setHovering(false)
       }}
     >
       <mesh
@@ -3549,6 +3874,7 @@ function SavedFriendAvatar({
         onPointerDown={(event) => {
           event.stopPropagation()
           selectFriend()
+          startFriendDrag(event)
         }}
       >
         <boxGeometry args={avatarSelectionHitboxSize} />
@@ -3574,6 +3900,7 @@ function SavedFriendAvatar({
         action="walk"
         isSelected={isSelected}
         onSelect={selectFriend}
+        onDragStart={canDrag ? startFriendDrag : undefined}
       />
       {isSelected ? (
         <FloatingMessageButton label={friend.name} onOpen={openThread} />
@@ -3635,6 +3962,11 @@ type BlockAvatarProps = {
   action?: BotRuntime['action']
   isSelected?: boolean
   onSelect?: () => void
+  onDragStart?: (pointer: {
+    pointerId: number
+    clientX: number
+    clientY: number
+  }) => void
 }
 
 export function BlockAvatar({
@@ -3659,6 +3991,7 @@ export function BlockAvatar({
   action = 'idle',
   isSelected,
   onSelect,
+  onDragStart,
 }: BlockAvatarProps) {
   const body = useRef<THREE.Group>(null)
   const leftArm = useRef<THREE.Group>(null)
@@ -3775,6 +4108,7 @@ export function BlockAvatar({
           onPointerDown={(event) => {
             event.stopPropagation()
             onSelect()
+            onDragStart?.(event)
           }}
           onClick={(event) => {
             event.stopPropagation()
@@ -3793,12 +4127,18 @@ export function BlockAvatar({
         >
           <button
             type="button"
-            className="bb-avatar-select-target"
+            className={`bb-avatar-select-target ${onDragStart ? 'draggable' : ''}`}
             aria-label={`Select ${username}`}
+            title={
+              onDragStart
+                ? `Drag ${username} to move them`
+                : `Select ${username}`
+            }
             onPointerDown={(event) => {
               event.preventDefault()
               event.stopPropagation()
               onSelect()
+              onDragStart?.(event)
             }}
             onClick={(event) => {
               event.preventDefault()

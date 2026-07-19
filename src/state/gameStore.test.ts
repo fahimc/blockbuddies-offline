@@ -13,6 +13,7 @@ import { questDefinitions } from '../data/quests'
 import { getLocation } from '../data/world'
 import { buildPlacementClearsPlayer } from '../ai/buildMode'
 import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
+import type { Vec3 } from '../game/types'
 import {
   defaultAvatar,
   defaultPlayerName,
@@ -351,6 +352,52 @@ describe('saved game friends', () => {
       position: [-72, 0, 54.5],
       movement: undefined,
     })
+  })
+
+  it('places dragged bots and created NPCs without moving the local player', () => {
+    useGameStore.setState({
+      savedFriends: [],
+      playerPosition: [7, 0, 9],
+      chat: [],
+      npcDrag: undefined,
+    })
+    useGameStore.getState().createSavedFriend('Drag Buddy', defaultAvatar)
+    const friend = useGameStore.getState().savedFriends[0]!
+    const bot = useGameStore.getState().bots[0]!
+    const botBeforeDrag = { ...bot, position: [...bot.position] as Vec3 }
+
+    useGameStore.getState().setNpcDrag({
+      kind: 'bot',
+      id: bot.id,
+      pointerId: 11,
+    })
+    useGameStore.getState().tickBots(1_000_000)
+    expect(useGameStore.getState().bots[0]).toEqual(botBeforeDrag)
+
+    useGameStore.getState().placeBot(bot.id, [3.25, 0, -4.75])
+    useGameStore.getState().placeSavedFriend(friend.id, [-2.25, 0, -5.5])
+    useGameStore.getState().setNpcDrag(undefined)
+
+    const state = useGameStore.getState()
+    expect(state.playerPosition).toEqual([7, 0, 9])
+    expect(state.bots.find((entry) => entry.id === bot.id)).toMatchObject({
+      position: [3.25, 0, -4.75],
+      target: [3.25, 0, -4.75],
+      state: 'idle',
+      action: 'idle',
+    })
+    expect(
+      state.savedFriends.find((entry) => entry.id === friend.id),
+    ).toMatchObject({
+      position: [-2.25, 0, -5.5],
+      movement: undefined,
+    })
+    expect(makeSaveSnapshot(state).savedFriends).toContainEqual(
+      expect.objectContaining({
+        id: friend.id,
+        position: [-2.25, 0, -5.5],
+      }),
+    )
   })
 })
 

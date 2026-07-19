@@ -18,6 +18,29 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.74-gameplay-npc-drag] - 2026-07-19
+
+### Added
+
+- Added direct mouse and touch dragging for built-in NPCs and locally created characters in the 3D world.
+- Added a raised character preview, ground target ring, release-to-place message, and grab cursor feedback.
+- Added pointer, placement, store, and rendered-game regression coverage for NPC dragging.
+
+### Changed
+
+- Freeze a dragged bot's AI until release, then resume it from its new collision-safe ground position after a short pause.
+- Cancel a created character's walking command when it is manually placed and persist the new position through normal saves.
+- Updated Android and package version metadata to `1.5.74` / `10574`.
+
+### Fixed
+
+- Kept gameplay camera orbit from consuming the pointer used to drag an NPC.
+- Kept the local player and remote Local Party characters read-only so NPC placement can never move another player.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.73-delivery-reward-settlement] - 2026-07-19
 
 ### Added

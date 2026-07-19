@@ -78,7 +78,6 @@ export function TouchControls() {
   }, [nearbyFootballBallId])
 
   useEffect(() => {
-    if (!buildMode) return
     let drag: { pointerId: number; x: number; y: number } | undefined
 
     const onPointerDown = (event: globalThis.PointerEvent) => {
@@ -90,6 +89,8 @@ export function TouchControls() {
       const dx = event.clientX - drag.x
       const dy = event.clientY - drag.y
       drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY }
+      const npcDrag = useGameStore.getState().npcDrag
+      if (npcDrag?.pointerId === event.pointerId) return
       const current = useGameStore.getState().touch
       useGameStore.getState().setTouch({
         lookX: clamp(
@@ -118,7 +119,7 @@ export function TouchControls() {
       window.removeEventListener('pointerup', stopDrag, true)
       window.removeEventListener('pointercancel', stopDrag, true)
     }
-  }, [buildMode])
+  }, [])
 
   const queueLookDelta = (dx: number, dy: number) => {
     const current = useGameStore.getState().touch
@@ -242,7 +243,7 @@ export function TouchControls() {
   return (
     <>
       <div
-        className={`world-drag-layer absolute inset-0 z-[8] ${buildMode ? 'pointer-events-none' : ''}`}
+        className="world-drag-layer pointer-events-none absolute inset-0 z-[8]"
         data-testid="world-drag-control"
         aria-hidden="true"
         onPointerDown={(event) => {
@@ -272,6 +273,8 @@ export function TouchControls() {
             x: event.clientX,
             y: event.clientY,
           }
+          const npcDrag = useGameStore.getState().npcDrag
+          if (npcDrag?.pointerId === event.pointerId) return
           queueLookDelta(dx, dy)
         }}
         onPointerUp={(event) => {

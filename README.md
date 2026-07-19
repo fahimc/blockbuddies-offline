@@ -614,6 +614,12 @@ consistently, the final transaction reports its paid amount and resulting
 balance, and repeat wins continue paying game rewards without repeating the
 one-time quest reward.
 
+The `v1.5.74` APK adds direct NPC placement during gameplay. Grab any built-in
+buddy or locally created character with a mouse or touch, drag the raised
+preview across the ground, and release on the target ring. Drops avoid blocking
+world geometry, created-character placement persists, and the local player plus
+remote Local Party characters cannot be dragged.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the

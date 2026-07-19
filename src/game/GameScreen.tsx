@@ -63,7 +63,7 @@ export function GameScreen() {
         <Canvas
           shadows={settings.quality !== 'low'}
           camera={{ position: [0, 7, 12], fov: 48 }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-grab"
           data-testid="game-canvas"
         >
           <Suspense fallback={<CanvasLoading />}>

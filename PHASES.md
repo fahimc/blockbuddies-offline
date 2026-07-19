@@ -1,5 +1,16 @@
 # Build Phases
 
+## Post-phase direct gameplay NPC placement
+
+- [x] Make built-in NPCs and locally created characters draggable in the 3D world with mouse or touch.
+- [x] Separate deliberate character dragging from ordinary selection and camera orbit.
+- [x] Preview the lifted character and ground target while the pointer moves.
+- [x] Resolve drops outside buildings, procedural blockers, parking, obby pieces, and local or remote builds.
+- [x] Stop active walking or bot AI during placement and persist created-character destinations.
+- [x] Keep the local player and remote Local Party characters read-only.
+- [x] Add unit, state, input, and rendered-game regression coverage.
+- [x] Package and release the Android debug APK for direct NPC placement.
+
 ## Post-phase Delivery Dash reward settlement
 
 - [x] Audit Delivery Dash route, completion, and associated quest rewards.

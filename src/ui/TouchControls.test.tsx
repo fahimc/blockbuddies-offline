@@ -21,6 +21,7 @@ describe('TouchControls', () => {
       worldActionRequest: undefined,
       playerEmote: 'none',
       miniGame: { ...state.miniGame, status: 'idle', activeId: undefined },
+      npcDrag: undefined,
     }))
   })
 
@@ -75,6 +76,30 @@ describe('TouchControls', () => {
 
     expect(useGameStore.getState().touch.lookX).toBe(35)
     expect(useGameStore.getState().touch.lookY).toBe(-20)
+  })
+
+  it('does not orbit the camera while the same pointer drags an NPC', () => {
+    useGameStore.setState({
+      npcDrag: { kind: 'bot', id: 'bot-1', pointerId: 12 },
+    })
+    render(<TouchControls />)
+    const dragLayer = screen.getByTestId('world-drag-control')
+
+    fireEvent.pointerDown(dragLayer, {
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: 100,
+      clientY: 100,
+    })
+    fireEvent.pointerMove(dragLayer, {
+      pointerId: 12,
+      pointerType: 'touch',
+      clientX: 150,
+      clientY: 140,
+    })
+
+    expect(useGameStore.getState().touch.lookX).toBe(0)
+    expect(useGameStore.getState().touch.lookY).toBe(0)
   })
 
   it('uses the old reset slot as a compact emote toggle in normal play', () => {
