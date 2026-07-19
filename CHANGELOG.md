@@ -18,6 +18,26 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.75-npc-accessory-preservation] - 2026-07-19
+
+### Added
+
+- Added accessory, hat, trail, drag-placement, and save-snapshot regression coverage for created NPCs.
+
+### Changed
+
+- Render a created NPC's selected trail in the same movable world group as its body and other accessories.
+- Updated Android and package version metadata to `1.5.75` / `10575`.
+
+### Fixed
+
+- Fixed dragged created NPCs losing their equipped hat, pet or wearable accessory, or trail after placement and persistence.
+- Fixed legacy-avatar migration treating a modern accessory-equipped, legacy-coloured avatar as the old default look.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.74-gameplay-npc-drag] - 2026-07-19
 
 ### Added

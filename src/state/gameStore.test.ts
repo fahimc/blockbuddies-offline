@@ -48,6 +48,22 @@ describe('avatar save migration', () => {
       defaultAvatar.outfitStyle,
     )
   })
+
+  it('does not migrate away accessories on a legacy-coloured avatar', () => {
+    const decoratedAvatar = normalizeSavedAvatar({
+      bodyColor: '#facc15',
+      shirtColor: '#2563eb',
+      hat: 'none',
+      accessory: 'pet-bot',
+      trail: 'none',
+    })
+
+    expect(decoratedAvatar).toMatchObject({
+      bodyColor: '#facc15',
+      shirtColor: '#2563eb',
+      accessory: 'pet-bot',
+    })
+  })
 })
 
 describe('avatar customization selection', () => {
@@ -361,8 +377,14 @@ describe('saved game friends', () => {
       chat: [],
       npcDrag: undefined,
     })
-    useGameStore.getState().createSavedFriend('Drag Buddy', defaultAvatar)
+    useGameStore.getState().createSavedFriend('Drag Buddy', {
+      ...defaultAvatar,
+      hat: 'hat-star',
+      accessory: 'pet-bot',
+      trail: 'trail-spark',
+    })
     const friend = useGameStore.getState().savedFriends[0]!
+    const appearanceBeforeDrag = { ...friend.avatar }
     const bot = useGameStore.getState().bots[0]!
     const botBeforeDrag = { ...bot, position: [...bot.position] as Vec3 }
 
@@ -389,12 +411,14 @@ describe('saved game friends', () => {
     expect(
       state.savedFriends.find((entry) => entry.id === friend.id),
     ).toMatchObject({
+      avatar: appearanceBeforeDrag,
       position: [-2.25, 0, -5.5],
       movement: undefined,
     })
     expect(makeSaveSnapshot(state).savedFriends).toContainEqual(
       expect.objectContaining({
         id: friend.id,
+        avatar: appearanceBeforeDrag,
         position: [-2.25, 0, -5.5],
       }),
     )

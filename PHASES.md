@@ -1,5 +1,14 @@
 # Build Phases
 
+## Post-phase NPC accessory preservation
+
+- [x] Trace created-NPC cosmetics through gameplay dragging, placement, save normalization, and rendering.
+- [x] Preserve the complete avatar object when placing or teleporting a created NPC.
+- [x] Keep pet, wearable, hat, and trail cosmetics attached to the dragged world avatar.
+- [x] Prevent legacy migration from replacing modern accessories on legacy-coloured avatars.
+- [x] Add state, persistence, and rendered-game regression coverage.
+- [x] Package and release the Android debug APK for NPC accessory preservation.
+
 ## Post-phase direct gameplay NPC placement
 
 - [x] Make built-in NPCs and locally created characters draggable in the 3D world with mouse or touch.

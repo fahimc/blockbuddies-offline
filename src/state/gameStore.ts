@@ -303,7 +303,23 @@ export function normalizeSavedAvatar(
   avatar: AvatarSettings | undefined,
 ): AvatarSettings | undefined {
   if (!avatar) return undefined
+  const hasModernAppearance =
+    avatar.hairColor !== undefined ||
+    avatar.hairStyle !== undefined ||
+    avatar.face !== undefined ||
+    avatar.eyeColor !== undefined ||
+    avatar.accentColor !== undefined ||
+    avatar.secondaryColor !== undefined ||
+    avatar.pantsColor !== undefined ||
+    avatar.topStyle !== undefined ||
+    avatar.outfitStyle !== undefined ||
+    avatar.bottomStyle !== undefined ||
+    avatar.shoeStyle !== undefined ||
+    avatar.shoeColor !== undefined ||
+    avatar.avatarSource !== undefined ||
+    (avatar.accessory !== undefined && avatar.accessory !== 'none')
   const isLegacyDefault =
+    !hasModernAppearance &&
     avatar.bodyColor === legacyDefaultAvatar.bodyColor &&
     avatar.shirtColor === legacyDefaultAvatar.shirtColor &&
     avatar.hat === legacyDefaultAvatar.hat &&
@@ -1756,6 +1772,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           entry.id === id
             ? {
                 ...entry,
+                avatar: { ...entry.avatar },
                 inWorld: true,
                 position: target,
                 movement: undefined,
@@ -1784,6 +1801,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           entry.id === id
             ? {
                 ...entry,
+                avatar: { ...entry.avatar },
                 inWorld: true,
                 position: target,
                 movement: undefined,

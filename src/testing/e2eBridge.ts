@@ -570,6 +570,9 @@ function prepareNpcDragInteraction(): GameplayE2ESnapshot {
       ...game.avatar,
       shirtColor: '#38bdf8',
       accentColor: '#facc15',
+      hat: 'hat-star',
+      accessory: 'pet-bot',
+      trail: 'trail-spark',
     })
   const next = useGameStore.getState()
   const friend = next.savedFriends.find((entry) => entry.name === 'Drag Buddy')

@@ -620,6 +620,11 @@ preview across the ground, and release on the target ring. Drops avoid blocking
 world geometry, created-character placement persists, and the local player plus
 remote Local Party characters cannot be dragged.
 
+The `v1.5.75` APK keeps a created NPC's complete appearance attached while it
+is dragged or teleported. Hats, pets, wearable accessories, and trails now
+survive placement and save normalization, including custom NPCs that use the
+legacy yellow-and-blue colours.
+
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar
 template, add that NPC to the town, message them, and persist them with the

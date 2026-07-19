@@ -105,5 +105,9 @@ test('drags NPCs in gameplay without moving the local player', async ({
     afterFriend.savedFriends.find((friend) => friend.name === 'Drag Buddy')
       ?.movement,
   ).toBeUndefined()
+  expect(
+    afterFriend.savedFriends.find((friend) => friend.name === 'Drag Buddy')
+      ?.avatar,
+  ).toEqual(friendBefore.avatar)
   expect(afterFriend.chatTexts).toContain('Drag Buddy moved here')
 })

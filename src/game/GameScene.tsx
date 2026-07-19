@@ -3880,6 +3880,9 @@ function SavedFriendAvatar({
         <boxGeometry args={avatarSelectionHitboxSize} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+      {friend.avatar.trail !== 'none' ? (
+        <AvatarTrail trail={friend.avatar.trail} />
+      ) : null}
       <BlockAvatar
         bodyColor={friend.avatar.bodyColor}
         shirtColor={friend.avatar.shirtColor}
