@@ -101,9 +101,10 @@ describe('world travel destinations', () => {
     expect(football.label).toBe('Football Pitch')
     expect(football.description).toContain('score goals')
     expect(football.position).toEqual(footballPitch.center)
-    expect(football.position[2]).toBeLessThan(-30)
+    expect(Math.abs(football.position[0])).toBeLessThanOrEqual(27)
+    expect(Math.abs(football.position[2])).toBeLessThanOrEqual(27)
     expect(distance2d(football.position, parking.position)).toBeGreaterThan(
-      footballPitch.length,
+      footballPitch.width,
     )
   })
 

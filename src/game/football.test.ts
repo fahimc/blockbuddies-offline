@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { generateProceduralWorld } from '../data/proceduralWorld'
 import { proceduralTerrainAt } from '../data/proceduralTownPlan'
-import { coreTerrainZones } from './townPlacement'
+import { parkingLot } from './vehicles'
+import { authoredCoreBounds, coreTerrainZones } from './townPlacement'
 import { terrainAt } from './worldGrid'
 import {
   advanceFootballBall,
@@ -66,7 +67,32 @@ describe('football pitch and ball logic', () => {
     ).toBe(true)
   })
 
-  it('keeps procedural scenery and build parcels out of the football field reservation', () => {
+  it('keeps the pitch inside the stable authored town map and clear of parking', () => {
+    const pitchFootprint = {
+      position: footballPitch.center,
+      scale: [footballPitch.width, 1, footballPitch.length],
+    } as { position: [number, number, number]; scale: [number, number, number] }
+    const parkingFootprint = {
+      position: parkingLot.center,
+      scale: [parkingLot.width, 1, parkingLot.depth],
+    } as { position: [number, number, number]; scale: [number, number, number] }
+
+    expect(
+      footballPitch.center[0] - footballPitch.width / 2,
+    ).toBeGreaterThanOrEqual(authoredCoreBounds.minX)
+    expect(
+      footballPitch.center[0] + footballPitch.width / 2,
+    ).toBeLessThanOrEqual(authoredCoreBounds.maxX)
+    expect(
+      footballPitch.center[2] - footballPitch.length / 2,
+    ).toBeGreaterThanOrEqual(authoredCoreBounds.minZ)
+    expect(
+      footballPitch.center[2] + footballPitch.length / 2,
+    ).toBeLessThanOrEqual(authoredCoreBounds.maxZ)
+    expect(overlapsTopDown(pitchFootprint, parkingFootprint, 0.2)).toBe(false)
+  })
+
+  it('keeps procedural scenery out of the football field reservation', () => {
     const world = generateProceduralWorld({
       seed: 'LONDON-2026',
       center: footballPitch.center,
@@ -91,12 +117,8 @@ describe('football pitch and ball logic', () => {
         sportsFieldBlockerKinds.has(piece.kind) &&
         footprintIntersectsFootballPitch(piece.position, piece.scale),
     )
-    const intrudingParcels = world.buildableParcels.filter((parcel) =>
-      footprintIntersectsFootballPitch(parcel.center, parcel.size),
-    )
 
     expect(intrudingPieces).toEqual([])
-    expect(intrudingParcels).toEqual([])
   })
 
   it('describes round ball patches instead of square cube blocks', () => {
@@ -194,3 +216,23 @@ describe('football pitch and ball logic', () => {
     ).toBe(false)
   })
 })
+
+function overlapsTopDown(
+  a: {
+    position: [number, number, number]
+    scale: [number, number, number]
+  },
+  b: {
+    position: [number, number, number]
+    scale: [number, number, number]
+  },
+  padding = 0,
+) {
+  const xOverlap =
+    Math.abs(a.position[0] - b.position[0]) <
+    (a.scale[0] + b.scale[0]) / 2 + padding
+  const zOverlap =
+    Math.abs(a.position[2] - b.position[2]) <
+    (a.scale[2] + b.scale[2]) / 2 + padding
+  return xOverlap && zOverlap
+}

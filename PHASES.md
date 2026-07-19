@@ -1,5 +1,13 @@
 # Build Phases
 
+## Post-phase football map restore
+
+- [x] Restore the town map scale and procedural generation behavior from before the outlying sports-field regression.
+- [x] Keep Football Pitch as an authored town feature instead of moving players into generated outskirts.
+- [x] Keep the pitch clear of the parking lot while preserving the round football visual.
+- [x] Add regression coverage for authored-map placement and parking clearance.
+- [x] Package and release Android debug APK for the football map restore.
+
 ## Post-phase football pitch placement fix
 
 - [x] Move Football Pitch into its own outlying sports field area.

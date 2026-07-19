@@ -18,6 +18,27 @@
 
 - Android artifact is a debug APK. Release signing is still a manual Play Store step.
 
+## [v1.5.69-football-map-restore] - 2026-07-19
+
+### Added
+
+- Added regression coverage that keeps the football pitch inside the stable authored town map and clear of the parking lot.
+
+### Changed
+
+- Restored the full town map scale and procedural borough generation to the pre-outlying-field placement behavior.
+- Repositioned the Football Pitch as an authored town feature beside the parking area instead of in generated outskirts.
+- Updated Android and package version metadata to `1.5.69` / `10569`.
+
+### Fixed
+
+- Fixed the map/town regression where moving the pitch into generated outskirts made roads, traffic, and buildings appear messy around the sports area.
+- Fixed football destination tests so they guard the restored town-map placement instead of requiring the far-out sports field.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
 ## [v1.5.68-football-pitch-placement] - 2026-07-19
 
 ### Added

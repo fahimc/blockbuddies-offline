@@ -26,11 +26,11 @@ export type FootballBallPatch = {
 }
 
 export const footballPitch = {
-  center: [36, 0, -43] as Vec3,
-  width: 11,
-  length: 20,
-  borderClearance: 3.5,
-  goalWidth: 5,
+  center: [23, 0, -20] as Vec3,
+  width: 8,
+  length: 12,
+  borderClearance: 1.6,
+  goalWidth: 4.4,
   goalDepth: 1.2,
 }
 

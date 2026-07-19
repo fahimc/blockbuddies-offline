@@ -83,7 +83,7 @@ export const worldLocations: WorldLocation[] = [
     travelPosition: [
       footballPitch.center[0],
       0,
-      footballPitch.center[2] + footballPitch.length / 2 + 2.4,
+      footballPitch.center[2] + footballPitch.length / 2 + 1.8,
     ],
     travelYaw: Math.PI,
     color: '#16a34a',

@@ -23,18 +23,7 @@ import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
 import { miniMapPlayerRotation } from './miniMapMath'
 
-const townExtent =
-  Math.ceil(
-    Math.max(
-      32,
-      ...worldLocations.flatMap((location) => [
-        Math.abs(location.position[0]),
-        Math.abs(location.position[2]),
-        Math.abs(location.travelPosition[0]),
-        Math.abs(location.travelPosition[2]),
-      ]),
-    ),
-  ) + 10
+const townExtent = 27
 
 const locationIcons: Record<LocationId, LucideIcon> = {
   spawn: Sparkles,

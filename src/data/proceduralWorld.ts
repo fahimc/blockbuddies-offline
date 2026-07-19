@@ -5,7 +5,6 @@ import {
   meters,
   realScale,
 } from '../game/scale'
-import { footprintIntersectsFootballPitch } from '../game/football'
 import {
   createProceduralChunkPlan,
   proceduralChunkSize,
@@ -98,7 +97,7 @@ export function generateProceduralWorld({
     removeDoorBlockerOverlaps(
       removeSurfaceBlockerOverlaps(removeAuthoredCoreConflicts(pieces)),
     ),
-  ).filter((piece) => !proceduralPieceReservedForFootballPitch(piece))
+  )
   const permanentStructures = placedPieces.filter(
     (placedPiece) =>
       placedPiece.kind === 'building' || placedPiece.kind === 'landmark',
@@ -112,37 +111,17 @@ export function generateProceduralWorld({
         placedPiece.id.startsWith('building:'),
     ).length,
     district: districtFor(center),
-    buildableParcels: buildableParcels.filter(
-      (parcel) =>
-        !footprintIntersectsFootballPitch(parcel.center, parcel.size) &&
-        permanentStructures.every(
-          (structure) =>
-            !overlapsTopDown(
-              { position: parcel.center, scale: parcel.size },
-              structure,
-              0.25,
-            ),
-        ),
+    buildableParcels: buildableParcels.filter((parcel) =>
+      permanentStructures.every(
+        (structure) =>
+          !overlapsTopDown(
+            { position: parcel.center, scale: parcel.size },
+            structure,
+            0.25,
+          ),
+      ),
     ),
   }
-}
-
-function proceduralPieceReservedForFootballPitch(piece: ProceduralPiece) {
-  const blocksSportsField =
-    piece.kind === 'building' ||
-    piece.kind === 'door' ||
-    piece.kind === 'roof' ||
-    piece.kind === 'window' ||
-    piece.kind === 'tree-trunk' ||
-    piece.kind === 'tree-top' ||
-    piece.kind === 'lamp-post' ||
-    piece.kind === 'lamp-light' ||
-    piece.kind === 'phone-box' ||
-    piece.kind === 'landmark'
-  return (
-    blocksSportsField &&
-    footprintIntersectsFootballPitch(piece.position, piece.scale, 0.2)
-  )
 }
 
 export function districtFor([x, , z]: Vec3): string {
