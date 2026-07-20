@@ -7,8 +7,8 @@ android {
         applicationId "com.blockbuddies.offline"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10581
-        versionName "1.5.81"
+        versionCode 10582
+        versionName "1.5.82"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,13 +17,6 @@ android {
         }
     }
     buildTypes {
-        debug {
-            // GitHub Actions uses a fresh debug signing certificate on each runner.
-            // Give downloadable test builds a separate package ID so they can be
-            // installed beside any older BlockBuddies build without a signature conflict.
-            applicationIdSuffix ".preview"
-            versionNameSuffix "-preview"
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
