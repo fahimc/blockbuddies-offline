@@ -158,6 +158,7 @@ export type ShopItemId =
   | 'pet-dino'
   | 'pet-unicorn'
   | 'pet-bot'
+  | 'pet-void-orb'
   | 'wings-night'
   | 'halo-gold'
   | 'visor-neon'
@@ -177,13 +178,28 @@ export type ShopItemId =
   | 'hero-cape-neon'
   | 'hero-cape-forest'
   | 'hero-cape-moon'
+  | 'outfit-shadow-oracle'
+  | 'weapon-light-saber-blue'
+  | 'weapon-light-saber-purple'
+  | 'weapon-light-saber-red'
 
 export type ShopItem = {
   id: ShopItemId
   name: string
-  category: 'body' | 'shirt' | 'hat' | 'trail' | 'pants' | 'accessory'
+  category:
+    | 'body'
+    | 'shirt'
+    | 'hat'
+    | 'trail'
+    | 'pants'
+    | 'accessory'
+    | 'pet'
+    | 'outfit'
+    | 'weapon'
   cost: number
   color?: string
+  avatarPatch?: Partial<AvatarSettings>
+  weaponColor?: string
 }
 
 export type AvatarHairStyle =
