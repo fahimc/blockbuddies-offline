@@ -47,7 +47,10 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --stacktrace 2>&1 | tee gradle-build.log
         working-directory: android
-      - name: Sign main BlockBuddies APK with stable test certificate
+      - name: Sign main BlockBuddies APK with the v1.5.79 update key
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ANDROID_UPDATE_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPDATE_KEYSTORE_BASE64 }}
         run: |
           set -euo pipefail
 
@@ -55,38 +58,23 @@ jobs:
           APK_NAME="BlockBuddies-Offline-v${VERSION}.apk"
           UNSIGNED_APK="$(find android/app/build/outputs/apk/release -name '*-unsigned.apk' -print -quit)"
           BUILD_TOOLS="$(find "${ANDROID_SDK_ROOT}/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          EXPECTED_SIGNER_SHA256="ab79aba264ecc6b80736355d1835179ddab9f3c91d8d1d4c85a9292942aad19c"
 
           test -n "${UNSIGNED_APK}"
+          test -n "${ANDROID_UPDATE_KEYSTORE_BASE64}"
           test -x "${BUILD_TOOLS}/zipalign"
           test -x "${BUILD_TOOLS}/apksigner"
           test -x "${BUILD_TOOLS}/aapt"
 
           mkdir -p release signing
-
-          # The AOSP test key is public and reproducible. It is intentionally used
-          # only for direct-install test releases, but unlike runner debug keys it
-          # remains identical across GitHub Actions runs so future APKs can update.
-          curl --fail --location --retry 3 \
-            --output signing/testkey.pk8 \
-            https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.pk8
-          curl --fail --location --retry 3 \
-            --output signing/testkey.x509.pem \
-            https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.x509.pem
-
-          openssl pkcs8 -inform DER -in signing/testkey.pk8 \
-            -out signing/testkey.pem -nocrypt
-          openssl pkcs12 -export \
-            -inkey signing/testkey.pem \
-            -in signing/testkey.x509.pem \
-            -name blockbuddies \
-            -out signing/blockbuddies-test.p12 \
-            -passout pass:android
+          printf '%s' "${ANDROID_UPDATE_KEYSTORE_BASE64}" \
+            | base64 --decode > signing/blockbuddies-update.keystore
 
           "${BUILD_TOOLS}/zipalign" -p -f 4 \
             "${UNSIGNED_APK}" release/aligned.apk
           "${BUILD_TOOLS}/apksigner" sign \
-            --ks signing/blockbuddies-test.p12 \
-            --ks-type PKCS12 \
+            --ks signing/blockbuddies-update.keystore \
+            --ks-key-alias androiddebugkey \
             --ks-pass pass:android \
             --key-pass pass:android \
             --out "release/${APK_NAME}" \
@@ -95,6 +83,8 @@ jobs:
 
           "${BUILD_TOOLS}/apksigner" verify --verbose --print-certs \
             "release/${APK_NAME}" | tee release/SIGNING-CERTIFICATE.txt
+          grep -qi "Signer #1 certificate SHA-256 digest: ${EXPECTED_SIGNER_SHA256}" \
+            release/SIGNING-CERTIFICATE.txt
           "${BUILD_TOOLS}/aapt" dump badging "release/${APK_NAME}" \
             | tee release/APK-BADGING.txt
           grep -q "package: name='com.blockbuddies.offline'" release/APK-BADGING.txt
@@ -103,6 +93,7 @@ jobs:
           cd release
           sha256sum "${APK_NAME}" > SHA256SUMS.txt
       - name: Upload Android APK artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: blockbuddies-android-apk
