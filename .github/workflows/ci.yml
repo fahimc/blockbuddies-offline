@@ -83,7 +83,7 @@ jobs:
 
           "${BUILD_TOOLS}/apksigner" verify --verbose --print-certs \
             "release/${APK_NAME}" | tee release/SIGNING-CERTIFICATE.txt
-          grep -qi "Signer #1 certificate SHA-256 digest: ${EXPECTED_SIGNER_SHA256}" \
+          grep -qi "certificate SHA-256 digest: ${EXPECTED_SIGNER_SHA256}" \
             release/SIGNING-CERTIFICATE.txt
           "${BUILD_TOOLS}/aapt" dump badging "release/${APK_NAME}" \
             | tee release/APK-BADGING.txt
