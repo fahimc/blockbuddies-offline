@@ -2939,6 +2939,7 @@ function PlayerController({
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
   const lastPreparedKartRaceId = useRef<string | undefined>(undefined)
+  const lastPreparedKartVehicleId = useRef<string | undefined>(undefined)
   const lastInteriorTransitionAt = useRef(0)
   const interactionHeld = useRef(false)
   const lastWorldActionSequence = useRef(0)
@@ -3115,15 +3116,22 @@ function PlayerController({
         )
       : []
     const currentKartRace = useGameStore.getState().kartRace
-    if (
-      currentVehicle &&
-      isGoKartId(currentVehicle.id) &&
+    const kartToPrepare =
+      currentVehicle && isGoKartId(currentVehicle.id)
+        ? currentVehicle
+        : undefined
+    const shouldPrepareKartLobby =
+      kartToPrepare &&
+      currentKartRace.status === 'lobby' &&
+      kartToPrepare.id !== lastPreparedKartVehicleId.current
+    const shouldPrepareKartRace =
+      kartToPrepare &&
       currentKartRace.raceId &&
       currentKartRace.raceId !== lastPreparedKartRaceId.current &&
       (currentKartRace.status === 'countdown' ||
         currentKartRace.status === 'racing')
-    ) {
-      const startingKart = getGoKart(currentVehicle.id)
+    if (kartToPrepare && (shouldPrepareKartLobby || shouldPrepareKartRace)) {
+      const startingKart = getGoKart(kartToPrepare.id)
       if (startingKart && drivableRuntime) {
         currentVehicle = {
           ...startingKart,
@@ -3141,9 +3149,12 @@ function PlayerController({
         )
         yaw.current = currentVehicle.yaw
         cameraOrbitYaw.current = 0
+        lastPreparedKartVehicleId.current = currentVehicle.id
         lastPreparedKartRaceId.current = currentKartRace.raceId
       }
     }
+    if (!currentVehicle || !isGoKartId(currentVehicle.id))
+      lastPreparedKartVehicleId.current = undefined
     const nearBed =
       activeInterior?.kind === 'house' &&
       isNearHouseBed([position.current.x, 0, position.current.z])

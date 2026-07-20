@@ -152,6 +152,7 @@ type CustomizationSelection = {
 
 export type GamePanel =
   | 'map'
+  | 'karts'
   | 'quests'
   | 'shop'
   | 'avatar'

@@ -4,27 +4,55 @@
 
 ### Added
 
-- Added four playable arcade karts, a compact three-lap circuit, ordered
-  checkpoints, boost pads, a synchronized countdown, race position/lap/time
-  HUD, finish rewards, and a speed-responsive chase camera.
-- Added Local Party kart and race snapshots, remote kart/driver rendering,
-  deterministic race authority, occupied-kart handling, and multiplayer browser
-  coverage.
-- Added focused race-rule, handling, collision, state, network-sanitization,
-  single-player browser, and two-player Local Party regression coverage.
+- Added a dedicated Go Kart Racing launcher near the top of the game menu with
+  clear race instructions and four selectable kart cards.
+- Added a second Play Go Karts entry point to Mini Games.
+- Added launcher, map quick-play, occupied-kart, single-player, and two-player
+  Local Party regression coverage.
 
 ### Changed
 
-- Updated Android and package version metadata to `1.5.77` / `10577`.
+- The Town Map's Go Kart Track action now travels to the circuit and puts the
+  player directly into the first available kart.
+- Entering a kart lobby now restores that kart to its starting-grid slot before
+  the race begins.
+- Updated Android and package version metadata to `1.5.78` / `10578`.
 
 ### Fixed
 
-- Moved Go Kart Track travel onto the accessible starting grid instead of behind
-  the circuit's continuous barrier.
-- Added a guaranteed paddock exit when neighboring grid karts block normal side
-  exits.
-- Prevented premature Local Party host promotion before the first host snapshot
-  arrives and made temporary failover hosts yield when the original host returns.
+- Fixed Go Kart Racing being difficult to discover and requiring players to
+  search the remote track for an interaction point.
+- Prevented the launcher from offering a kart already occupied by another Local
+  Party racer.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.78-go-kart-launcher] - 2026-07-20
+
+### Added
+
+- Added a dedicated Go Kart Racing launcher near the top of the game menu with
+  clear race instructions and four selectable kart cards.
+- Added a second Play Go Karts entry point to Mini Games.
+- Added launcher, map quick-play, occupied-kart, single-player, and two-player
+  Local Party regression coverage.
+
+### Changed
+
+- The Town Map's Go Kart Track action now travels to the circuit and puts the
+  player directly into the first available kart.
+- Entering a kart lobby now restores that kart to its starting-grid slot before
+  the race begins.
+- Updated Android and package version metadata to `1.5.78` / `10578`.
+
+### Fixed
+
+- Fixed Go Kart Racing being difficult to discover and requiring players to
+  search the remote track for an interaction point.
+- Prevented the launcher from offering a kart already occupied by another Local
+  Party racer.
 
 ### Known Issues
 

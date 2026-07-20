@@ -89,7 +89,7 @@ export const worldLocations: WorldLocation[] = [
   {
     id: 'kart',
     label: 'Go Kart Track',
-    description: 'Practise driving lines on a clear kart loop.',
+    description: 'Choose a kart and start a three-lap driving race.',
     position: goKartTrack.center,
     travelPosition: goKartTrackTravelPosition,
     travelYaw: Math.PI,

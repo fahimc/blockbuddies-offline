@@ -47,6 +47,23 @@ describe('MapPanel', () => {
     expect(useGameStore.getState().openPanel).toBeUndefined()
   })
 
+  it('puts the player straight into a kart from the map destination', async () => {
+    const user = userEvent.setup()
+    render(<MapPanel />)
+
+    await user.click(screen.getByTestId('map-marker-kart'))
+    await user.click(screen.getByRole('button', { name: 'Play Go Karts' }))
+
+    const state = useGameStore.getState()
+    expect(state.playerPosition).toEqual(getLocation('kart').travelPosition)
+    expect(state.activeVehicleId).toBe('go-kart:red')
+    expect(state.kartRace).toMatchObject({
+      vehicleId: 'go-kart:red',
+      status: 'lobby',
+    })
+    expect(state.openPanel).toBeUndefined()
+  })
+
   it('keeps the map visible but disables travel during an active activity', () => {
     useGameStore.setState((state) => ({
       obby: { ...state.obby, active: true },

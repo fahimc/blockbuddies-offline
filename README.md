@@ -90,7 +90,9 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
 - Buddy Kart Circuit is an outlying world-map destination with four playable
   karts, a compact three-lap loop, ordered checkpoints, boost pads, a race HUD,
   speed-responsive chase camera, finish rewards, and synchronized Local Party
-  racing.
+  racing. Players can open Go Kart Racing directly from the game menu, choose a
+  free kart, and jump straight to the starting grid; Mini Games and the Town Map
+  also provide Play Go Karts shortcuts.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable

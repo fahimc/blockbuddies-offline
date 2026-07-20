@@ -19,17 +19,17 @@ test('joins, starts, drives, and finishes a three-lap kart race', async ({
 }) => {
   test.setTimeout(90_000)
   await completeStartFlow(page)
-  await page.evaluate(() =>
-    window.__blockBuddiesE2E!.prepareGoKartInteraction(),
-  )
 
   const welcomeStart = page.getByRole('button', { name: 'Start Playing' })
   if (await welcomeStart.isVisible().catch(() => false))
     await welcomeStart.click()
 
-  const enterKart = page.getByRole('button', { name: 'Race Red Rocket' })
-  await expect(enterKart).toBeVisible({ timeout: 15_000 })
-  await enterKart.click()
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await page.getByRole('button', { name: 'Go Kart Racing' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Buddy Kart Circuit' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Play Go Karts' }).click()
   await expect(page.getByTestId('kart-race-hud')).toContainText(
     'Buddy Kart Circuit',
   )

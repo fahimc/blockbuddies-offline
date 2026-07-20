@@ -3,6 +3,7 @@ import {
   BookOpenCheck,
   Blocks,
   Gamepad2,
+  Gauge,
   HeartHandshake,
   ListChecks,
   Map,
@@ -28,19 +29,64 @@ const menuItems: {
   icon: ReactNode
 }[] = [
   { panel: 'map', label: 'Town Map', icon: <Map size={21} aria-hidden /> },
-  { panel: 'tutorial', label: 'Tutorial', icon: <BookOpenCheck size={21} aria-hidden /> },
-  { panel: 'messages', label: 'Messages', icon: <MessageCircle size={21} aria-hidden /> },
-  { panel: 'avatar', label: 'Customise Character', icon: <Palette size={21} aria-hidden /> },
-  { panel: 'quests', label: 'Quests', icon: <ListChecks size={21} aria-hidden /> },
-  { panel: 'minigames', label: 'Mini Games', icon: <Gamepad2 size={21} aria-hidden /> },
-  { panel: 'build', label: 'Build Mode', icon: <Blocks size={21} aria-hidden /> },
+  {
+    panel: 'karts',
+    label: 'Go Kart Racing',
+    icon: <Gauge size={21} aria-hidden />,
+  },
+  {
+    panel: 'tutorial',
+    label: 'Tutorial',
+    icon: <BookOpenCheck size={21} aria-hidden />,
+  },
+  {
+    panel: 'messages',
+    label: 'Messages',
+    icon: <MessageCircle size={21} aria-hidden />,
+  },
+  {
+    panel: 'avatar',
+    label: 'Customise Character',
+    icon: <Palette size={21} aria-hidden />,
+  },
+  {
+    panel: 'quests',
+    label: 'Quests',
+    icon: <ListChecks size={21} aria-hidden />,
+  },
+  {
+    panel: 'minigames',
+    label: 'Mini Games',
+    icon: <Gamepad2 size={21} aria-hidden />,
+  },
+  {
+    panel: 'build',
+    label: 'Build Mode',
+    icon: <Blocks size={21} aria-hidden />,
+  },
   { panel: 'shop', label: 'Shop', icon: <ShoppingBag size={21} aria-hidden /> },
-  { panel: 'friends', label: 'Buddies & NPCs', icon: <HeartHandshake size={21} aria-hidden /> },
-  { panel: 'server', label: 'Local Party', icon: <Server size={21} aria-hidden /> },
-  { panel: 'leaderboard', label: 'Leaderboard', icon: <Trophy size={21} aria-hidden /> },
+  {
+    panel: 'friends',
+    label: 'Buddies & NPCs',
+    icon: <HeartHandshake size={21} aria-hidden />,
+  },
+  {
+    panel: 'server',
+    label: 'Local Party',
+    icon: <Server size={21} aria-hidden />,
+  },
+  {
+    panel: 'leaderboard',
+    label: 'Leaderboard',
+    icon: <Trophy size={21} aria-hidden />,
+  },
   { panel: 'badges', label: 'Badges', icon: <Medal size={21} aria-hidden /> },
   { panel: 'emotes', label: 'Emotes', icon: <Smile size={21} aria-hidden /> },
-  { panel: 'settings', label: 'Settings', icon: <Settings size={21} aria-hidden /> },
+  {
+    panel: 'settings',
+    label: 'Settings',
+    icon: <Settings size={21} aria-hidden />,
+  },
 ]
 
 export function GameMenu() {
@@ -72,7 +118,11 @@ export function GameMenu() {
         <aside className="bb-game-menu-drawer absolute left-3 top-[3.75rem] z-40">
           <header>
             <strong>Menu</strong>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close menu">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close menu"
+            >
               <X size={18} aria-hidden />
             </button>
           </header>

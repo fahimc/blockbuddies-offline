@@ -1,5 +1,16 @@
 # Build Phases
 
+## Post-phase Go Kart launcher and direct play
+
+- [x] Add Go Kart Racing near the top of the main game menu.
+- [x] Add a dedicated launcher with instructions and four selectable karts.
+- [x] Link the launcher from Mini Games as another obvious discovery route.
+- [x] Make Town Map quick play travel to the circuit and enter an available kart.
+- [x] Mark Local Party karts already in use and guide each racer to a free kart.
+- [x] Restore newly joined karts to their starting-grid slots.
+- [x] Verify the visible solo and two-player Local Party launch journeys.
+- [x] Package and release the Android debug APK for the Go Kart launcher update.
+
 ## Post-phase arcade kart racing
 
 - [x] Turn the decorative Go Kart Track into a compact playable circuit.

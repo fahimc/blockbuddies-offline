@@ -16,6 +16,16 @@ describe('GameMenu', () => {
     expect(useGameStore.getState().openPanel).toBe('tutorial')
   })
 
+  it('opens Go Kart Racing directly from the hamburger menu', () => {
+    useGameStore.setState({ openPanel: undefined })
+
+    render(<GameMenu />)
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Go Kart Racing' }))
+
+    expect(useGameStore.getState().openPanel).toBe('karts')
+  })
+
   it('resets the player to Spawn Plaza from the hamburger menu', () => {
     const plaza = getLocation('spawn')
     useGameStore.setState((state) => ({
@@ -37,8 +47,21 @@ describe('GameMenu', () => {
       playerEmote: 'dance',
       buildMode: true,
       obby: { ...state.obby, active: true },
-      miniGame: { ...createInitialMiniGame(), activeId: 'coin-rush', status: 'running' },
-      touch: { ...state.touch, x: 1, y: -1, lookX: 20, lookY: -10, jump: true, interact: true, run: true },
+      miniGame: {
+        ...createInitialMiniGame(),
+        activeId: 'coin-rush',
+        status: 'running',
+      },
+      touch: {
+        ...state.touch,
+        x: 1,
+        y: -1,
+        lookX: 20,
+        lookY: -10,
+        jump: true,
+        interact: true,
+        run: true,
+      },
       chat: [],
     }))
 
@@ -65,7 +88,15 @@ describe('GameMenu', () => {
     expect(state.buildMode).toBe(false)
     expect(state.obby.active).toBe(false)
     expect(state.miniGame.status).toBe('idle')
-    expect(state.touch).toMatchObject({ x: 0, y: 0, lookX: 0, lookY: 0, jump: false, interact: false, run: false })
+    expect(state.touch).toMatchObject({
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    })
     expect(state.chat.at(-1)?.text).toBe('Reset to Spawn Plaza')
   })
 })

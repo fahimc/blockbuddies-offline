@@ -53,6 +53,7 @@ import {
   staticTownBuildings,
 } from '../game/townPlacement'
 import { parkingLot } from '../game/vehicles'
+import { goKartVehicleDefinitions } from '../game/goKart'
 import type { LocationId, SavedFriend, Vec3 } from '../game/types'
 import {
   savedFriendIsMoving,
@@ -107,6 +108,7 @@ export function MapPanel() {
   const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const setTouch = useGameStore((state) => state.setTouch)
   const travelToLocation = useGameStore((state) => state.travelToLocation)
+  const setActiveVehicle = useGameStore((state) => state.setActiveVehicle)
   const playerPosition = useGameStore((state) => state.playerPosition)
   const playerYaw = useGameStore((state) => state.playerYaw)
   const activeInterior = useGameStore((state) => state.activeInterior)
@@ -120,6 +122,12 @@ export function MapPanel() {
   const moveSavedFriend = useGameStore((state) => state.moveSavedFriend)
   const teleportSavedFriend = useGameStore((state) => state.teleportSavedFriend)
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
+  const quickPlayKart = goKartVehicleDefinitions.find(
+    (kart) =>
+      !Object.values(remotePlayers).some(
+        (player) => player.kart?.id === kart.id,
+      ),
+  )
   const [selectedId, setSelectedId] = useState<LocationId>(
     nearbyLocation ?? 'spawn',
   )
@@ -186,6 +194,15 @@ export function MapPanel() {
   const closeMap = () => {
     resetGameplayInput()
     setOpenPanel(undefined)
+  }
+
+  const travelOrPlay = () => {
+    if (selected.id !== 'kart') {
+      travelToLocation(selected.id)
+      return
+    }
+    if (!quickPlayKart || !travelToLocation('kart')) return
+    setActiveVehicle(quickPlayKart.id)
   }
 
   useEffect(() => {
@@ -378,15 +395,25 @@ export function MapPanel() {
               <button
                 type="button"
                 className="bb-map-travel-button"
-                disabled={travelBlocked}
-                onClick={() => travelToLocation(selected.id)}
-                aria-label={`Travel to ${selected.label}`}
+                disabled={
+                  travelBlocked || (selected.id === 'kart' && !quickPlayKart)
+                }
+                onClick={travelOrPlay}
+                aria-label={
+                  selected.id === 'kart'
+                    ? 'Play Go Karts'
+                    : `Travel to ${selected.label}`
+                }
               >
                 <Navigation size={21} aria-hidden />
                 <span>
                   {travelBlocked
                     ? 'Activity in progress'
-                    : `Travel to ${shortLabels[selected.id]}`}
+                    : selected.id === 'kart' && !quickPlayKart
+                      ? 'All karts in use'
+                      : selected.id === 'kart'
+                        ? 'Play Go Karts'
+                        : `Travel to ${shortLabels[selected.id]}`}
                 </span>
               </button>
               {travelBlocked ? (

@@ -1,6 +1,7 @@
 import {
   Clock3,
   Coins,
+  Gauge,
   Gamepad2,
   MapPin,
   Play,
@@ -23,6 +24,7 @@ export function MiniGamesPanel() {
   const startMiniGame = useGameStore((state) => state.startMiniGame)
   const cancelMiniGame = useGameStore((state) => state.cancelMiniGame)
   const beginObby = useGameStore((state) => state.beginObby)
+  const setOpenPanel = useGameStore((state) => state.setOpenPanel)
   const obby = useGameStore((state) => state.obby)
   const activeDefinition = miniGame.activeId
     ? miniGameDefinition(miniGame.activeId)
@@ -72,6 +74,34 @@ export function MiniGamesPanel() {
         </div>
 
         <div className="space-y-3">
+          <article className="overflow-hidden rounded-2xl bg-slate-950 text-white shadow-xl ring-4 ring-cyan-300">
+            <div className="h-2 bg-gradient-to-r from-cyan-300 via-blue-500 to-fuchsia-500" />
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-black">Go Kart Racing</h3>
+                  <p className="text-sm font-bold text-slate-300">
+                    Pick a kart, jump straight to the circuit, and race three
+                    laps solo or with a Local Party.
+                  </p>
+                </div>
+                <Gauge
+                  size={28}
+                  className="shrink-0 text-cyan-300"
+                  aria-hidden
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpenPanel('karts')}
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-amber-300 to-orange-500 px-4 text-base font-black text-slate-950 shadow-lg"
+              >
+                <Play size={19} fill="currentColor" aria-hidden />
+                Play Go Karts
+              </button>
+            </div>
+          </article>
+
           {miniGameDefinitions.map((game) => {
             const record = miniGame.records[game.id]
             const isActive =
@@ -100,7 +130,8 @@ export function MiniGamesPanel() {
                       ) : null}
                       {isDeliveryDash ? (
                         <p className="mt-1 text-xs font-black uppercase text-emerald-700">
-                          Route game: pickup first, follow map marker, deliver in order.
+                          Route game: pickup first, follow map marker, deliver
+                          in order.
                         </p>
                       ) : null}
                     </div>
@@ -117,10 +148,13 @@ export function MiniGamesPanel() {
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1">
                       <Clock3 size={14} aria-hidden />
-                      <strong className="text-slate-950">{Math.round(game.durationMs / 1000)}s</strong>
+                      <strong className="text-slate-950">
+                        {Math.round(game.durationMs / 1000)}s
+                      </strong>
                     </span>
                     <span className="rounded-lg bg-amber-50 px-2 py-1 text-amber-800">
-                      Points {game.pointsPerTarget} each + {game.completionBonus}
+                      Points {game.pointsPerTarget} each +{' '}
+                      {game.completionBonus}
                       {isDeliveryDash ? ' - +8 coins per drop-off - +5s' : ''}
                     </span>
                     <span className="rounded-lg bg-blue-50 px-2 py-1 text-blue-800">

@@ -103,20 +103,40 @@ async function waitForGeneratedCode(
 }
 
 async function runSynchronizedKartRace(host: Page, guest: Page) {
-  await host.evaluate(() =>
-    window.__blockBuddiesE2E!.prepareGoKartInteraction(),
-  )
-  await guest.evaluate(() =>
-    window.__blockBuddiesE2E!.prepareGoKartInteraction(),
-  )
+  for (const player of [host, guest]) {
+    const closeMessages = player.getByRole('button', {
+      name: 'Close messages',
+    })
+    if (await closeMessages.isVisible().catch(() => false))
+      await closeMessages.click()
+  }
+
+  await host.getByRole('button', { name: 'Menu' }).click()
+  await host.getByRole('button', { name: 'Go Kart Racing' }).click()
   await expect(
-    host.getByRole('button', { name: 'Race Red Rocket' }),
-  ).toBeVisible({ timeout: 15_000 })
+    host.getByRole('heading', { name: 'Buddy Kart Circuit' }),
+  ).toBeVisible()
+  await host.getByRole('button', { name: 'Play Go Karts' }).click()
+
+  await expect
+    .poll(
+      async () => {
+        const remote = (await partySnapshot(guest)).remotePlayers.find(
+          (player) => player.name === 'HostBuddy',
+        )
+        return remote?.kart?.id
+      },
+      { timeout: 15_000 },
+    )
+    .toBe('go-kart:red')
+
+  await guest.getByRole('button', { name: 'Menu' }).click()
+  await guest.getByRole('button', { name: 'Go Kart Racing' }).click()
   await expect(
-    guest.getByRole('button', { name: 'Race Blue Bolt' }),
-  ).toBeVisible({ timeout: 15_000 })
-  await host.getByRole('button', { name: 'Race Red Rocket' }).click()
-  await guest.getByRole('button', { name: 'Race Blue Bolt' }).click()
+    guest.getByRole('radio', { name: 'Red Rocket - in use' }),
+  ).toBeDisabled()
+  await guest.getByRole('radio', { name: 'Blue Bolt' }).click()
+  await guest.getByRole('button', { name: 'Play Go Karts' }).click()
   await expect
     .poll(
       async () =>

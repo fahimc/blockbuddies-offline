@@ -23,6 +23,7 @@ import { MiniGameAnnouncement } from '../ui/MiniGameAnnouncement'
 import { MiniMap } from '../ui/MiniMap'
 import { MapPanel } from '../ui/MapPanel'
 import { TutorialPanel } from '../ui/TutorialPanel'
+import { KartPanel } from '../ui/KartPanel'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
 import { WelcomeOverlay } from '../ui/WelcomeOverlay'
 import { useGameStore } from '../state/gameStore'
@@ -112,6 +113,7 @@ export function GameScreen() {
         {openPanel === 'server' ? <ServerPanel /> : null}
         {openPanel === 'emotes' ? <EmotePanel /> : null}
         {openPanel === 'minigames' ? <MiniGamesPanel /> : null}
+        {openPanel === 'karts' ? <KartPanel /> : null}
         {openPanel === 'map' ? <MapPanel /> : null}
         {openPanel === 'tutorial' ? <TutorialPanel /> : null}
       </section>
