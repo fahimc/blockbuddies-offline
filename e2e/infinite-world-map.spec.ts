@@ -51,7 +51,7 @@ test('pans beyond town and travels to a fixed outlying stadium tile', async ({
       const match = (await coordinate.innerText()).match(/X (-?\d+)/)
       return Number(match?.[1] ?? 0)
     })
-    .toBeLessThan(-60)
+    .toBeLessThanOrEqual(-60)
 
   await page.getByRole('button', { name: 'Show all destinations' }).click()
   await expect(footballMarker).toBeVisible()

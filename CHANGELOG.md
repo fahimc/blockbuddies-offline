@@ -4,15 +4,47 @@
 
 ### Added
 
-- Nothing yet.
+- Added mesh-style collision boxes to Football Pitch goal posts and crossbars.
+- Added the outlying Go Kart Track destination with a streamed low-poly track,
+  perimeter barriers, start line, decorative karts, and map travel support.
+- Added regression coverage for goal post collision, kart-track placement,
+  collision barriers, world destinations, and the adjusted outlying-map pan
+  boundary.
 
 ### Changed
 
-- Nothing yet.
+- Updated Android and package version metadata to `1.5.76` / `10576`.
 
 ### Fixed
 
-- Nothing yet.
+- Kept the new kart destination in the feature/world-map layer so procedural
+  blockers are cleared from the track footprint instead of spilling into the
+  town layout.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.76-go-kart-track] - 2026-07-20
+
+### Added
+
+- Added mesh-style collision boxes to Football Pitch goal posts and crossbars.
+- Added the outlying Go Kart Track destination with a streamed low-poly track,
+  perimeter barriers, start line, decorative karts, and map travel support.
+- Added regression coverage for goal post collision, kart-track placement,
+  collision barriers, world destinations, and the adjusted outlying-map pan
+  boundary.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.76` / `10576`.
+
+### Fixed
+
+- Kept the new kart destination in the feature/world-map layer so procedural
+  blockers are cleared from the track footprint instead of spilling into the
+  town layout.
 
 ### Known Issues
 

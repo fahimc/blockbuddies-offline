@@ -11,6 +11,7 @@ import {
   footballBallPatchFaces,
   footballGoals,
   footballGoalForBall,
+  footballGoalPostCollisionBoxes,
   footballKickVelocity,
   footballPitch,
   footprintIntersectsFootballPitch,
@@ -32,6 +33,26 @@ describe('football pitch and ball logic', () => {
         Math.abs(goal.center[2] - footballPitch.center[2]),
       ),
     ).toEqual([footballPitch.length / 2, footballPitch.length / 2])
+  })
+
+  it('adds solid collision boxes to each goal post and crossbar', () => {
+    const boxes = footballGoalPostCollisionBoxes()
+
+    expect(boxes).toHaveLength(footballGoals.length * 3)
+    footballGoals.forEach((goal) => {
+      const goalBoxes = boxes.filter((box) => box.id.includes(goal.id))
+      const leftPost = goalBoxes.find((box) => box.id.endsWith('left-post'))
+      const rightPost = goalBoxes.find((box) => box.id.endsWith('right-post'))
+      const crossbar = goalBoxes.find((box) => box.id.endsWith('crossbar'))
+
+      expect(leftPost).toBeDefined()
+      expect(rightPost).toBeDefined()
+      expect(crossbar).toBeDefined()
+      expect(leftPost?.center[1]).toBeGreaterThan(0.5)
+      expect(rightPost?.center[1]).toBeGreaterThan(0.5)
+      expect(crossbar?.center[1]).toBeGreaterThan(leftPost?.center[1] ?? 0)
+      expect(crossbar?.half[0]).toBeGreaterThan(footballPitch.goalWidth / 2)
+    })
   })
 
   it('places the authored pitch on clear non-road terrain', () => {

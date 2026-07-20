@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase goal collision and go-kart track
+
+- [x] Add collision boxes to the Football Pitch goal posts and crossbars.
+- [x] Add a streamed outlying Go Kart Track destination.
+- [x] Reserve the kart footprint through the world-feature layer.
+- [x] Render a clear loop track with barriers, start line, and decorative karts.
+- [x] Add the Go Kart Track to the full map and travel destination list.
+- [x] Add unit and e2e regression coverage for collision and map behavior.
+- [x] Package and release the Android debug APK for the go-kart track update.
+
 ## Post-phase NPC accessory preservation
 
 - [x] Trace created-NPC cosmetics through gameplay dragging, placement, save normalization, and rendering.

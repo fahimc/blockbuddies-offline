@@ -1,5 +1,6 @@
 import type { Vec3 } from './types'
 import { footballStadiumCenter } from '../data/worldFeatures'
+import type { CollisionBox } from './collision'
 
 export type FootballBallRuntime = {
   id: string
@@ -90,6 +91,32 @@ export const footballGoals: FootballGoal[] = [
     yaw: Math.PI,
   },
 ]
+
+export function footballGoalPostCollisionBoxes(): CollisionBox[] {
+  return footballGoals.flatMap((goal): CollisionBox[] => {
+    const direction = goal.id === 'north-goal' ? -1 : 1
+    const postZ = goal.center[2] + direction * 0.45
+    const postY = 0.9
+    const halfGoal = footballPitch.goalWidth / 2
+    return [
+      {
+        id: `football:${goal.id}:left-post`,
+        center: [goal.center[0] - halfGoal, postY, postZ],
+        half: [0.09, postY, 0.09],
+      },
+      {
+        id: `football:${goal.id}:right-post`,
+        center: [goal.center[0] + halfGoal, postY, postZ],
+        half: [0.09, postY, 0.09],
+      },
+      {
+        id: `football:${goal.id}:crossbar`,
+        center: [goal.center[0], postY * 2, postZ],
+        half: [(footballPitch.goalWidth + 0.18) / 2, 0.09, 0.09],
+      },
+    ]
+  })
+}
 
 export function createFootballBalls(): FootballBallRuntime[] {
   return [

@@ -10,6 +10,7 @@ import {
   proceduralTerrainAt,
 } from './proceduralTownPlan'
 import { footballPitch } from '../game/football'
+import { goKartTrack } from '../game/goKart'
 import { distance2d, getLocation, worldLocations } from './world'
 
 describe('world travel destinations', () => {
@@ -42,7 +43,7 @@ describe('world travel destinations', () => {
   })
 
   it('provides one grounded, nearby arrival point for every key location', () => {
-    expect(worldLocations).toHaveLength(10)
+    expect(worldLocations).toHaveLength(11)
     expect(new Set(worldLocations.map((location) => location.id)).size).toBe(
       worldLocations.length,
     )
@@ -58,6 +59,13 @@ describe('world travel destinations', () => {
         expect(
           distance2d(location.position, location.travelPosition),
         ).toBeLessThan(footballPitch.length / 2 + 4)
+      } else if (location.id === 'kart') {
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeGreaterThan(goKartTrack.depth / 2)
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeLessThan(goKartTrack.depth / 2 + 5)
       } else {
         expect(
           distance2d(location.position, location.travelPosition),
@@ -131,6 +139,19 @@ describe('world travel destinations', () => {
     expect(football.position).toEqual(footballPitch.center)
     expect(Math.abs(football.position[0])).toBeGreaterThan(27)
     expect(distance2d(football.position, parking.position)).toBeGreaterThan(
+      footballPitch.width,
+    )
+  })
+
+  it('adds the Go Kart Track as a discoverable remote activity destination', () => {
+    const kart = getLocation('kart')
+    const football = getLocation('football')
+
+    expect(kart.label).toBe('Go Kart Track')
+    expect(kart.description).toContain('driving')
+    expect(kart.position).toEqual(goKartTrack.center)
+    expect(Math.abs(kart.position[0])).toBeGreaterThan(27)
+    expect(distance2d(kart.position, football.position)).toBeGreaterThan(
       footballPitch.width,
     )
   })

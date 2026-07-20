@@ -3,6 +3,7 @@ import {
   Building2,
   CarFront,
   CircleDot,
+  Gauge,
   GraduationCap,
   Hammer,
   House,
@@ -83,6 +84,7 @@ const locationIcons: Record<LocationId, LucideIcon> = {
   houses: House,
   parking: CarFront,
   football: CircleDot,
+  kart: Gauge,
   builder: Hammer,
   hall: Building2,
 }
@@ -96,6 +98,7 @@ const shortLabels: Record<LocationId, string> = {
   houses: 'Homes',
   parking: 'Parking',
   football: 'Pitch',
+  kart: 'Karts',
   builder: 'Build',
   hall: 'Hall',
 }

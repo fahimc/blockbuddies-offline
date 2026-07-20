@@ -83,9 +83,13 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   rewards, and a Mini Game Star badge.
 - Football Stadium is a world-map destination with goals, kickable footballs,
   contextual Kick and Skills buttons, a hold-to-kick power gauge, kick-ups, goal
-  rewards, chat feedback, local sound effects, and spectator stands. Its fixed
-  tile sits at world position `(90, -42)` outside Central Buddy Town, and its
-  reserved footprint stays clear of procedural placement.
+  rewards, mesh-collidable goal posts/crossbars, chat feedback, local sound
+  effects, and spectator stands. Its fixed tile sits at world position
+  `(90, -42)` outside Central Buddy Town, and its reserved footprint stays clear
+  of procedural placement.
+- Go Kart Track is an outlying world-map destination with a reserved feature
+  footprint, streamed low-poly loop track, solid perimeter barriers, start line,
+  decorative karts, and regression coverage for placement and collision.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable

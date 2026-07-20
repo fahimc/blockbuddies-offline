@@ -129,6 +129,7 @@ import {
   footballBallInteractionRadius,
   footballBallRadius,
   footballGoalForBall,
+  footballGoalPostCollisionBoxes,
   footballGoalReward,
   footballGoals,
   footballKickVelocity,
@@ -138,6 +139,7 @@ import {
   resetFootballBall,
   type FootballBallRuntime,
 } from './football'
+import { goKartTrack, goKartTrackCollisionBoxes } from './goKart'
 import {
   coreActivityPositions,
   coreCoinPositions,
@@ -234,6 +236,8 @@ function useNpcDrag() {
 }
 
 const staticCollisionObstacles: CollisionBox[] = [
+  ...footballGoalPostCollisionBoxes(),
+  ...goKartTrackCollisionBoxes(),
   ...staticTownBuildings.map(({ position, scale }, index) => ({
     id: `static-building:${index}`,
     center: position,
@@ -600,6 +604,9 @@ function OutdoorWorld() {
       <StreamedFeature featureId="football-stadium">
         <FootballPitch balls={footballs} runtime={footballRuntime} />
       </StreamedFeature>
+      <StreamedFeature featureId="go-kart-track">
+        <GoKartTrack />
+      </StreamedFeature>
       <SeatActionMarkers />
       <TrafficVehicles
         lanes={trafficLanes}
@@ -805,6 +812,191 @@ function TrafficVehicleMesh({
           </button>
         </Html>
       ) : null}
+    </group>
+  )
+}
+
+function GoKartTrack() {
+  const { center, width, depth, laneWidth, barrierThickness, barrierHeight } =
+    goKartTrack
+  const asphaltColor = '#111827'
+  const grassColor = '#22c55e'
+  const startZ = center[2] + depth / 2 - laneWidth / 2
+  const startX = center[0] - width / 2 + laneWidth * 1.3
+  return (
+    <group>
+      <mesh receiveShadow position={[center[0], 0.025, center[2]]}>
+        <boxGeometry args={[width + 3.4, 0.06, depth + 3.4]} />
+        <meshStandardMaterial color="#15803d" roughness={0.92} />
+      </mesh>
+      <TrackAsphalt
+        position={[center[0], 0.075, center[2] - depth / 2 + laneWidth / 2]}
+        size={[width, laneWidth]}
+      />
+      <TrackAsphalt
+        position={[center[0], 0.075, center[2] + depth / 2 - laneWidth / 2]}
+        size={[width, laneWidth]}
+      />
+      <TrackAsphalt
+        position={[center[0] - width / 2 + laneWidth / 2, 0.076, center[2]]}
+        size={[laneWidth, depth]}
+      />
+      <TrackAsphalt
+        position={[center[0] + width / 2 - laneWidth / 2, 0.076, center[2]]}
+        size={[laneWidth, depth]}
+      />
+      <mesh receiveShadow position={[center[0], 0.086, center[2]]}>
+        <boxGeometry
+          args={[width - laneWidth * 2, 0.055, depth - laneWidth * 2]}
+        />
+        <meshStandardMaterial color={grassColor} roughness={0.86} />
+      </mesh>
+      <TrackBarrier
+        position={[
+          center[0],
+          barrierHeight / 2,
+          center[2] - depth / 2 - barrierThickness / 2,
+        ]}
+        size={[width + barrierThickness * 2, barrierHeight, barrierThickness]}
+      />
+      <TrackBarrier
+        position={[
+          center[0],
+          barrierHeight / 2,
+          center[2] + depth / 2 + barrierThickness / 2,
+        ]}
+        size={[width + barrierThickness * 2, barrierHeight, barrierThickness]}
+      />
+      <TrackBarrier
+        position={[
+          center[0] - width / 2 - barrierThickness / 2,
+          barrierHeight / 2,
+          center[2],
+        ]}
+        size={[barrierThickness, barrierHeight, depth + barrierThickness * 2]}
+      />
+      <TrackBarrier
+        position={[
+          center[0] + width / 2 + barrierThickness / 2,
+          barrierHeight / 2,
+          center[2],
+        ]}
+        size={[barrierThickness, barrierHeight, depth + barrierThickness * 2]}
+      />
+      <mesh receiveShadow position={[startX, 0.12, startZ]}>
+        <boxGeometry args={[0.18, 0.04, laneWidth * 0.82]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.55} />
+      </mesh>
+      {[-0.55, 0.55].map((offset) => (
+        <group key={offset} position={[startX + offset, 0.13, startZ]}>
+          {[0, 1, 2, 3].map((square) => (
+            <mesh
+              key={square}
+              position={[0, 0.02, -laneWidth * 0.32 + square * 0.42]}
+            >
+              <boxGeometry args={[0.46, 0.03, 0.2]} />
+              <meshStandardMaterial
+                color={
+                  square % 2 === (offset > 0 ? 0 : 1) ? '#f8fafc' : '#0f172a'
+                }
+                roughness={0.48}
+              />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      <mesh receiveShadow position={[center[0], 0.11, center[2]]}>
+        <boxGeometry args={[3.1, 0.07, 2.2]} />
+        <meshStandardMaterial color="#86efac" roughness={0.78} />
+      </mesh>
+      <KartProp
+        position={[center[0] - 2.6, 0, center[2] + 1.4]}
+        color="#ef4444"
+        yaw={Math.PI / 2}
+      />
+      <KartProp
+        position={[center[0] + 2.6, 0, center[2] - 1.2]}
+        color="#2563eb"
+        yaw={-Math.PI / 2}
+      />
+      <Html
+        center
+        position={[center[0], 2.6, center[2] + depth / 2 + 2.3]}
+        zIndexRange={worldHtmlZIndexRange}
+      >
+        <span className="pointer-events-none select-none whitespace-nowrap rounded-xl bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
+          Go Kart Track
+        </span>
+      </Html>
+      <mesh
+        receiveShadow
+        position={[center[0], 0.035, center[2] + depth / 2 + 2.8]}
+      >
+        <boxGeometry args={[5.6, 0.07, 3.2]} />
+        <meshStandardMaterial color="#e5e7eb" roughness={0.82} />
+      </mesh>
+      <mesh
+        receiveShadow
+        position={[center[0], 0.046, center[2] + depth / 2 + 5.2]}
+      >
+        <boxGeometry args={[2.8, 0.06, 2.2]} />
+        <meshStandardMaterial color={asphaltColor} roughness={0.88} />
+      </mesh>
+    </group>
+  )
+}
+
+function TrackAsphalt({
+  position,
+  size,
+}: {
+  position: Vec3
+  size: [number, number]
+}) {
+  return (
+    <mesh receiveShadow position={position}>
+      <boxGeometry args={[size[0], 0.08, size[1]]} />
+      <meshStandardMaterial color="#111827" roughness={0.82} />
+    </mesh>
+  )
+}
+
+function TrackBarrier({ position, size }: { position: Vec3; size: Vec3 }) {
+  return (
+    <mesh castShadow receiveShadow position={position}>
+      <boxGeometry args={size} />
+      <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+    </mesh>
+  )
+}
+
+function KartProp({
+  position,
+  color,
+  yaw,
+}: {
+  position: Vec3
+  color: string
+  yaw: number
+}) {
+  return (
+    <group position={position} rotation={[0, yaw, 0]}>
+      <mesh castShadow position={[0, 0.22, 0]}>
+        <boxGeometry args={[1.45, 0.32, 0.82]} />
+        <meshStandardMaterial color={color} roughness={0.68} />
+      </mesh>
+      <mesh castShadow position={[0.16, 0.48, -0.08]}>
+        <boxGeometry args={[0.62, 0.32, 0.54]} />
+        <meshStandardMaterial color="#0f172a" roughness={0.62} />
+      </mesh>
+      {[-0.58, 0.58].flatMap((x) =>
+        [-0.42, 0.42].map((z) => (
+          <mesh key={`${x}:${z}`} castShadow position={[x, 0.18, z]}>
+            <cylinderGeometry args={[0.18, 0.18, 0.16, 12]} />
+            <meshStandardMaterial color="#020617" roughness={0.8} />
+          </mesh>
+        )),
+      )}
     </group>
   )
 }

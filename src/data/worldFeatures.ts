@@ -1,4 +1,5 @@
 import type { Vec3 } from '../game/types'
+import { goKartTrack } from '../game/goKart'
 import { authoredCoreBounds } from '../game/townPlacement'
 import {
   boundsFromCenter,
@@ -87,6 +88,21 @@ export const worldFeatures: WorldFeature[] = [
     blocksProceduralObjects: true,
     color: '#16a34a',
   },
+  {
+    id: 'go-kart-track',
+    label: 'Go Kart Track',
+    kind: 'activity-district',
+    center: goKartTrack.center,
+    bounds: boundsFromCenter(
+      goKartTrack.center[0],
+      goKartTrack.center[2],
+      goKartTrack.width + goKartTrack.borderClearance * 2,
+      goKartTrack.depth + goKartTrack.borderClearance * 2,
+    ),
+    ownerChunk: { cx: 2, cz: -1 },
+    blocksProceduralObjects: true,
+    color: '#f97316',
+  },
 ]
 
 const featureById = new Map(
@@ -173,6 +189,16 @@ export function terrainOverrideForWorldFeature(x: number, z: number) {
     x <= stadium.bounds.maxX &&
     z >= stadium.bounds.minZ &&
     z <= stadium.bounds.maxZ
+  ) {
+    return 'park' as const
+  }
+  const kart = getWorldFeature('go-kart-track')
+  if (
+    kart &&
+    x >= kart.bounds.minX &&
+    x <= kart.bounds.maxX &&
+    z >= kart.bounds.minZ &&
+    z <= kart.bounds.maxZ
   ) {
     return 'park' as const
   }

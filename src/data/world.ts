@@ -1,5 +1,6 @@
 import type { LocationId, Vec3 } from '../game/types'
 import { footballPitch } from '../game/football'
+import { goKartTrack, goKartTrackTravelPosition } from '../game/goKart'
 import { footballStadiumTravelPosition } from './worldFeatures'
 
 export type WorldLocation = {
@@ -84,6 +85,15 @@ export const worldLocations: WorldLocation[] = [
     travelPosition: footballStadiumTravelPosition,
     travelYaw: Math.PI,
     color: '#16a34a',
+  },
+  {
+    id: 'kart',
+    label: 'Go Kart Track',
+    description: 'Practise driving lines on a clear kart loop.',
+    position: goKartTrack.center,
+    travelPosition: goKartTrackTravelPosition,
+    travelYaw: Math.PI,
+    color: '#f97316',
   },
   {
     id: 'builder',

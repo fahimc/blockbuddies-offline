@@ -9,6 +9,7 @@ export type LocationId =
   | 'houses'
   | 'parking'
   | 'football'
+  | 'kart'
   | 'hall'
   | 'builder'
 
