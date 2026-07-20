@@ -3,6 +3,7 @@ import { proceduralTerrainAt } from '../data/proceduralTownPlan'
 import { getLocation } from '../data/world'
 import { getWorldFeature } from '../data/worldFeatures'
 import {
+  activeLocalGoKarts,
   advanceKartRace,
   createGoKarts,
   createKartRaceLobby,
@@ -26,6 +27,7 @@ describe('go-kart track placement and collision', () => {
     expect(location.position).toEqual(goKartTrack.center)
     expect(location.travelPosition).toEqual(goKartTrackTravelPosition)
     expect(feature?.center).toEqual(goKartTrack.center)
+    expect(feature?.ownerChunk).toEqual({ cx: 6, cz: -3 })
     expect(feature?.blocksProceduralObjects).toBe(true)
     expect(
       footprintIntersectsFootballPitch(
@@ -43,7 +45,7 @@ describe('go-kart track placement and collision', () => {
     ).toBe(false)
   })
 
-  it('keeps the track on clear generated ground with an arrival beside the starting grid', () => {
+  it('relocates the larger track onto clear generated ground with an outside paddock arrival', () => {
     const samples = [
       goKartTrack.center,
       [
@@ -73,12 +75,12 @@ describe('go-kart track placement and collision', () => {
     ).toBe(true)
     expect(goKartTrackTravelPosition[1]).toBe(0)
     expect(pointInGoKartTrackClearance(goKartTrackTravelPosition)).toBe(true)
-    expect(
-      Math.hypot(
-        goKartTrackTravelPosition[0] - createGoKarts()[0].position[0],
-        goKartTrackTravelPosition[2] - createGoKarts()[0].position[2],
-      ),
-    ).toBeLessThan(2.3)
+    expect(goKartTrack.center).toEqual([216, 0, -99])
+    expect(goKartTrack.width).toBeGreaterThanOrEqual(70)
+    expect(goKartTrack.depth).toBeGreaterThanOrEqual(48)
+    expect(goKartTrackTravelPosition[2]).toBeGreaterThan(
+      goKartTrack.center[2] + goKartTrack.depth / 2,
+    )
   })
 
   it('defines solid perimeter barriers while leaving the lane itself open', () => {
@@ -122,6 +124,28 @@ describe('go-kart race rules', () => {
     expect(new Set(karts.map((kart) => kart.id)).size).toBe(4)
     expect(new Set(karts.map((kart) => kart.position.join(':'))).size).toBe(4)
     expect(karts.every((kart) => kart.kind === 'kart')).toBe(true)
+    expect(goKartTrack.laneWidth).toBeGreaterThanOrEqual(10)
+    const pairDistances = karts.flatMap((kart, index) =>
+      karts
+        .slice(index + 1)
+        .map((other) =>
+          Math.hypot(
+            kart.position[0] - other.position[0],
+            kart.position[2] - other.position[2],
+          ),
+        ),
+    )
+    expect(Math.min(...pairDistances)).toBeGreaterThan(3)
+  })
+
+  it('returns no empty track karts and only the local player kart after joining', () => {
+    const karts = createGoKarts()
+
+    expect(activeLocalGoKarts(karts, undefined)).toEqual([])
+    expect(activeLocalGoKarts(karts, 'sunny-car')).toEqual([])
+    expect(
+      activeLocalGoKarts(karts, 'go-kart:green').map((kart) => kart.id),
+    ).toEqual(['go-kart:green'])
   })
 
   it('requires every ordered checkpoint before counting each of three laps', () => {

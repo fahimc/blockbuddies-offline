@@ -87,12 +87,14 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   effects, and spectator stands. Its fixed tile sits at world position
   `(90, -42)` outside Central Buddy Town, and its reserved footprint stays clear
   of procedural placement.
-- Buddy Kart Circuit is an outlying world-map destination with four playable
-  karts, a compact three-lap loop, ordered checkpoints, boost pads, a race HUD,
-  speed-responsive chase camera, finish rewards, and synchronized Local Party
-  racing. Players can open Go Kart Racing directly from the game menu, choose a
-  free kart, and jump straight to the starting grid; Mini Games and the Town Map
-  also provide Play Go Karts shortcuts.
+- Buddy Kart Circuit is an outlying world-map destination at `(216, -99)` with
+  a large `72 x 50` original arcade loop, a 10-unit-wide lane, spacious two-by-two
+  grid, ordered checkpoints, boost pads, a race HUD, speed-responsive chase
+  camera, finish rewards, and synchronized Local Party racing. Only players who
+  join the race have a kart rendered on the track, so empty karts cannot block
+  the racing line. Players can open Go Kart Racing directly from the game menu,
+  choose a free kart, and jump straight to the starting grid; Mini Games and the
+  Town Map also provide Play Go Karts shortcuts.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable

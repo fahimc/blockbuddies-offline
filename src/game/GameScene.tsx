@@ -140,6 +140,7 @@ import {
   type FootballBallRuntime,
 } from './football'
 import {
+  activeLocalGoKarts,
   createGoKarts,
   getGoKart,
   goKartBoostPads,
@@ -836,6 +837,7 @@ function GoKartTrack({
   vehicles: DrivableVehicle[]
   runtime: MutableRefObject<DrivableVehicle[]>
 }) {
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const { center, width, depth, laneWidth, barrierThickness, barrierHeight } =
     goKartTrack
   const asphaltColor = '#111827'
@@ -844,10 +846,13 @@ function GoKartTrack({
   const startX = goKartStartLine.center[0]
   const innerWidth = width - laneWidth * 2
   const innerDepth = depth - laneWidth * 2
+  const horizontalKerbCount = Math.floor(innerWidth / 1.6)
+  const verticalKerbCount = Math.floor(innerDepth / 1.6)
+  const visibleVehicles = activeLocalGoKarts(vehicles, activeVehicleId)
   return (
     <group>
       <mesh receiveShadow position={[center[0], 0.025, center[2]]}>
-        <boxGeometry args={[width + 3.4, 0.06, depth + 3.4]} />
+        <boxGeometry args={[width + 6, 0.06, depth + 6]} />
         <meshStandardMaterial color="#15803d" roughness={0.92} />
       </mesh>
       <TrackAsphalt
@@ -870,24 +875,30 @@ function GoKartTrack({
         <boxGeometry args={[innerWidth, 0.055, innerDepth]} />
         <meshStandardMaterial color={grassColor} roughness={0.86} />
       </mesh>
-      {Array.from({ length: 14 }, (_, index) => {
-        const x = center[0] - innerWidth / 2 + 0.65 + index * 1.2
+      {Array.from({ length: horizontalKerbCount }, (_, index) => {
+        const x =
+          center[0] -
+          innerWidth / 2 +
+          ((index + 0.5) * innerWidth) / horizontalKerbCount
         return [-1, 1].map((side) => (
           <TrackKerb
             key={`horizontal-${side}-${index}`}
             position={[x, 0.14, center[2] + (innerDepth / 2 + 0.16) * side]}
-            size={[1.12, 0.14, 0.32]}
+            size={[innerWidth / horizontalKerbCount - 0.06, 0.14, 0.38]}
             red={index % 2 === 0}
           />
         ))
       })}
-      {Array.from({ length: 9 }, (_, index) => {
-        const z = center[2] - innerDepth / 2 + 0.65 + index * 1.2
+      {Array.from({ length: verticalKerbCount }, (_, index) => {
+        const z =
+          center[2] -
+          innerDepth / 2 +
+          ((index + 0.5) * innerDepth) / verticalKerbCount
         return [-1, 1].map((side) => (
           <TrackKerb
             key={`vertical-${side}-${index}`}
             position={[center[0] + (innerWidth / 2 + 0.16) * side, 0.14, z]}
-            size={[0.32, 0.14, 1.12]}
+            size={[0.38, 0.14, innerDepth / verticalKerbCount - 0.06]}
             red={index % 2 === 0}
           />
         ))
@@ -925,17 +936,21 @@ function GoKartTrack({
         size={[barrierThickness, barrierHeight, depth + barrierThickness * 2]}
       />
       <mesh receiveShadow position={[startX, 0.12, startZ]}>
-        <boxGeometry args={[0.18, 0.04, laneWidth * 0.82]} />
+        <boxGeometry args={[0.22, 0.04, laneWidth * 0.9]} />
         <meshStandardMaterial color="#f8fafc" roughness={0.55} />
       </mesh>
       {[-0.55, 0.55].map((offset) => (
         <group key={offset} position={[startX + offset, 0.13, startZ]}>
-          {[0, 1, 2, 3].map((square) => (
+          {Array.from({ length: 10 }, (_, square) => (
             <mesh
               key={square}
-              position={[0, 0.02, -laneWidth * 0.32 + square * 0.42]}
+              position={[
+                0,
+                0.02,
+                -laneWidth * 0.405 + square * laneWidth * 0.09,
+              ]}
             >
-              <boxGeometry args={[0.46, 0.03, 0.2]} />
+              <boxGeometry args={[0.46, 0.03, laneWidth * 0.085]} />
               <meshStandardMaterial
                 color={
                   square % 2 === (offset > 0 ? 0 : 1) ? '#f8fafc' : '#0f172a'
@@ -974,14 +989,14 @@ function GoKartTrack({
         </group>
       ))}
       <group position={[startX, 0, startZ - laneWidth / 2 - 0.42]}>
-        {[-1.35, 1.35].map((z) => (
+        {[-laneWidth * 0.43, laneWidth * 0.43].map((z) => (
           <mesh key={z} castShadow position={[0, 1.35, z]}>
             <boxGeometry args={[0.18, 2.7, 0.18]} />
             <meshStandardMaterial color="#f8fafc" roughness={0.5} />
           </mesh>
         ))}
         <mesh castShadow position={[0, 2.62, 0]}>
-          <boxGeometry args={[0.2, 0.22, 2.9]} />
+          <boxGeometry args={[0.2, 0.22, laneWidth * 0.9]} />
           <meshStandardMaterial color="#0f172a" roughness={0.5} />
         </mesh>
         {[-0.55, 0, 0.55].map((z, index) => (
@@ -995,7 +1010,34 @@ function GoKartTrack({
           </mesh>
         ))}
       </group>
-      {vehicles.map((vehicle) => (
+      {[
+        [-innerWidth * 0.3, -innerDepth * 0.25],
+        [0, -innerDepth * 0.18],
+        [innerWidth * 0.28, -innerDepth * 0.28],
+        [-innerWidth * 0.2, innerDepth * 0.25],
+        [innerWidth * 0.2, innerDepth * 0.22],
+      ].map(([x, z], index) => (
+        <CircuitTree
+          key={`circuit-tree-${index}`}
+          position={[center[0] + x, 0.12, center[2] + z]}
+        />
+      ))}
+      <group position={[center[0], 0.12, center[2]]}>
+        <mesh castShadow position={[0, 0.7, 0]}>
+          <boxGeometry args={[8.5, 1.4, 1.2]} />
+          <meshStandardMaterial color="#0f172a" roughness={0.55} />
+        </mesh>
+        <Html
+          center
+          position={[0, 0.72, 0.64]}
+          zIndexRange={worldHtmlZIndexRange}
+        >
+          <span className="pointer-events-none select-none whitespace-nowrap text-lg font-black text-white">
+            BUDDY GRAND PRIX
+          </span>
+        </Html>
+      </group>
+      {visibleVehicles.map((vehicle) => (
         <KartVehicleMesh key={vehicle.id} vehicle={vehicle} runtime={runtime} />
       ))}
       <Html
@@ -1004,21 +1046,21 @@ function GoKartTrack({
         zIndexRange={worldHtmlZIndexRange}
       >
         <span className="pointer-events-none select-none whitespace-nowrap rounded-xl bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
-          Buddy Kart Circuit - 3 laps
+          Buddy Grand Prix - wide 3-lap circuit
         </span>
       </Html>
       <mesh
         receiveShadow
         position={[center[0], 0.035, center[2] + depth / 2 + 2.8]}
       >
-        <boxGeometry args={[5.6, 0.07, 3.2]} />
+        <boxGeometry args={[14, 0.07, 5.5]} />
         <meshStandardMaterial color="#e5e7eb" roughness={0.82} />
       </mesh>
       <mesh
         receiveShadow
         position={[center[0], 0.046, center[2] + depth / 2 + 5.2]}
       >
-        <boxGeometry args={[2.8, 0.06, 2.2]} />
+        <boxGeometry args={[7, 0.06, 3.2]} />
         <meshStandardMaterial color={asphaltColor} roughness={0.88} />
       </mesh>
     </group>
@@ -1066,6 +1108,21 @@ function TrackKerb({
         roughness={0.6}
       />
     </mesh>
+  )
+}
+
+function CircuitTree({ position }: { position: Vec3 }) {
+  return (
+    <group position={position}>
+      <mesh castShadow position={[0, 0.85, 0]}>
+        <cylinderGeometry args={[0.18, 0.24, 1.7, 8]} />
+        <meshStandardMaterial color="#854d0e" roughness={0.9} />
+      </mesh>
+      <mesh castShadow position={[0, 2.15, 0]}>
+        <dodecahedronGeometry args={[1.05, 0]} />
+        <meshStandardMaterial color="#16a34a" roughness={0.82} />
+      </mesh>
+    </group>
   )
 }
 
@@ -3107,11 +3164,9 @@ function PlayerController({
           (vehicle) => vehicle.id === activeVehicleThisFrame,
         )
       : undefined
-    const currentRemotePlayers = useLocalPartyStore.getState().remotePlayers
     const localDrivableVehicles = drivableRuntime
       ? drivableVehiclesAvailableLocally(
           drivableRuntime.current,
-          currentRemotePlayers,
           activeVehicleThisFrame,
         )
       : []
@@ -3971,19 +4026,10 @@ function AvatarTrail({ trail }: { trail: ShopItemId | 'none' }) {
 
 function drivableVehiclesAvailableLocally(
   vehicles: DrivableVehicle[],
-  remotePlayers: Record<string, LocalPartySnapshot>,
   activeVehicleId?: string,
 ) {
-  const remoteKartIds = new Set(
-    Object.values(remotePlayers).flatMap((player) =>
-      player.kart ? [player.kart.id] : [],
-    ),
-  )
   return vehicles.filter(
-    (vehicle) =>
-      vehicle.id === activeVehicleId ||
-      !isGoKartId(vehicle.id) ||
-      !remoteKartIds.has(vehicle.id),
+    (vehicle) => !isGoKartId(vehicle.id) || vehicle.id === activeVehicleId,
   )
 }
 

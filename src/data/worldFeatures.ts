@@ -99,7 +99,7 @@ export const worldFeatures: WorldFeature[] = [
       goKartTrack.width + goKartTrack.borderClearance * 2,
       goKartTrack.depth + goKartTrack.borderClearance * 2,
     ),
-    ownerChunk: { cx: 2, cz: -1 },
+    ownerChunk: { cx: 6, cz: -3 },
     blocksProceduralObjects: true,
     color: '#f97316',
   },

@@ -34,6 +34,21 @@ test('joins, starts, drives, and finishes a three-lap kart race', async ({
     'Buddy Kart Circuit',
   )
   await expect(page.getByRole('button', { name: 'Exit kart' })).toBeVisible()
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__blockBuddiesE2E!.getGameplaySnapshot().activeVehicleId,
+      ),
+    )
+    .toBe('go-kart:red')
+
+  const gridPosition = await page.evaluate(
+    () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition,
+  )
+  expect(gridPosition[0]).toBeGreaterThan(189)
+  expect(gridPosition[0]).toBeLessThan(195)
+  expect(gridPosition[2]).toBeGreaterThan(-84)
+  expect(gridPosition[2]).toBeLessThan(-78)
 
   await page.getByTestId('start-kart-race').click()
   await expect(page.getByTestId('kart-countdown')).toBeVisible()

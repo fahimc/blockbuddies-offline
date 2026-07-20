@@ -4,26 +4,49 @@
 
 ### Added
 
-- Added a dedicated Go Kart Racing launcher near the top of the game menu with
-  clear race instructions and four selectable kart cards.
-- Added a second Play Go Karts entry point to Mini Games.
-- Added launcher, map quick-play, occupied-kart, single-player, and two-player
-  Local Party regression coverage.
+- Added a much larger original beginner-friendly arcade circuit with a wide
+  racing lane, spacious two-by-two starting grid, boost strips, centre island,
+  kerbs, trees, and a Buddy Grand Prix sign.
+- Added regression coverage for the expanded track footprint, grid spacing,
+  outlying placement, and active-racer-only kart filtering.
 
 ### Changed
 
-- The Town Map's Go Kart Track action now travels to the circuit and puts the
-  player directly into the first available kart.
-- Entering a kart lobby now restores that kart to its starting-grid slot before
-  the race begins.
-- Updated Android and package version metadata to `1.5.78` / `10578`.
+- Relocated Buddy Kart Circuit to the open world at `(216, -99)`, away from the
+  central town, and expanded it to a `72 x 50` footprint with a 10-unit lane.
+- Updated Android and package version metadata to `1.5.79` / `10579`.
 
 ### Fixed
 
-- Fixed Go Kart Racing being difficult to discover and requiring players to
-  search the remote track for an interaction point.
-- Prevented the launcher from offering a kart already occupied by another Local
-  Party racer.
+- Removed unoccupied karts from the live circuit so only racers who have joined
+  are rendered, interactive, and included in collision checks.
+- Prevented empty grid karts from crowding or blocking players at race start.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.79-wide-kart-circuit] - 2026-07-20
+
+### Added
+
+- Added a much larger original beginner-friendly arcade circuit with a wide
+  racing lane, spacious two-by-two starting grid, boost strips, centre island,
+  kerbs, trees, and a Buddy Grand Prix sign.
+- Added regression coverage for the expanded track footprint, grid spacing,
+  outlying placement, and active-racer-only kart filtering.
+
+### Changed
+
+- Relocated Buddy Kart Circuit to the open world at `(216, -99)`, away from the
+  central town, and expanded it to a `72 x 50` footprint with a 10-unit lane.
+- Updated Android and package version metadata to `1.5.79` / `10579`.
+
+### Fixed
+
+- Removed unoccupied karts from the live circuit so only racers who have joined
+  are rendered, interactive, and included in collision checks.
+- Prevented empty grid karts from crowding or blocking players at race start.
 
 ### Known Issues
 

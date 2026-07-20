@@ -3,13 +3,13 @@ import type { Vec3 } from './types'
 import type { DrivableVehicle } from './vehicles'
 
 export const goKartTrack = {
-  center: [116, 0, -42] as Vec3,
-  width: 28,
-  depth: 20,
-  laneWidth: 4,
-  barrierThickness: 0.35,
-  barrierHeight: 0.56,
-  borderClearance: 1.8,
+  center: [216, 0, -99] as Vec3,
+  width: 72,
+  depth: 50,
+  laneWidth: 10,
+  barrierThickness: 0.42,
+  barrierHeight: 0.68,
+  borderClearance: 3,
 }
 
 export const goKartTotalLaps = 3
@@ -64,7 +64,7 @@ export type KartPartyRace = Pick<
 
 const southLaneZ =
   goKartTrack.center[2] + goKartTrack.depth / 2 - goKartTrack.laneWidth / 2
-const startLineX = goKartTrack.center[0] - goKartTrack.width / 2 + 6.2
+const startLineX = goKartTrack.center[0] - goKartTrack.width / 2 + 14
 
 export const goKartStartLine = {
   center: [startLineX, 0.12, southLaneZ] as Vec3,
@@ -79,7 +79,7 @@ export const goKartCheckpoints = [
       0,
       goKartTrack.center[2],
     ] as Vec3,
-    half: [goKartTrack.laneWidth / 2, 1, 0.9] as Vec3,
+    half: [goKartTrack.laneWidth / 2, 1, 1.4] as Vec3,
   },
   {
     id: 'north-straight',
@@ -88,7 +88,7 @@ export const goKartCheckpoints = [
       0,
       goKartTrack.center[2] - goKartTrack.depth / 2 + goKartTrack.laneWidth / 2,
     ] as Vec3,
-    half: [0.9, 1, goKartTrack.laneWidth / 2] as Vec3,
+    half: [1.4, 1, goKartTrack.laneWidth / 2] as Vec3,
   },
   {
     id: 'west-turn',
@@ -97,7 +97,7 @@ export const goKartCheckpoints = [
       0,
       goKartTrack.center[2],
     ] as Vec3,
-    half: [goKartTrack.laneWidth / 2, 1, 0.9] as Vec3,
+    half: [goKartTrack.laneWidth / 2, 1, 1.4] as Vec3,
   },
   {
     id: 'finish-line',
@@ -109,39 +109,39 @@ export const goKartCheckpoints = [
 export const goKartBoostPads = [
   {
     id: 'south-boost',
-    center: [goKartTrack.center[0] + 4, 0.11, southLaneZ] as Vec3,
-    half: [1.4, 0.4, goKartTrack.laneWidth * 0.34] as Vec3,
+    center: [goKartTrack.center[0] + 9, 0.11, southLaneZ] as Vec3,
+    half: [2.4, 0.4, goKartTrack.laneWidth * 0.34] as Vec3,
     yaw: Math.PI / 2,
   },
   {
     id: 'north-boost',
     center: [
-      goKartTrack.center[0] - 3.5,
+      goKartTrack.center[0] - 10,
       0.11,
       goKartTrack.center[2] - goKartTrack.depth / 2 + goKartTrack.laneWidth / 2,
     ] as Vec3,
-    half: [1.4, 0.4, goKartTrack.laneWidth * 0.34] as Vec3,
+    half: [2.4, 0.4, goKartTrack.laneWidth * 0.34] as Vec3,
     yaw: -Math.PI / 2,
   },
 ] as const
 
 export const goKartVehicleDefinitions: DrivableVehicle[] = [
-  goKartVehicle('go-kart:red', 'Red Rocket', '#ef4444', -1.5, -0.9),
-  goKartVehicle('go-kart:blue', 'Blue Bolt', '#2563eb', -1.5, 0.9),
-  goKartVehicle('go-kart:green', 'Green Glide', '#16a34a', -3.5, -0.9),
-  goKartVehicle('go-kart:gold', 'Gold Comet', '#f59e0b', -3.5, 0.9),
+  goKartVehicle('go-kart:red', 'Red Rocket', '#ef4444', -2.2, -2.4),
+  goKartVehicle('go-kart:blue', 'Blue Bolt', '#2563eb', -2.2, 2.4),
+  goKartVehicle('go-kart:green', 'Green Glide', '#16a34a', -5.3, -2.4),
+  goKartVehicle('go-kart:gold', 'Gold Comet', '#f59e0b', -5.3, 2.4),
 ]
 
 export const goKartTrackTravelPosition: Vec3 = [
-  startLineX + 0.2,
+  goKartTrack.center[0],
   0,
-  southLaneZ - 0.9,
+  goKartTrack.center[2] + goKartTrack.depth / 2 + 3,
 ]
 
 export const goKartPaddockExitPosition: Vec3 = [
-  startLineX + 2.4,
+  startLineX + 4.2,
   0,
-  goKartTrack.center[2] + goKartTrack.depth / 2 + 1.5,
+  goKartTrack.center[2] + goKartTrack.depth / 2 + 3,
 ]
 
 export function goKartTrackCollisionBoxes(): CollisionBox[] {
@@ -194,6 +194,14 @@ export function createGoKarts() {
     ...vehicle,
     position: [...vehicle.position] as Vec3,
   }))
+}
+
+export function activeLocalGoKarts(
+  vehicles: DrivableVehicle[],
+  activeVehicleId?: string,
+) {
+  if (!isGoKartId(activeVehicleId)) return []
+  return vehicles.filter((vehicle) => vehicle.id === activeVehicleId)
 }
 
 export function getGoKart(id: string) {

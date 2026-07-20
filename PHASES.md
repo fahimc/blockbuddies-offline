@@ -1,5 +1,15 @@
 # Build Phases
 
+## Post-phase wide active-racer kart circuit
+
+- [x] Relocate Buddy Kart Circuit farther into the streamed world without moving Central Buddy Town.
+- [x] Expand the course into a large original arcade loop with a 10-unit-wide racing lane.
+- [x] Space the four start positions across a clear two-by-two grid.
+- [x] Render and collide with only the karts belonging to players who joined the race.
+- [x] Preserve Local Party remote racers while removing unused grid karts.
+- [x] Verify track placement, lane size, grid spacing, race flow, and the mobile chase view.
+- [x] Package and release the Android debug APK for the wide circuit update.
+
 ## Post-phase Go Kart launcher and direct play
 
 - [x] Add Go Kart Racing near the top of the main game menu.
