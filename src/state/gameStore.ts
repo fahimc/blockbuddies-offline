@@ -78,6 +78,16 @@ import {
   savedFriendTravelSeconds,
   snapSavedFriendDestination,
 } from '../game/savedFriendMovement'
+import {
+  advanceKartRace,
+  createInitialKartRace,
+  createKartRaceLobby,
+  isGoKartId,
+  startKartRaceCountdown,
+  syncKartRaceStart,
+  type KartPartyRace,
+  type KartRaceRuntime,
+} from '../game/goKart'
 
 export type GameSave = {
   profileComplete: boolean
@@ -180,6 +190,7 @@ type GameState = GameSave & {
   sleeping: boolean
   seatedSeatId?: string
   activeVehicleId?: string
+  kartRace: KartRaceRuntime
   interactionPrompt?: InteractionPrompt
   worldActionRequest?: WorldActionRequest
   nearbyFootballBallId?: string
@@ -235,6 +246,10 @@ type GameState = GameSave & {
   setSleeping: (sleeping: boolean) => void
   setSeatedSeat: (seatId?: string) => void
   setActiveVehicle: (vehicleId?: string) => void
+  startKartRace: (now: number, raceId?: string) => void
+  syncKartRace: (race: KartPartyRace, now: number) => void
+  tickKartRace: (now: number, position: Vec3) => void
+  resetKartRace: () => void
   setInteractionPrompt: (prompt?: InteractionPrompt) => void
   setNearbyFootballBall: (ballId?: string) => void
   requestWorldAction: (
@@ -732,6 +747,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   sleeping: false,
   seatedSeatId: undefined,
   activeVehicleId: undefined,
+  kartRace: createInitialKartRace(),
   worldActionRequest: undefined,
   nearbyFootballBallId: undefined,
   footballActionSequence: 0,
@@ -811,6 +827,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         playerEmote: 'none',
@@ -855,6 +872,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         playerEmote: 'none',
@@ -902,6 +920,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         touch: {
@@ -938,6 +957,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         touch: {
@@ -1261,6 +1281,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping,
         seatedSeatId: sleeping ? undefined : state.seatedSeatId,
         activeVehicleId: sleeping ? undefined : state.activeVehicleId,
+        kartRace: sleeping ? createInitialKartRace() : state.kartRace,
         playerEmote: sleeping ? 'none' : state.playerEmote,
         interactionPrompt: sleeping ? 'wake' : undefined,
         coins: questResult?.coins ?? state.coins,
@@ -1282,6 +1303,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         seatedSeatId,
         sleeping: false,
         activeVehicleId: seatedSeatId ? undefined : state.activeVehicleId,
+        kartRace: seatedSeatId ? createInitialKartRace() : state.kartRace,
         playerEmote: seatedSeatId ? 'none' : state.playerEmote,
         interactionPrompt: seatedSeatId ? 'stand' : undefined,
         coins: questResult?.coins ?? state.coins,
@@ -1296,11 +1318,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   setActiveVehicle: (activeVehicleId) =>
     set((state) => {
       if (state.activeVehicleId === activeVehicleId) return state
+      const wasKart = isGoKartId(state.activeVehicleId)
+      const isKart = isGoKartId(activeVehicleId)
       const questResult = activeVehicleId
         ? applyQuestAdvance(state, 'drive-a-car', 1)
         : undefined
       return {
         activeVehicleId,
+        kartRace: isKart
+          ? createKartRaceLobby(activeVehicleId)
+          : createInitialKartRace(),
         sleeping: false,
         seatedSeatId: undefined,
         playerEmote: 'none',
@@ -1310,12 +1337,58 @@ export const useGameStore = create<GameState>((set, get) => ({
         chat: [
           ...state.chat.slice(-60),
           systemMessage(
-            activeVehicleId ? 'You started driving' : 'You left the car',
+            isKart
+              ? 'You joined the Buddy Kart starting grid'
+              : activeVehicleId
+                ? 'You started driving'
+                : wasKart
+                  ? 'You left the kart'
+                  : 'You left the car',
           ),
           ...(questResult?.message ? [questResult.message] : []),
         ],
       }
     }),
+  startKartRace: (now, raceId) =>
+    set((state) => {
+      if (!isGoKartId(state.activeVehicleId)) return state
+      const next = startKartRaceCountdown(
+        state.kartRace,
+        now,
+        raceId ?? `kart-race-${now.toString(36)}`,
+      )
+      if (next === state.kartRace) return state
+      return {
+        kartRace: next,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage('Buddy Kart race starts in 3… 2… 1…'),
+        ],
+      }
+    }),
+  syncKartRace: (race, now) =>
+    set((state) => {
+      const next = syncKartRaceStart(state.kartRace, race, now)
+      return next === state.kartRace ? state : { kartRace: next }
+    }),
+  tickKartRace: (now, position) =>
+    set((state) => {
+      const next = advanceKartRace(state.kartRace, position, now)
+      if (next === state.kartRace) return state
+      const finishedNow =
+        state.kartRace.status !== 'finished' && next.status === 'finished'
+      return {
+        kartRace: next,
+        coins: finishedNow ? state.coins + 30 : state.coins,
+        chat: finishedNow
+          ? [
+              ...state.chat.slice(-60),
+              systemMessage('Buddy Kart finish! +30 coins'),
+            ]
+          : state.chat,
+      }
+    }),
+  resetKartRace: () => set({ kartRace: createInitialKartRace() }),
   setInteractionPrompt: (interactionPrompt) =>
     set((state) =>
       state.interactionPrompt === interactionPrompt
@@ -1369,6 +1442,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             selectedBuildBlockId: undefined,
             seatedSeatId: buildMode ? undefined : state.seatedSeatId,
             activeVehicleId: buildMode ? undefined : state.activeVehicleId,
+            kartRace: buildMode ? createInitialKartRace() : state.kartRace,
             interactionPrompt: buildMode ? undefined : state.interactionPrompt,
           },
     ),
@@ -1877,6 +1951,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         chat: [
@@ -1948,6 +2023,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         buildMode: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         openPanel: undefined,
@@ -2119,6 +2195,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       sleeping: false,
       seatedSeatId: undefined,
       activeVehicleId: undefined,
+      kartRace: createInitialKartRace(),
       interactionPrompt: undefined,
       worldActionRequest: undefined,
       nearbyFootballBallId: undefined,
@@ -2192,6 +2269,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sleeping: false,
         seatedSeatId: undefined,
         activeVehicleId: undefined,
+        kartRace: createInitialKartRace(),
         interactionPrompt: undefined,
         worldActionRequest: undefined,
         npcDrag: undefined,

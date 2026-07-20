@@ -13,6 +13,11 @@ import { questDefinitions } from '../data/quests'
 import { getLocation } from '../data/world'
 import { buildPlacementClearsPlayer } from '../ai/buildMode'
 import { interiorEntryYaw, interiorSpawnPosition } from '../game/interiors'
+import {
+  createInitialKartRace,
+  goKartCheckpoints,
+  goKartTrack,
+} from '../game/goKart'
 import type { Vec3 } from '../game/types'
 import {
   defaultAvatar,
@@ -1276,6 +1281,43 @@ describe('world interaction state', () => {
     useGameStore.getState().setActiveVehicle(undefined)
     expect(useGameStore.getState().activeVehicleId).toBeUndefined()
     expect(useGameStore.getState().interactionPrompt).toBeUndefined()
+  })
+
+  it('runs a three-lap kart race and awards the finish once', () => {
+    useGameStore.setState({
+      activeVehicleId: undefined,
+      kartRace: createInitialKartRace(),
+      coins: 0,
+      questProgress: [],
+      chat: [],
+    })
+
+    useGameStore.getState().setActiveVehicle('go-kart:red')
+    expect(useGameStore.getState().kartRace).toMatchObject({
+      vehicleId: 'go-kart:red',
+      status: 'lobby',
+      lap: 1,
+    })
+    const coinsBeforeRace = useGameStore.getState().coins
+    useGameStore.getState().startKartRace(1_000, 'store-race')
+    useGameStore.getState().tickKartRace(4_200, goKartTrack.center)
+
+    for (let lap = 1; lap <= 3; lap += 1) {
+      for (const checkpoint of goKartCheckpoints)
+        useGameStore
+          .getState()
+          .tickKartRace(4_200 + lap * 1_000, checkpoint.center)
+    }
+
+    expect(useGameStore.getState().kartRace.status).toBe('finished')
+    expect(useGameStore.getState().coins).toBe(coinsBeforeRace + 30)
+    useGameStore
+      .getState()
+      .tickKartRace(9_000, goKartCheckpoints.at(-1)!.center)
+    expect(useGameStore.getState().coins).toBe(coinsBeforeRace + 30)
+
+    useGameStore.getState().setActiveVehicle(undefined)
+    expect(useGameStore.getState().kartRace.status).toBe('idle')
   })
 
   it('creates ordered world-action requests for exact 3D icon taps', () => {

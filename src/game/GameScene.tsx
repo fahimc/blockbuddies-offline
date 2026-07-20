@@ -139,7 +139,15 @@ import {
   resetFootballBall,
   type FootballBallRuntime,
 } from './football'
-import { goKartTrack, goKartTrackCollisionBoxes } from './goKart'
+import {
+  createGoKarts,
+  getGoKart,
+  goKartBoostPads,
+  goKartStartLine,
+  goKartTrack,
+  goKartTrackCollisionBoxes,
+  isGoKartId,
+} from './goKart'
 import {
   coreActivityPositions,
   coreCoinPositions,
@@ -578,7 +586,12 @@ function OutdoorWorld() {
   )
   const trafficRuntime = useRef<TrafficVehicle[]>(initialTrafficVehicles)
   const parkedVehicles = useMemo(() => createParkedVehicles(), [])
-  const drivableRuntime = useRef<DrivableVehicle[]>(parkedVehicles)
+  const goKarts = useMemo(() => createGoKarts(), [])
+  const initialDrivableVehicles = useMemo(
+    () => [...parkedVehicles, ...goKarts],
+    [goKarts, parkedVehicles],
+  )
+  const drivableRuntime = useRef<DrivableVehicle[]>(initialDrivableVehicles)
   const footballs = useMemo(() => createFootballBalls(), [])
   const footballRuntime = useRef<FootballBallRuntime[]>(footballs)
 
@@ -587,8 +600,8 @@ function OutdoorWorld() {
   }, [initialTrafficVehicles])
 
   useEffect(() => {
-    drivableRuntime.current = parkedVehicles
-  }, [parkedVehicles])
+    drivableRuntime.current = initialDrivableVehicles
+  }, [initialDrivableVehicles])
 
   useEffect(() => {
     footballRuntime.current = footballs
@@ -605,7 +618,7 @@ function OutdoorWorld() {
         <FootballPitch balls={footballs} runtime={footballRuntime} />
       </StreamedFeature>
       <StreamedFeature featureId="go-kart-track">
-        <GoKartTrack />
+        <GoKartTrack vehicles={goKarts} runtime={drivableRuntime} />
       </StreamedFeature>
       <SeatActionMarkers />
       <TrafficVehicles
@@ -816,13 +829,21 @@ function TrafficVehicleMesh({
   )
 }
 
-function GoKartTrack() {
+function GoKartTrack({
+  vehicles,
+  runtime,
+}: {
+  vehicles: DrivableVehicle[]
+  runtime: MutableRefObject<DrivableVehicle[]>
+}) {
   const { center, width, depth, laneWidth, barrierThickness, barrierHeight } =
     goKartTrack
   const asphaltColor = '#111827'
   const grassColor = '#22c55e'
-  const startZ = center[2] + depth / 2 - laneWidth / 2
-  const startX = center[0] - width / 2 + laneWidth * 1.3
+  const startZ = goKartStartLine.center[2]
+  const startX = goKartStartLine.center[0]
+  const innerWidth = width - laneWidth * 2
+  const innerDepth = depth - laneWidth * 2
   return (
     <group>
       <mesh receiveShadow position={[center[0], 0.025, center[2]]}>
@@ -846,11 +867,31 @@ function GoKartTrack() {
         size={[laneWidth, depth]}
       />
       <mesh receiveShadow position={[center[0], 0.086, center[2]]}>
-        <boxGeometry
-          args={[width - laneWidth * 2, 0.055, depth - laneWidth * 2]}
-        />
+        <boxGeometry args={[innerWidth, 0.055, innerDepth]} />
         <meshStandardMaterial color={grassColor} roughness={0.86} />
       </mesh>
+      {Array.from({ length: 14 }, (_, index) => {
+        const x = center[0] - innerWidth / 2 + 0.65 + index * 1.2
+        return [-1, 1].map((side) => (
+          <TrackKerb
+            key={`horizontal-${side}-${index}`}
+            position={[x, 0.14, center[2] + (innerDepth / 2 + 0.16) * side]}
+            size={[1.12, 0.14, 0.32]}
+            red={index % 2 === 0}
+          />
+        ))
+      })}
+      {Array.from({ length: 9 }, (_, index) => {
+        const z = center[2] - innerDepth / 2 + 0.65 + index * 1.2
+        return [-1, 1].map((side) => (
+          <TrackKerb
+            key={`vertical-${side}-${index}`}
+            position={[center[0] + (innerWidth / 2 + 0.16) * side, 0.14, z]}
+            size={[0.32, 0.14, 1.12]}
+            red={index % 2 === 0}
+          />
+        ))
+      })}
       <TrackBarrier
         position={[
           center[0],
@@ -905,27 +946,65 @@ function GoKartTrack() {
           ))}
         </group>
       ))}
-      <mesh receiveShadow position={[center[0], 0.11, center[2]]}>
-        <boxGeometry args={[3.1, 0.07, 2.2]} />
-        <meshStandardMaterial color="#86efac" roughness={0.78} />
-      </mesh>
-      <KartProp
-        position={[center[0] - 2.6, 0, center[2] + 1.4]}
-        color="#ef4444"
-        yaw={Math.PI / 2}
-      />
-      <KartProp
-        position={[center[0] + 2.6, 0, center[2] - 1.2]}
-        color="#2563eb"
-        yaw={-Math.PI / 2}
-      />
+      {goKartBoostPads.map((pad) => (
+        <group key={pad.id} position={pad.center}>
+          <mesh receiveShadow>
+            <boxGeometry args={[pad.half[0] * 2, 0.045, pad.half[2] * 2]} />
+            <meshStandardMaterial
+              color="#22d3ee"
+              emissive="#0891b2"
+              emissiveIntensity={0.9}
+              roughness={0.34}
+            />
+          </mesh>
+          {[-0.72, 0, 0.72].map((offset) => (
+            <mesh
+              key={offset}
+              position={[offset, 0.035, 0]}
+              rotation={[0, 0, -0.7]}
+            >
+              <boxGeometry args={[0.48, 0.035, 0.12]} />
+              <meshStandardMaterial
+                color="#ecfeff"
+                emissive="#67e8f9"
+                emissiveIntensity={1.2}
+              />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      <group position={[startX, 0, startZ - laneWidth / 2 - 0.42]}>
+        {[-1.35, 1.35].map((z) => (
+          <mesh key={z} castShadow position={[0, 1.35, z]}>
+            <boxGeometry args={[0.18, 2.7, 0.18]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.5} />
+          </mesh>
+        ))}
+        <mesh castShadow position={[0, 2.62, 0]}>
+          <boxGeometry args={[0.2, 0.22, 2.9]} />
+          <meshStandardMaterial color="#0f172a" roughness={0.5} />
+        </mesh>
+        {[-0.55, 0, 0.55].map((z, index) => (
+          <mesh key={z} position={[0.12, 2.62, z]}>
+            <sphereGeometry args={[0.13, 10, 8]} />
+            <meshStandardMaterial
+              color={index === 2 ? '#22c55e' : '#ef4444'}
+              emissive={index === 2 ? '#16a34a' : '#dc2626'}
+              emissiveIntensity={0.7}
+            />
+          </mesh>
+        ))}
+      </group>
+      {vehicles.map((vehicle) => (
+        <KartVehicleMesh key={vehicle.id} vehicle={vehicle} runtime={runtime} />
+      ))}
       <Html
         center
         position={[center[0], 2.6, center[2] + depth / 2 + 2.3]}
         zIndexRange={worldHtmlZIndexRange}
       >
         <span className="pointer-events-none select-none whitespace-nowrap rounded-xl bg-white/95 px-3 py-1 text-xs font-black text-slate-950 shadow">
-          Go Kart Track
+          Buddy Kart Circuit - 3 laps
         </span>
       </Html>
       <mesh
@@ -970,33 +1049,162 @@ function TrackBarrier({ position, size }: { position: Vec3; size: Vec3 }) {
   )
 }
 
-function KartProp({
+function TrackKerb({
   position,
-  color,
-  yaw,
+  size,
+  red,
 }: {
   position: Vec3
-  color: string
-  yaw: number
+  size: Vec3
+  red: boolean
 }) {
   return (
-    <group position={position} rotation={[0, yaw, 0]}>
-      <mesh castShadow position={[0, 0.22, 0]}>
-        <boxGeometry args={[1.45, 0.32, 0.82]} />
+    <mesh castShadow receiveShadow position={position}>
+      <boxGeometry args={size} />
+      <meshStandardMaterial
+        color={red ? '#ef4444' : '#f8fafc'}
+        roughness={0.6}
+      />
+    </mesh>
+  )
+}
+
+function KartPiece({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.28, 0]}>
+        <boxGeometry args={[1.75, 0.26, 1.14]} />
         <meshStandardMaterial color={color} roughness={0.68} />
       </mesh>
-      <mesh castShadow position={[0.16, 0.48, -0.08]}>
-        <boxGeometry args={[0.62, 0.32, 0.54]} />
+      <mesh castShadow position={[-0.18, 0.5, 0]}>
+        <boxGeometry args={[0.58, 0.32, 0.66]} />
         <meshStandardMaterial color="#0f172a" roughness={0.62} />
       </mesh>
-      {[-0.58, 0.58].flatMap((x) =>
-        [-0.42, 0.42].map((z) => (
-          <mesh key={`${x}:${z}`} castShadow position={[x, 0.18, z]}>
-            <cylinderGeometry args={[0.18, 0.18, 0.16, 12]} />
+      <mesh castShadow position={[0.7, 0.42, 0]}>
+        <boxGeometry args={[0.18, 0.3, 0.82]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.48} />
+      </mesh>
+      <mesh castShadow position={[-0.78, 0.58, 0]}>
+        <boxGeometry args={[0.12, 0.54, 1.42]} />
+        <meshStandardMaterial color={color} roughness={0.58} />
+      </mesh>
+      {[-0.62, 0.62].flatMap((x) =>
+        [-0.62, 0.62].map((z) => (
+          <mesh
+            key={`${x}:${z}`}
+            castShadow
+            position={[x, 0.2, z]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry args={[0.2, 0.2, 0.18, 12]} />
             <meshStandardMaterial color="#020617" roughness={0.8} />
           </mesh>
         )),
       )}
+    </group>
+  )
+}
+
+function KartVehicleMesh({
+  vehicle,
+  runtime,
+}: {
+  vehicle: DrivableVehicle
+  runtime: MutableRefObject<DrivableVehicle[]>
+}) {
+  const group = useRef<THREE.Group>(null)
+  const activeVehicleId = useGameStore((state) => state.activeVehicleId)
+  const avatar = useGameStore((state) => state.avatar)
+  const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
+  const [nearby, setNearby] = useState(false)
+  const occupied = activeVehicleId === vehicle.id
+  const occupiedRemotely = Object.values(remotePlayers).some(
+    (player) => player.kart?.id === vehicle.id,
+  )
+
+  useFrame(() => {
+    const current =
+      runtime.current.find((item) => item.id === vehicle.id) ?? vehicle
+    group.current?.position.set(...current.position)
+    if (group.current) group.current.rotation.y = vehicleRenderYaw(current.yaw)
+    const state = useGameStore.getState()
+    const nextNearby =
+      (!state.activeVehicleId || occupied) &&
+      !state.activeInterior &&
+      distanceToVehicle(state.playerPosition, current) <= 2.3
+    if (nextNearby !== nearby) setNearby(nextNearby)
+  })
+
+  if (occupiedRemotely && !occupied) return null
+
+  return (
+    <group
+      ref={group}
+      data-testid={`go-kart-${vehicle.id}`}
+      position={vehicle.position}
+      rotation={[0, vehicleRenderYaw(vehicle.yaw), 0]}
+      onClick={(event) => {
+        event.stopPropagation()
+        pulseWorldAction('vehicle', vehicle.id)
+      }}
+    >
+      <KartPiece color={vehicle.color} />
+      {occupied ? (
+        <group
+          position={[-0.18, 0.68, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={0.46}
+        >
+          <BlockAvatar
+            bodyColor={avatar.bodyColor}
+            shirtColor={avatar.shirtColor}
+            hairColor={avatar.hairColor}
+            hairStyle={avatar.hairStyle}
+            pantsColor={avatar.pantsColor}
+            eyeColor={avatar.eyeColor}
+            accentColor={avatar.accentColor}
+            secondaryColor={avatar.secondaryColor}
+            outfitStyle={avatar.outfitStyle}
+            bottomStyle={avatar.bottomStyle}
+            shoeStyle={avatar.shoeStyle}
+            shoeColor={avatar.shoeColor}
+            accessory={avatar.accessory}
+            face={avatar.face}
+            username="Racer"
+            hat={avatar.hat !== 'none'}
+            showName={false}
+            emote="sit"
+            action="idle"
+          />
+        </group>
+      ) : null}
+      {nearby ? (
+        <Html
+          center
+          position={[0, 2.2, 0]}
+          zIndexRange={worldActionZIndexRange}
+        >
+          <button
+            type="button"
+            className={`bb-world-action-button ${occupied ? 'vehicle-exit-world' : ''}`}
+            data-testid={`vehicle-action-${vehicle.id}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              pulseWorldAction('vehicle', vehicle.id)
+            }}
+          >
+            <CarFront size={18} aria-hidden />
+            {occupied ? 'Exit kart' : `Race ${vehicle.label}`}
+          </button>
+        </Html>
+      ) : !occupied ? (
+        <Html center position={[0, 1.9, 0]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="pointer-events-none select-none whitespace-nowrap rounded-full bg-cyan-950/90 px-3 py-1 text-xs font-black text-white shadow">
+            Race
+          </span>
+        </Html>
+      ) : null}
     </group>
   )
 }
@@ -1876,8 +2084,9 @@ function ParkingLot({
   runtime: MutableRefObject<DrivableVehicle[]>
 }) {
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
-  const visibleVehicles =
+  const visibleVehicles = (
     activeVehicleId || runtime.current.length > 0 ? runtime.current : vehicles
+  ).filter((vehicle) => !isGoKartId(vehicle.id))
 
   return (
     <group data-testid="parking-lot">
@@ -2729,6 +2938,7 @@ function PlayerController({
   >(undefined)
   const lastBuildAt = useRef(0)
   const lastPartyBroadcastAt = useRef(0)
+  const lastPreparedKartRaceId = useRef<string | undefined>(undefined)
   const lastInteriorTransitionAt = useRef(0)
   const interactionHeld = useRef(false)
   const lastWorldActionSequence = useRef(0)
@@ -2757,6 +2967,7 @@ function PlayerController({
   const setSeatedSeat = useGameStore((state) => state.setSeatedSeat)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
   const setActiveVehicle = useGameStore((state) => state.setActiveVehicle)
+  const tickKartRace = useGameStore((state) => state.tickKartRace)
   const setInteractionPrompt = useGameStore(
     (state) => state.setInteractionPrompt,
   )
@@ -2895,6 +3106,44 @@ function PlayerController({
           (vehicle) => vehicle.id === activeVehicleThisFrame,
         )
       : undefined
+    const currentRemotePlayers = useLocalPartyStore.getState().remotePlayers
+    const localDrivableVehicles = drivableRuntime
+      ? drivableVehiclesAvailableLocally(
+          drivableRuntime.current,
+          currentRemotePlayers,
+          activeVehicleThisFrame,
+        )
+      : []
+    const currentKartRace = useGameStore.getState().kartRace
+    if (
+      currentVehicle &&
+      isGoKartId(currentVehicle.id) &&
+      currentKartRace.raceId &&
+      currentKartRace.raceId !== lastPreparedKartRaceId.current &&
+      (currentKartRace.status === 'countdown' ||
+        currentKartRace.status === 'racing')
+    ) {
+      const startingKart = getGoKart(currentVehicle.id)
+      if (startingKart && drivableRuntime) {
+        currentVehicle = {
+          ...startingKart,
+          position: [...startingKart.position],
+          speed: 0,
+        }
+        const kartIndex = drivableRuntime.current.findIndex(
+          (vehicle) => vehicle.id === currentVehicle?.id,
+        )
+        if (kartIndex >= 0) drivableRuntime.current[kartIndex] = currentVehicle
+        position.current.set(
+          currentVehicle.position[0],
+          avatarGroundOffset,
+          currentVehicle.position[2],
+        )
+        yaw.current = currentVehicle.yaw
+        cameraOrbitYaw.current = 0
+        lastPreparedKartRaceId.current = currentKartRace.raceId
+      }
+    }
     const nearBed =
       activeInterior?.kind === 'house' &&
       isNearHouseBed([position.current.x, 0, position.current.z])
@@ -2906,7 +3155,7 @@ function PlayerController({
       activeInterior || !drivableRuntime
         ? []
         : drivableVehicleCollisionBoxes(
-            drivableRuntime.current,
+            localDrivableVehicles,
             activeVehicleThisFrame,
           )
     const solidObstacles = [
@@ -2931,7 +3180,7 @@ function PlayerController({
         : undefined
     const requestedVehicle =
       hasWorldRequest && request?.type === 'vehicle' && drivableRuntime
-        ? drivableRuntime.current.find(
+        ? localDrivableVehicles.find(
             (vehicle) =>
               vehicle.id === request.id &&
               distanceToVehicle(
@@ -2962,7 +3211,7 @@ function PlayerController({
       !activeInterior && drivableRuntime
         ? nearestDrivableVehicle(
             [position.current.x, 0, position.current.z],
-            drivableRuntime.current,
+            localDrivableVehicles,
           )
         : undefined
     const wantsWorldAction = justInteracted || hasWorldRequest
@@ -2990,14 +3239,18 @@ function PlayerController({
       const partyPlayers = Object.values(
         useLocalPartyStore.getState().remotePlayers,
       )
-        .filter((player) => !player.interiorId)
+        .filter((player) => !player.interiorId && !player.kart)
         .map((player) => player.position)
+      const partyKarts = partyKartVehicles(
+        useLocalPartyStore.getState().remotePlayers,
+      )
       const exitObstacles = collisionBoxesBlockingPlayer(
         [
           ...collisionObstacles,
           ...trafficObstacles,
+          ...drivableVehicleCollisionBoxes(partyKarts),
           ...drivableVehicleCollisionBoxes(
-            drivableRuntime?.current ?? [],
+            localDrivableVehicles,
             activeVehicleThisFrame,
           ),
           ...pedestrianCollisionBoxes([
@@ -3187,16 +3440,25 @@ function PlayerController({
     let effectiveRunning = false
 
     if (activeVehicleThisFrame && currentVehicle && drivableRuntime) {
+      const isKart = isGoKartId(currentVehicle.id)
+      if (isKart) {
+        tickKartRace(Date.now(), currentVehicle.position)
+      }
+      const raceStatus = useGameStore.getState().kartRace.status
       const remotePedestrians = Object.values(
         useLocalPartyStore.getState().remotePlayers,
       )
-        .filter((player) => !player.interiorId)
+        .filter((player) => !player.interiorId && !player.kart)
         .map((player) => player.position)
+      const remoteKarts = partyKartVehicles(
+        useLocalPartyStore.getState().remotePlayers,
+      )
       const vehicleObstacles = [
         ...collisionObstacles,
         ...trafficObstacles,
+        ...drivableVehicleCollisionBoxes(remoteKarts),
         ...drivableVehicleCollisionBoxes(
-          drivableRuntime.current,
+          localDrivableVehicles,
           activeVehicleThisFrame,
         ),
         ...pedestrianCollisionBoxes([
@@ -3204,16 +3466,19 @@ function PlayerController({
           ...remotePedestrians,
         ]),
       ]
-      const nextVehicle = advanceDrivableVehicleWithCollisions(
-        currentVehicle,
-        drivingInputFromControls(
-          forward,
-          strafe,
-          Boolean(keys.jump) || touch.jump,
-        ),
-        delta,
-        vehicleObstacles,
-      )
+      const nextVehicle =
+        isKart && (raceStatus === 'lobby' || raceStatus === 'countdown')
+          ? { ...currentVehicle, speed: 0 }
+          : advanceDrivableVehicleWithCollisions(
+              currentVehicle,
+              drivingInputFromControls(
+                forward,
+                strafe,
+                Boolean(keys.jump) || touch.jump,
+              ),
+              delta,
+              vehicleObstacles,
+            )
       const vehicleIndex = drivableRuntime.current.findIndex(
         (vehicle) => vehicle.id === nextVehicle.id,
       )
@@ -3224,6 +3489,7 @@ function PlayerController({
         avatarGroundOffset,
         nextVehicle.position[2],
       )
+      if (isKart) tickKartRace(Date.now(), nextVehicle.position)
       velocityY.current = 0
     } else if (seatedThisFrame && currentSeat) {
       position.current.set(
@@ -3324,7 +3590,7 @@ function PlayerController({
       !activeInterior && drivableRuntime
         ? nearestDrivableVehicle(
             [position.current.x, 0, position.current.z],
-            drivableRuntime.current,
+            localDrivableVehicles,
           )
         : undefined
     const promptFootballBall =
@@ -3394,15 +3660,27 @@ function PlayerController({
       group.current.rotation.y = sleepingThisFrame ? 0 : yaw.current
     }
     const mobile = state.size.width < 640
+    const activeKart = isGoKartId(activeVehicleThisFrame)
+    const drivenVehicle = activeVehicleThisFrame
+      ? drivableRuntime?.current.find(
+          (vehicle) => vehicle.id === activeVehicleThisFrame,
+        )
+      : undefined
+    if (activeKart)
+      cameraOrbitYaw.current *= Math.exp(-Math.min(delta, 0.1) * 2.8)
     const interiorZoom = THREE.MathUtils.clamp(
       settings.interiorCameraZoom ?? 1.3,
       0.85,
       1.85,
     )
     const cameraDistance = activeVehicleThisFrame
-      ? mobile
-        ? -15
-        : -10.5
+      ? activeKart
+        ? mobile
+          ? -9.5
+          : -7.2
+        : mobile
+          ? -15
+          : -10.5
       : activeInterior
         ? mobile
           ? -5.6 * interiorZoom
@@ -3411,9 +3689,13 @@ function PlayerController({
           ? -13
           : -8
     const baseCameraHeight = activeVehicleThisFrame
-      ? mobile
-        ? 8.4
-        : 6.2
+      ? activeKart
+        ? mobile
+          ? 4.8
+          : 3.65
+        : mobile
+          ? 8.4
+          : 6.2
       : activeInterior
         ? mobile
           ? 7 + (interiorZoom - 1) * 2.2
@@ -3423,7 +3705,8 @@ function PlayerController({
           : 5
     const cameraHeight = baseCameraHeight + cameraPitch.current * 3.2
     const lookHeight =
-      (activeVehicleThisFrame ? 1.8 : 1.4) + cameraPitch.current * 1.1
+      (activeKart ? 1.05 : activeVehicleThisFrame ? 1.8 : 1.4) +
+      cameraPitch.current * 1.1
     const cameraYaw = yaw.current + cameraOrbitYaw.current
     const cameraTarget = position.current
       .clone()
@@ -3455,15 +3738,20 @@ function PlayerController({
     }
     const targetFov = activeInterior
       ? THREE.MathUtils.lerp(42, 64, (interiorZoom - 0.85) / 1)
-      : 48
+      : activeKart
+        ? 52 + Math.min(1, Math.abs(drivenVehicle?.speed ?? 0) / 18) * 10
+        : 48
     if ('fov' in state.camera && Math.abs(state.camera.fov - targetFov) > 0.1) {
       state.camera.fov = targetFov
       state.camera.updateProjectionMatrix()
     }
+    const kartLookAhead = activeKart
+      ? 1.8 + Math.min(2.4, Math.abs(drivenVehicle?.speed ?? 0) * 0.12)
+      : 0
     state.camera.lookAt(
-      position.current.x,
+      position.current.x + Math.sin(yaw.current) * kartLookAhead,
       position.current.y + lookHeight,
-      position.current.z,
+      position.current.z + Math.cos(yaw.current) * kartLookAhead,
     )
     setPlayer(
       [position.current.x, position.current.y - standY, position.current.z],
@@ -3489,10 +3777,20 @@ function PlayerController({
                 ? 'run'
                 : 'walk'
               : 'idle',
-          emote: seatedSeatId ? 'sit' : playerEmote,
+          emote: seatedSeatId || activeVehicleThisFrame ? 'sit' : playerEmote,
           interiorId: activeInterior?.id,
           placedBlocks,
           savedFriends,
+          kart:
+            activeKart && drivenVehicle
+              ? {
+                  id: drivenVehicle.id,
+                  position: [...drivenVehicle.position],
+                  yaw: drivenVehicle.yaw,
+                  speed: drivenVehicle.speed,
+                }
+              : undefined,
+          kartRace: activeKart ? useGameStore.getState().kartRace : undefined,
         }),
       )
       lastPartyBroadcastAt.current = performance.now()
@@ -3660,6 +3958,42 @@ function AvatarTrail({ trail }: { trail: ShopItemId | 'none' }) {
   )
 }
 
+function drivableVehiclesAvailableLocally(
+  vehicles: DrivableVehicle[],
+  remotePlayers: Record<string, LocalPartySnapshot>,
+  activeVehicleId?: string,
+) {
+  const remoteKartIds = new Set(
+    Object.values(remotePlayers).flatMap((player) =>
+      player.kart ? [player.kart.id] : [],
+    ),
+  )
+  return vehicles.filter(
+    (vehicle) =>
+      vehicle.id === activeVehicleId ||
+      !isGoKartId(vehicle.id) ||
+      !remoteKartIds.has(vehicle.id),
+  )
+}
+
+function partyKartVehicles(
+  remotePlayers: Record<string, LocalPartySnapshot>,
+): DrivableVehicle[] {
+  return Object.values(remotePlayers).flatMap((player) => {
+    if (player.interiorId || !player.kart) return []
+    const definition = getGoKart(player.kart.id)
+    if (!definition) return []
+    return [
+      {
+        ...definition,
+        position: [...player.kart.position] as Vec3,
+        yaw: player.kart.yaw,
+        speed: player.kart.speed,
+      },
+    ]
+  })
+}
+
 function LocalPartyPlayers() {
   const lastPruneAt = useRef(0)
   const remotePlayerRecord = useLocalPartyStore((state) => state.remotePlayers)
@@ -3686,10 +4020,102 @@ function LocalPartyPlayers() {
 
   return (
     <>
-      {remotePlayers.map((player) => (
-        <LocalPartyAvatar key={player.id} player={player} />
-      ))}
+      {remotePlayers.map((player) =>
+        player.kart ? (
+          <LocalPartyKartAvatar key={player.id} player={player} />
+        ) : (
+          <LocalPartyAvatar key={player.id} player={player} />
+        ),
+      )}
     </>
+  )
+}
+
+function LocalPartyKartAvatar({ player }: { player: LocalPartySnapshot }) {
+  const group = useRef<THREE.Group>(null)
+  const { selectedMessageTargetId, selectMessageTarget } =
+    useMessageTargetSelection()
+  const openMessageThread = useGameStore((state) => state.openMessageThread)
+  const messageTargetId = `local-party:${player.id}`
+  const isSelected = selectedMessageTargetId === messageTargetId
+  const kart = player.kart
+  const definition = kart ? getGoKart(kart.id) : undefined
+  const targetPosition = useMemo(
+    () => new THREE.Vector3(...(kart?.position ?? player.position)),
+    [kart?.position, player.position],
+  )
+
+  useFrame((_, delta) => {
+    if (!group.current || !kart) return
+    const smoothing = 1 - Math.exp(-delta * 12)
+    group.current.position.lerp(targetPosition, smoothing)
+    group.current.rotation.y = THREE.MathUtils.lerp(
+      group.current.rotation.y,
+      vehicleRenderYaw(kart.yaw),
+      smoothing,
+    )
+  })
+
+  if (!kart || !definition) return null
+  const selectPlayer = () => selectMessageTarget(messageTargetId)
+
+  return (
+    <group
+      ref={group}
+      data-testid={`remote-go-kart-${player.id}`}
+      position={kart.position}
+      rotation={[0, vehicleRenderYaw(kart.yaw), 0]}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        selectPlayer()
+      }}
+      onClick={(event) => {
+        event.stopPropagation()
+        selectPlayer()
+      }}
+    >
+      <KartPiece color={definition.color} />
+      <group
+        position={[-0.18, 0.68, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={0.46}
+      >
+        <BlockAvatar
+          bodyColor={player.avatar.bodyColor}
+          shirtColor={player.avatar.shirtColor}
+          hairColor={player.avatar.hairColor}
+          hairStyle={player.avatar.hairStyle}
+          pantsColor={player.avatar.pantsColor}
+          eyeColor={player.avatar.eyeColor}
+          accentColor={player.avatar.accentColor}
+          secondaryColor={player.avatar.secondaryColor}
+          outfitStyle={player.avatar.outfitStyle}
+          bottomStyle={player.avatar.bottomStyle}
+          shoeStyle={player.avatar.shoeStyle}
+          shoeColor={player.avatar.shoeColor}
+          accessory={player.avatar.accessory}
+          face={player.avatar.face}
+          username={player.name}
+          hat={player.avatar.hat !== 'none'}
+          showName={false}
+          action="idle"
+          emote="sit"
+          isSelected={isSelected}
+          onSelect={selectPlayer}
+        />
+      </group>
+      <Html center position={[0, 1.75, 0]} zIndexRange={worldHtmlZIndexRange}>
+        <span className="pointer-events-none select-none whitespace-nowrap rounded-full bg-slate-950/90 px-2.5 py-1 text-xs font-black text-white shadow">
+          {player.name}
+        </span>
+      </Html>
+      {isSelected ? (
+        <FloatingMessageButton
+          label={player.name}
+          onOpen={() => openMessageThread(player.id, player.name)}
+        />
+      ) : null}
+    </group>
   )
 }
 

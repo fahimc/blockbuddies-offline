@@ -18,7 +18,20 @@ type LocalPartySnapshot = {
       inWorld: boolean
       route: string[]
     }[]
-    placedBlocks?: { id: string; kind?: string; position: [number, number, number]; color: string; rotation?: number }[]
+    placedBlocks?: {
+      id: string
+      kind?: string
+      position: [number, number, number]
+      color: string
+      rotation?: number
+    }[]
+    kart?: {
+      id: string
+      position: [number, number, number]
+      yaw: number
+      speed: number
+    }
+    kartRace?: { raceId?: string; status: string; lap: number }
   }[]
   lastEvent: string
   error?: string
@@ -26,18 +39,24 @@ type LocalPartySnapshot = {
 
 async function completeStartFlow(page: Page, name: string) {
   await page.getByRole('button', { name: 'Start' }).click()
-  await expect(page.getByRole('heading', { name: 'Customization Hub' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Customization Hub' }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Customize' }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByRole('button', { name: 'Next: Trails' }).click()
   await page.getByRole('button', { name: 'Finish' }).click()
-  await expect(page.getByRole('heading', { name: 'Name Your Buddy' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Name Your Buddy' }),
+  ).toBeVisible()
   await page.getByLabel('Character name').fill(name)
   await page.getByRole('button', { name: 'Start Game' }).click()
   await expect(page.getByTestId('game-canvas')).toBeVisible()
-  await expect(page.evaluate(() => Boolean(window.__blockBuddiesE2E))).resolves.toBe(true)
+  await expect(
+    page.evaluate(() => Boolean(window.__blockBuddiesE2E)),
+  ).resolves.toBe(true)
 }
 
 async function openLocalPartyPanel(page: Page) {
@@ -51,7 +70,10 @@ async function partySnapshot(page: Page): Promise<LocalPartySnapshot> {
   return page.evaluate(() => window.__blockBuddiesE2E!.getLocalPartySnapshot())
 }
 
-async function waitForPartyStatus(page: Page, status: LocalPartySnapshot['status']) {
+async function waitForPartyStatus(
+  page: Page,
+  status: LocalPartySnapshot['status'],
+) {
   await expect
     .poll(
       async () => {
@@ -64,7 +86,10 @@ async function waitForPartyStatus(page: Page, status: LocalPartySnapshot['status
     .toBe(status)
 }
 
-async function waitForGeneratedCode(page: Page, kind: 'inviteCode' | 'answerCode') {
+async function waitForGeneratedCode(
+  page: Page,
+  kind: 'inviteCode' | 'answerCode',
+) {
   await expect
     .poll(
       async () => {
@@ -75,6 +100,62 @@ async function waitForGeneratedCode(page: Page, kind: 'inviteCode' | 'answerCode
     )
     .toBeGreaterThan(40)
   return (await partySnapshot(page))[kind]
+}
+
+async function runSynchronizedKartRace(host: Page, guest: Page) {
+  await host.evaluate(() =>
+    window.__blockBuddiesE2E!.prepareGoKartInteraction(),
+  )
+  await guest.evaluate(() =>
+    window.__blockBuddiesE2E!.prepareGoKartInteraction(),
+  )
+  await expect(
+    host.getByRole('button', { name: 'Race Red Rocket' }),
+  ).toBeVisible({ timeout: 15_000 })
+  await expect(
+    guest.getByRole('button', { name: 'Race Blue Bolt' }),
+  ).toBeVisible({ timeout: 15_000 })
+  await host.getByRole('button', { name: 'Race Red Rocket' }).click()
+  await guest.getByRole('button', { name: 'Race Blue Bolt' }).click()
+  await expect
+    .poll(
+      async () =>
+        (await host.getByTestId('start-kart-race').count()) +
+        (await guest.getByTestId('start-kart-race').count()),
+      { timeout: 15_000 },
+    )
+    .toBe(1)
+  const hostStarts = (await host.getByTestId('start-kart-race').count()) === 1
+  const raceStarter = hostStarts ? host : guest
+  const waitingRacer = hostStarts ? guest : host
+  await expect(waitingRacer.getByText('Waiting for host')).toBeVisible()
+  await raceStarter.getByTestId('start-kart-race').click()
+
+  await expect
+    .poll(
+      async () => {
+        const hostRace = await host.evaluate(
+          () => window.__blockBuddiesE2E!.getGameplaySnapshot().kartRace,
+        )
+        const guestRace = await guest.evaluate(
+          () => window.__blockBuddiesE2E!.getGameplaySnapshot().kartRace,
+        )
+        return `${hostRace.raceId}:${guestRace.raceId}`
+      },
+      { timeout: 15_000 },
+    )
+    .toMatch(/^(.+):\1$/)
+  await expect
+    .poll(
+      async () => {
+        const remote = (await partySnapshot(host)).remotePlayers.find(
+          (player) => player.name === 'GuestBuddy',
+        )
+        return remote?.kart?.id
+      },
+      { timeout: 15_000 },
+    )
+    .toBe('go-kart:blue')
 }
 
 test.describe('local party multiplayer', () => {
@@ -98,12 +179,16 @@ test.describe('local party multiplayer', () => {
 
     await host.getByRole('button', { name: 'Host Local Party' }).click()
     const inviteCode = await waitForGeneratedCode(host, 'inviteCode')
-    await expect(host.getByLabel('Host invite code preview')).toContainText('chars')
+    await expect(host.getByLabel('Host invite code preview')).toContainText(
+      'chars',
+    )
 
     await guest.getByLabel('Join with invite code').fill(inviteCode)
     await guest.getByRole('button', { name: 'Create Join Answer' }).click()
     const answerCode = await waitForGeneratedCode(guest, 'answerCode')
-    await expect(guest.getByLabel('Join answer code preview')).toContainText('chars')
+    await expect(guest.getByLabel('Join answer code preview')).toContainText(
+      'chars',
+    )
 
     await host.getByLabel('Accept join answer').fill(answerCode)
     await host.getByRole('button', { name: 'Accept Join Answer' }).click()
@@ -113,91 +198,160 @@ test.describe('local party multiplayer', () => {
     await expect(host.locator('.bb-party-status.connected')).toBeVisible()
     await expect(guest.locator('.bb-party-status.connected')).toBeVisible()
 
-    await guest.evaluate(() => window.__blockBuddiesE2E!.broadcastLocalPartySnapshot([4, 0, 7], undefined, 'dance'))
+    await guest.evaluate(() =>
+      window.__blockBuddiesE2E!.broadcastLocalPartySnapshot(
+        [4, 0, 7],
+        undefined,
+        'dance',
+      ),
+    )
     await expect
-      .poll(async () => (await partySnapshot(host)).remotePlayers.map((player) => player.name), {
-        timeout: 15_000,
-      })
+      .poll(
+        async () =>
+          (await partySnapshot(host)).remotePlayers.map(
+            (player) => player.name,
+          ),
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('GuestBuddy')
     await expect
-      .poll(async () => {
-        const guestRemote = (await partySnapshot(host)).remotePlayers.find((player) => player.name === 'GuestBuddy')
-        return guestRemote?.emote
-      }, {
-        timeout: 15_000,
-      })
+      .poll(
+        async () => {
+          const guestRemote = (await partySnapshot(host)).remotePlayers.find(
+            (player) => player.name === 'GuestBuddy',
+          )
+          return guestRemote?.emote
+        },
+        {
+          timeout: 15_000,
+        },
+      )
       .toBe('dance')
     await expect(host.getByText('Local players connected: 1')).toBeVisible()
-    await expect(host.locator('.bb-party-card').locator('span', { hasText: 'GuestBuddy' })).toBeVisible()
+    await expect(
+      host.locator('.bb-party-card').locator('span', { hasText: 'GuestBuddy' }),
+    ).toBeVisible()
 
-    await guest.evaluate(() => window.__blockBuddiesE2E!.createLocalPartyFriend('Party Pal'))
+    await guest.evaluate(() =>
+      window.__blockBuddiesE2E!.createLocalPartyFriend('Party Pal'),
+    )
     await expect
-      .poll(async () => {
-        const guestRemote = (await partySnapshot(host)).remotePlayers.find((player) => player.name === 'GuestBuddy')
-        return guestRemote?.savedFriends?.map((friend) => `${friend.name}:${friend.inWorld}`) ?? []
-      }, {
-        timeout: 15_000,
-      })
+      .poll(
+        async () => {
+          const guestRemote = (await partySnapshot(host)).remotePlayers.find(
+            (player) => player.name === 'GuestBuddy',
+          )
+          return (
+            guestRemote?.savedFriends?.map(
+              (friend) => `${friend.name}:${friend.inWorld}`,
+            ) ?? []
+          )
+        },
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('Party Pal:true')
 
     await host.evaluate(() =>
-      window.__blockBuddiesE2E!.broadcastLocalPartySnapshot([-3, 0, 5], [
-        {
-          id: 'e2e-party-house',
-          kind: 'house',
-          position: [67, 0, 54],
-          color: '#60a5fa',
-          rotation: 0,
-        },
-      ]),
+      window.__blockBuddiesE2E!.broadcastLocalPartySnapshot(
+        [-3, 0, 5],
+        [
+          {
+            id: 'e2e-party-house',
+            kind: 'house',
+            position: [67, 0, 54],
+            color: '#60a5fa',
+            rotation: 0,
+          },
+        ],
+      ),
     )
     await expect
-      .poll(async () => (await partySnapshot(guest)).remotePlayers.map((player) => player.name), {
-        timeout: 15_000,
-      })
+      .poll(
+        async () =>
+          (await partySnapshot(guest)).remotePlayers.map(
+            (player) => player.name,
+          ),
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('HostBuddy')
     await expect(guest.getByText('Local players connected: 1')).toBeVisible()
-    await expect(guest.locator('.bb-party-card').locator('span', { hasText: 'HostBuddy' })).toBeVisible()
+    await expect(
+      guest.locator('.bb-party-card').locator('span', { hasText: 'HostBuddy' }),
+    ).toBeVisible()
 
     const hostRemote = (await partySnapshot(host)).remotePlayers[0]
     expect(hostRemote.name).toBe('GuestBuddy')
     expect(hostRemote.position).toHaveLength(3)
-    expect(hostRemote.position.every((value) => Number.isFinite(value))).toBe(true)
+    expect(hostRemote.position.every((value) => Number.isFinite(value))).toBe(
+      true,
+    )
 
     await expect
-      .poll(async () => {
-        const guestRemote = (await partySnapshot(guest)).remotePlayers.find((player) => player.name === 'HostBuddy')
-        return guestRemote?.placedBlocks?.map((block) => block.id) ?? []
-      }, {
-        timeout: 15_000,
-      })
+      .poll(
+        async () => {
+          const guestRemote = (await partySnapshot(guest)).remotePlayers.find(
+            (player) => player.name === 'HostBuddy',
+          )
+          return guestRemote?.placedBlocks?.map((block) => block.id) ?? []
+        },
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('e2e-party-house')
     await expect
-      .poll(async () => {
-        const snapshot = await guest.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-        return snapshot.placedBlocks.map((block) => block.id)
-      }, {
-        timeout: 15_000,
-      })
+      .poll(
+        async () => {
+          const snapshot = await guest.evaluate(() =>
+            window.__blockBuddiesE2E!.getGameplaySnapshot(),
+          )
+          return snapshot.placedBlocks.map((block) => block.id)
+        },
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('e2e-party-house')
 
     const guestParty = await partySnapshot(guest)
     await host.evaluate(
       ({ playerId, playerName }) => {
-        window.__blockBuddiesE2E!.openLocalPartyMessageThread(playerId, playerName)
+        window.__blockBuddiesE2E!.openLocalPartyMessageThread(
+          playerId,
+          playerName,
+        )
         window.__blockBuddiesE2E!.sendSelectedPredefinedMessage('greeting-001')
       },
       { playerId: guestParty.playerId, playerName: guestParty.playerName },
     )
     await expect
-      .poll(async () => {
-        const snapshot = await guest.evaluate(() => window.__blockBuddiesE2E!.getGameplaySnapshot())
-        const hostThread = snapshot.messageThreads.find((thread) => thread.botName === 'HostBuddy')
-        return hostThread?.messages.map((message) => `${message.from}:${message.text}:${message.read}`) ?? []
-      }, {
-        timeout: 15_000,
-      })
+      .poll(
+        async () => {
+          const snapshot = await guest.evaluate(() =>
+            window.__blockBuddiesE2E!.getGameplaySnapshot(),
+          )
+          const hostThread = snapshot.messageThreads.find(
+            (thread) => thread.botName === 'HostBuddy',
+          )
+          return (
+            hostThread?.messages.map(
+              (message) => `${message.from}:${message.text}:${message.read}`,
+            ) ?? []
+          )
+        },
+        {
+          timeout: 15_000,
+        },
+      )
       .toContain('bot:Hi!:false')
+
+    await runSynchronizedKartRace(host, guest)
 
     await guest.close()
   })

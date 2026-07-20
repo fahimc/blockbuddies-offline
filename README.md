@@ -87,9 +87,10 @@ Screenshots are stored in `docs/screenshots/` and `docs/review/`.
   effects, and spectator stands. Its fixed tile sits at world position
   `(90, -42)` outside Central Buddy Town, and its reserved footprint stays clear
   of procedural placement.
-- Go Kart Track is an outlying world-map destination with a reserved feature
-  footprint, streamed low-poly loop track, solid perimeter barriers, start line,
-  decorative karts, and regression coverage for placement and collision.
+- Buddy Kart Circuit is an outlying world-map destination with four playable
+  karts, a compact three-lap loop, ordered checkpoints, boost pads, a race HUD,
+  speed-responsive chase camera, finish rewards, and synchronized Local Party
+  racing.
 - Reusable mini-game engine for collection and ordered-route activities, with
   server-style start popups, bold countdowns, points, best-point records, and
   local sound effects for starts, pickups, wins, and failures. Coin Rush is the first polished flow with spendable
@@ -628,6 +629,11 @@ The `v1.5.75` APK keeps a created NPC's complete appearance attached while it
 is dragged or teleported. Hats, pets, wearable accessories, and trails now
 survive placement and save normalization, including custom NPCs that use the
 legacy yellow-and-blue colours.
+
+The `v1.5.77` APK turns the Go Kart Track into Buddy Kart Circuit. Players can
+travel straight to the grid, enter one of four arcade karts, start a three-lap
+checkpoint race, hit boost pads, follow a close chase camera, earn a finish
+reward, and race a synchronized opponent in Local Party mode.
 
 The `v1.5.50` APK adds a Buddies & NPCs menu creator. Players can name a new
 NPC, choose the current character or a saved character style as the avatar

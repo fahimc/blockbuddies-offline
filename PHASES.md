@@ -1,5 +1,16 @@
 # Build Phases
 
+## Post-phase arcade kart racing
+
+- [x] Turn the decorative Go Kart Track into a compact playable circuit.
+- [x] Add four drivable karts with arcade handling, boost pads, and chase camera.
+- [x] Add synchronized countdown, ordered checkpoints, three laps, race HUD, and finish reward.
+- [x] Synchronize kart transforms and race progress through Local Party.
+- [x] Use deterministic race authority and hide karts occupied by remote racers.
+- [x] Make map arrival and race exits accessible around the solid circuit barriers.
+- [x] Add unit, browser, and two-player Local Party regression coverage.
+- [x] Package and release the Android debug APK for arcade kart racing.
+
 ## Post-phase goal collision and go-kart track
 
 - [x] Add collision boxes to the Football Pitch goal posts and crossbars.

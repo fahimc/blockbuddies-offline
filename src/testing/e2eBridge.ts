@@ -15,6 +15,13 @@ import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
 import { footballPitch } from '../game/football'
 import {
+  createInitialKartRace,
+  goKartCheckpoints,
+  goKartTrack,
+  goKartTrackTravelPosition,
+  type KartRaceRuntime,
+} from '../game/goKart'
+import {
   createParkedVehicles,
   drivableVehicleCollisionBoxes,
   safeVehicleExitPosition,
@@ -55,6 +62,8 @@ export type BlockBuddiesE2EBridge = {
   prepareHouseBedInteraction: () => GameplayE2ESnapshot
   prepareClassroomSeatInteraction: () => GameplayE2ESnapshot
   prepareParkingInteraction: () => GameplayE2ESnapshot
+  prepareGoKartInteraction: () => GameplayE2ESnapshot
+  completeGoKartRace: () => GameplayE2ESnapshot
   prepareMessageTargetInteraction: (distance?: number) => GameplayE2ESnapshot
   prepareMovementInteraction: () => GameplayE2ESnapshot
   prepareNpcDragInteraction: () => GameplayE2ESnapshot
@@ -80,6 +89,7 @@ export type GameplayE2ESnapshot = {
   run: boolean
   seatedSeatId?: string
   activeVehicleId?: string
+  kartRace: KartRaceRuntime
   playerPosition: Vec3
   teleportSequence: number
   interiorKind?: string
@@ -138,6 +148,8 @@ export function installE2EBridge() {
     prepareHouseBedInteraction,
     prepareClassroomSeatInteraction,
     prepareParkingInteraction,
+    prepareGoKartInteraction,
+    completeGoKartRace,
     prepareMessageTargetInteraction,
     prepareMovementInteraction,
     prepareNpcDragInteraction,
@@ -321,6 +333,58 @@ function prepareParkingInteraction() {
   return getGameplaySnapshot()
 }
 
+function prepareGoKartInteraction() {
+  const game = useGameStore.getState()
+  const teleportSequence = game.teleportSequence + 1
+  useGameStore.setState({
+    activeInterior: undefined,
+    openPanel: undefined,
+    playerPosition: [...goKartTrackTravelPosition],
+    playerYaw: Math.PI / 2,
+    teleportSequence,
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: [...goKartTrackTravelPosition],
+      yaw: Math.PI / 2,
+      resetView: true,
+    },
+    sleeping: false,
+    seatedSeatId: undefined,
+    activeVehicleId: undefined,
+    kartRace: createInitialKartRace(),
+    interactionPrompt: undefined,
+    worldActionRequest: undefined,
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
+  })
+  return getGameplaySnapshot()
+}
+
+function completeGoKartRace() {
+  const game = useGameStore.getState()
+  if (!game.activeVehicleId?.startsWith('go-kart:'))
+    throw new Error('No go-kart is active')
+  const baseTime = Date.now()
+  if (game.kartRace.status === 'lobby')
+    game.startKartRace(baseTime - 4_000, 'e2e-kart-race')
+  useGameStore.getState().tickKartRace(baseTime, goKartTrack.center)
+  for (let lap = 1; lap <= 3; lap += 1) {
+    for (const checkpoint of goKartCheckpoints)
+      useGameStore
+        .getState()
+        .tickKartRace(baseTime + lap * 1_000, checkpoint.center)
+  }
+  return getGameplaySnapshot()
+}
+
 function prepareMessageTargetInteraction(distance = 5) {
   const game = useGameStore.getState()
   const teleportSequence = game.teleportSequence + 1
@@ -440,6 +504,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     run: game.touch.run,
     seatedSeatId: game.seatedSeatId,
     activeVehicleId: game.activeVehicleId,
+    kartRace: game.kartRace,
     playerPosition: game.playerPosition,
     teleportSequence: game.teleportSequence,
     interiorKind: game.activeInterior?.kind,

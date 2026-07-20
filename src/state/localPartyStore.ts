@@ -17,6 +17,12 @@ import {
 } from '../game/savedFriendMovement'
 import { sanitizeBuildPieceName } from '../data/buildPieces'
 import {
+  isGoKartId,
+  type KartPartyRace,
+  type KartPartyVehicle,
+  type KartRaceStatus,
+} from '../game/goKart'
+import {
   discoverSignalRooms,
   getSignalAnswers,
   getSignalOffer,
@@ -63,8 +69,11 @@ export type LocalPartySnapshot = {
   interiorId?: string
   role?: LocalPartyRole
   hostId?: string
+  hostAuthority?: 'original' | 'failover'
   placedBlocks?: BuildBlock[]
   savedFriends?: SavedFriend[]
+  kart?: KartPartyVehicle
+  kartRace?: KartPartyRace
   updatedAt: number
 }
 
@@ -97,6 +106,8 @@ type LocalPartyState = {
   playerName: string
   status: LocalPartyStatus
   role?: LocalPartyRole
+  promotedHost: boolean
+  lastHostSeenAt?: number
   inviteCode: string
   joinCodeInput: string
   answerCode: string
@@ -270,8 +281,12 @@ export function makePartySnapshot(
     ],
     emote: sanitizePartyEmote(snapshot.emote),
     interiorId: snapshot.interiorId,
+    hostAuthority:
+      snapshot.hostAuthority === 'failover' ? 'failover' : 'original',
     placedBlocks: sanitizeBuildBlocks(snapshot.placedBlocks),
     savedFriends: sanitizePartySavedFriends(snapshot.savedFriends),
+    kart: sanitizePartyKart(snapshot.kart),
+    kartRace: sanitizePartyKartRace(snapshot.kartRace),
     updatedAt: snapshot.updatedAt ?? Date.now(),
   }
 }
@@ -284,6 +299,76 @@ function sanitizePartyEmote(emote: unknown): PlayerEmote {
     emote === 'kickups'
     ? emote
     : 'none'
+}
+
+function sanitizePartyKart(kart: unknown): KartPartyVehicle | undefined {
+  if (!isRecord(kart)) return undefined
+  const id = asString(kart.id)
+  if (!isGoKartId(id)) return undefined
+  if (!Array.isArray(kart.position) || kart.position.length < 3)
+    return undefined
+  return {
+    id,
+    position: [
+      finiteNumber(kart.position[0], 0, -1_000_000, 1_000_000),
+      finiteNumber(kart.position[1], 0, -1000, 1000),
+      finiteNumber(kart.position[2], 0, -1_000_000, 1_000_000),
+    ],
+    yaw: finiteNumber(kart.yaw, 0, -Math.PI * 4, Math.PI * 4),
+    speed: finiteNumber(kart.speed, 0, -30, 30),
+  }
+}
+
+function sanitizePartyKartRace(race: unknown): KartPartyRace | undefined {
+  if (!isRecord(race)) return undefined
+  const validStatuses: KartRaceStatus[] = [
+    'idle',
+    'lobby',
+    'countdown',
+    'racing',
+    'finished',
+  ]
+  if (!validStatuses.includes(race.status as KartRaceStatus)) return undefined
+  const vehicleId = asString(race.vehicleId)
+  const raceId = asString(race.raceId)?.slice(0, 64)
+  return {
+    status: race.status as KartRaceStatus,
+    ...(raceId ? { raceId } : {}),
+    ...(isGoKartId(vehicleId) ? { vehicleId } : {}),
+    lap: Math.round(finiteNumber(race.lap, 1, 1, 3)),
+    totalLaps: Math.round(finiteNumber(race.totalLaps, 3, 1, 3)),
+    nextCheckpoint: Math.round(finiteNumber(race.nextCheckpoint, 0, 0, 4)),
+    ...(optionalTimestamp(race.countdownEndsAt) !== undefined
+      ? { countdownEndsAt: optionalTimestamp(race.countdownEndsAt) }
+      : {}),
+    ...(optionalTimestamp(race.startedAt) !== undefined
+      ? { startedAt: optionalTimestamp(race.startedAt) }
+      : {}),
+    ...(optionalTimestamp(race.finishedAt) !== undefined
+      ? { finishedAt: optionalTimestamp(race.finishedAt) }
+      : {}),
+  }
+}
+
+function asString(value: unknown) {
+  return typeof value === 'string' ? value : undefined
+}
+
+function finiteNumber(
+  value: unknown,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(maximum, Math.max(minimum, value))
+    : fallback
+}
+
+function optionalTimestamp(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, value)
+    : undefined
 }
 
 export function isRemoteFresh(
@@ -462,6 +547,10 @@ function parsePartyMessage(data: unknown): LocalPartyMessage | undefined {
           snapshot: {
             ...(snapshot as LocalPartySnapshot),
             emote: sanitizePartyEmote(snapshot.emote),
+            hostAuthority:
+              snapshot.hostAuthority === 'failover' ? 'failover' : 'original',
+            kart: sanitizePartyKart(snapshot.kart),
+            kartRace: sanitizePartyKartRace(snapshot.kartRace),
           },
         }
       }
@@ -667,15 +756,20 @@ function promoteLocalHost(set: LocalPartySetter) {
     if (state.status !== 'connected' && state.status !== 'connecting') {
       return { status: 'idle', lastEvent: 'Local player disconnected.' }
     }
+    const wasHost = state.role === 'host' && !state.promotedHost
     return {
       status: 'hosting',
       role: 'host',
+      promotedHost: state.promotedHost || !wasHost,
+      lastHostSeenAt: undefined,
       lanHost: undefined,
       hostedRoom: undefined,
       pendingLanAnswerName: undefined,
       pendingHostedAnswerName: undefined,
       error: undefined,
-      lastEvent: 'Host left. You are now hosting the local party.',
+      lastEvent: wasHost
+        ? 'Local player disconnected. Room remains open.'
+        : 'Host left. You are now hosting the local party.',
     }
   })
 }
@@ -700,6 +794,7 @@ function attachDataChannel(
       pendingLanAnswerName: undefined,
       pendingHostedAnswerName: undefined,
       error: undefined,
+      lastHostSeenAt: state.role === 'guest' ? Date.now() : undefined,
       lastEvent: 'Local player connected.',
     })
     sendPartyMessage({
@@ -747,6 +842,11 @@ function attachDataChannel(
             updatedAt: receivedAt,
           }),
         },
+        lastHostSeenAt:
+          message.snapshot.role === 'host' &&
+          message.snapshot.hostAuthority !== 'failover'
+            ? receivedAt
+            : state.lastHostSeenAt,
       }))
       return
     }
@@ -769,6 +869,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
   playerId: localPlayerId,
   playerName: `Buddy${localPlayerId.slice(-3).toUpperCase()}`,
   status: 'idle',
+  promotedHost: false,
+  lastHostSeenAt: undefined,
   inviteCode: '',
   joinCodeInput: '',
   answerCode: '',
@@ -834,6 +936,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'hosting',
         role: 'host',
+        promotedHost: false,
+        lastHostSeenAt: undefined,
         inviteCode: '',
         answerCode: '',
         answerCodeInput: '',
@@ -895,6 +999,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'joining',
         role: 'guest',
+        promotedHost: false,
+        lastHostSeenAt: Date.now(),
         joinCodeInput: '',
         answerCode: '',
         hostedRoom: undefined,
@@ -957,6 +1063,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'hosting',
         role: 'host',
+        promotedHost: false,
+        lastHostSeenAt: undefined,
         inviteCode: '',
         answerCode: '',
         answerCodeInput: '',
@@ -1031,6 +1139,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'joining',
         role: 'guest',
+        promotedHost: false,
+        lastHostSeenAt: Date.now(),
         joinCodeInput: '',
         answerCode: '',
         answerCodeInput: '',
@@ -1097,6 +1207,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'hosting',
         role: 'host',
+        promotedHost: false,
+        lastHostSeenAt: undefined,
         inviteCode: '',
         answerCode: '',
         answerCodeInput: '',
@@ -1160,6 +1272,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
       set({
         status: 'joining',
         role: 'guest',
+        promotedHost: false,
+        lastHostSeenAt: Date.now(),
         answerCode: '',
         hostedRoom: undefined,
         pendingHostedAnswerName: undefined,
@@ -1252,6 +1366,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
     set({
       status: 'idle',
       role: undefined,
+      promotedHost: false,
+      lastHostSeenAt: undefined,
       inviteCode: '',
       answerCode: '',
       answerCodeInput: '',
@@ -1277,6 +1393,7 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         ...snapshot,
         role: hostId === state.playerId ? 'host' : state.role,
         hostId,
+        hostAuthority: state.promotedHost ? 'failover' : 'original',
       }),
     })
   },
@@ -1300,6 +1417,27 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
           isRemoteFresh(player, now),
         ),
       )
+      const returningHost = Object.values(remotePlayers)
+        .filter(
+          (player) =>
+            player.role === 'host' && player.hostAuthority !== 'failover',
+        )
+        .sort((left, right) => left.id.localeCompare(right.id))[0]
+      if (state.promotedHost && returningHost)
+        return {
+          remotePlayers,
+          status: 'connected',
+          role: 'guest',
+          promotedHost: false,
+          lastHostSeenAt: now,
+          lastEvent: `Reconnected to ${sanitizePartyName(returningHost.name)}.`,
+        }
+      if (
+        state.role === 'guest' &&
+        !returningHost &&
+        now - (state.lastHostSeenAt ?? now) <= 5000
+      )
+        return { remotePlayers }
       const hostId =
         state.role === 'host'
           ? state.playerId
@@ -1316,6 +1454,8 @@ export const useLocalPartyStore = create<LocalPartyState>((set, get) => ({
         remotePlayers,
         status: promoted ? 'hosting' : state.status,
         role,
+        promotedHost: promoted ? true : state.promotedHost,
+        lastHostSeenAt: promoted ? undefined : state.lastHostSeenAt,
         lastEvent: promoted
           ? 'Host left. You are now hosting the local party.'
           : state.lastEvent,

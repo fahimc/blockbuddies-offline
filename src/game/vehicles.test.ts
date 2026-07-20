@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { realScale } from './scale'
 import {
+  createGoKarts,
+  goKartBoostPads,
+  goKartBoostSpeed,
+  goKartPaddockExitPosition,
+  goKartTrackCollisionBoxes,
+} from './goKart'
+import {
   advanceDrivableVehicle,
   advanceDrivableVehicleWithCollisions,
   collisionBoxOverlapsParkingClearance,
@@ -125,6 +132,42 @@ describe('parking and drivable vehicles', () => {
     expect(getDrivableVehicle('traffic-drive:traffic-1')?.label).toBe(
       'Traffic Car',
     )
+  })
+
+  it('uses compact arcade handling and boost pads for race karts', () => {
+    const kart = {
+      ...createGoKarts()[0],
+      position: [...goKartBoostPads[0].center] as [number, number, number],
+      speed: 4,
+    }
+    const car = { ...createParkedVehicles()[0], speed: 4 }
+    const boosted = advanceDrivableVehicle(
+      kart,
+      { throttle: 1, steer: 1, brake: false },
+      0.1,
+    )
+    const steeredCar = advanceDrivableVehicle(
+      car,
+      { throttle: 1, steer: 1, brake: false },
+      0.1,
+    )
+
+    expect(boosted.speed).toBe(goKartBoostSpeed)
+    expect(boosted.yaw - kart.yaw).toBeGreaterThan(steeredCar.yaw - car.yaw)
+    expect(drivableVehicleCollisionBox(kart).half[0]).toBeLessThan(
+      drivableVehicleCollisionBox(car).half[0],
+    )
+    expect(getDrivableVehicle(kart.id)?.label).toBe('Red Rocket')
+  })
+
+  it('always offers a clear paddock exit when the starting grid is packed', () => {
+    const karts = createGoKarts()
+    const exit = safeVehicleExitPosition(karts[0], [
+      ...goKartTrackCollisionBoxes(),
+      ...karts.slice(1).map(drivableVehicleCollisionBox),
+    ])
+
+    expect(exit).toEqual(goKartPaddockExitPosition)
   })
 
   it('stops against solid objects instead of passing through them', () => {

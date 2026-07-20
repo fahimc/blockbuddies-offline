@@ -6,10 +6,25 @@ import {
 } from './collision'
 import { realScale } from './scale'
 import type { Vec3 } from './types'
+import {
+  getGoKart,
+  goKartAcceleration,
+  goKartBoostSpeed,
+  goKartBrakeStrength,
+  goKartHeight,
+  goKartLength,
+  goKartMaxSpeed,
+  goKartPaddockExitPosition,
+  goKartReverseSpeed,
+  goKartSteeringRate,
+  goKartWidth,
+  pointOnGoKartBoost,
+} from './goKart'
 
 export type DrivableVehicle = {
   id: string
   label: string
+  kind?: 'car' | 'kart'
   color: string
   position: Vec3
   yaw: number
@@ -56,6 +71,8 @@ export function createParkedVehicles() {
 }
 
 export function getDrivableVehicle(id: string) {
+  const kart = getGoKart(id)
+  if (kart) return kart
   if (id.startsWith('traffic-drive:')) {
     return {
       id,
@@ -87,14 +104,15 @@ export function nearestDrivableVehicle(
 }
 
 export function distanceToVehicle(position: Vec3, vehicle: DrivableVehicle) {
+  const dimensions = vehicleDimensions(vehicle)
   const dx = position[0] - vehicle.position[0]
   const dz = position[2] - vehicle.position[2]
   const cosine = Math.cos(vehicle.yaw)
   const sine = Math.sin(vehicle.yaw)
   const lateral = dx * cosine - dz * sine
   const longitudinal = dx * sine + dz * cosine
-  const outsideX = Math.max(0, Math.abs(lateral) - realScale.carWidth / 2)
-  const outsideZ = Math.max(0, Math.abs(longitudinal) - realScale.carLength / 2)
+  const outsideX = Math.max(0, Math.abs(lateral) - dimensions.width / 2)
+  const outsideZ = Math.max(0, Math.abs(longitudinal) - dimensions.length / 2)
   return Math.hypot(outsideX, outsideZ)
 }
 
@@ -105,28 +123,31 @@ export function advanceDrivableVehicle(
 ) {
   const delta = Math.max(0, Math.min(deltaSeconds, 0.1))
   const throttle = clamp(input.throttle, -1, 1)
+  const kart = vehicle.kind === 'kart'
+  const forwardSpeed = kart ? goKartMaxSpeed : vehicleDriveSpeed
+  const reverseSpeed = kart ? goKartReverseSpeed : vehicleReverseSpeed
+  const baseAcceleration = kart ? goKartAcceleration : vehicleAcceleration
+  const brakeStrength = kart ? goKartBrakeStrength : vehicleBrakeStrength
+  const steeringRate = kart ? goKartSteeringRate : vehicleSteeringRate
   const targetSpeed =
-    throttle >= 0
-      ? throttle * vehicleDriveSpeed
-      : throttle * vehicleReverseSpeed
-  const acceleration = input.brake ? vehicleBrakeStrength : vehicleAcceleration
+    throttle >= 0 ? throttle * forwardSpeed : throttle * reverseSpeed
+  const acceleration = input.brake ? brakeStrength : baseAcceleration
   let speed = moveTowards(
     vehicle.speed,
     input.brake ? 0 : targetSpeed,
     acceleration * delta,
   )
   if (Math.abs(throttle) < 0.04 && !input.brake)
-    speed = moveTowards(speed, 0, vehicleAcceleration * 0.55 * delta)
+    speed = moveTowards(speed, 0, baseAcceleration * 0.55 * delta)
+
+  if (kart && throttle > 0.15 && pointOnGoKartBoost(vehicle.position))
+    speed = Math.max(speed, goKartBoostSpeed)
 
   const steeringScale = Math.min(1, Math.abs(speed) / 2.2)
   const direction = speed < 0 ? -1 : 1
   const yaw =
     vehicle.yaw +
-    clamp(input.steer, -1, 1) *
-      vehicleSteeringRate *
-      steeringScale *
-      direction *
-      delta
+    clamp(input.steer, -1, 1) * steeringRate * steeringScale * direction * delta
   const position: Vec3 = [
     vehicle.position[0] + Math.sin(yaw) * speed * delta,
     vehicle.position[1],
@@ -171,14 +192,12 @@ export function advanceDrivableVehicleWithCollisions(
 export function drivableVehicleCollisionBox(
   vehicle: DrivableVehicle,
 ): CollisionBox {
+  const dimensions = vehicleDimensions(vehicle)
   const cosine = Math.abs(Math.cos(vehicle.yaw))
   const sine = Math.abs(Math.sin(vehicle.yaw))
-  const halfX =
-    cosine * (realScale.carWidth / 2) + sine * (realScale.carLength / 2)
-  const halfZ =
-    sine * (realScale.carWidth / 2) + cosine * (realScale.carLength / 2)
-  const height =
-    realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight
+  const halfX = cosine * (dimensions.width / 2) + sine * (dimensions.length / 2)
+  const halfZ = sine * (dimensions.width / 2) + cosine * (dimensions.length / 2)
+  const height = dimensions.height
   return {
     id: `drivable:${vehicle.id}`,
     center: [
@@ -207,10 +226,14 @@ export function safeVehicleExitPosition(
   vehicle: DrivableVehicle,
   obstacles: CollisionBox[],
 ) {
-  const sideDistance = realScale.carWidth / 2 + playerCollisionRadius + 0.42
+  const dimensions = vehicleDimensions(vehicle)
+  const sideDistance = dimensions.width / 2 + playerCollisionRadius + 0.42
   const cosine = Math.cos(vehicle.yaw)
   const sine = Math.sin(vehicle.yaw)
   const candidates: Vec3[] = [
+    ...(vehicle.kind === 'kart'
+      ? [[...goKartPaddockExitPosition] as Vec3]
+      : []),
     [
       vehicle.position[0] + cosine * sideDistance,
       0,
@@ -222,9 +245,9 @@ export function safeVehicleExitPosition(
       vehicle.position[2] + sine * sideDistance,
     ],
     [
-      vehicle.position[0] - sine * (realScale.carLength / 2 + 0.8),
+      vehicle.position[0] - sine * (dimensions.length / 2 + 0.8),
       0,
-      vehicle.position[2] - cosine * (realScale.carLength / 2 + 0.8),
+      vehicle.position[2] - cosine * (dimensions.length / 2 + 0.8),
     ],
   ]
   return candidates.find((candidate) => !pointHitsAnyBox(candidate, obstacles))
@@ -295,6 +318,19 @@ function parkedVehicle(
     yaw: Math.PI / 2,
     speed: 0,
   }
+}
+
+function vehicleDimensions(vehicle: DrivableVehicle) {
+  return vehicle.kind === 'kart'
+    ? { width: goKartWidth, length: goKartLength, height: goKartHeight }
+    : {
+        width: realScale.carWidth,
+        length: realScale.carLength,
+        height:
+          realScale.wheelRadius +
+          realScale.carBodyHeight +
+          realScale.carCabinHeight,
+      }
 }
 
 function vehicleOverlapsAnyBox(

@@ -4,22 +4,57 @@
 
 ### Added
 
-- Added mesh-style collision boxes to Football Pitch goal posts and crossbars.
-- Added the outlying Go Kart Track destination with a streamed low-poly track,
-  perimeter barriers, start line, decorative karts, and map travel support.
-- Added regression coverage for goal post collision, kart-track placement,
-  collision barriers, world destinations, and the adjusted outlying-map pan
-  boundary.
+- Added four playable arcade karts, a compact three-lap circuit, ordered
+  checkpoints, boost pads, a synchronized countdown, race position/lap/time
+  HUD, finish rewards, and a speed-responsive chase camera.
+- Added Local Party kart and race snapshots, remote kart/driver rendering,
+  deterministic race authority, occupied-kart handling, and multiplayer browser
+  coverage.
+- Added focused race-rule, handling, collision, state, network-sanitization,
+  single-player browser, and two-player Local Party regression coverage.
 
 ### Changed
 
-- Updated Android and package version metadata to `1.5.76` / `10576`.
+- Updated Android and package version metadata to `1.5.77` / `10577`.
 
 ### Fixed
 
-- Kept the new kart destination in the feature/world-map layer so procedural
-  blockers are cleared from the track footprint instead of spilling into the
-  town layout.
+- Moved Go Kart Track travel onto the accessible starting grid instead of behind
+  the circuit's continuous barrier.
+- Added a guaranteed paddock exit when neighboring grid karts block normal side
+  exits.
+- Prevented premature Local Party host promotion before the first host snapshot
+  arrives and made temporary failover hosts yield when the original host returns.
+
+### Known Issues
+
+- Android artifact is a debug APK. Release signing is still a manual Play Store step.
+
+## [v1.5.77-arcade-kart-racing] - 2026-07-20
+
+### Added
+
+- Added four playable arcade karts, a compact three-lap circuit, ordered
+  checkpoints, boost pads, a synchronized countdown, race position/lap/time
+  HUD, finish rewards, and a speed-responsive chase camera.
+- Added Local Party kart and race snapshots, remote kart/driver rendering,
+  deterministic race authority, occupied-kart handling, and multiplayer browser
+  coverage.
+- Added focused race-rule, handling, collision, state, network-sanitization,
+  single-player browser, and two-player Local Party regression coverage.
+
+### Changed
+
+- Updated Android and package version metadata to `1.5.77` / `10577`.
+
+### Fixed
+
+- Moved Go Kart Track travel onto the accessible starting grid instead of behind
+  the circuit's continuous barrier.
+- Added a guaranteed paddock exit when neighboring grid karts block normal side
+  exits.
+- Prevented premature Local Party host promotion before the first host snapshot
+  arrives and made temporary failover hosts yield when the original host returns.
 
 ### Known Issues
 

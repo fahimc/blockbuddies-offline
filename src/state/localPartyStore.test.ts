@@ -9,6 +9,7 @@ import {
   makePartySnapshot,
   rebasePartySavedFriendClocks,
   sanitizePartyName,
+  useLocalPartyStore,
 } from './localPartyStore'
 import type { AvatarSettings } from '../game/types'
 
@@ -121,6 +122,49 @@ describe('local party helpers', () => {
 
     expect(missingEmoteSnapshot.emote).toBe('none')
     expect(invalidEmoteSnapshot.emote).toBe('none')
+  })
+
+  it('sanitizes synchronized kart motion and race progress', () => {
+    const snapshot = makePartySnapshot({
+      id: 'local-racer',
+      name: 'Racer',
+      position: [108, 0, -33],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      kart: {
+        id: 'go-kart:blue',
+        position: [Number.POSITIVE_INFINITY, 0.08, -33],
+        yaw: 99,
+        speed: 999,
+      },
+      kartRace: {
+        raceId: 'shared-race',
+        vehicleId: 'go-kart:blue',
+        status: 'racing',
+        lap: 99,
+        totalLaps: 99,
+        nextCheckpoint: 99,
+        startedAt: 500,
+      },
+      updatedAt: 600,
+    })
+
+    expect(snapshot.kart).toEqual({
+      id: 'go-kart:blue',
+      position: [0, 0.08, -33],
+      yaw: Math.PI * 4,
+      speed: 30,
+    })
+    expect(snapshot.kartRace).toMatchObject({
+      raceId: 'shared-race',
+      vehicleId: 'go-kart:blue',
+      status: 'racing',
+      lap: 3,
+      totalLaps: 3,
+      nextCheckpoint: 4,
+      startedAt: 500,
+    })
   })
 
   it('syncs a bounded sanitized set of built world objects', () => {
@@ -301,5 +345,66 @@ describe('local party helpers', () => {
 
     expect(isRemoteFresh(snapshot, 5900)).toBe(true)
     expect(isRemoteFresh(snapshot, 7001)).toBe(false)
+  })
+
+  it('yields a temporary failover host role when the original host returns', () => {
+    const host = makePartySnapshot({
+      id: 'original-host',
+      name: 'Original Host',
+      position: [0, 0, 0],
+      yaw: 0,
+      avatar,
+      action: 'idle',
+      role: 'host',
+      hostId: 'original-host',
+      updatedAt: 1_000,
+    })
+    useLocalPartyStore.setState({
+      status: 'hosting',
+      role: 'host',
+      promotedHost: true,
+      remotePlayers: { [host.id]: host },
+    })
+
+    useLocalPartyStore.getState().pruneRemotePlayers(1_100)
+
+    expect(useLocalPartyStore.getState()).toMatchObject({
+      status: 'connected',
+      role: 'guest',
+      promotedHost: false,
+      lastEvent: 'Reconnected to Original Host.',
+    })
+    useLocalPartyStore.setState({
+      status: 'idle',
+      role: undefined,
+      promotedHost: false,
+      remotePlayers: {},
+    })
+  })
+
+  it('gives a newly connected guest time to receive the first host snapshot', () => {
+    useLocalPartyStore.setState({
+      status: 'connected',
+      role: 'guest',
+      promotedHost: false,
+      lastHostSeenAt: 1_000,
+      remotePlayers: {},
+    })
+
+    useLocalPartyStore.getState().pruneRemotePlayers(5_000)
+    expect(useLocalPartyStore.getState().role).toBe('guest')
+    useLocalPartyStore.getState().pruneRemotePlayers(7_001)
+    expect(useLocalPartyStore.getState()).toMatchObject({
+      status: 'hosting',
+      role: 'host',
+      promotedHost: true,
+    })
+    useLocalPartyStore.setState({
+      status: 'idle',
+      role: undefined,
+      promotedHost: false,
+      lastHostSeenAt: undefined,
+      remotePlayers: {},
+    })
   })
 })
