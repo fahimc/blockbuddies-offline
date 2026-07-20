@@ -41,18 +41,65 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
-      - name: Build Android debug APK
+      - name: Build unsigned Android release APK
         run: |
           set -o pipefail
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee gradle-build.log
+          ./gradlew assembleRelease --stacktrace 2>&1 | tee gradle-build.log
         working-directory: android
-      - name: Prepare APK and checksum
+      - name: Sign main BlockBuddies APK with stable test certificate
         run: |
+          set -euo pipefail
+
           VERSION="$(node -p "require('./package.json').version")"
-          APK_NAME="BlockBuddies-Offline-v${VERSION}-debug.apk"
-          mkdir -p release
-          cp android/app/build/outputs/apk/debug/app-debug.apk "release/${APK_NAME}"
+          APK_NAME="BlockBuddies-Offline-v${VERSION}.apk"
+          UNSIGNED_APK="$(find android/app/build/outputs/apk/release -name '*-unsigned.apk' -print -quit)"
+          BUILD_TOOLS="$(find "${ANDROID_SDK_ROOT}/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+
+          test -n "${UNSIGNED_APK}"
+          test -x "${BUILD_TOOLS}/zipalign"
+          test -x "${BUILD_TOOLS}/apksigner"
+          test -x "${BUILD_TOOLS}/aapt"
+
+          mkdir -p release signing
+
+          # The AOSP test key is public and reproducible. It is intentionally used
+          # only for direct-install test releases, but unlike runner debug keys it
+          # remains identical across GitHub Actions runs so future APKs can update.
+          curl --fail --location --retry 3 \
+            --output signing/testkey.pk8 \
+            https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.pk8
+          curl --fail --location --retry 3 \
+            --output signing/testkey.x509.pem \
+            https://raw.githubusercontent.com/aosp-mirror/platform_build/master/target/product/security/testkey.x509.pem
+
+          openssl pkcs8 -inform DER -in signing/testkey.pk8 \
+            -out signing/testkey.pem -nocrypt
+          openssl pkcs12 -export \
+            -inkey signing/testkey.pem \
+            -in signing/testkey.x509.pem \
+            -name blockbuddies \
+            -out signing/blockbuddies-test.p12 \
+            -passout pass:android
+
+          "${BUILD_TOOLS}/zipalign" -p -f 4 \
+            "${UNSIGNED_APK}" release/aligned.apk
+          "${BUILD_TOOLS}/apksigner" sign \
+            --ks signing/blockbuddies-test.p12 \
+            --ks-type PKCS12 \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "release/${APK_NAME}" \
+            release/aligned.apk
+          rm release/aligned.apk
+
+          "${BUILD_TOOLS}/apksigner" verify --verbose --print-certs \
+            "release/${APK_NAME}" | tee release/SIGNING-CERTIFICATE.txt
+          "${BUILD_TOOLS}/aapt" dump badging "release/${APK_NAME}" \
+            | tee release/APK-BADGING.txt
+          grep -q "package: name='com.blockbuddies.offline'" release/APK-BADGING.txt
+          grep -q "application-label:'BlockBuddies'" release/APK-BADGING.txt
+
           cd release
           sha256sum "${APK_NAME}" > SHA256SUMS.txt
       - name: Upload Android APK artifact
