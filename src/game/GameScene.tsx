@@ -117,6 +117,8 @@ import {
 import { avatarSleepRotation } from './sleepPose'
 import { avatarTrailPieces } from './avatarTrail'
 import { petAccessoryModel, type PetAccessoryPart } from './pets'
+import { EquippedLightSaber } from './WorldEquipment'
+import { lightSaberHandSocket } from './lightSaber'
 import {
   avatarSelectionHitboxPosition,
   avatarSelectionHitboxSize,
@@ -3978,6 +3980,7 @@ function PlayerController({
                   : 'walk'
                 : 'idle'
         }
+        rightHandItem={<EquippedLightSaber />}
       />
     </group>
   )
@@ -4645,6 +4648,7 @@ type BlockAvatarProps = {
     clientX: number
     clientY: number
   }) => void
+  rightHandItem?: ReactNode
 }
 
 export function BlockAvatar({
@@ -4670,6 +4674,7 @@ export function BlockAvatar({
   isSelected,
   onSelect,
   onDragStart,
+  rightHandItem,
 }: BlockAvatarProps) {
   const body = useRef<THREE.Group>(null)
   const leftArm = useRef<THREE.Group>(null)
@@ -4881,6 +4886,15 @@ export function BlockAvatar({
             shirtColor={shirtColor}
             outfitStyle={outfitStyle}
           />
+          {rightHandItem ? (
+            <group
+              data-testid="right-hand-item-socket"
+              position={lightSaberHandSocket.position}
+              rotation={lightSaberHandSocket.rotation}
+            >
+              {rightHandItem}
+            </group>
+          ) : null}
         </group>
 
         <mesh castShadow position={[0, 1.92, 0]}>

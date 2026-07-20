@@ -3,56 +3,41 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import { useGameStore } from '../state/gameStore'
 import {
+  isLightSaberId,
   lightSaberColors,
   useEquipmentStore,
 } from '../state/equipmentStore'
 import { avatarGroundOffset } from './scale'
+import { lightSaberPreviewFromSearch } from './lightSaber'
 
 export function WorldEquipment() {
-  return (
-    <>
-      <EquippedLightSaber />
-      <HoveringVoidOrb />
-    </>
-  )
+  return <HoveringVoidOrb />
 }
 
-function EquippedLightSaber() {
-  const group = useRef<THREE.Group>(null)
+export function EquippedLightSaber() {
   const selectedSaber = useEquipmentStore((state) => state.selectedSaber)
   const saberActive = useEquipmentStore((state) => state.saberActive)
   const unlockedItems = useGameStore((state) => state.unlockedItems)
   const sleeping = useGameStore((state) => state.sleeping)
   const activeVehicleId = useGameStore((state) => state.activeVehicleId)
-  const color = selectedSaber ? lightSaberColors[selectedSaber] : '#60a5fa'
+  const previewSaber = import.meta.env.DEV
+    ? lightSaberPreviewFromSearch(window.location.search)
+    : undefined
+  const equippedSaber = previewSaber ?? selectedSaber
+  const color = equippedSaber && isLightSaberId(equippedSaber)
+    ? lightSaberColors[equippedSaber]
+    : '#60a5fa'
   const visible = Boolean(
-    selectedSaber &&
-      saberActive &&
-      unlockedItems.includes(selectedSaber) &&
+    equippedSaber &&
+      (previewSaber || (saberActive && unlockedItems.includes(equippedSaber))) &&
       !sleeping &&
       !activeVehicleId,
   )
 
-  useFrame(() => {
-    if (!group.current || !visible) return
-    const { playerPosition, playerYaw } = useGameStore.getState()
-    const rightX = Math.cos(playerYaw)
-    const rightZ = -Math.sin(playerYaw)
-    const forwardX = Math.sin(playerYaw)
-    const forwardZ = Math.cos(playerYaw)
-
-    group.current.position.set(
-      playerPosition[0] + rightX * 0.57 + forwardX * 0.08,
-      playerPosition[1] + avatarGroundOffset + 1.03,
-      playerPosition[2] + rightZ * 0.57 + forwardZ * 0.08,
-    )
-    group.current.rotation.set(0, playerYaw, -0.34)
-  })
-
   if (!visible) return null
 
   return (
-    <group ref={group} data-testid="equipped-light-saber">
+    <group data-testid="equipped-light-saber">
       <mesh castShadow position={[0, 0, 0]}>
         <cylinderGeometry args={[0.075, 0.09, 0.36, 12]} />
         <meshStandardMaterial color="#263244" metalness={0.72} roughness={0.3} />
