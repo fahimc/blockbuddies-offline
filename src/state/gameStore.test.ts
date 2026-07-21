@@ -1047,6 +1047,60 @@ describe('mini game store flow', () => {
     ).toContain('Delivery Dash rewards paid: +48 coins (balance 208)')
   })
 
+  it.each([
+    ['coin-rush', coinRushTargets, 43],
+    ['delivery-dash', deliveryDashTargets, 64],
+    ['hide-and-seek', hideAndSeekTargets, 50],
+  ] as const)(
+    'adds the exact %s earnings to an existing player balance',
+    (gameId, targets, expectedIncrease) => {
+      const startingCoins = 275
+      const completedQuests = createQuestProgress(questDefinitions).map(
+        (progress) => {
+          const definition = questDefinitions.find(
+            (quest) => quest.id === progress.id,
+          )!
+          return {
+            ...progress,
+            started: true,
+            completed: true,
+            progress: definition.target,
+          }
+        },
+      )
+      useGameStore.setState({
+        miniGame: createInitialMiniGame(),
+        activeInterior: undefined,
+        coins: startingCoins,
+        questProgress: completedQuests,
+        earnedBadges: ['coin-starter', 'mini-game-star'],
+        chat: [],
+      })
+
+      useGameStore.getState().startMiniGame(gameId, 1_000)
+      targets.forEach((target, index) => {
+        useGameStore
+          .getState()
+          .tickMiniGame(2_000 + index * 1_000, target.position)
+      })
+
+      const finished = useGameStore.getState()
+      expect(finished.miniGame.status).toBe('completed')
+      expect(finished.coins).toBe(startingCoins + expectedIncrease)
+      expect(
+        finished.chat
+          .map((message) => message.text)
+          .find((text) =>
+            text.startsWith(
+              `${miniGameDefinition(gameId).title} rewards paid:`,
+            ),
+          ),
+      ).toContain(
+        `balance ${startingCoins + expectedIncrease}`,
+      )
+    },
+  )
+
   it('starts a mini game, completes it, and awards coins plus a badge', () => {
     useGameStore.setState({
       miniGame: createInitialMiniGame(),

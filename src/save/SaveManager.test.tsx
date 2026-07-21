@@ -86,4 +86,46 @@ describe('SaveManager', () => {
       }),
     )
   })
+
+  it('serializes saves so a stale coin balance cannot overwrite a mini-game reward', async () => {
+    let resolveFirstSave: () => void = () => {}
+    storageMock.loadGameSave.mockResolvedValue({ coins: 10 })
+    storageMock.saveGame
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveFirstSave = resolve
+          }),
+      )
+      .mockResolvedValue(undefined)
+
+    render(<SaveManager />)
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+    await act(async () => {
+      useGameStore.setState({ coins: 11 })
+      await vi.advanceTimersByTimeAsync(701)
+    })
+
+    expect(storageMock.saveGame).toHaveBeenCalledTimes(1)
+    expect(storageMock.saveGame.mock.calls[0][0].coins).toBe(11)
+
+    await act(async () => {
+      useGameStore.setState({ coins: 54 })
+      await vi.advanceTimersByTimeAsync(701)
+    })
+
+    expect(storageMock.saveGame).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveFirstSave()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(storageMock.saveGame).toHaveBeenCalledTimes(2)
+    expect(storageMock.saveGame.mock.calls[1][0].coins).toBe(54)
+  })
 })

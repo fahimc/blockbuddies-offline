@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { loadGameSave, saveGame } from './storage'
 import { makeSaveSnapshot, useGameStore } from '../state/gameStore'
 
 export function SaveManager() {
   const state = useGameStore()
+  const saveQueue = useRef<Promise<void>>(Promise.resolve())
   const loadFromSave = useGameStore((store) => store.loadFromSave)
   const markSaveLoaded = useGameStore((store) => store.markSaveLoaded)
   const markSaving = useGameStore((store) => store.markSaving)
@@ -24,9 +25,15 @@ export function SaveManager() {
     if (!state.saveLoaded) return undefined
     const timeout = window.setTimeout(() => {
       markSaving()
-      void saveGame(makeSaveSnapshot(useGameStore.getState()))
-        .then(markSaved)
-        .catch(markSaved)
+      const snapshot = makeSaveSnapshot(useGameStore.getState())
+      const queuedSave = saveQueue.current
+        .catch(() => undefined)
+        .then(() => saveGame(snapshot))
+      const settledSave = queuedSave.catch(() => undefined)
+      saveQueue.current = settledSave
+      void settledSave.then(() => {
+        if (saveQueue.current === settledSave) markSaved()
+      })
     }, 700)
     return () => window.clearTimeout(timeout)
   }, [
