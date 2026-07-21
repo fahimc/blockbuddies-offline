@@ -37,6 +37,7 @@ export function GameAvatarPreview({ avatar, pose = 'none', className, yaw = -0.2
           eyeColor={avatar.eyeColor}
           accentColor={avatar.accentColor}
           secondaryColor={avatar.secondaryColor}
+          topStyle={avatar.topStyle}
           outfitStyle={avatar.outfitStyle}
           bottomStyle={avatar.bottomStyle}
           shoeStyle={avatar.shoeStyle}

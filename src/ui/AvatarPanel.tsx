@@ -1447,7 +1447,7 @@ function MiniAvatar({
 }) {
   return (
     <span
-      className={`bb-mini-avatar pose-${pose} hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'} outfit-${avatar.outfitStyle ?? 'hoodie'} bottom-${avatar.bottomStyle ?? 'jeans'} shoes-${avatar.shoeStyle ?? 'sneakers'}`}
+      className={`bb-mini-avatar pose-${pose} hair-${avatar.hairStyle ?? 'spiky'} face-${avatar.face ?? 'smile'} outfit-${avatar.outfitStyle ?? 'hoodie'} bottom-${avatar.bottomStyle ?? 'jeans'} shoes-${avatar.shoeStyle ?? 'sneakers'} style-${avatar.topStyle ?? 'none'}`}
       style={
         {
           '--skin': avatar.bodyColor,
@@ -1468,6 +1468,9 @@ function MiniAvatar({
         <span className="eye right" />
         <span className="mouth" />
       </span>
+      {avatar.topStyle === 'outfit-shadow-oracle' ? (
+        <span className="eye-mask" />
+      ) : null}
       <span className="body" />
       <span className="arm left" />
       <span className="arm right" />

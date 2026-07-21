@@ -4766,6 +4766,34 @@ button.bb-town-map-friend {
   );
 }
 
+.bb-mini-avatar.style-outfit-shadow-oracle .body {
+  background:
+    linear-gradient(
+      90deg,
+      var(--accent) 0 28%,
+      transparent 29% 71%,
+      var(--accent) 72% 100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0 20%,
+      var(--shirt) 21% 65%,
+      transparent 66% 100%
+    ),
+    var(--skin);
+}
+
+.bb-mini-avatar.style-outfit-shadow-oracle .body::before {
+  position: absolute;
+  left: 29%;
+  right: 29%;
+  top: 58%;
+  height: 5%;
+  border-radius: 999px;
+  background: var(--secondary);
+  content: '';
+}
+
 .bb-mini-avatar.outfit-suit .body {
   background:
     linear-gradient(90deg, #111827 0 34%, #f8fafc 35% 65%, #111827 66% 100%),
@@ -4854,6 +4882,14 @@ button.bb-town-map-friend {
   background: linear-gradient(var(--shirt) 0 82%, var(--accent) 83% 100%);
 }
 
+.bb-mini-avatar.style-outfit-shadow-oracle .arm {
+  background: linear-gradient(
+    var(--accent) 0 67%,
+    var(--secondary) 68% 74%,
+    var(--skin) 75% 100%
+  );
+}
+
 .bb-mini-avatar .arm.left {
   left: 0;
   transform: rotate(6deg);
@@ -4909,6 +4945,20 @@ button.bb-town-map-friend {
   content: '';
 }
 
+.bb-mini-avatar.style-outfit-shadow-oracle.bottom-skirt .body::after {
+  left: -13%;
+  right: -13%;
+  bottom: -20%;
+  height: 27%;
+  clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--pants) 0 12%,
+    var(--secondary) 13% 15%,
+    var(--accent) 16% 28%
+  );
+}
+
 .bb-mini-avatar .leg.left {
   left: 22%;
 }
@@ -4961,6 +5011,26 @@ button.bb-town-map-friend {
   border-radius: 0.25rem;
   background: #111827;
   z-index: 5;
+}
+
+.bb-mini-avatar .eye-mask {
+  left: 21%;
+  top: 13%;
+  width: 58%;
+  height: 8%;
+  border-radius: 0.38rem 0.38rem 0.52rem 0.52rem;
+  background:
+    linear-gradient(
+      90deg,
+      var(--accent) 0 24%,
+      #160b2b 25% 42%,
+      var(--accent) 43% 57%,
+      #160b2b 58% 75%,
+      var(--accent) 76% 100%
+    );
+  box-shadow: 0 0.14rem 0 var(--secondary);
+  transform: skewX(-5deg);
+  z-index: 6;
 }
 
 .bb-mini-avatar .cape {

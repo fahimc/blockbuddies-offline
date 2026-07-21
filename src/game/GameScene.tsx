@@ -1223,6 +1223,7 @@ function KartVehicleMesh({
             eyeColor={avatar.eyeColor}
             accentColor={avatar.accentColor}
             secondaryColor={avatar.secondaryColor}
+            topStyle={avatar.topStyle}
             outfitStyle={avatar.outfitStyle}
             bottomStyle={avatar.bottomStyle}
             shoeStyle={avatar.shoeStyle}
@@ -2273,6 +2274,7 @@ function DrivableVehicleMesh({
             eyeColor={avatar.eyeColor}
             accentColor={avatar.accentColor}
             secondaryColor={avatar.secondaryColor}
+            topStyle={avatar.topStyle}
             outfitStyle={avatar.outfitStyle}
             bottomStyle={avatar.bottomStyle}
             shoeStyle={avatar.shoeStyle}
@@ -3960,6 +3962,7 @@ function PlayerController({
         eyeColor={avatar.eyeColor}
         accentColor={avatar.accentColor}
         secondaryColor={avatar.secondaryColor}
+        topStyle={avatar.topStyle}
         outfitStyle={avatar.outfitStyle}
         bottomStyle={avatar.bottomStyle}
         shoeStyle={avatar.shoeStyle}
@@ -4149,6 +4152,7 @@ function LocalPartyKartAvatar({ player }: { player: LocalPartySnapshot }) {
           eyeColor={player.avatar.eyeColor}
           accentColor={player.avatar.accentColor}
           secondaryColor={player.avatar.secondaryColor}
+          topStyle={player.avatar.topStyle}
           outfitStyle={player.avatar.outfitStyle}
           bottomStyle={player.avatar.bottomStyle}
           shoeStyle={player.avatar.shoeStyle}
@@ -4246,6 +4250,7 @@ function LocalPartyAvatar({ player }: { player: LocalPartySnapshot }) {
         eyeColor={player.avatar.eyeColor}
         accentColor={player.avatar.accentColor}
         secondaryColor={player.avatar.secondaryColor}
+        topStyle={player.avatar.topStyle}
         outfitStyle={player.avatar.outfitStyle}
         bottomStyle={player.avatar.bottomStyle}
         shoeStyle={player.avatar.shoeStyle}
@@ -4570,6 +4575,7 @@ function SavedFriendAvatar({
         eyeColor={friend.avatar.eyeColor}
         accentColor={friend.avatar.accentColor}
         secondaryColor={friend.avatar.secondaryColor}
+        topStyle={friend.avatar.topStyle}
         outfitStyle={friend.avatar.outfitStyle}
         bottomStyle={friend.avatar.bottomStyle}
         shoeStyle={friend.avatar.shoeStyle}
@@ -4630,6 +4636,7 @@ type BlockAvatarProps = {
   eyeColor?: string
   accentColor?: string
   secondaryColor?: string
+  topStyle?: ShopItemId | 'none'
   outfitStyle?: AvatarOutfitStyle
   bottomStyle?: AvatarBottomStyle
   shoeStyle?: AvatarShoeStyle
@@ -4660,6 +4667,7 @@ export function BlockAvatar({
   eyeColor = '#111827',
   accentColor = '#0b74ff',
   secondaryColor = '#ffffff',
+  topStyle = 'none',
   outfitStyle = 'hoodie',
   bottomStyle = 'jeans',
   shoeStyle = 'sneakers',
@@ -4865,6 +4873,7 @@ export function BlockAvatar({
           shirtColor={shirtColor}
           accentColor={accentColor}
           secondaryColor={secondaryColor}
+          topStyle={topStyle}
           outfitStyle={outfitStyle}
           bottomStyle={bottomStyle}
         />
@@ -4877,6 +4886,8 @@ export function BlockAvatar({
           <AvatarArm
             bodyColor={bodyColor}
             shirtColor={shirtColor}
+            accentColor={accentColor}
+            topStyle={topStyle}
             outfitStyle={outfitStyle}
           />
         </group>
@@ -4884,6 +4895,8 @@ export function BlockAvatar({
           <AvatarArm
             bodyColor={bodyColor}
             shirtColor={shirtColor}
+            accentColor={accentColor}
+            topStyle={topStyle}
             outfitStyle={outfitStyle}
           />
           {rightHandItem ? (
@@ -4910,6 +4923,7 @@ export function BlockAvatar({
           face={faceStyle}
           eyeColor={eyeColor}
           accentColor={accentColor}
+          topStyle={topStyle}
         />
         {hat ? (
           <mesh castShadow position={[0, 2.45, 0]}>
@@ -4977,6 +4991,7 @@ function AvatarTorso({
   shirtColor,
   accentColor,
   secondaryColor,
+  topStyle,
   outfitStyle,
   bottomStyle,
 }: {
@@ -4984,17 +4999,50 @@ function AvatarTorso({
   shirtColor: string
   accentColor: string
   secondaryColor: string
+  topStyle: ShopItemId | 'none'
   outfitStyle: AvatarOutfitStyle
   bottomStyle: AvatarBottomStyle
 }) {
   const torsoColor = outfitStyle === 'none' ? bodyColor : shirtColor
+  const shadowOracle = topStyle === 'outfit-shadow-oracle'
 
   return (
     <group>
       <mesh castShadow position={[0, 1.05, 0]}>
         <boxGeometry args={[0.82, 0.94, 0.38]} />
-        <meshStandardMaterial color={torsoColor} roughness={0.7} />
+        <meshStandardMaterial
+          color={shadowOracle ? bodyColor : torsoColor}
+          roughness={0.7}
+        />
       </mesh>
+      {shadowOracle ? (
+        <>
+          <mesh castShadow position={[0, 1.22, 0.215]}>
+            <boxGeometry args={[0.52, 0.38, 0.05]} />
+            <meshStandardMaterial color={shirtColor} roughness={0.58} />
+          </mesh>
+          <mesh castShadow position={[0, 1.02, 0.222]}>
+            <boxGeometry args={[0.56, 0.055, 0.055]} />
+            <meshStandardMaterial color={secondaryColor} roughness={0.5} />
+          </mesh>
+          <mesh
+            castShadow
+            position={[-0.13, 1.34, 0.255]}
+            rotation={[0, 0, -0.52]}
+          >
+            <boxGeometry args={[0.1, 0.34, 0.045]} />
+            <meshStandardMaterial color={secondaryColor} roughness={0.56} />
+          </mesh>
+          <mesh
+            castShadow
+            position={[0.13, 1.34, 0.255]}
+            rotation={[0, 0, 0.52]}
+          >
+            <boxGeometry args={[0.1, 0.34, 0.045]} />
+            <meshStandardMaterial color={secondaryColor} roughness={0.56} />
+          </mesh>
+        </>
+      ) : null}
       {outfitStyle === 'hoodie' ? (
         <>
           <mesh castShadow position={[-0.09, 1.2, 0.205]}>
@@ -5021,6 +5069,18 @@ function AvatarTorso({
             <boxGeometry args={[0.26, 0.82, 0.045]} />
             <meshStandardMaterial color={accentColor} />
           </mesh>
+          {shadowOracle ? (
+            <>
+              <mesh castShadow position={[-0.065, 1.08, 0.246]}>
+                <boxGeometry args={[0.04, 0.78, 0.035]} />
+                <meshStandardMaterial color={secondaryColor} roughness={0.52} />
+              </mesh>
+              <mesh castShadow position={[0.065, 1.08, 0.246]}>
+                <boxGeometry args={[0.04, 0.78, 0.035]} />
+                <meshStandardMaterial color={secondaryColor} roughness={0.52} />
+              </mesh>
+            </>
+          ) : null}
         </>
       ) : null}
       {outfitStyle === 'suit' ? (
@@ -5136,10 +5196,25 @@ function AvatarTorso({
         </mesh>
       ) : null}
       {bottomStyle === 'skirt' ? (
-        <mesh castShadow position={[0, 0.52, 0]}>
-          <boxGeometry args={[0.94, 0.22, 0.44]} />
-          <meshStandardMaterial color={accentColor} roughness={0.72} />
-        </mesh>
+        shadowOracle ? (
+          <group>
+            <mesh castShadow position={[0, 0.48, 0]}>
+              <cylinderGeometry args={[0.45, 0.55, 0.36, 8]} />
+              <meshStandardMaterial color={accentColor} roughness={0.7} />
+            </mesh>
+            {[-0.32, -0.16, 0, 0.16, 0.32].map((x) => (
+              <mesh key={x} castShadow position={[x, 0.47, 0.39]}>
+                <boxGeometry args={[0.035, 0.28, 0.035]} />
+                <meshStandardMaterial color={secondaryColor} roughness={0.6} />
+              </mesh>
+            ))}
+          </group>
+        ) : (
+          <mesh castShadow position={[0, 0.52, 0]}>
+            <boxGeometry args={[0.94, 0.22, 0.44]} />
+            <meshStandardMaterial color={accentColor} roughness={0.72} />
+          </mesh>
+        )
       ) : null}
     </group>
   )
@@ -5148,14 +5223,23 @@ function AvatarTorso({
 function AvatarArm({
   bodyColor,
   shirtColor,
+  accentColor,
+  topStyle,
   outfitStyle,
 }: {
   bodyColor: string
   shirtColor: string
+  accentColor: string
+  topStyle: ShopItemId | 'none'
   outfitStyle: AvatarOutfitStyle
 }) {
+  const shadowOracle = topStyle === 'outfit-shadow-oracle'
   const sleeveColor =
-    outfitStyle === 'tank' || outfitStyle === 'none' ? bodyColor : shirtColor
+    outfitStyle === 'tank' || outfitStyle === 'none'
+      ? bodyColor
+      : shadowOracle
+        ? accentColor
+        : shirtColor
   const sleeveHeight =
     outfitStyle === 'tee' || outfitStyle === 'sport' ? 0.36 : 0.48
   const hasHeroGlove =
@@ -5173,6 +5257,12 @@ function AvatarArm({
         <boxGeometry args={[0.24, 0.3, 0.24]} />
         <meshStandardMaterial color={bodyColor} roughness={0.7} />
       </mesh>
+      {shadowOracle ? (
+        <mesh castShadow position={[0, -0.41, 0.01]}>
+          <boxGeometry args={[0.255, 0.08, 0.255]} />
+          <meshStandardMaterial color="#c4b5fd" roughness={0.55} />
+        </mesh>
+      ) : null}
       {hasHeroGlove ? (
         <mesh castShadow position={[0, -0.67, 0.01]}>
           <boxGeometry args={[0.25, 0.14, 0.25]} />
@@ -5267,23 +5357,49 @@ function AvatarFace({
   face,
   eyeColor,
   accentColor,
+  topStyle,
 }: {
   face: string
   eyeColor: string
   accentColor: string
+  topStyle: ShopItemId | 'none'
 }) {
   const cool = face === 'cool'
+  const shadowOracle = topStyle === 'outfit-shadow-oracle'
   const sleepy = face === 'sleepy'
   const robot = face === 'robot'
   const surprised = face === 'surprised' || face === 'wow'
 
   return (
     <>
-      {cool ? (
-        <mesh castShadow position={[0, 1.97, 0.36]}>
-          <boxGeometry args={[0.52, 0.12, 0.04]} />
-          <meshStandardMaterial color="#111827" roughness={0.5} />
-        </mesh>
+      {cool || shadowOracle ? (
+        <group>
+          <mesh castShadow position={[0, 1.97, 0.36]}>
+            <boxGeometry
+              args={[
+                shadowOracle ? 0.58 : 0.52,
+                shadowOracle ? 0.17 : 0.12,
+                0.04,
+              ]}
+            />
+            <meshStandardMaterial
+              color={shadowOracle ? '#5b21b6' : '#111827'}
+              roughness={0.5}
+            />
+          </mesh>
+          {shadowOracle ? (
+            <>
+              <mesh castShadow position={[-0.17, 1.97, 0.39]}>
+                <boxGeometry args={[0.15, 0.055, 0.025]} />
+                <meshStandardMaterial color="#160b2b" roughness={0.4} />
+              </mesh>
+              <mesh castShadow position={[0.17, 1.97, 0.39]}>
+                <boxGeometry args={[0.15, 0.055, 0.025]} />
+                <meshStandardMaterial color="#160b2b" roughness={0.4} />
+              </mesh>
+            </>
+          ) : null}
+        </group>
       ) : (
         <>
           <mesh castShadow position={[-0.22, 1.96, 0.31]}>
