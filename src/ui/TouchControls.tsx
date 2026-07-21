@@ -16,6 +16,7 @@ import type { PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { PlayerEmote } from '../game/types'
 import { useGameStore } from '../state/gameStore'
+import { EquipmentHud } from './EquipmentHud'
 
 type TouchPatch = Partial<{
   x: number
@@ -410,20 +411,23 @@ export function TouchControls() {
                 <RotateCw size={22} aria-hidden />
               </button>
             ) : !activeVehicleId ? (
-              <button
-                type="button"
-                className={`mobile-run-button ${running ? 'active' : ''}`}
-                onPointerDown={press({ run: true })}
-                onPointerUp={release({ run: false })}
-                onPointerCancel={release({ run: false })}
-                onLostPointerCapture={() => setTouch({ run: false })}
-                aria-label="Run"
-                aria-pressed={running}
-                title="Hold to run"
-              >
-                <Gauge size={20} aria-hidden />
-                <span>Run</span>
-              </button>
+              <div className="mobile-run-row flex items-center gap-2">
+                <EquipmentHud />
+                <button
+                  type="button"
+                  className={`mobile-run-button ${running ? 'active' : ''}`}
+                  onPointerDown={press({ run: true })}
+                  onPointerUp={release({ run: false })}
+                  onPointerCancel={release({ run: false })}
+                  onLostPointerCapture={() => setTouch({ run: false })}
+                  aria-label="Run"
+                  aria-pressed={running}
+                  title="Hold to run"
+                >
+                  <Gauge size={20} aria-hidden />
+                  <span>Run</span>
+                </button>
+              </div>
             ) : null}
             {!activeVehicleId ? (
               <button

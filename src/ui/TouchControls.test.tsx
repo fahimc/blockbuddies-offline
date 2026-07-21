@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useGameStore } from '../state/gameStore'
+import { useEquipmentStore } from '../state/equipmentStore'
 import { TouchControls } from './TouchControls'
 
 describe('TouchControls', () => {
@@ -22,7 +23,9 @@ describe('TouchControls', () => {
       playerEmote: 'none',
       miniGame: { ...state.miniGame, status: 'idle', activeId: undefined },
       npcDrag: undefined,
+      unlockedItems: [],
     }))
+    useEquipmentStore.getState().resetEquipment()
   })
 
   it('runs only while the mobile run control is held', () => {
@@ -39,6 +42,26 @@ describe('TouchControls', () => {
 
     expect(runButton).toHaveAttribute('aria-pressed', 'false')
     expect(useGameStore.getState().touch.run).toBe(false)
+  })
+
+  it('places one icon-only light saber toggle beside the run button', () => {
+    useGameStore.setState({
+      unlockedItems: ['weapon-light-saber-purple'],
+    })
+    render(<TouchControls />)
+
+    const runButton = screen.getByRole('button', { name: 'Run' })
+    const saberButton = screen.getByRole('button', {
+      name: 'Turn on light saber',
+    })
+
+    expect(runButton.parentElement).toContainElement(saberButton)
+    expect(saberButton.querySelectorAll('svg')).toHaveLength(1)
+    expect(saberButton.textContent).toBe('')
+
+    fireEvent.click(saberButton)
+    expect(useEquipmentStore.getState().saberActive).toBe(true)
+    expect(saberButton).toHaveAccessibleName('Turn off light saber')
   })
 
   it('turns the interaction control into a bed action when nearby', () => {

@@ -1263,6 +1263,7 @@ button.bb-town-map-friend {
 .mobile-jump-button,
 .mobile-use-button,
 .mobile-run-button,
+.mobile-saber-button,
 .mobile-emote-button,
 .mobile-drive-exit-button,
 .mobile-remove-button {
@@ -1294,6 +1295,7 @@ button.bb-town-map-friend {
 }
 
 .mobile-run-button,
+.mobile-saber-button,
 .mobile-emote-button,
 .mobile-drive-exit-button {
   display: flex;
@@ -1307,6 +1309,29 @@ button.bb-town-map-friend {
   background: rgb(15 23 42 / 0.5);
   font-size: 0.58rem;
   line-height: 1;
+}
+
+.mobile-saber-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.mobile-saber-button:active {
+  transform: scale(0.94);
+}
+
+.mobile-saber-button.active {
+  border-color: currentColor;
+  background: rgb(76 29 149 / 0.88);
+  box-shadow:
+    0 0 0 0.18rem color-mix(in srgb, currentColor 28%, transparent),
+    0 0 1.1rem color-mix(in srgb, currentColor 55%, transparent),
+    0 0.75rem 1.5rem rgb(15 23 42 / 0.25);
 }
 
 .mobile-run-button.active,
@@ -1644,6 +1669,7 @@ button.bb-town-map-friend {
   }
 
   .mobile-run-button,
+  .mobile-saber-button,
   .mobile-emote-button,
   .mobile-drive-exit-button {
     width: 2.9rem;
@@ -1662,6 +1688,40 @@ button.bb-town-map-friend {
   .bb-mini-map {
     top: max(3.2rem, calc(env(safe-area-inset-top) + 3rem));
     width: clamp(5.9rem, 18vw, 7.4rem);
+  }
+}
+
+@media (max-width: 360px) {
+  .touch-control-layer {
+    padding-right: max(0.65rem, env(safe-area-inset-right));
+    padding-left: max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .virtual-joystick {
+    width: 5.2rem;
+    height: 5.2rem;
+  }
+
+  .mobile-jump-button {
+    width: 4.3rem;
+    height: 4.3rem;
+  }
+
+  .mobile-use-button,
+  .mobile-run-button,
+  .mobile-saber-button,
+  .mobile-emote-button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .mobile-action-cluster,
+  .mobile-run-row {
+    gap: 0.35rem;
+  }
+
+  .mobile-action-cluster {
+    min-width: 0;
   }
 }
 

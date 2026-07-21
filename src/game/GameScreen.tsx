@@ -5,7 +5,6 @@ import { Suspense, useEffect, useRef } from 'react'
 import { GameScene } from './GameScene'
 import { WorldEquipment } from './WorldEquipment'
 import { HUD } from '../ui/HUD'
-import { EquipmentHud } from '../ui/EquipmentHud'
 import { GameMenu } from '../ui/GameMenu'
 import { ChatPanel } from '../ui/ChatPanel'
 import { TouchControls } from '../ui/TouchControls'
@@ -97,7 +96,6 @@ export function GameScreen() {
 
         <GameMenu />
         <HUD />
-        <EquipmentHud />
         <BuildHudPalette />
         <MiniGameAnnouncement />
         <MiniMap />
