@@ -52,6 +52,7 @@ import {
   type LocalPartySnapshot,
 } from '../state/localPartyStore'
 import { pitchFromLookDrag, yawFromLookDrag } from './cameraControl'
+import { shadowOracleRearPanels } from './avatarOutfits'
 import {
   classroomStations,
   classroomTeacher,
@@ -5005,6 +5006,11 @@ function AvatarTorso({
 }) {
   const torsoColor = outfitStyle === 'none' ? bodyColor : shirtColor
   const shadowOracle = topStyle === 'outfit-shadow-oracle'
+  const shadowOraclePanelColors = {
+    shirt: shirtColor,
+    accent: accentColor,
+    secondary: secondaryColor,
+  }
 
   return (
     <group>
@@ -5041,6 +5047,15 @@ function AvatarTorso({
             <boxGeometry args={[0.1, 0.34, 0.045]} />
             <meshStandardMaterial color={secondaryColor} roughness={0.56} />
           </mesh>
+          {shadowOracleRearPanels.map((panel) => (
+            <mesh key={panel.id} castShadow position={panel.position}>
+              <boxGeometry args={panel.size} />
+              <meshStandardMaterial
+                color={shadowOraclePanelColors[panel.material]}
+                roughness={0.58}
+              />
+            </mesh>
+          ))}
         </>
       ) : null}
       {outfitStyle === 'hoodie' ? (
