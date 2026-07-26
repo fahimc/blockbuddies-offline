@@ -7,14 +7,17 @@ import {
   GraduationCap,
   Hammer,
   House,
+  PackageCheck,
   Map as MapIcon,
   MapPin,
   Move,
   Navigation,
   ShoppingBag,
   Sparkles,
+  UtensilsCrossed,
   Trees,
   UserRound,
+  Wheat,
   X,
   Zap,
   type LucideIcon,
@@ -88,6 +91,10 @@ const locationIcons: Record<LocationId, LucideIcon> = {
   kart: Gauge,
   builder: Hammer,
   hall: Building2,
+  market: ShoppingBag,
+  restaurant: UtensilsCrossed,
+  delivery: PackageCheck,
+  farm: Wheat,
 }
 
 const shortLabels: Record<LocationId, string> = {
@@ -102,6 +109,10 @@ const shortLabels: Record<LocationId, string> = {
   kart: 'Karts',
   builder: 'Build',
   hall: 'Hall',
+  market: 'Market',
+  restaurant: 'Food',
+  delivery: 'Delivery',
+  farm: 'Farm',
 }
 
 export function MapPanel() {

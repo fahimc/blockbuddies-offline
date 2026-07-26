@@ -8,7 +8,9 @@ import {
 } from '../ai/miniGames'
 import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { createQuestProgress } from '../ai/quests'
+import { createInitialJobRuntime } from '../ai/jobs'
 import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
+import { jobDefinitions } from '../data/jobs'
 import { questDefinitions } from '../data/quests'
 import { getLocation } from '../data/world'
 import { buildPlacementClearsPlayer } from '../ai/buildMode'
@@ -615,6 +617,109 @@ describe('quest progression', () => {
           .reward,
       )
     })
+  })
+})
+
+describe('paid work shifts', () => {
+  it('pays every workplace shift, completes its quest once, and pays repeat shifts', () => {
+    const questIds = {
+      shopkeeper: 'work-shopkeeper-shift',
+      restaurant: 'work-restaurant-shift',
+      delivery: 'work-delivery-shift',
+      farming: 'work-farm-shift',
+    } as const
+
+    jobDefinitions.forEach((job) => {
+      useGameStore.setState((state) => ({
+        coins: 0,
+        chat: [],
+        job: createInitialJobRuntime(),
+        miniGame: createInitialMiniGame(),
+        obby: { ...state.obby, active: false },
+        questProgress: createQuestProgress(questDefinitions).map((quest) =>
+          quest.id === 'collect-10-coins'
+            ? { ...quest, started: true, completed: true, progress: 10 }
+            : quest,
+        ),
+      }))
+
+      useGameStore.getState().startJobShift(job.id)
+      job.tasks.forEach((task) =>
+        useGameStore.getState().completeJobTask(task.id),
+      )
+
+      const quest = questDefinitions.find(
+        (definition) => definition.id === questIds[job.id],
+      )!
+      expect(useGameStore.getState().coins).toBe(job.reward + quest.reward)
+      expect(
+        useGameStore
+          .getState()
+          .questProgress.find((entry) => entry.id === quest.id),
+      ).toMatchObject({ completed: true, progress: 1 })
+      expect(useGameStore.getState().job.records[job.id]).toEqual({
+        shiftsCompleted: 1,
+        coinsEarned: job.reward,
+      })
+
+      useGameStore.getState().startJobShift(job.id)
+      job.tasks.forEach((task) =>
+        useGameStore.getState().completeJobTask(task.id),
+      )
+
+      expect(useGameStore.getState().coins).toBe(
+        job.reward * 2 + quest.reward,
+      )
+      expect(useGameStore.getState().job.records[job.id]).toEqual({
+        shiftsCompleted: 2,
+        coinsEarned: job.reward * 2,
+      })
+    })
+  })
+
+  it('persists career totals but resumes with no half-finished shift', () => {
+    const job = jobDefinitions[0]
+    useGameStore.setState({
+      job: createInitialJobRuntime({
+        shopkeeper: { shiftsCompleted: 4, coinsEarned: 96 },
+      }),
+    })
+
+    const snapshot = makeSaveSnapshot(useGameStore.getState())
+    expect(snapshot.jobRecords?.shopkeeper).toEqual({
+      shiftsCompleted: 4,
+      coinsEarned: 96,
+    })
+
+    useGameStore.getState().startJobShift(job.id)
+    useGameStore.getState().loadFromSave(snapshot)
+
+    expect(useGameStore.getState().job).toMatchObject({
+      activeId: undefined,
+      status: 'idle',
+      records: {
+        shopkeeper: { shiftsCompleted: 4, coinsEarned: 96 },
+      },
+    })
+  })
+
+  it('blocks unrelated travel and mini games until the shift is cancelled', () => {
+    const job = jobDefinitions[1]
+    useGameStore.setState((state) => ({
+      job: createInitialJobRuntime(),
+      miniGame: createInitialMiniGame(),
+      obby: { ...state.obby, active: false },
+      activeInterior: undefined,
+      chat: [],
+    }))
+    useGameStore.getState().startJobShift(job.id)
+
+    expect(useGameStore.getState().travelToLocation('park')).toBe(false)
+    useGameStore.getState().startMiniGame('coin-rush', 1_000)
+    expect(useGameStore.getState().miniGame.status).toBe('idle')
+
+    useGameStore.getState().cancelJobShift()
+    expect(useGameStore.getState().travelToLocation('park')).toBe(true)
   })
 })
 

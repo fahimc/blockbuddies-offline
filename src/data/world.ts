@@ -114,6 +114,42 @@ export const worldLocations: WorldLocation[] = [
     travelYaw: Math.PI,
     color: '#c08457',
   },
+  {
+    id: 'market',
+    label: 'Buddy Market',
+    description: 'Work a shopkeeper shift stocking and serving customers.',
+    position: [82, 0, 88],
+    travelPosition: [82, 0, 96],
+    travelYaw: Math.PI,
+    color: '#0ea5e9',
+  },
+  {
+    id: 'restaurant',
+    label: 'Sunny Bites',
+    description: 'Prepare, cook, and serve meals for coins.',
+    position: [98, 0, 88],
+    travelPosition: [98, 0, 96],
+    travelYaw: Math.PI,
+    color: '#f97316',
+  },
+  {
+    id: 'delivery',
+    label: 'Buddy Delivery',
+    description: 'Collect parcels and deliver them around the district.',
+    position: [82, 0, 112],
+    travelPosition: [82, 0, 120],
+    travelYaw: Math.PI,
+    color: '#8b5cf6',
+  },
+  {
+    id: 'farm',
+    label: 'Sunshine Farm',
+    description: 'Plant, water, and harvest crops for coins.',
+    position: [98, 0, 112],
+    travelPosition: [98, 0, 120],
+    travelYaw: Math.PI,
+    color: '#16a34a',
+  },
 ]
 
 export function getLocation(id: LocationId) {

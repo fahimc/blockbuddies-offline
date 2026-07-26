@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createQuestProgress } from '../ai/quests'
@@ -37,8 +37,7 @@ describe('QuestPanel', () => {
     expect(screen.getByText('How to complete')).toBeInTheDocument()
   })
 
-  it('reveals instructions and tips for every active and daily quest card', async () => {
-    const user = userEvent.setup()
+  it('reveals instructions and tips for every active and daily quest card', () => {
     render(<QuestPanel />)
 
     const activeQuestIds = questDefinitions
@@ -50,7 +49,7 @@ describe('QuestPanel', () => {
 
     for (const id of activeQuestIds) {
       const quest = questDefinitions.find((item) => item.id === id)!
-      await user.click(
+      fireEvent.click(
         screen.getByRole('button', {
           name: new RegExp(escapeRegExp(quest.title), 'i'),
         }),
@@ -59,10 +58,10 @@ describe('QuestPanel', () => {
       expect(screen.getByText(quest.tip)).toBeInTheDocument()
     }
 
-    await user.click(screen.getByRole('button', { name: 'Daily' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Daily' }))
     for (const id of dailyQuestIds) {
       const quest = questDefinitions.find((item) => item.id === id)!
-      await user.click(
+      fireEvent.click(
         screen.getByRole('button', {
           name: new RegExp(escapeRegExp(quest.title), 'i'),
         }),

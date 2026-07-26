@@ -1,6 +1,7 @@
 import type { Vec3 } from '../game/types'
 import { goKartTrack } from '../game/goKart'
 import { authoredCoreBounds } from '../game/townPlacement'
+import { workDistrictCenter, workDistrictSize } from './jobs'
 import {
   boundsFromCenter,
   boundsIntersect,
@@ -103,6 +104,21 @@ export const worldFeatures: WorldFeature[] = [
     blocksProceduralObjects: true,
     color: '#f97316',
   },
+  {
+    id: 'work-district',
+    label: 'Buddy Work District',
+    kind: 'activity-district',
+    center: workDistrictCenter,
+    bounds: boundsFromCenter(
+      workDistrictCenter[0],
+      workDistrictCenter[2],
+      workDistrictSize[0],
+      workDistrictSize[2],
+    ),
+    ownerChunk: { cx: 2, cz: 2 },
+    blocksProceduralObjects: true,
+    color: '#facc15',
+  },
 ]
 
 const featureById = new Map(
@@ -199,6 +215,16 @@ export function terrainOverrideForWorldFeature(x: number, z: number) {
     x <= kart.bounds.maxX &&
     z >= kart.bounds.minZ &&
     z <= kart.bounds.maxZ
+  ) {
+    return 'park' as const
+  }
+  const workDistrict = getWorldFeature('work-district')
+  if (
+    workDistrict &&
+    x >= workDistrict.bounds.minX &&
+    x <= workDistrict.bounds.maxX &&
+    z >= workDistrict.bounds.minZ &&
+    z <= workDistrict.bounds.maxZ
   ) {
     return 'park' as const
   }

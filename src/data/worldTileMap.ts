@@ -26,6 +26,7 @@ import {
   footballStadiumFootprint,
   terrainOverrideForWorldFeature,
 } from './worldFeatures'
+import { jobDefinitions, workplaceBuildings } from './jobs'
 
 export type WorldTileTerrain = WorldTerrain | 'parking'
 export type WorldTileObjectKind =
@@ -310,6 +311,28 @@ function authoredMapObjects(): WorldTileObject[] {
       'authored',
       footballStadiumCenter,
       [footballStadiumFootprint.width, 1, footballStadiumFootprint.depth],
+    ),
+    ...workplaceBuildings.map((building) =>
+      mapObject(
+        `authored:workplace:${building.id}`,
+        building.label,
+        'building',
+        'authored',
+        building.position,
+        building.size,
+      ),
+    ),
+    ...jobDefinitions.flatMap((job) =>
+      job.tasks.map((task) =>
+        mapObject(
+          `authored:job-task:${task.id}`,
+          task.label,
+          'activity',
+          'authored',
+          task.position,
+          [1.2, 1, 1.2],
+        ),
+      ),
     ),
   ]
 }

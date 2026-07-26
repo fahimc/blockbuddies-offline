@@ -26,6 +26,16 @@ describe('GameMenu', () => {
     expect(useGameStore.getState().openPanel).toBe('karts')
   })
 
+  it('opens paid jobs directly from the hamburger menu', () => {
+    useGameStore.setState({ openPanel: undefined })
+
+    render(<GameMenu />)
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Jobs & Work' }))
+
+    expect(useGameStore.getState().openPanel).toBe('jobs')
+  })
+
   it('resets the player to Spawn Plaza from the hamburger menu', () => {
     const plaza = getLocation('spawn')
     useGameStore.setState((state) => ({

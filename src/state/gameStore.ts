@@ -30,6 +30,13 @@ import {
   type MiniGameTickResult,
 } from '../ai/miniGames'
 import {
+  cancelJobRuntime,
+  completeJobRuntimeTask,
+  createInitialJobRuntime,
+  startJobRuntime,
+} from '../ai/jobs'
+import { activeJobTask, getJobDefinition } from '../data/jobs'
+import {
   sanitizePartyName,
   useLocalPartyStore,
   type LocalPartyDirectMessage,
@@ -55,6 +62,9 @@ import type {
   DirectMessage,
   GameSettings,
   InteriorVisit,
+  JobId,
+  JobRecord,
+  JobRuntime,
   LocationId,
   MessageThread,
   MiniGameId,
@@ -105,6 +115,7 @@ export type GameSave = {
   miniGameRecords?: Partial<Record<MiniGameId, MiniGameRecord>>
   obbyBestTime?: number
   messageThreads?: MessageThread[]
+  jobRecords?: Partial<Record<JobId, JobRecord>>
 }
 
 type TouchInput = {
@@ -164,6 +175,7 @@ export type GamePanel =
   | 'server'
   | 'emotes'
   | 'minigames'
+  | 'jobs'
   | 'messages'
   | 'tutorial'
 
@@ -183,6 +195,7 @@ type GameState = GameSave & {
   visitedBots: string[]
   obby: ObbyState
   miniGame: MiniGameRuntime
+  job: JobRuntime
   touch: TouchInput
   loading: boolean
   saveStatus: 'idle' | 'saving' | 'saved'
@@ -277,6 +290,9 @@ type GameState = GameSave & {
   startMiniGame: (id: MiniGameId, now: number) => void
   tickMiniGame: (now: number, position: Vec3) => void
   cancelMiniGame: () => void
+  startJobShift: (id: JobId) => void
+  completeJobTask: (taskId: string) => void
+  cancelJobShift: () => void
   recordBotMeet: (botId: string) => void
   updateSettings: (settings: Partial<GameSettings>) => void
   resetSave: () => void
@@ -592,6 +608,13 @@ const miniGameQuestIds: Partial<Record<MiniGameId, QuestId>> = {
   'hide-and-seek': 'find-hidden-buddies',
 }
 
+const jobQuestIds: Record<JobId, QuestId> = {
+  shopkeeper: 'work-shopkeeper-shift',
+  restaurant: 'work-restaurant-shift',
+  delivery: 'work-delivery-shift',
+  farming: 'work-farm-shift',
+}
+
 function applyQuestAdvance(
   state: Pick<GameState, 'questProgress' | 'coins'>,
   id: QuestId,
@@ -702,6 +725,7 @@ const initialObby: ObbyState = {
 }
 
 const initialMiniGame = createInitialMiniGame()
+const initialJob = createInitialJobRuntime()
 
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'menu',
@@ -733,6 +757,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   visitedBots: [],
   obby: initialObby,
   miniGame: initialMiniGame,
+  job: initialJob,
   touch: {
     x: 0,
     y: 0,
@@ -807,6 +832,22 @@ export const useGameStore = create<GameState>((set, get) => ({
         ],
       })
       return false
+    }
+    if (state.job.status === 'running') {
+      const activeJob = state.job.activeId
+        ? getJobDefinition(state.job.activeId)
+        : undefined
+      if (activeJob?.locationId !== id) {
+        set({
+          chat: [
+            ...state.chat.slice(-60),
+            systemMessage(
+              `Finish or cancel your ${activeJob?.title ?? 'work shift'} before travelling`,
+            ),
+          ],
+        })
+        return false
+      }
     }
 
     const destination = getLocation(id)
@@ -886,6 +927,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           target: 0,
           collected: [],
         },
+        job: cancelJobRuntime(state.job),
         touch: {
           x: 0,
           y: 0,
@@ -1210,6 +1252,100 @@ export const useGameStore = create<GameState>((set, get) => ({
           : state.chat,
       }
     }),
+
+  startJobShift: (id) => {
+    const state = get()
+    const definition = getJobDefinition(id)
+    if (
+      state.obby.active ||
+      state.miniGame.status === 'running' ||
+      (state.job.status === 'running' && state.job.activeId !== id)
+    ) {
+      set({
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage('Finish or cancel the current activity before working'),
+        ],
+      })
+      return
+    }
+    set((current) => ({
+      job: startJobRuntime(current.job, id),
+      openPanel: undefined,
+      chat: [
+        ...current.chat.slice(-60),
+        botMessage(
+          definition.managerName,
+          `Welcome to ${definition.employer}! ${definition.tasks[0].instruction}`,
+        ),
+      ],
+    }))
+  },
+
+  completeJobTask: (taskId) => {
+    set((state) => {
+      const activeId = state.job.activeId
+      if (!activeId) return state
+      const definition = getJobDefinition(activeId)
+      const currentTask = activeJobTask(state.job)
+      const result = completeJobRuntimeTask(state.job, taskId)
+      if (!result.changed || !currentTask) return state
+
+      if (!result.completedNow) {
+        const nextTask = activeJobTask(result.runtime)
+        return {
+          job: result.runtime,
+          chat: [
+            ...state.chat.slice(-60),
+            botMessage(definition.managerName, currentTask.npcLine),
+            ...(nextTask
+              ? [
+                  botMessage(
+                    definition.managerName,
+                    `Next task: ${nextTask.instruction}`,
+                  ),
+                ]
+              : []),
+          ],
+        }
+      }
+
+      const earning = applyCoinEarning(state, result.reward)
+      const questResult = applyQuestAdvance(
+        {
+          coins: earning.coins,
+          questProgress: earning.questProgress,
+        },
+        jobQuestIds[activeId],
+        1,
+      )
+      return {
+        job: result.runtime,
+        coins: questResult.coins,
+        questProgress: questResult.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          botMessage(definition.managerName, currentTask.npcLine),
+          botMessage(
+            definition.managerName,
+            `Shift complete! You earned ${definition.reward} coins.`,
+          ),
+          ...earning.messages,
+          ...(questResult.message ? [questResult.message] : []),
+        ],
+      }
+    })
+    if (get().coins >= 10) get().awardBadge('coin-starter')
+  },
+
+  cancelJobShift: () =>
+    set((state) => ({
+      job: cancelJobRuntime(state.job),
+      chat:
+        state.job.status === 'running'
+          ? [...state.chat.slice(-60), systemMessage('Work shift cancelled')]
+          : state.chat,
+    })),
 
   addCoins: (amount) => {
     set((state) => {
@@ -1940,6 +2076,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   beginObby: (now) =>
     set((state) => {
+      if (state.job.status === 'running') {
+        return {
+          chat: [
+            ...state.chat.slice(-60),
+            systemMessage('Finish or cancel your work shift before the obby'),
+          ],
+        }
+      }
       const teleportSequence = state.teleportSequence + 1
       return {
         obby: { ...startObby(now), bestTime: state.obby.bestTime },
@@ -1995,6 +2139,16 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   startMiniGame: (id, now) =>
     set((state) => {
+      if (state.job.status === 'running') {
+        return {
+          chat: [
+            ...state.chat.slice(-60),
+            systemMessage(
+              'Finish or cancel your work shift before starting a mini game',
+            ),
+          ],
+        }
+      }
       if (state.activeInterior) {
         return {
           chat: [
@@ -2229,6 +2383,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       botMemory: {},
       obby: initialObby,
       miniGame: createInitialMiniGame(),
+      job: createInitialJobRuntime(),
       chat: [systemMessage('Save reset')],
       messageThreads: createInitialMessageThreads(),
       selectedMessageThreadId: undefined,
@@ -2262,6 +2417,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         miniGame: createInitialMiniGame(
           save.miniGameRecords ?? state.miniGame.records,
         ),
+        job: createInitialJobRuntime(save.jobRecords ?? state.job.records),
         messageThreads: ensureMessageThreads(
           save.messageThreads ?? state.messageThreads,
         ),
@@ -2299,6 +2455,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     settings: state.settings,
     obbyBestTime: state.obby.bestTime,
     miniGameRecords: state.miniGame.records,
+    jobRecords: state.job.records,
     messageThreads: ensureMessageThreads(state.messageThreads),
   }
 }
@@ -2316,12 +2473,23 @@ export function completeQuestWithBot(botId: string) {
 }
 
 export function nearestLocation(position: Vec3): LocationId | undefined {
-  const match = ['park', 'shop', 'school', 'obby', 'houses']
+  const match: LocationId[] = [
+    'park',
+    'shop',
+    'school',
+    'obby',
+    'houses',
+    'market',
+    'restaurant',
+    'delivery',
+    'farm',
+  ]
+  const nearby = match
     .map((id) => getLocation(id as LocationId))
     .find((location) => {
       const dx = location.position[0] - position[0]
       const dz = location.position[2] - position[2]
-      return Math.hypot(dx, dz) < 4
+      return Math.hypot(dx, dz) < 7
     })
-  return match?.id
+  return nearby?.id
 }

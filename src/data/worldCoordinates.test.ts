@@ -11,6 +11,7 @@ import {
   getWorldFeature,
   worldFeaturesForChunk,
 } from './worldFeatures'
+import { workDistrictCenter } from './jobs'
 import { predictChunkRequests } from './worldStreaming'
 
 describe('world coordinates and feature streaming', () => {
@@ -55,5 +56,15 @@ describe('world coordinates and feature streaming', () => {
     expect(
       new Set(requests.map((request) => `${request.cx}:${request.cz}`)).size,
     ).toBe(requests.length)
+  })
+
+  it('streams the work district from its deterministic owner tile', () => {
+    const district = getWorldFeature('work-district')
+
+    expect(district?.center).toEqual(workDistrictCenter)
+    expect(district?.ownerChunk).toEqual({ cx: 2, cz: 2 })
+    expect(worldFeaturesForChunk(2, 2).map((feature) => feature.id)).toContain(
+      'work-district',
+    )
   })
 })

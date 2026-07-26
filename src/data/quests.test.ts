@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { miniGameDefinition } from '../ai/miniGames'
 import { staticTownBuildings } from '../game/townPlacement'
-import type { LocationId, MiniGameId, QuestId } from '../game/types'
+import type { JobId, LocationId, MiniGameId, QuestId } from '../game/types'
+import { getJobDefinition } from './jobs'
 import { getLocation, worldLocations } from './world'
 import { questDefinitions } from './quests'
 
@@ -18,6 +19,7 @@ type QuestCompletionRoute =
   | { kind: 'bed'; locationId: 'houses' }
   | { kind: 'emote' }
   | { kind: 'miniGame'; miniGameId: MiniGameId }
+  | { kind: 'job'; jobId: JobId }
 
 const questCompletionRoutes = {
   'meet-three-buddies': {
@@ -43,6 +45,10 @@ const questCompletionRoutes = {
   'play-coin-rush': { kind: 'miniGame', miniGameId: 'coin-rush' },
   'deliver-a-package': { kind: 'miniGame', miniGameId: 'delivery-dash' },
   'find-hidden-buddies': { kind: 'miniGame', miniGameId: 'hide-and-seek' },
+  'work-shopkeeper-shift': { kind: 'job', jobId: 'shopkeeper' },
+  'work-restaurant-shift': { kind: 'job', jobId: 'restaurant' },
+  'work-delivery-shift': { kind: 'job', jobId: 'delivery' },
+  'work-farm-shift': { kind: 'job', jobId: 'farming' },
 } satisfies Record<QuestId, QuestCompletionRoute>
 
 describe('quest definitions', () => {
@@ -76,6 +82,9 @@ describe('quest definitions', () => {
       }
       if (route.kind === 'miniGame') {
         expect(miniGameDefinition(route.miniGameId).id).toBe(route.miniGameId)
+      }
+      if (route.kind === 'job') {
+        expect(getJobDefinition(route.jobId).id).toBe(route.jobId)
       }
     })
 

@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   BookOpenCheck,
+  BriefcaseBusiness,
   Blocks,
   Gamepad2,
   Gauge,
@@ -58,6 +59,11 @@ const menuItems: {
     panel: 'minigames',
     label: 'Mini Games',
     icon: <Gamepad2 size={21} aria-hidden />,
+  },
+  {
+    panel: 'jobs',
+    label: 'Jobs & Work',
+    icon: <BriefcaseBusiness size={21} aria-hidden />,
   },
   {
     panel: 'build',

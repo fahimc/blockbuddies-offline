@@ -12,6 +12,7 @@ import {
 import { footballPitch } from '../game/football'
 import { goKartTrack } from '../game/goKart'
 import { distance2d, getLocation, worldLocations } from './world'
+import type { LocationId } from '../game/types'
 
 describe('world travel destinations', () => {
   it('keeps every central-town destination at its established coordinates', () => {
@@ -43,7 +44,7 @@ describe('world travel destinations', () => {
   })
 
   it('provides one grounded, nearby arrival point for every key location', () => {
-    expect(worldLocations).toHaveLength(11)
+    expect(worldLocations).toHaveLength(15)
     expect(new Set(worldLocations.map((location) => location.id)).size).toBe(
       worldLocations.length,
     )
@@ -66,6 +67,15 @@ describe('world travel destinations', () => {
         expect(
           distance2d(location.position, location.travelPosition),
         ).toBeLessThan(goKartTrack.depth / 2 + 5)
+      } else if (
+        ['market', 'restaurant', 'delivery', 'farm'].includes(location.id)
+      ) {
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeGreaterThan(7)
+        expect(
+          distance2d(location.position, location.travelPosition),
+        ).toBeLessThan(9)
       } else {
         expect(
           distance2d(location.position, location.travelPosition),
@@ -169,5 +179,27 @@ describe('world travel destinations', () => {
         [1, 1, 1],
       ),
     ).toBeDefined()
+  })
+
+  it('adds four separated workplaces outside the central town', () => {
+    const workLocations = ['market', 'restaurant', 'delivery', 'farm'].map(
+      (id) => getLocation(id as LocationId),
+    )
+
+    expect(workLocations.map((location) => location.label)).toEqual([
+      'Buddy Market',
+      'Sunny Bites',
+      'Buddy Delivery',
+      'Sunshine Farm',
+    ])
+    workLocations.forEach((location) => {
+      expect(Math.abs(location.position[0])).toBeGreaterThan(27)
+      expect(
+        distance2d(location.position, location.travelPosition),
+      ).toBeGreaterThan(7)
+      expect(
+        distance2d(location.position, location.travelPosition),
+      ).toBeLessThan(9)
+    })
   })
 })

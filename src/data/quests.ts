@@ -183,4 +183,48 @@ export const questDefinitions: QuestDefinition[] = [
     target: 1,
     reward: 55,
   },
+  {
+    id: 'work-shopkeeper-shift',
+    title: 'Work at Buddy Market',
+    description: 'Complete a full shopkeeper shift for Mia Market.',
+    howTo:
+      'Open Jobs, travel to Buddy Market, talk to Mia, then stock, scan, and serve in order.',
+    tip: 'Follow the blue task marker and finish each customer-service step.',
+    category: 'daily',
+    target: 1,
+    reward: 30,
+  },
+  {
+    id: 'work-restaurant-shift',
+    title: 'Work at Sunny Bites',
+    description: 'Prepare and serve a complete restaurant order.',
+    howTo:
+      'Open Jobs, travel to Sunny Bites, talk to Chef Coco, then prepare, cook, and serve the meal.',
+    tip: 'The orange marker moves from preparation to cooking and the customer.',
+    category: 'daily',
+    target: 1,
+    reward: 35,
+  },
+  {
+    id: 'work-delivery-shift',
+    title: 'Work for Buddy Delivery',
+    description: 'Collect, load, and deliver one labelled parcel.',
+    howTo:
+      'Open Jobs, travel to Buddy Delivery, talk to Dex, and follow all three purple parcel markers.',
+    tip: 'The final customer waits by the east gate across the work district.',
+    category: 'daily',
+    target: 1,
+    reward: 40,
+  },
+  {
+    id: 'work-farm-shift',
+    title: 'Work at Sunshine Farm',
+    description: 'Grow and harvest one complete row of crops.',
+    howTo:
+      'Open Jobs, travel to Sunshine Farm, talk to Fern, then plant, water, and harvest in order.',
+    tip: 'Follow the green field markers from left to right across the crop rows.',
+    category: 'daily',
+    target: 1,
+    reward: 35,
+  },
 ]

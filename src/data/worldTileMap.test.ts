@@ -3,6 +3,7 @@ import { obbyPlatforms } from '../ai/obby'
 import { realScale } from '../game/scale'
 import { createWorldTileMap, worldTerrainAt } from './worldTileMap'
 import { footballStadiumCenter } from './worldFeatures'
+import { jobDefinitions, workplaceBuildings, workDistrictCenter } from './jobs'
 
 describe('world tile map', () => {
   it('builds deterministic terrain and object layers without forbidden placement', () => {
@@ -30,6 +31,28 @@ describe('world tile map', () => {
       worldTerrainAt(footballStadiumCenter[0], footballStadiumCenter[2]),
     ).toBe('park')
     expect(worldTerrainAt(footballStadiumCenter[0], -58)).toBe('road')
+  })
+
+  it('registers the complete work district on deterministic park tiles', () => {
+    const map = createWorldTileMap('LONDON-2026', 3)
+    const workplaceIds = new Set(
+      map.objects
+        .filter((object) => object.id.startsWith('authored:workplace:'))
+        .map((object) => object.id),
+    )
+    const taskIds = new Set(
+      map.objects
+        .filter((object) => object.id.startsWith('authored:job-task:'))
+        .map((object) => object.id),
+    )
+
+    expect(workplaceIds.size).toBe(workplaceBuildings.length)
+    expect(taskIds.size).toBe(
+      jobDefinitions.reduce((total, job) => total + job.tasks.length, 0),
+    )
+    expect(worldTerrainAt(workDistrictCenter[0], workDistrictCenter[2])).toBe(
+      'park',
+    )
   })
 
   it('never assigns a solid object to a road tile', () => {

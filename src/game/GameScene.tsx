@@ -1,7 +1,14 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { Edges, useKeyboardControls, Html, useTexture } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { Armchair, BedDouble, CarFront, MessageCircle } from 'lucide-react'
+import {
+  Armchair,
+  BedDouble,
+  BriefcaseBusiness,
+  CarFront,
+  CheckCircle2,
+  MessageCircle,
+} from 'lucide-react'
 import {
   createContext,
   useCallback,
@@ -16,6 +23,13 @@ import {
 } from 'react'
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
+import {
+  activeJobTask,
+  jobDefinitions,
+  workplaceBuildings,
+  workDistrictCenter,
+  workDistrictSize,
+} from '../data/jobs'
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import {
   obbyCheckpoints,
@@ -254,6 +268,11 @@ const staticCollisionObstacles: CollisionBox[] = [
     id: `static-building:${index}`,
     center: position,
     half: [scale[0] / 2 + 0.18, scale[1] / 2, scale[2] / 2 + 0.18] as Vec3,
+  })),
+  ...workplaceBuildings.map(({ id, position, size }) => ({
+    id: `workplace-building:${id}`,
+    center: position,
+    half: [size[0] / 2 + 0.18, size[1] / 2, size[2] / 2 + 0.18] as Vec3,
   })),
   ...staticTreePositions
     .filter(
@@ -623,6 +642,9 @@ function OutdoorWorld() {
       </StreamedFeature>
       <StreamedFeature featureId="go-kart-track">
         <GoKartTrack vehicles={goKarts} runtime={drivableRuntime} />
+      </StreamedFeature>
+      <StreamedFeature featureId="work-district">
+        <WorkDistrict />
       </StreamedFeature>
       <SeatActionMarkers />
       <TrafficVehicles
@@ -2692,6 +2714,316 @@ function Town() {
   )
 }
 
+function WorkDistrict() {
+  return (
+    <group data-testid="work-district">
+      <RigidBody type="fixed" colliders={false}>
+        <mesh
+          receiveShadow
+          position={[
+            workDistrictCenter[0],
+            -workDistrictSize[1] / 2,
+            workDistrictCenter[2],
+          ]}
+        >
+          <boxGeometry args={workDistrictSize} />
+          <meshStandardMaterial color="#86efac" roughness={0.92} />
+        </mesh>
+        <CuboidCollider
+          args={[
+            workDistrictSize[0] / 2,
+            workDistrictSize[1] / 2,
+            workDistrictSize[2] / 2,
+          ]}
+          position={[
+            workDistrictCenter[0],
+            -workDistrictSize[1] / 2,
+            workDistrictCenter[2],
+          ]}
+        />
+      </RigidBody>
+
+      <mesh
+        receiveShadow
+        position={[workDistrictCenter[0], 0.025, workDistrictCenter[2]]}
+      >
+        <boxGeometry args={[5.5, 0.08, workDistrictSize[2] - 2]} />
+        <meshStandardMaterial color="#64748b" roughness={0.9} />
+      </mesh>
+      <mesh
+        receiveShadow
+        position={[workDistrictCenter[0], 0.03, workDistrictCenter[2]]}
+      >
+        <boxGeometry args={[workDistrictSize[0] - 2, 0.08, 5.5]} />
+        <meshStandardMaterial color="#64748b" roughness={0.9} />
+      </mesh>
+      <Html
+        center
+        position={[workDistrictCenter[0], 5.1, workDistrictCenter[2] - 18]}
+        zIndexRange={worldHtmlZIndexRange}
+      >
+        <span className="pointer-events-none whitespace-nowrap rounded-xl bg-amber-300 px-4 py-2 text-sm font-black text-slate-950 shadow-xl">
+          Buddy Work District · Complete tasks to earn coins
+        </span>
+      </Html>
+
+      {workplaceBuildings.map((building) => (
+        <group key={building.id}>
+          <Building
+            position={building.position}
+            color={building.color}
+            scale={building.size}
+            roofStyle="flat"
+          />
+          <Storefront
+            position={[building.position[0], 0, building.position[2]]}
+            label={building.label.toUpperCase()}
+            color={building.color}
+          />
+        </group>
+      ))}
+
+      <FarmFields />
+      {jobDefinitions.map((job) => (
+        <group key={job.id}>
+          <JobManager jobId={job.id} />
+          {job.tasks.map((task) => (
+            <JobTaskStation key={task.id} jobId={job.id} taskId={task.id} />
+          ))}
+          <WorkCustomer jobId={job.id} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function FarmFields() {
+  return (
+    <group>
+      {[94, 98, 102].map((x, index) => (
+        <group key={x}>
+          <mesh receiveShadow position={[x, 0.08, 121]}>
+            <boxGeometry args={[3.2, 0.14, 5]} />
+            <meshStandardMaterial color="#854d0e" roughness={1} />
+          </mesh>
+          {[-1.5, -0.5, 0.5, 1.5].map((zOffset) => (
+            <mesh
+              key={zOffset}
+              castShadow
+              position={[x + (index - 1) * 0.08, 0.34, 121 + zOffset]}
+            >
+              <coneGeometry args={[0.2, 0.52, 6]} />
+              <meshStandardMaterial
+                color={index === 2 ? '#facc15' : '#22c55e'}
+              />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  )
+}
+
+function JobManager({ jobId }: { jobId: (typeof jobDefinitions)[number]['id'] }) {
+  const job = jobDefinitions.find((entry) => entry.id === jobId)!
+  const runtime = useGameStore((state) => state.job)
+  const startJobShift = useGameStore((state) => state.startJobShift)
+  const [nearby, setNearby] = useState(false)
+  const activeHere = runtime.activeId === job.id
+  const runningHere = activeHere && runtime.status === 'running'
+  const completedHere = activeHere && runtime.status === 'completed'
+  const currentTask = runningHere ? activeJobTask(runtime) : undefined
+
+  useFrame(() => {
+    const next =
+      distance2d(
+        useGameStore.getState().playerPosition,
+        job.managerPosition,
+      ) <= 3.4
+    if (next !== nearby) setNearby(next)
+  })
+
+  const managerLine = runningHere
+    ? currentTask?.instruction
+    : completedHere
+      ? `Great shift! You earned ${job.reward} coins.`
+      : runtime.status === 'running'
+        ? 'Finish your current shift, then come and work with me.'
+        : `I have a three-task shift worth ${job.reward} coins.`
+
+  return (
+    <group
+      position={[
+        job.managerPosition[0],
+        avatarGroundOffset,
+        job.managerPosition[2],
+      ]}
+      onClick={(event) => {
+        event.stopPropagation()
+        if (nearby && !runningHere) startJobShift(job.id)
+      }}
+    >
+      <BlockAvatar
+        bodyColor="#c9825a"
+        shirtColor={job.color}
+        hairColor="#3b1f12"
+        hairStyle={job.id === 'farming' ? 'bob' : 'short'}
+        pantsColor="#1f2937"
+        outfitStyle="tee"
+        bottomStyle="jeans"
+        shoeStyle="boots"
+        username={job.managerName}
+        showName={nearby || activeHere}
+        action={runningHere ? 'wave' : 'idle'}
+        emote={runningHere ? 'wave' : 'none'}
+      />
+      {nearby ? (
+        <Html
+          center
+          position={[0, 3.55, 0]}
+          zIndexRange={worldActionZIndexRange}
+        >
+          <div className="w-52 rounded-xl bg-white p-2 text-center text-xs font-black text-slate-950 shadow-xl">
+            <span className="block">{managerLine}</span>
+            {!runningHere ? (
+              <button
+                type="button"
+                className="bb-world-action-button mt-2"
+                data-testid={`start-job-${job.id}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  startJobShift(job.id)
+                }}
+              >
+                <BriefcaseBusiness size={17} aria-hidden />
+                {completedHere ? 'Work another shift' : 'Start shift'}
+              </button>
+            ) : null}
+          </div>
+        </Html>
+      ) : null}
+    </group>
+  )
+}
+
+function JobTaskStation({
+  jobId,
+  taskId,
+}: {
+  jobId: (typeof jobDefinitions)[number]['id']
+  taskId: string
+}) {
+  const job = jobDefinitions.find((entry) => entry.id === jobId)!
+  const task = job.tasks.find((entry) => entry.id === taskId)!
+  const runtime = useGameStore((state) => state.job)
+  const completeJobTask = useGameStore((state) => state.completeJobTask)
+  const [nearby, setNearby] = useState(false)
+  const current = activeJobTask(runtime)?.id === task.id
+  const completed = runtime.completedTaskIds.includes(task.id)
+
+  useFrame(() => {
+    const next =
+      current &&
+      distance2d(useGameStore.getState().playerPosition, task.position) <= 3.8
+    if (next !== nearby) setNearby(next)
+  })
+
+  return (
+    <group position={task.position}>
+      <mesh
+        receiveShadow
+        position={[0, 0.08, 0]}
+        onClick={(event) => {
+          event.stopPropagation()
+          if (current && nearby) completeJobTask(task.id)
+        }}
+      >
+        <cylinderGeometry args={[0.9, 0.9, 0.16, 28]} />
+        <meshStandardMaterial
+          color={completed ? '#22c55e' : current ? job.color : '#cbd5e1'}
+          emissive={current ? job.color : '#000000'}
+          emissiveIntensity={current ? 0.4 : 0}
+          roughness={0.65}
+        />
+      </mesh>
+      {current ? (
+        <Html center position={[0, 1.5, 0]} zIndexRange={worldActionZIndexRange}>
+          {nearby ? (
+            <button
+              type="button"
+              className="bb-world-action-button"
+              data-testid={`job-task-${task.id}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation()
+                completeJobTask(task.id)
+              }}
+            >
+              <CheckCircle2 size={17} aria-hidden />
+              {task.label}
+            </button>
+          ) : (
+            <span className="pointer-events-none whitespace-nowrap rounded-lg bg-slate-950/90 px-3 py-1 text-xs font-black text-white shadow">
+              Next: {task.label}
+            </span>
+          )}
+        </Html>
+      ) : null}
+    </group>
+  )
+}
+
+function WorkCustomer({
+  jobId,
+}: {
+  jobId: (typeof jobDefinitions)[number]['id']
+}) {
+  const job = jobDefinitions.find((entry) => entry.id === jobId)!
+  const finalTask = job.tasks.at(-1)!
+  const runtime = useGameStore((state) => state.job)
+  const waiting =
+    runtime.activeId === job.id &&
+    runtime.status === 'running' &&
+    activeJobTask(runtime)?.id === finalTask.id
+  const helped =
+    runtime.activeId === job.id &&
+    runtime.completedTaskIds.includes(finalTask.id)
+  const label = job.id === 'farming' ? 'Garden Helper' : 'Waiting Customer'
+
+  return (
+    <group
+      position={[
+        finalTask.position[0] + 1.15,
+        avatarGroundOffset,
+        finalTask.position[2] - 0.7,
+      ]}
+    >
+      <BlockAvatar
+        bodyColor="#d99b70"
+        shirtColor={job.color}
+        hairColor="#111827"
+        hairStyle="bob"
+        pantsColor="#334155"
+        outfitStyle="tee"
+        bottomStyle="jeans"
+        shoeStyle="sneakers"
+        username={label}
+        showName={waiting || helped}
+        action={helped ? 'cheer' : 'idle'}
+        emote={helped ? 'cheer' : 'none'}
+      />
+      {waiting || helped ? (
+        <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
+          <span className="pointer-events-none block max-w-40 rounded-lg bg-white px-3 py-2 text-center text-xs font-black text-slate-900 shadow">
+            {helped ? finalTask.npcLine : 'Hi! I am waiting for your help.'}
+          </span>
+        </Html>
+      ) : null}
+    </group>
+  )
+}
+
 function SpawnPad() {
   const studs = useMemo(() => {
     const items: Vec3[] = []
@@ -2755,10 +3087,12 @@ function Building({
   position,
   color,
   scale,
+  roofStyle = 'pitched',
 }: {
   position: Vec3
   color: string
   scale: Vec3
+  roofStyle?: 'pitched' | 'flat'
 }) {
   const floors = floorCountFromHeight(scale[1])
   const roofHeight = realScale.roofHeight
@@ -2775,14 +3109,25 @@ function Building({
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={color} />
       </mesh>
-      <mesh
-        castShadow
-        position={[0, scale[1] / 2 + roofHeight / 2, 0]}
-        scale={[scale[0] * 1.08, roofHeight, scale[2] * 1.08]}
-      >
-        <coneGeometry args={[0.8, 1, 4]} />
-        <meshStandardMaterial color="#ef4444" />
-      </mesh>
+      {roofStyle === 'flat' ? (
+        <mesh
+          castShadow
+          position={[0, scale[1] / 2 + roofHeight / 2, 0]}
+          scale={[scale[0] * 1.04, roofHeight, scale[2] * 1.04]}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#ef4444" />
+        </mesh>
+      ) : (
+        <mesh
+          castShadow
+          position={[0, scale[1] / 2 + roofHeight / 2, 0]}
+          scale={[scale[0] * 1.08, roofHeight, scale[2] * 1.08]}
+        >
+          <coneGeometry args={[0.8, 1, 4]} />
+          <meshStandardMaterial color="#ef4444" />
+        </mesh>
+      )}
       <mesh
         position={[0, doorY, scale[2] / 2 + 0.02]}
         scale={[realScale.doorWidth, realScale.doorHeight, realScale.doorDepth]}

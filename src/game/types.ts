@@ -12,6 +12,10 @@ export type LocationId =
   | 'kart'
   | 'hall'
   | 'builder'
+  | 'market'
+  | 'restaurant'
+  | 'delivery'
+  | 'farm'
 
 export type InteriorKind = 'house' | 'shop' | 'school' | 'building'
 
@@ -104,6 +108,10 @@ export type QuestId =
   | 'play-coin-rush'
   | 'deliver-a-package'
   | 'find-hidden-buddies'
+  | 'work-shopkeeper-shift'
+  | 'work-restaurant-shift'
+  | 'work-delivery-shift'
+  | 'work-farm-shift'
 
 export type QuestProgress = {
   id: QuestId
@@ -121,6 +129,45 @@ export type QuestDefinition = {
   category: 'starter' | 'daily' | 'adventure'
   target: number
   reward: number
+}
+
+export type JobId = 'shopkeeper' | 'restaurant' | 'delivery' | 'farming'
+
+export type JobTask = {
+  id: string
+  label: string
+  instruction: string
+  position: Vec3
+  npcLine: string
+}
+
+export type JobDefinition = {
+  id: JobId
+  title: string
+  employer: string
+  description: string
+  locationId: LocationId
+  reward: number
+  color: string
+  managerName: string
+  managerPosition: Vec3
+  tasks: JobTask[]
+}
+
+export type JobRecord = {
+  shiftsCompleted: number
+  coinsEarned: number
+}
+
+export type JobStatus = 'idle' | 'running' | 'completed'
+
+export type JobRuntime = {
+  activeId?: JobId
+  status: JobStatus
+  taskIndex: number
+  completedTaskIds: string[]
+  eventSequence: number
+  records: Partial<Record<JobId, JobRecord>>
 }
 
 export type ShopItemId =
