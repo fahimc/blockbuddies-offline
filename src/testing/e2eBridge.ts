@@ -204,12 +204,14 @@ function prepareBuddyRushWorldView(
       : buddyRushSiteByRivalId[target]
   const frontX = Math.sin(site.facingYaw)
   const frontZ = Math.cos(site.facingYaw)
-  const arrival: Vec3 = [
-    site.position[0] + frontX * 7.2,
-    0,
-    site.position[2] + frontZ * 7.2,
-  ]
-  const yaw = site.facingYaw + Math.PI
+  const arrival: Vec3 =
+    target === 'bus-stop'
+      ? [site.position[0] - 5.8, 0, site.position[2] + 6.8]
+      : [site.position[0] + frontX * 7.2, 0, site.position[2] + frontZ * 7.2]
+  const yaw =
+    target === 'bus-stop'
+      ? Math.atan2(site.position[0] - arrival[0], site.position[2] - arrival[2])
+      : site.facingYaw + Math.PI
   const teleportSequence = game.teleportSequence + 1
   useGameStore.setState({
     activeInterior: undefined,

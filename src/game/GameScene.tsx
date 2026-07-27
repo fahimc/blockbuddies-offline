@@ -87,9 +87,7 @@ import {
   type CollisionBox,
 } from './collision'
 import { actorCollisionBoxes } from './modularCollision'
-import {
-  authoredWorldCollisionBoxes as staticCollisionObstacles,
-} from './worldCollision'
+import { authoredWorldCollisionBoxes as staticCollisionObstacles } from './worldCollision'
 import { activeObbyCollisionBoxes } from './obbyPhysics'
 import {
   buildBlockInteriorEntrance,
@@ -185,6 +183,7 @@ import {
   createTrafficVehicles,
   makeTrafficLanes,
   trafficCollisionBoxes,
+  trafficDoubleDeckerHeight,
   trafficHeadingYaw,
   trafficPositionAt,
   type TrafficLane,
@@ -742,6 +741,7 @@ function TrafficVehicleMesh({
     const playerPosition = useGameStore.getState().playerPosition
     const nextNearby =
       !activeVehicleId &&
+      vehicle.kind !== 'double-decker-bus' &&
       Math.hypot(
         playerPosition[0] - pose.position[0],
         playerPosition[2] - pose.position[2],
@@ -751,7 +751,8 @@ function TrafficVehicleMesh({
 
   const driveTrafficCar = () => {
     const current = runtime.current.find((item) => item.id === vehicle.id)
-    if (!current || activeVehicleId) return
+    if (!current || current.kind === 'double-decker-bus' || activeVehicleId)
+      return
     const pose = trafficPositionAt(lane, current.offset)
     const drivableId = `traffic-drive:${current.id}`
     runtime.current = runtime.current.filter((item) => item.id !== current.id)
@@ -775,7 +776,11 @@ function TrafficVehicleMesh({
       position={initialPose.position}
       rotation={[0, initialPose.yaw, 0]}
     >
-      <CarPiece color={vehicle.color} />
+      {vehicle.kind === 'double-decker-bus' ? (
+        <DoubleDeckerBusPiece color={vehicle.color} />
+      ) : (
+        <CarPiece color={vehicle.color} />
+      )}
       {nearby ? (
         <Html
           center
@@ -6815,6 +6820,109 @@ function ShopPiece({ color }: { color: string }) {
         />
         <meshStandardMaterial color="#7c2d12" roughness={0.82} />
       </mesh>
+    </group>
+  )
+}
+
+function DoubleDeckerBusPiece({ color }: { color: string }) {
+  const length = realScale.busLength
+  const width = realScale.busWidth
+  const height = trafficDoubleDeckerHeight
+  const bodyBottom = realScale.wheelRadius * 0.72
+  const bodyHeight = height - bodyBottom
+  const deckHeight = bodyHeight / 2
+  const windowHeight = deckHeight * 0.48
+  const windowXs = [-0.34, -0.11, 0.12, 0.35].map((ratio) => ratio * length)
+  const windowYs = [
+    bodyBottom + deckHeight * 0.58,
+    bodyBottom + deckHeight * 1.55,
+  ]
+
+  return (
+    <group>
+      <mesh
+        castShadow
+        receiveShadow
+        position={[0, bodyBottom + bodyHeight / 2, 0]}
+      >
+        <boxGeometry args={[length, bodyHeight, width]} />
+        <meshStandardMaterial color={color} roughness={0.68} />
+      </mesh>
+      <mesh castShadow position={[0, height + 0.08, 0]}>
+        <boxGeometry args={[length * 0.98, 0.16, width * 0.98]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.72} />
+      </mesh>
+      {windowYs.flatMap((y, row) =>
+        [-1, 1].flatMap((side) =>
+          windowXs.map((x, column) => (
+            <mesh
+              key={`bus-window-${row}-${side}-${column}`}
+              position={[x, y, side * (width / 2 + 0.035)]}
+            >
+              <boxGeometry args={[length * 0.18, windowHeight, 0.07]} />
+              <meshStandardMaterial
+                color="#bae6fd"
+                emissive="#7dd3fc"
+                emissiveIntensity={0.08}
+                roughness={0.42}
+              />
+            </mesh>
+          )),
+        ),
+      )}
+      {windowYs.map((y, row) => (
+        <mesh
+          key={`bus-windscreen-${row}`}
+          position={[length / 2 + 0.04, y, 0]}
+        >
+          <boxGeometry args={[0.08, windowHeight, width * 0.72]} />
+          <meshStandardMaterial
+            color="#bfdbfe"
+            emissive="#7dd3fc"
+            emissiveIntensity={0.1}
+            roughness={0.4}
+          />
+        </mesh>
+      ))}
+      <mesh position={[length / 2 + 0.085, height * 0.47, 0]}>
+        <boxGeometry args={[0.09, 0.38, width * 0.68]} />
+        <meshStandardMaterial
+          color="#111827"
+          emissive="#facc15"
+          emissiveIntensity={0.3}
+        />
+      </mesh>
+      <mesh
+        castShadow
+        position={[
+          length * 0.31,
+          bodyBottom + deckHeight * 0.52,
+          -width / 2 - 0.045,
+        ]}
+      >
+        <boxGeometry args={[length * 0.16, deckHeight * 0.82, 0.09]} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.48} />
+      </mesh>
+      {[-length * 0.34, length * 0.32].flatMap((x) =>
+        [-width * 0.48, width * 0.48].map((z) => (
+          <mesh
+            key={`bus-wheel-${x}-${z}`}
+            castShadow
+            position={[x, realScale.wheelRadius, z]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry
+              args={[
+                realScale.wheelRadius * 1.18,
+                realScale.wheelRadius * 1.18,
+                width * 0.11,
+                14,
+              ]}
+            />
+            <meshStandardMaterial color="#111827" roughness={0.82} />
+          </mesh>
+        )),
+      )}
     </group>
   )
 }

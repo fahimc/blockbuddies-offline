@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { buildingHeightForFloors, realScale } from '../game/scale'
 import { footprintOverlapsAuthoredCore } from '../game/townPlacement'
-import { districtFor, generateProceduralWorld, hashSeed, roadDriveCorridorPadding } from './proceduralWorld'
+import {
+  districtFor,
+  generateProceduralWorld,
+  hashSeed,
+  roadDriveCorridorPadding,
+} from './proceduralWorld'
+import {
+  buddyRushReservationFootprint,
+  buddyRushReservedSites,
+} from './buddyRushWorldPlan'
 
 describe('procedural borough world', () => {
   it('generates deterministic chunks for the same seed and center', () => {
@@ -36,8 +45,12 @@ describe('procedural borough world', () => {
       night: false,
     })
 
-    const firstBuildings = first.pieces.filter((piece) => piece.kind === 'building').map((piece) => piece.scale.join(','))
-    const secondBuildings = second.pieces.filter((piece) => piece.kind === 'building').map((piece) => piece.scale.join(','))
+    const firstBuildings = first.pieces
+      .filter((piece) => piece.kind === 'building')
+      .map((piece) => piece.scale.join(','))
+    const secondBuildings = second.pieces
+      .filter((piece) => piece.kind === 'building')
+      .map((piece) => piece.scale.join(','))
     expect(firstBuildings).not.toEqual(secondBuildings)
   })
 
@@ -73,9 +86,15 @@ describe('procedural borough world', () => {
 
     expect(buildings.length).toBeGreaterThan(0)
     expect(doors.length).toBeGreaterThan(0)
-    expect(buildings.every((piece) => piece.scale[1] >= buildingHeightForFloors(2))).toBe(true)
-    expect(doors.every((piece) => piece.scale[1] === realScale.doorHeight)).toBe(true)
-    expect(doors.every((piece) => piece.scale[1] / realScale.avatarHeight > 1.1)).toBe(true)
+    expect(
+      buildings.every((piece) => piece.scale[1] >= buildingHeightForFloors(2)),
+    ).toBe(true)
+    expect(
+      doors.every((piece) => piece.scale[1] === realScale.doorHeight),
+    ).toBe(true)
+    expect(
+      doors.every((piece) => piece.scale[1] / realScale.avatarHeight > 1.1),
+    ).toBe(true)
   })
 
   it('keeps tree trunks and phone boxes off roads and pavements', () => {
@@ -86,12 +105,22 @@ describe('procedural borough world', () => {
       night: false,
     })
 
-    const roadsAndPavements = world.pieces.filter((piece) => piece.kind === 'road' || piece.kind === 'pavement')
-    const blockers = world.pieces.filter((piece) => piece.kind === 'tree-trunk' || piece.kind === 'phone-box')
+    const roadsAndPavements = world.pieces.filter(
+      (piece) => piece.kind === 'road' || piece.kind === 'pavement',
+    )
+    const blockers = world.pieces.filter(
+      (piece) => piece.kind === 'tree-trunk' || piece.kind === 'phone-box',
+    )
 
     expect(blockers.length).toBeGreaterThan(0)
     expect(roadsAndPavements.length).toBeGreaterThan(0)
-    expect(blockers.every((blocker) => roadsAndPavements.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
+    expect(
+      blockers.every((blocker) =>
+        roadsAndPavements.every(
+          (road) => !overlapsTopDown(blocker, road, 0.04),
+        ),
+      ),
+    ).toBe(true)
   })
 
   it('keeps traffic lanes clear of scenery inside the drivable road corridor', () => {
@@ -112,17 +141,22 @@ describe('procedural borough world', () => {
           road.scale[2] + roadDriveCorridorPadding * 2,
         ] as [number, number, number],
       }))
-    const blockers = world.pieces.filter((piece) =>
-      piece.kind === 'tree-trunk' ||
-      piece.kind === 'tree-top' ||
-      piece.kind === 'lamp-post' ||
-      piece.kind === 'lamp-light' ||
-      piece.kind === 'phone-box',
+    const blockers = world.pieces.filter(
+      (piece) =>
+        piece.kind === 'tree-trunk' ||
+        piece.kind === 'tree-top' ||
+        piece.kind === 'lamp-post' ||
+        piece.kind === 'lamp-light' ||
+        piece.kind === 'phone-box',
     )
 
     expect(driveCorridors.length).toBeGreaterThan(0)
     expect(blockers.length).toBeGreaterThan(0)
-    expect(blockers.every((blocker) => driveCorridors.every((road) => !overlapsTopDown(blocker, road, 0.04)))).toBe(true)
+    expect(
+      blockers.every((blocker) =>
+        driveCorridors.every((road) => !overlapsTopDown(blocker, road, 0.04)),
+      ),
+    ).toBe(true)
   })
 
   it('does not generate obsolete stationary buses in traffic lanes', () => {
@@ -133,7 +167,9 @@ describe('procedural borough world', () => {
       night: false,
     })
 
-    expect(world.pieces.some((piece) => piece.id.startsWith('bus:'))).toBe(false)
+    expect(world.pieces.some((piece) => piece.id.startsWith('bus:'))).toBe(
+      false,
+    )
   })
 
   it('uses sparse sandbox-style building plots and wide roads', () => {
@@ -144,14 +180,26 @@ describe('procedural borough world', () => {
       night: false,
     })
 
-    const generatedBuildings = world.pieces.filter((piece) => piece.kind === 'building' && piece.id.startsWith('building:'))
-    const roads = world.pieces.filter((piece) => piece.kind === 'road' && piece.id.startsWith('road-'))
+    const generatedBuildings = world.pieces.filter(
+      (piece) => piece.kind === 'building' && piece.id.startsWith('building:'),
+    )
+    const roads = world.pieces.filter(
+      (piece) => piece.kind === 'road' && piece.id.startsWith('road-'),
+    )
 
     expect(generatedBuildings.length).toBeLessThanOrEqual(18)
     expect(generatedBuildings.length).toBeGreaterThan(0)
-    expect(roads.every((road) => Math.max(road.scale[0], road.scale[2]) === 36)).toBe(true)
-    expect(roads.every((road) => Math.min(road.scale[0], road.scale[2]) === realScale.roadTile)).toBe(true)
-    expect(roads.every(() => realScale.roadTile / realScale.carWidth > 3.4)).toBe(true)
+    expect(
+      roads.every((road) => Math.max(road.scale[0], road.scale[2]) === 36),
+    ).toBe(true)
+    expect(
+      roads.every(
+        (road) => Math.min(road.scale[0], road.scale[2]) === realScale.roadTile,
+      ),
+    ).toBe(true)
+    expect(
+      roads.every(() => realScale.roadTile / realScale.carWidth > 3.4),
+    ).toBe(true)
   })
 
   it('keeps procedural door safe zones clear of scenery blockers', () => {
@@ -165,13 +213,26 @@ describe('procedural borough world', () => {
     const doorZones = world.pieces
       .filter((piece) => piece.kind === 'door')
       .map((door) => ({
-        position: [door.position[0], 0, door.position[2] + 0.58] as [number, number, number],
+        position: [door.position[0], 0, door.position[2] + 0.58] as [
+          number,
+          number,
+          number,
+        ],
         scale: [3.7, 2, 3.7] as [number, number, number],
       }))
-    const blockers = world.pieces.filter((piece) => piece.kind === 'tree-trunk' || piece.kind === 'phone-box' || piece.kind === 'lamp-post')
+    const blockers = world.pieces.filter(
+      (piece) =>
+        piece.kind === 'tree-trunk' ||
+        piece.kind === 'phone-box' ||
+        piece.kind === 'lamp-post',
+    )
 
     expect(doorZones.length).toBeGreaterThan(0)
-    expect(blockers.every((blocker) => doorZones.every((zone) => !overlapsTopDown(blocker, zone, 0.04)))).toBe(true)
+    expect(
+      blockers.every((blocker) =>
+        doorZones.every((zone) => !overlapsTopDown(blocker, zone, 0.04)),
+      ),
+    ).toBe(true)
   })
 
   it('snaps independent scenery to grid cells and prevents occupied-cell overlap', () => {
@@ -181,24 +242,40 @@ describe('procedural borough world', () => {
       viewDistance: 2,
       night: true,
     })
-    const anchors = world.pieces.filter((piece) =>
-      piece.kind === 'building' || piece.kind === 'tree-trunk' || piece.kind === 'lamp-post' || piece.kind === 'phone-box',
+    const anchors = world.pieces.filter(
+      (piece) =>
+        piece.kind === 'building' ||
+        piece.kind === 'tree-trunk' ||
+        piece.kind === 'lamp-post' ||
+        piece.kind === 'phone-box',
     )
     const footprints = anchors.map((piece) => ({
       ...piece,
       scale:
         piece.kind === 'tree-trunk'
-          ? [realScale.treeCanopySize, piece.scale[1], realScale.treeCanopySize] as [number, number, number]
+          ? ([
+              realScale.treeCanopySize,
+              piece.scale[1],
+              realScale.treeCanopySize,
+            ] as [number, number, number])
           : piece.kind === 'lamp-post'
-            ? [0.8, piece.scale[1], 0.8] as [number, number, number]
+            ? ([0.8, piece.scale[1], 0.8] as [number, number, number])
             : piece.scale,
     }))
 
     expect(anchors.length).toBeGreaterThan(0)
-    expect(anchors.every((piece) => Number.isInteger(piece.position[0]) && Number.isInteger(piece.position[2]))).toBe(true)
+    expect(
+      anchors.every(
+        (piece) =>
+          Number.isInteger(piece.position[0]) &&
+          Number.isInteger(piece.position[2]),
+      ),
+    ).toBe(true)
     expect(
       footprints.every((piece, index) =>
-        footprints.slice(index + 1).every((other) => !overlapsTopDown(piece, other)),
+        footprints
+          .slice(index + 1)
+          .every((other) => !overlapsTopDown(piece, other)),
       ),
     ).toBe(true)
   })
@@ -217,11 +294,27 @@ describe('procedural borough world', () => {
 
     expect(realScale.pavementWidth).toBeGreaterThan(realScale.avatarHeight)
     expect(parks.length).toBeGreaterThan(0)
-    expect(parks.every((park) => roads.every((road) => !overlapsTopDown(park, road)))).toBe(true)
-    expect(parks.every((park) => pavements.every((pavement) => !overlapsTopDown(park, pavement)))).toBe(true)
+    expect(
+      parks.every((park) =>
+        roads.every((road) => !overlapsTopDown(park, road)),
+      ),
+    ).toBe(true)
+    expect(
+      parks.every((park) =>
+        pavements.every((pavement) => !overlapsTopDown(park, pavement)),
+      ),
+    ).toBe(true)
     expect(lamps.length).toBeGreaterThan(0)
-    expect(lamps.every((lamp) => roads.every((road) => !overlapsTopDown(lamp, road)))).toBe(true)
-    expect(lamps.every((lamp) => pavements.some((pavement) => overlapsTopDown(lamp, pavement)))).toBe(true)
+    expect(
+      lamps.every((lamp) =>
+        roads.every((road) => !overlapsTopDown(lamp, road)),
+      ),
+    ).toBe(true)
+    expect(
+      lamps.every((lamp) =>
+        pavements.some((pavement) => overlapsTopDown(lamp, pavement)),
+      ),
+    ).toBe(true)
   })
 
   it('renders continuous shared road surfaces across chunk boundaries and the core', () => {
@@ -238,10 +331,15 @@ describe('procedural borough world', () => {
       samples.push([-54, z], [54, z])
     }
 
-    expect(samples.every(([x, z]) => roads.some((road) =>
-      Math.abs(x - road.position[0]) <= road.scale[0] / 2 + 0.01 &&
-      Math.abs(z - road.position[2]) <= road.scale[2] / 2 + 0.01,
-    ))).toBe(true)
+    expect(
+      samples.every(([x, z]) =>
+        roads.some(
+          (road) =>
+            Math.abs(x - road.position[0]) <= road.scale[0] / 2 + 0.01 &&
+            Math.abs(z - road.position[2]) <= road.scale[2] / 2 + 0.01,
+        ),
+      ),
+    ).toBe(true)
   })
 
   it('keeps generated buildings inside planned parcels and reserves empty lots for players', () => {
@@ -251,17 +349,57 @@ describe('procedural borough world', () => {
       viewDistance: 2,
       night: false,
     })
-    const buildings = world.pieces.filter((piece) => piece.kind === 'building' && piece.id.startsWith('building:'))
+    const buildings = world.pieces.filter(
+      (piece) => piece.kind === 'building' && piece.id.startsWith('building:'),
+    )
 
     expect(buildings.length).toBeGreaterThan(0)
     expect(world.buildableParcels.length).toBeGreaterThan(0)
-    expect(world.buildableParcels.every((parcel) =>
-      buildings.every((building) => !overlapsTopDown({
-        position: parcel.center,
-        scale: parcel.size,
-      }, building)),
-    )).toBe(true)
+    expect(
+      world.buildableParcels.every((parcel) =>
+        buildings.every(
+          (building) =>
+            !overlapsTopDown(
+              {
+                position: parcel.center,
+                scale: parcel.size,
+              },
+              building,
+            ),
+        ),
+      ),
+    ).toBe(true)
   })
+
+  it.each(['LONDON-2026', 'BUDDY-TOWN', 'PARTY-9000'])(
+    'uses tile-grid reservations to keep procedural objects clear of Buddy Rush sites for seed %s',
+    (seed) => {
+      for (const site of buddyRushReservedSites) {
+        const world = generateProceduralWorld({
+          seed,
+          center: site.position,
+          viewDistance: 1,
+          night: true,
+        })
+        const reservation = {
+          position: site.position,
+          scale: buddyRushReservationFootprint(site),
+        }
+        const anchors = world.pieces.filter(
+          (piece) =>
+            piece.kind === 'building' ||
+            piece.kind === 'tree-trunk' ||
+            piece.kind === 'lamp-post' ||
+            piece.kind === 'phone-box',
+        )
+
+        expect(
+          anchors.every((anchor) => !overlapsTopDown(anchor, reservation)),
+          `${site.id} must remain clear`,
+        ).toBe(true)
+      }
+    },
+  )
 
   it('keeps the clocktower hall as one complete landmark assembly', () => {
     const world = generateProceduralWorld({
@@ -271,10 +409,25 @@ describe('procedural borough world', () => {
       night: true,
     })
 
-    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall' && piece.kind === 'building')).toBe(true)
-    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-tower')).toBe(true)
-    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:clock-face')).toBe(true)
-    expect(world.pieces.some((piece) => piece.id === 'landmark:town-hall:door')).toBe(true)
+    expect(
+      world.pieces.some(
+        (piece) =>
+          piece.id === 'landmark:town-hall' && piece.kind === 'building',
+      ),
+    ).toBe(true)
+    expect(
+      world.pieces.some(
+        (piece) => piece.id === 'landmark:town-hall:clock-tower',
+      ),
+    ).toBe(true)
+    expect(
+      world.pieces.some(
+        (piece) => piece.id === 'landmark:town-hall:clock-face',
+      ),
+    ).toBe(true)
+    expect(
+      world.pieces.some((piece) => piece.id === 'landmark:town-hall:door'),
+    ).toBe(true)
   })
 
   it('allows the shared road layer through the core while suppressing procedural props', () => {
@@ -284,14 +437,23 @@ describe('procedural borough world', () => {
       viewDistance: 1,
       night: true,
     })
-    const allowedCoreLayers = new Set(['ground', 'water', 'road', 'pavement', 'line'])
-    const coreConflicts = world.pieces.filter((piece) =>
-      !allowedCoreLayers.has(piece.kind) &&
-      !piece.id.startsWith('landmark:') &&
-      footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08),
+    const allowedCoreLayers = new Set([
+      'ground',
+      'water',
+      'road',
+      'pavement',
+      'line',
+    ])
+    const coreConflicts = world.pieces.filter(
+      (piece) =>
+        !allowedCoreLayers.has(piece.kind) &&
+        !piece.id.startsWith('landmark:') &&
+        footprintOverlapsAuthoredCore(piece.position, piece.scale, 0.08),
     )
 
-    expect(coreConflicts.map((piece) => `${piece.kind}:${piece.id}`)).toEqual([])
+    expect(coreConflicts.map((piece) => `${piece.kind}:${piece.id}`)).toEqual(
+      [],
+    )
   })
 })
 
@@ -300,7 +462,11 @@ function overlapsTopDown(
   b: { position: [number, number, number]; scale: [number, number, number] },
   padding = 0,
 ) {
-  const xOverlap = Math.abs(a.position[0] - b.position[0]) < (a.scale[0] + b.scale[0]) / 2 + padding
-  const zOverlap = Math.abs(a.position[2] - b.position[2]) < (a.scale[2] + b.scale[2]) / 2 + padding
+  const xOverlap =
+    Math.abs(a.position[0] - b.position[0]) <
+    (a.scale[0] + b.scale[0]) / 2 + padding
+  const zOverlap =
+    Math.abs(a.position[2] - b.position[2]) <
+    (a.scale[2] + b.scale[2]) / 2 + padding
   return xOverlap && zOverlap
 }

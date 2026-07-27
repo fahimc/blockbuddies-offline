@@ -1,10 +1,7 @@
 import type { Vec3 } from '../game/types'
 
 export type BuddyRushClubhouseStyle =
-  | 'player'
-  | 'moonlight'
-  | 'builder'
-  | 'party'
+  'player' | 'moonlight' | 'builder' | 'party'
 
 export type BuddyRushWorldSite = {
   id: string
@@ -13,6 +10,7 @@ export type BuddyRushWorldSite = {
   style: BuddyRushClubhouseStyle
   position: Vec3
   footprint: Vec3
+  placementClearance: number
   facingYaw: number
 }
 
@@ -29,6 +27,7 @@ export const buddyRushWorldSites = {
     style: 'player',
     position: [-12, 0, -8],
     footprint: [6.6, 1, 7.2],
+    placementClearance: 0,
     facingYaw: 0,
   },
   luna: {
@@ -38,6 +37,7 @@ export const buddyRushWorldSites = {
     style: 'moonlight',
     position: [67.35, 0, -41.075],
     footprint: [6.6, 1, 7],
+    placementClearance: 2.5,
     facingYaw: -Math.PI / 2,
   },
   nori: {
@@ -47,6 +47,7 @@ export const buddyRushWorldSites = {
     style: 'builder',
     position: [-67.35, 0, -18],
     footprint: [6.6, 1, 7],
+    placementClearance: 2.5,
     facingYaw: Math.PI / 2,
   },
   pip: {
@@ -56,6 +57,7 @@ export const buddyRushWorldSites = {
     style: 'party',
     position: [67.35, 0, 42.667],
     footprint: [6.6, 1, 7],
+    placementClearance: 2.5,
     facingYaw: -Math.PI / 2,
   },
   bus: {
@@ -65,7 +67,9 @@ export const buddyRushWorldSites = {
     style: 'player',
     position: [45.2, 0, -18],
     footprint: [4, 1, 5.4],
-    facingYaw: 0,
+    placementClearance: 1.25,
+    // The shelter's open local +Z side faces east toward the x=54 road.
+    facingYaw: Math.PI / 2,
   },
 } as const satisfies Record<string, BuddyRushWorldSite>
 
@@ -93,6 +97,15 @@ export function orientedBuddyRushFootprint(site: BuddyRushWorldSite): Vec3 {
     site.footprint[0] * cosine + site.footprint[2] * sine,
     site.footprint[1],
     site.footprint[0] * sine + site.footprint[2] * cosine,
+  ]
+}
+
+export function buddyRushReservationFootprint(site: BuddyRushWorldSite): Vec3 {
+  const footprint = orientedBuddyRushFootprint(site)
+  return [
+    footprint[0] + site.placementClearance * 2,
+    footprint[1],
+    footprint[2] + site.placementClearance * 2,
   ]
 }
 

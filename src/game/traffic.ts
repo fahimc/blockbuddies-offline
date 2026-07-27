@@ -1,4 +1,4 @@
-import { realScale } from './scale'
+import { meters, realScale } from './scale'
 import type { CollisionBox } from './collision'
 import type { Vec3 } from './types'
 import {
@@ -20,6 +20,7 @@ export type TrafficVehicle = {
   offset: number
   speed: number
   color: string
+  kind?: 'car' | 'double-decker-bus'
   stopped?: boolean
 }
 
@@ -30,41 +31,117 @@ export type TrafficPose = {
 
 const trafficExtent = 94
 const laneOffset = realScale.roadTile * 0.22
-const trafficColors = ['#ef4444', '#f97316', '#2563eb', '#22c55e', '#eab308', '#8b5cf6', '#06b6d4', '#f43f5e']
+const trafficColors = [
+  '#ef4444',
+  '#f97316',
+  '#2563eb',
+  '#22c55e',
+  '#eab308',
+  '#8b5cf6',
+  '#06b6d4',
+  '#f43f5e',
+]
+const buddyBusRoadLanePrefix = 'road-z-54:'
+const buddyBusStopZ = -18
+export const trafficDoubleDeckerHeight = meters(4.35)
 export const trafficPedestrianLookAhead = realScale.carLength + 1.5
 export const trafficPedestrianHalfWidth = realScale.carWidth / 2 + 0.72
 
 export function makeTrafficLanes(): TrafficLane[] {
   const lanes: TrafficLane[] = []
-  for (const center of verticalRoadCentersBetween(-trafficExtent, trafficExtent)) {
+  for (const center of verticalRoadCentersBetween(
+    -trafficExtent,
+    trafficExtent,
+  )) {
     lanes.push(
-      lane(`road-z-${center}:north`, [center + laneOffset, 0, -trafficExtent], [center + laneOffset, 0, trafficExtent]),
-      lane(`road-z-${center}:south`, [center - laneOffset, 0, trafficExtent], [center - laneOffset, 0, -trafficExtent]),
+      lane(
+        `road-z-${center}:north`,
+        [center + laneOffset, 0, -trafficExtent],
+        [center + laneOffset, 0, trafficExtent],
+      ),
+      lane(
+        `road-z-${center}:south`,
+        [center - laneOffset, 0, trafficExtent],
+        [center - laneOffset, 0, -trafficExtent],
+      ),
     )
   }
-  for (const center of horizontalRoadCentersBetween(-trafficExtent, trafficExtent)) {
+  for (const center of horizontalRoadCentersBetween(
+    -trafficExtent,
+    trafficExtent,
+  )) {
     lanes.push(
-      lane(`road-x-${center}:east`, [-trafficExtent, 0, center - laneOffset], [trafficExtent, 0, center - laneOffset]),
-      lane(`road-x-${center}:west`, [trafficExtent, 0, center + laneOffset], [-trafficExtent, 0, center + laneOffset]),
+      lane(
+        `road-x-${center}:east`,
+        [-trafficExtent, 0, center - laneOffset],
+        [trafficExtent, 0, center - laneOffset],
+      ),
+      lane(
+        `road-x-${center}:west`,
+        [trafficExtent, 0, center + laneOffset],
+        [-trafficExtent, 0, center + laneOffset],
+      ),
     )
   }
   return lanes
 }
 
-export function createTrafficVehicles(lanes: TrafficLane[], count = 10): TrafficVehicle[] {
-  return lanes.slice(0, count).map((lane, index) => ({
-    id: `traffic-${index}`,
-    laneId: lane.id,
-    offset: wrapDistance(lane.length * ((index * 0.37) % 1), lane.length),
-    speed: 4.2 + (index % 4) * 0.72,
-    color: trafficColors[index % trafficColors.length],
-  }))
+export function createTrafficVehicles(
+  lanes: TrafficLane[],
+  count = 10,
+): TrafficVehicle[] {
+  return lanes.slice(0, count).map((lane, index) => {
+    const isBuddyBusLane = lane.id.startsWith(buddyBusRoadLanePrefix)
+    const isNorthbound = lane.id.endsWith(':north')
+    const kind = isBuddyBusLane ? 'double-decker-bus' : 'car'
+    const targetBusZ = buddyBusStopZ + (isNorthbound ? -14 : 30)
+    return {
+      id: isBuddyBusLane
+        ? `traffic-bus-${isNorthbound ? 'red' : 'blue'}`
+        : `traffic-${index}`,
+      laneId: lane.id,
+      offset: isBuddyBusLane
+        ? offsetAtWorldPosition(lane, [lane.start[0], 0, targetBusZ])
+        : wrapDistance(lane.length * ((index * 0.37) % 1), lane.length),
+      speed: isBuddyBusLane ? 3.6 : 4.2 + (index % 4) * 0.72,
+      color: isBuddyBusLane
+        ? isNorthbound
+          ? '#dc2626'
+          : '#2563eb'
+        : trafficColors[index % trafficColors.length],
+      kind,
+    }
+  })
 }
 
-export function advanceTraffic(vehicle: TrafficVehicle, lane: TrafficLane, deltaSeconds: number): TrafficVehicle {
+export function trafficVehicleDimensions(vehicle: TrafficVehicle) {
+  return vehicle.kind === 'double-decker-bus'
+    ? {
+        length: realScale.busLength,
+        width: realScale.busWidth,
+        height: trafficDoubleDeckerHeight,
+      }
+    : {
+        length: realScale.carLength,
+        width: realScale.carWidth,
+        height:
+          realScale.wheelRadius +
+          realScale.carBodyHeight +
+          realScale.carCabinHeight,
+      }
+}
+
+export function advanceTraffic(
+  vehicle: TrafficVehicle,
+  lane: TrafficLane,
+  deltaSeconds: number,
+): TrafficVehicle {
   return {
     ...vehicle,
-    offset: wrapDistance(vehicle.offset + vehicle.speed * Math.max(0, deltaSeconds), lane.length),
+    offset: wrapDistance(
+      vehicle.offset + vehicle.speed * Math.max(0, deltaSeconds),
+      lane.length,
+    ),
     stopped: false,
   }
 }
@@ -97,8 +174,13 @@ export function advanceTrafficForObstacles(
   return advanceTraffic(vehicle, lane, deltaSeconds)
 }
 
-export function hasPedestrianAhead(vehicle: TrafficVehicle, lane: TrafficLane, pedestrianPositions: Vec3[]) {
+export function hasPedestrianAhead(
+  vehicle: TrafficVehicle,
+  lane: TrafficLane,
+  pedestrianPositions: Vec3[],
+) {
   const pose = trafficPositionAt(lane, vehicle.offset)
+  const dimensions = trafficVehicleDimensions(vehicle)
   const sideX = -lane.direction[2]
   const sideZ = lane.direction[0]
 
@@ -107,19 +189,33 @@ export function hasPedestrianAhead(vehicle: TrafficVehicle, lane: TrafficLane, p
     const relativeZ = pedestrian[2] - pose.position[2]
     const ahead = relativeX * lane.direction[0] + relativeZ * lane.direction[2]
     const lateral = Math.abs(relativeX * sideX + relativeZ * sideZ)
-    return ahead >= -0.1 && ahead <= trafficPedestrianLookAhead && lateral <= trafficPedestrianHalfWidth
+    return (
+      ahead >= -0.1 &&
+      ahead <= dimensions.length + 1.5 &&
+      lateral <= dimensions.width / 2 + 0.72
+    )
   })
 }
 
-export function hasTrafficVehicleAhead(vehicle: TrafficVehicle, lane: TrafficLane, trafficVehicles: TrafficVehicle[]) {
+export function hasTrafficVehicleAhead(
+  vehicle: TrafficVehicle,
+  lane: TrafficLane,
+  trafficVehicles: TrafficVehicle[],
+) {
+  const vehicleLength = trafficVehicleDimensions(vehicle).length
   return trafficVehicles.some((other) => {
     if (other.id === vehicle.id || other.laneId !== vehicle.laneId) return false
     const gap = wrapDistance(other.offset - vehicle.offset, lane.length)
-    return gap > 0.05 && gap <= realScale.carLength + 1.2
+    const safeGap =
+      (vehicleLength + trafficVehicleDimensions(other).length) / 2 + 1.2
+    return gap > 0.05 && gap <= safeGap
   })
 }
 
-export function trafficPositionAt(lane: TrafficLane, offset: number): TrafficPose {
+export function trafficPositionAt(
+  lane: TrafficLane,
+  offset: number,
+): TrafficPose {
   const distance = wrapDistance(offset, lane.length)
   return {
     position: [
@@ -136,11 +232,22 @@ export function trafficHeadingYaw(lane: TrafficLane) {
   return Math.atan2(lane.direction[0], lane.direction[2])
 }
 
-export function trafficPositionAtTime(lane: TrafficLane, vehicle: TrafficVehicle, timeSeconds: number): TrafficPose {
-  return trafficPositionAt(lane, vehicle.offset + vehicle.speed * Math.max(0, timeSeconds))
+export function trafficPositionAtTime(
+  lane: TrafficLane,
+  vehicle: TrafficVehicle,
+  timeSeconds: number,
+): TrafficPose {
+  return trafficPositionAt(
+    lane,
+    vehicle.offset + vehicle.speed * Math.max(0, timeSeconds),
+  )
 }
 
-export function trafficCollisionBoxesAtTime(lanes: TrafficLane[], vehicles: TrafficVehicle[], timeSeconds: number): CollisionBox[] {
+export function trafficCollisionBoxesAtTime(
+  lanes: TrafficLane[],
+  vehicles: TrafficVehicle[],
+  timeSeconds: number,
+): CollisionBox[] {
   return trafficCollisionBoxes(
     lanes,
     vehicles.map((vehicle) => ({
@@ -150,24 +257,49 @@ export function trafficCollisionBoxesAtTime(lanes: TrafficLane[], vehicles: Traf
   )
 }
 
-export function trafficCollisionBoxes(lanes: TrafficLane[], vehicles: TrafficVehicle[]): CollisionBox[] {
+export function trafficCollisionBoxes(
+  lanes: TrafficLane[],
+  vehicles: TrafficVehicle[],
+): CollisionBox[] {
   const laneById = new Map(lanes.map((laneItem) => [laneItem.id, laneItem]))
-  const renderedCarHeight = realScale.wheelRadius + realScale.carBodyHeight + realScale.carCabinHeight
   return vehicles.flatMap((vehicle) => {
     const vehicleLane = laneById.get(vehicle.laneId)
     if (!vehicleLane) return []
     const pose = trafficPositionAt(vehicleLane, vehicle.offset)
-    const horizontal = Math.abs(vehicleLane.direction[0]) >= Math.abs(vehicleLane.direction[2])
+    const dimensions = trafficVehicleDimensions(vehicle)
+    const horizontal =
+      Math.abs(vehicleLane.direction[0]) >= Math.abs(vehicleLane.direction[2])
     return [
       {
         id: `traffic:${vehicle.id}`,
-        center: [pose.position[0], pose.position[1] + renderedCarHeight / 2, pose.position[2]],
+        center: [
+          pose.position[0],
+          pose.position[1] + dimensions.height / 2,
+          pose.position[2],
+        ],
         half: horizontal
-          ? [realScale.carLength / 2 + 0.12, renderedCarHeight / 2, realScale.carWidth / 2 + 0.12]
-          : [realScale.carWidth / 2 + 0.12, renderedCarHeight / 2, realScale.carLength / 2 + 0.12],
+          ? [
+              dimensions.length / 2 + 0.12,
+              dimensions.height / 2,
+              dimensions.width / 2 + 0.12,
+            ]
+          : [
+              dimensions.width / 2 + 0.12,
+              dimensions.height / 2,
+              dimensions.length / 2 + 0.12,
+            ],
       } satisfies CollisionBox,
     ]
   })
+}
+
+function offsetAtWorldPosition(lane: TrafficLane, position: Vec3) {
+  const relativeX = position[0] - lane.start[0]
+  const relativeZ = position[2] - lane.start[2]
+  return wrapDistance(
+    relativeX * lane.direction[0] + relativeZ * lane.direction[2],
+    lane.length,
+  )
 }
 
 function lane(id: string, start: Vec3, end: Vec3): TrafficLane {

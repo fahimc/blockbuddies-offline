@@ -3,9 +3,10 @@ import { goKartTrack } from '../game/goKart'
 import { authoredCoreBounds } from '../game/townPlacement'
 import { workDistrictCenter, workDistrictSize } from './jobs'
 import {
+  buddyRushReservationFootprint,
   buddyRushReservedSites,
-  orientedBuddyRushFootprint,
 } from './buddyRushWorldPlan'
+import type { WorldFootprint } from '../game/worldGrid'
 import {
   boundsFromCenter,
   boundsIntersect,
@@ -17,7 +18,7 @@ import {
   type WorldBounds,
 } from './worldCoordinates'
 
-export const worldGeneratorVersion = 3
+export const worldGeneratorVersion = 4
 
 export type WorldFeatureKind =
   | 'authored-region'
@@ -128,7 +129,7 @@ export const worldFeatures: WorldFeature[] = [
     color: '#facc15',
   },
   ...buddyRushReservedSites.map((site): WorldFeature => {
-    const footprint = orientedBuddyRushFootprint(site)
+    const footprint = buddyRushReservationFootprint(site)
     return {
       id: `buddy-rush:${site.id}`,
       label: site.label,
@@ -149,10 +150,10 @@ export const worldFeatures: WorldFeature[] = [
         site.kind === 'bus-stop'
           ? '#0ea5e9'
           : site.style === 'moonlight'
-          ? '#60a5fa'
-          : site.style === 'builder'
-            ? '#22c55e'
-            : '#f472b6',
+            ? '#60a5fa'
+            : site.style === 'builder'
+              ? '#22c55e'
+              : '#f472b6',
     }
   }),
 ]
@@ -181,6 +182,27 @@ export function worldFeaturesForChunk(cx: number, cz: number) {
     const feature = featureById.get(id)
     return feature ? [feature] : []
   })
+}
+
+export function worldGridReservationsForChunk(
+  cx: number,
+  cz: number,
+): WorldFootprint[] {
+  return worldFeaturesForChunk(cx, cz)
+    .filter(
+      (feature) =>
+        feature.blocksProceduralObjects &&
+        (feature.kind === 'clubhouse' || feature.kind === 'transit-stop'),
+    )
+    .map((feature) => ({
+      id: `reserved:${feature.id}`,
+      center: [...feature.center],
+      size: [
+        feature.bounds.maxX - feature.bounds.minX,
+        1,
+        feature.bounds.maxZ - feature.bounds.minZ,
+      ],
+    }))
 }
 
 export function worldFeaturesInBounds(bounds: WorldBounds) {

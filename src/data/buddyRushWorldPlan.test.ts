@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { proceduralBuildableParcelFor, proceduralTerrainAt } from './proceduralTownPlan'
+import {
+  proceduralBuildableParcelFor,
+  proceduralTerrainAt,
+} from './proceduralTownPlan'
 import { worldTerrainAt } from './worldTileMap'
 import { buddyRushRoutes, playerClubhousePosition } from './buddyRush'
 import {
+  buddyRushReservationFootprint,
   buddyRushRivalSites,
   buddyRushWorldSites,
   orientedBuddyRushFootprint,
@@ -75,6 +79,28 @@ describe('Buddy Rush deterministic world sites', () => {
         return terrain === 'ground' || terrain === 'sidewalk'
       }),
     ).toBe(true)
+  })
+
+  it('faces the open side of the bus shelter toward the adjacent road', () => {
+    const site = buddyRushWorldSites.bus
+    const forwardX = Math.sin(site.facingYaw)
+    const forwardZ = Math.cos(site.facingYaw)
+    const roadCenter = [54, 0, site.position[2]] as const
+    const toRoadX = roadCenter[0] - site.position[0]
+    const toRoadZ = roadCenter[2] - site.position[2]
+
+    expect(forwardX * toRoadX + forwardZ * toRoadZ).toBeGreaterThan(0)
+    expect(forwardX).toBeCloseTo(1, 5)
+    expect(forwardZ).toBeCloseTo(0, 5)
+  })
+
+  it('reserves breathing room around every rival club and the bus stop', () => {
+    for (const site of [...buddyRushRivalSites, buddyRushWorldSites.bus]) {
+      const footprint = orientedBuddyRushFootprint(site)
+      const reservation = buddyRushReservationFootprint(site)
+      expect(reservation[0]).toBeGreaterThan(footprint[0])
+      expect(reservation[2]).toBeGreaterThan(footprint[2])
+    }
   })
 
   it('ends both deterministic routes for each rival at its reserved site', () => {

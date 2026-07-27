@@ -14,12 +14,14 @@ import {
   WorldOccupancyGrid,
   placeOnWorldGrid,
   type TerrainZone,
+  type WorldFootprint,
   type WorldObjectKind,
 } from '../game/worldGrid'
 import {
   footprintOverlapsBlockingWorldFeature,
   getWorldFeature,
   stadiumAccessRoadBounds,
+  worldGridReservationsForChunk,
   worldGeneratorVersion,
 } from './worldFeatures'
 
@@ -204,6 +206,7 @@ function generateProceduralChunk(
         removeWorldFeatureConflicts([...chunk.pieces, ...featurePieces]),
       ),
     ),
+    worldGridReservationsForChunk(cx, cz),
   )
   const permanentStructures = placedPieces.filter(
     (placedPiece) =>
@@ -428,7 +431,10 @@ function generateChunk(
   }
 }
 
-export function applyProceduralPlacementRules(pieces: ProceduralPiece[]) {
+export function applyProceduralPlacementRules(
+  pieces: ProceduralPiece[],
+  reservedFootprints: readonly WorldFootprint[] = [],
+) {
   const surfaceKinds = new Set<ProceduralPieceKind>([
     'ground',
     'water',
@@ -468,6 +474,7 @@ export function applyProceduralPlacementRules(pieces: ProceduralPiece[]) {
     }
   })
   const occupancy = new WorldOccupancyGrid()
+  reservedFootprints.forEach((footprint) => occupancy.reserve(footprint))
   const placed = [...surfaces]
   const consumed = new Set<string>(surfaces.map((surface) => surface.id))
 
@@ -648,8 +655,41 @@ function isDriveCorridorBlocker(piece: ProceduralPiece) {
 }
 
 function removeWorldFeatureConflicts(pieces: ProceduralPiece[]) {
+  const groupedPieceIds = new Set<string>()
+  pieces
+    .filter(
+      (piece) =>
+        !piece.id.startsWith('landmark:') &&
+        (piece.kind === 'building' ||
+          piece.kind === 'tree-trunk' ||
+          piece.kind === 'lamp-post'),
+    )
+    .forEach((anchor) => {
+      const baseId =
+        anchor.kind === 'tree-trunk'
+          ? anchor.id.replace(/:trunk$/, '')
+          : anchor.kind === 'lamp-post'
+            ? anchor.id.replace(/:post$/, '')
+            : anchor.id
+      const members = pieces.filter(
+        (piece) => piece.id === baseId || piece.id.startsWith(`${baseId}:`),
+      )
+      if (
+        members.some((member) =>
+          footprintOverlapsBlockingWorldFeature(
+            member.position,
+            orientedFootprintScale(member),
+            0.08,
+          ),
+        )
+      ) {
+        members.forEach((member) => groupedPieceIds.add(member.id))
+      }
+    })
+
   return pieces.filter((piece) => {
     if (piece.id.startsWith('landmark:')) return true
+    if (groupedPieceIds.has(piece.id)) return false
     if (
       piece.kind === 'ground' ||
       piece.kind === 'water' ||
