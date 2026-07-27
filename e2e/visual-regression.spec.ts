@@ -227,6 +227,57 @@ test.describe('mobile visual regression', () => {
     )
   })
 
+  test('keeps the illustrated club, bus, and work tutorial readable in portrait', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await completeStartFlow(page, 'TutorialGuide')
+    await page.getByRole('button', { name: 'Start Playing' }).click()
+    await hideGameCanvas(page)
+    await page.getByRole('button', { name: 'Menu', exact: true }).click()
+    await page.getByRole('button', { name: 'Tutorial', exact: true }).click()
+
+    const panel = page.locator('.bb-panel')
+    const panelBody = panel.locator('.bb-panel-body')
+    await expect(panel).toBeVisible()
+    await expectWithinViewport(panel, page)
+    await expect(
+      panel.getByRole('img', { name: /purple Buddy Rush clubhouse/i }),
+    ).toBeVisible()
+    await expect(
+      panel.getByRole('heading', { name: 'Your Club & Buddy Rush' }),
+    ).toBeVisible()
+    await expect(page).toHaveScreenshot('tutorial-club-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+
+    await panelBody.evaluate((element) => {
+      const workImage = Array.from(
+        element.querySelectorAll('[role="img"]'),
+      ).find((image) =>
+        image
+          .getAttribute('aria-label')
+          ?.startsWith('Illustration of the four workplaces'),
+      )
+      workImage?.scrollIntoView({ block: 'start' })
+    })
+    await expect(
+      panel.getByRole('img', {
+        name: /four workplaces.*three-task route/i,
+      }),
+    ).toBeVisible()
+    await expect(panel.getByText('Shopkeeper')).toBeVisible()
+    await expect(panel.getByText('Farming')).toBeVisible()
+    await expect(
+      panel.getByRole('button', { name: 'Open Jobs & Work' }),
+    ).toBeVisible()
+    await expect(page).toHaveScreenshot('tutorial-work-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+  })
+
   test('keeps Buddy Rush recruitment and BuddyBook readable in portrait', async ({
     page,
   }) => {
