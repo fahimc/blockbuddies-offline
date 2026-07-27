@@ -4,6 +4,7 @@ import { Physics } from '@react-three/rapier'
 import { Suspense, useEffect, useRef } from 'react'
 import { GameScene } from './GameScene'
 import { WorldEquipment } from './WorldEquipment'
+import { BuddyRushWorld } from './BuddyRushWorld'
 import { HUD } from '../ui/HUD'
 import { GameMenu } from '../ui/GameMenu'
 import { ChatPanel } from '../ui/ChatPanel'
@@ -29,6 +30,8 @@ import { JobsPanel } from '../ui/JobsPanel'
 import { JobTaskChallenge } from '../ui/JobTaskChallenge'
 import { WorkShiftHUD } from '../ui/WorkShiftHUD'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
+import { BuddyRushHUD } from '../ui/BuddyRushHUD'
+import { BuddyRushPanel } from '../ui/BuddyRushPanel'
 import { WelcomeOverlay } from '../ui/WelcomeOverlay'
 import { useGameStore } from '../state/gameStore'
 import { useLocalPartyStore } from '../state/localPartyStore'
@@ -93,6 +96,7 @@ export function GameScreen() {
             <Physics gravity={[0, -18, 0]}>
               <GameScene />
               <WorldEquipment />
+              <BuddyRushWorld />
             </Physics>
           </Suspense>
         </Canvas>
@@ -102,6 +106,7 @@ export function GameScreen() {
         <BuildHudPalette />
         <MiniGameAnnouncement />
         <WorkShiftHUD />
+        <BuddyRushHUD />
         <JobTaskChallenge />
         <MiniMap />
         <ChatPanel />
@@ -121,6 +126,7 @@ export function GameScreen() {
         {openPanel === 'emotes' ? <EmotePanel /> : null}
         {openPanel === 'minigames' ? <MiniGamesPanel /> : null}
         {openPanel === 'jobs' ? <JobsPanel /> : null}
+        {openPanel === 'buddy-rush' ? <BuddyRushPanel /> : null}
         {openPanel === 'karts' ? <KartPanel /> : null}
         {openPanel === 'map' ? <MapPanel /> : null}
         {openPanel === 'tutorial' ? <TutorialPanel /> : null}

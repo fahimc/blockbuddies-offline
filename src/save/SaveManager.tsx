@@ -54,6 +54,7 @@ export function SaveManager() {
     state.obby.bestTime,
     state.miniGame.records,
     state.job.records,
+    state.buddyRush,
     markSaving,
     markSaved,
   ])

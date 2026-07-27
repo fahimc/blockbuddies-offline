@@ -2827,7 +2827,11 @@ function FarmFields() {
   )
 }
 
-function JobManager({ jobId }: { jobId: (typeof jobDefinitions)[number]['id'] }) {
+function JobManager({
+  jobId,
+}: {
+  jobId: (typeof jobDefinitions)[number]['id']
+}) {
   const job = jobDefinitions.find((entry) => entry.id === jobId)!
   const runtime = useGameStore((state) => state.job)
   const startJobShift = useGameStore((state) => state.startJobShift)
@@ -2840,10 +2844,8 @@ function JobManager({ jobId }: { jobId: (typeof jobDefinitions)[number]['id'] })
 
   useFrame(() => {
     const next =
-      distance2d(
-        useGameStore.getState().playerPosition,
-        job.managerPosition,
-      ) <= 3.4
+      distance2d(useGameStore.getState().playerPosition, job.managerPosition) <=
+      3.4
     if (next !== nearby) setNearby(next)
   })
 
@@ -2953,7 +2955,11 @@ function JobTaskStation({
         />
       </mesh>
       {current ? (
-        <Html center position={[0, 1.5, 0]} zIndexRange={worldActionZIndexRange}>
+        <Html
+          center
+          position={[0, 1.5, 0]}
+          zIndexRange={worldActionZIndexRange}
+        >
           {nearby ? (
             <button
               type="button"
@@ -3955,7 +3961,15 @@ function PlayerController({
           yaw.current,
         )
       }
-      const speed = playerMovementSpeed(inputRunning)
+      const buddyRush = useGameStore.getState().buddyRush
+      const buddyRushBoost = buddyRush.boostEndsAt > Date.now() ? 1.35 : 1
+      const escortPenalty =
+        buddyRush.activeRaid?.direction === 'raid' &&
+        buddyRush.activeRaid.phase === 'chase'
+          ? 0.85
+          : 1
+      const speed =
+        playerMovementSpeed(inputRunning) * buddyRushBoost * escortPenalty
       const blockingObstacles = collisionBoxesBlockingPlayer(
         solidObstacles,
         position.current.y,

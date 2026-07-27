@@ -61,6 +61,18 @@ export const badgeDefinitions: BadgeDefinition[] = [
     description: 'Reach mastery level 4 in any town job.',
     icon: 'J',
   },
+  {
+    id: 'buddy-recruiter',
+    title: 'Buddy Recruiter',
+    description: 'Recruit your first collectable Buddy from the Buddy Bus.',
+    icon: 'R',
+  },
+  {
+    id: 'rush-rescuer',
+    title: 'Rush Rescuer',
+    description: 'Protect or rescue a Buddy during a Buddy Rush.',
+    icon: 'H',
+  },
 ]
 
 export function findBadge(id: BadgeDefinition['id']) {

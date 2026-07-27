@@ -38,10 +38,31 @@ import {
   startJobRuntime,
 } from '../ai/jobs'
 import {
+  answerBuddyRecruitment,
+  assignBuddyToStation,
+  collectBuddyRushEarnings,
+  completePlayerBadgeCapture,
+  createInitialBuddyRush,
+  rescueVisitingBuddy,
+  sanitizeBuddyRushRuntime,
+  setBuddyRushPet,
+  startBuddyRecruitment,
+  startPlayerBuddyRaid,
+  tagBuddyRushRival,
+  tickBuddyRushRuntime,
+  toggleFavouriteBuddy,
+  activateBuddyRushGadget,
+} from '../ai/buddyRush'
+import {
   activeJobChallenge,
   activeJobTask,
   getJobDefinition,
 } from '../data/jobs'
+import {
+  buddyBusStopPosition,
+  findBuddyRival,
+  playerClubhouseEntrance,
+} from '../data/buddyRush'
 import {
   sanitizePartyName,
   useLocalPartyStore,
@@ -60,6 +81,10 @@ import {
 import type {
   AvatarSettings,
   BadgeId,
+  BuddyActivityStationId,
+  BuddyGadgetId,
+  BuddyPetId,
+  BuddyRushRuntime,
   BuildBlock,
   BuildPieceId,
   BotMemory,
@@ -106,6 +131,7 @@ import {
 } from '../game/goKart'
 
 export type GameSave = {
+  saveVersion: number
   profileComplete: boolean
   playerName: string
   coins: number
@@ -122,6 +148,7 @@ export type GameSave = {
   obbyBestTime?: number
   messageThreads?: MessageThread[]
   jobRecords?: Partial<Record<JobId, JobRecord>>
+  buddyRush: BuddyRushRuntime
 }
 
 type TouchInput = {
@@ -182,6 +209,7 @@ export type GamePanel =
   | 'emotes'
   | 'minigames'
   | 'jobs'
+  | 'buddy-rush'
   | 'messages'
   | 'tutorial'
 
@@ -202,6 +230,7 @@ type GameState = GameSave & {
   obby: ObbyState
   miniGame: MiniGameRuntime
   job: JobRuntime
+  buddyRush: BuddyRushRuntime
   touch: TouchInput
   loading: boolean
   saveStatus: 'idle' | 'saving' | 'saved'
@@ -301,6 +330,23 @@ type GameState = GameSave & {
   answerJobTask: (taskId: string, optionId: string, now?: number) => void
   closeJobTask: () => void
   cancelJobShift: () => void
+  tickBuddyRush: (now?: number) => void
+  collectBuddyRushCoins: () => void
+  startBuddyRecruitment: (definitionId: string) => void
+  answerBuddyRecruitment: (answer: string, now?: number) => void
+  assignBuddyToStation: (
+    buddyInstanceId: string,
+    stationId: BuddyActivityStationId | null,
+  ) => void
+  toggleFavouriteBuddy: (buddyInstanceId: string) => void
+  startPlayerBuddyRush: (rivalId: string, now?: number) => void
+  completePlayerBuddyCapture: (now?: number) => void
+  tagBuddyRushRival: (now?: number) => void
+  startBuddyRescue: (buddyInstanceId: string) => void
+  rescueBuddyVisitor: (buddyInstanceId: string, now?: number) => void
+  activateBuddyRushGadget: (gadgetId: BuddyGadgetId, now?: number) => void
+  setBuddyRushPet: (slot: 'adventure' | 'guard', petId: BuddyPetId) => void
+  travelToBuddyRushTarget: (target: 'clubhouse' | 'bus' | string) => void
   recordBotMeet: (botId: string) => void
   updateSettings: (settings: Partial<GameSettings>) => void
   resetSave: () => void
@@ -377,6 +423,8 @@ export const defaultSettings: GameSettings = {
   worldViewDistance: 1,
   nightMode: false,
   interiorCameraZoom: 1.3,
+  buddyRushEnabled: true,
+  buddyRushMode: 'standard',
 }
 
 export const defaultPlayerName = 'BlockBuddy'
@@ -734,8 +782,10 @@ const initialObby: ObbyState = {
 
 const initialMiniGame = createInitialMiniGame()
 const initialJob = createInitialJobRuntime()
+const initialBuddyRush = createInitialBuddyRush()
 
 export const useGameStore = create<GameState>((set, get) => ({
+  saveVersion: 2,
   screen: 'menu',
   profileComplete: false,
   saveLoaded: false,
@@ -766,6 +816,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   obby: initialObby,
   miniGame: initialMiniGame,
   job: initialJob,
+  buddyRush: initialBuddyRush,
   touch: {
     x: 0,
     y: 0,
@@ -800,6 +851,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ playerName })
   },
   completePlayerProfile: (name) => {
+    const profileCompletedAt = Date.now()
     const playerName = sanitizePartyName(name) || defaultPlayerName
     useLocalPartyStore.getState().setPlayerName(playerName)
     set((state) => {
@@ -818,6 +870,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         savedAvatars: alreadySaved
           ? state.savedAvatars
           : [saved, ...state.savedAvatars].slice(0, 18),
+        buddyRush:
+          state.buddyRush.ownedBuddies.length === 0
+            ? createInitialBuddyRush(profileCompletedAt)
+            : state.buddyRush,
       }
     })
   },
@@ -832,6 +888,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     }),
   travelToLocation: (id) => {
     const state = get()
+    if (state.buddyRush.activeRaid?.phase === 'chase') {
+      set({
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(
+            'Teleporting is paused during a Friendship Badge chase',
+          ),
+        ],
+      })
+      return false
+    }
     if (state.obby.active || state.miniGame.status === 'running') {
       set({
         chat: [
@@ -1311,12 +1378,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const definition = getJobDefinition(activeId)
       const currentTask = activeJobTask(state.job)
       const currentChallenge = activeJobChallenge(state.job)
-      const result = completeJobRuntimeTask(
-        state.job,
-        taskId,
-        optionId,
-        now,
-      )
+      const result = completeJobRuntimeTask(state.job, taskId, optionId, now)
       if (!result.changed || !currentTask) return state
 
       if (!result.correct) {
@@ -1364,8 +1426,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         jobQuestIds[activeId],
         1,
       )
-      const earnedFirstPaycheck =
-        !state.earnedBadges.includes('first-paycheck')
+      const earnedFirstPaycheck = !state.earnedBadges.includes('first-paycheck')
       const earnedJobSpecialist =
         (result.runtime.summary?.levelAfter ?? 1) >= 4 &&
         !state.earnedBadges.includes('job-specialist')
@@ -1417,6 +1478,285 @@ export const useGameStore = create<GameState>((set, get) => ({
           ? [...state.chat.slice(-60), systemMessage('Work shift cancelled')]
           : state.chat,
     })),
+
+  tickBuddyRush: (now = Date.now()) =>
+    set((state) => {
+      const result = tickBuddyRushRuntime(state.buddyRush, now, {
+        enabled: state.settings.buddyRushEnabled,
+        mode: state.settings.buddyRushMode,
+        playerPosition: state.playerPosition,
+        pauseRaids:
+          state.obby.active ||
+          state.miniGame.status === 'running' ||
+          state.job.status === 'running' ||
+          Boolean(state.activeVehicleId),
+      })
+      const earning =
+        result.coinsAwarded > 0
+          ? applyCoinEarning(state, result.coinsAwarded)
+          : {
+              coins: state.coins,
+              questProgress: state.questProgress,
+              messages: [] as ChatMessage[],
+            }
+      const noticeChanged =
+        result.state.notice?.sequence !== state.buddyRush.notice?.sequence
+      return {
+        buddyRush: result.state,
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat:
+          noticeChanged || earning.messages.length > 0
+            ? [
+                ...state.chat.slice(-60),
+                ...(result.state.notice && noticeChanged
+                  ? [systemMessage(result.state.notice.text)]
+                  : []),
+                ...earning.messages,
+              ]
+            : state.chat,
+      }
+    }),
+
+  collectBuddyRushCoins: () => {
+    let collected = 0
+    set((state) => {
+      const result = collectBuddyRushEarnings(state.buddyRush)
+      collected = result.coins
+      if (collected <= 0) return state
+      const earning = applyCoinEarning(state, collected)
+      return {
+        buddyRush: result.state,
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`Clubhouse activities paid ${collected} coins`),
+          ...earning.messages,
+        ],
+      }
+    })
+    if (collected > 0 && get().coins >= 10) get().awardBadge('coin-starter')
+  },
+
+  startBuddyRecruitment: (definitionId) =>
+    set((state) => ({
+      buddyRush: startBuddyRecruitment(state.buddyRush, definitionId),
+    })),
+
+  answerBuddyRecruitment: (answer, now = Date.now()) => {
+    let recruited = false
+    set((state) => {
+      const result = answerBuddyRecruitment(state.buddyRush, answer, now)
+      recruited = Boolean(result.recruited)
+      const earning =
+        result.consolationCoins > 0
+          ? applyCoinEarning(state, result.consolationCoins)
+          : {
+              coins: state.coins,
+              questProgress: state.questProgress,
+              messages: [] as ChatMessage[],
+            }
+      return {
+        buddyRush: result.state,
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          ...(result.state.notice?.text
+            ? [systemMessage(result.state.notice.text)]
+            : []),
+          ...earning.messages,
+        ],
+      }
+    })
+    if (recruited) {
+      get().advanceQuest('recruit-first-buddy', 1)
+      get().awardBadge('buddy-recruiter')
+    }
+  },
+
+  assignBuddyToStation: (buddyInstanceId, stationId) =>
+    set((state) => ({
+      buddyRush: assignBuddyToStation(
+        state.buddyRush,
+        buddyInstanceId,
+        stationId,
+      ),
+    })),
+
+  toggleFavouriteBuddy: (buddyInstanceId) =>
+    set((state) => ({
+      buddyRush: toggleFavouriteBuddy(state.buddyRush, buddyInstanceId),
+    })),
+
+  startPlayerBuddyRush: (rivalId, now = Date.now()) =>
+    set((state) => {
+      const buddyRush = startPlayerBuddyRaid(state.buddyRush, rivalId, now)
+      const rival = findBuddyRival(rivalId)
+      if (buddyRush === state.buddyRush || !rival?.clubhousePosition)
+        return state
+      const teleportSequence = state.teleportSequence + 1
+      const destination: Vec3 = [
+        rival.clubhousePosition[0] - 5,
+        0,
+        rival.clubhousePosition[2],
+      ]
+      return {
+        buddyRush,
+        openPanel: undefined,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: destination,
+          yaw: -Math.PI / 2,
+          resetView: true,
+        },
+        playerPosition: destination,
+      }
+    }),
+
+  completePlayerBuddyCapture: (now = Date.now()) =>
+    set((state) => ({
+      buddyRush: completePlayerBadgeCapture(
+        state.buddyRush,
+        now,
+        state.settings.buddyRushMode,
+      ),
+    })),
+
+  tagBuddyRushRival: (now = Date.now()) => {
+    let rescued = false
+    set((state) => {
+      const result = tagBuddyRushRival(state.buddyRush, now)
+      rescued = result.coinsAwarded > 0
+      if (!rescued) return state
+      const earning = applyCoinEarning(state, result.coinsAwarded)
+      return {
+        buddyRush: result.state,
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          ...(result.state.notice?.text
+            ? [systemMessage(result.state.notice.text)]
+            : []),
+          ...earning.messages,
+        ],
+      }
+    })
+    if (rescued) {
+      get().advanceQuest('defend-buddy-rush', 1)
+      get().awardBadge('rush-rescuer')
+    }
+  },
+
+  startBuddyRescue: (buddyInstanceId) =>
+    set((state) => {
+      const buddy = state.buddyRush.ownedBuddies.find(
+        (entry) => entry.id === buddyInstanceId && entry.visitState,
+      )
+      const rival = buddy?.visitState
+        ? findBuddyRival(buddy.visitState.hostPlayerId)
+        : undefined
+      if (!buddy || !rival?.clubhousePosition) return state
+      const teleportSequence = state.teleportSequence + 1
+      const destination: Vec3 = [
+        rival.clubhousePosition[0] - 4,
+        0,
+        rival.clubhousePosition[2] + 3,
+      ]
+      return {
+        openPanel: undefined,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: destination,
+          yaw: -Math.PI / 2,
+          resetView: true,
+        },
+        playerPosition: destination,
+        chat: [
+          ...state.chat.slice(-60),
+          systemMessage(`Rescue route started for ${rival.clubhouseName}`),
+        ],
+      }
+    }),
+
+  rescueBuddyVisitor: (buddyInstanceId, now = Date.now()) => {
+    let rescued = false
+    set((state) => {
+      const result = rescueVisitingBuddy(state.buddyRush, buddyInstanceId, now)
+      rescued = result.coinsAwarded > 0
+      if (!rescued) return state
+      const earning = applyCoinEarning(state, result.coinsAwarded)
+      return {
+        buddyRush: result.state,
+        coins: earning.coins,
+        questProgress: earning.questProgress,
+        chat: [
+          ...state.chat.slice(-60),
+          ...(result.state.notice?.text
+            ? [systemMessage(result.state.notice.text)]
+            : []),
+          ...earning.messages,
+        ],
+      }
+    })
+    if (rescued) {
+      get().advanceQuest('rescue-visiting-buddy', 1)
+      get().awardBadge('rush-rescuer')
+    }
+  },
+
+  activateBuddyRushGadget: (gadgetId, now = Date.now()) =>
+    set((state) => ({
+      buddyRush: activateBuddyRushGadget(state.buddyRush, gadgetId, now),
+    })),
+
+  setBuddyRushPet: (slot, petId) =>
+    set((state) => ({
+      buddyRush: setBuddyRushPet(state.buddyRush, slot, petId),
+    })),
+
+  travelToBuddyRushTarget: (target) =>
+    set((state) => {
+      if (state.buddyRush.activeRaid?.phase === 'chase') {
+        return {
+          chat: [
+            ...state.chat.slice(-60),
+            systemMessage(
+              'Finish the active Buddy Rush chase before fast travelling.',
+            ),
+          ],
+        }
+      }
+      const rival = findBuddyRival(target)
+      const position =
+        target === 'clubhouse'
+          ? playerClubhouseEntrance
+          : target === 'bus'
+            ? buddyBusStopPosition
+            : rival?.clubhousePosition
+      if (!position) return state
+      const teleportSequence = state.teleportSequence + 1
+      const destination: Vec3 = [
+        position[0],
+        0,
+        position[2] + (target === 'bus' ? 3 : 4),
+      ]
+      return {
+        openPanel: undefined,
+        teleportSequence,
+        teleportTarget: {
+          sequence: teleportSequence,
+          position: destination,
+          yaw: Math.PI,
+          resetView: true,
+        },
+        playerPosition: destination,
+      }
+    }),
 
   addCoins: (amount) => {
     set((state) => {
@@ -2455,6 +2795,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       obby: initialObby,
       miniGame: createInitialMiniGame(),
       job: createInitialJobRuntime(),
+      buddyRush: createInitialBuddyRush(),
       chat: [systemMessage('Save reset')],
       messageThreads: createInitialMessageThreads(),
       selectedMessageThreadId: undefined,
@@ -2468,6 +2809,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         : state.playerName
       useLocalPartyStore.getState().setPlayerName(playerName)
       return {
+        saveVersion: 2,
         profileComplete: hasCompletedLegacyProfile(save),
         playerName,
         coins: save.coins ?? state.coins,
@@ -2489,6 +2831,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           save.miniGameRecords ?? state.miniGame.records,
         ),
         job: createInitialJobRuntime(save.jobRecords ?? state.job.records),
+        buddyRush: sanitizeBuddyRushRuntime(save.buddyRush, Date.now()),
         messageThreads: ensureMessageThreads(
           save.messageThreads ?? state.messageThreads,
         ),
@@ -2512,6 +2855,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 export function makeSaveSnapshot(state: GameState): GameSave {
   return {
+    saveVersion: 2,
     profileComplete: state.profileComplete,
     playerName: state.playerName,
     coins: state.coins,
@@ -2527,6 +2871,7 @@ export function makeSaveSnapshot(state: GameState): GameSave {
     obbyBestTime: state.obby.bestTime,
     miniGameRecords: state.miniGame.records,
     jobRecords: state.job.records,
+    buddyRush: state.buddyRush,
     messageThreads: ensureMessageThreads(state.messageThreads),
   }
 }

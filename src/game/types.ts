@@ -112,6 +112,9 @@ export type QuestId =
   | 'work-restaurant-shift'
   | 'work-delivery-shift'
   | 'work-farm-shift'
+  | 'recruit-first-buddy'
+  | 'defend-buddy-rush'
+  | 'rescue-visiting-buddy'
 
 export type QuestProgress = {
   id: QuestId
@@ -227,6 +230,169 @@ export type JobRuntime = {
   summary?: JobShiftSummary
   eventSequence: number
   records: Partial<Record<JobId, JobRecord>>
+}
+
+export type BuddyRarity =
+  'everyday' | 'unusual' | 'rare' | 'epic' | 'superstar' | 'secret'
+
+export type BuddyTalent = 'speedy' | 'clever' | 'musical' | 'protective'
+
+export type BuddyStyleId = 'galaxy'
+
+export type BuddyActivityStationId =
+  'clubhouse-bakery' | 'clubhouse-garden' | 'clubhouse-arcade'
+
+export type CollectableBuddyDefinition = {
+  id: string
+  name: string
+  family: 'animal' | 'fantasy' | 'robot' | 'performer' | 'mini'
+  rarity: BuddyRarity
+  color: string
+  accentColor: string
+  personality: string
+  talent: BuddyTalent
+  favouriteActivity: BuddyActivityStationId
+  passiveCoinsPerMinute: number
+  ability: string
+  recruitmentPrompt: string
+  recruitmentOptions: string[]
+  recruitmentAnswer: string
+}
+
+export type BuddyVisitState = {
+  hostPlayerId: string
+  sourcePlayerId: string
+  startedAtGameTime: number
+  endsAtGameTime: number
+  rescueProgress: number
+}
+
+export type CollectableBuddyInstance = {
+  id: string
+  definitionId: string
+  ownerId: 'player'
+  rarity: BuddyRarity
+  styleId: BuddyStyleId | null
+  talent: BuddyTalent
+  friendshipLevel: number
+  friendshipXp: number
+  happiness: number
+  isFavourite: boolean
+  activityStationId: BuddyActivityStationId | null
+  visitState: BuddyVisitState | null
+  rescues: number
+}
+
+export type BuddyActivityStationState = {
+  id: BuddyActivityStationId
+  level: number
+  assignedBuddyIds: string[]
+}
+
+export type ClubhouseShieldPhase = 'protected' | 'warning' | 'rush' | 'recovery'
+
+export type ClubhouseShieldState = {
+  phase: ClubhouseShieldPhase
+  phaseEndsAtGameTime: number
+  lastRaiderId: string | null
+}
+
+export type BuddyRushMode = 'friendly' | 'standard' | 'reduced-tension'
+
+export type BuddyRaidDirection = 'defend' | 'raid'
+
+export type BuddyRaidPhase = 'approach' | 'capture' | 'chase'
+
+export type BuddyRushRaid = {
+  id: string
+  direction: BuddyRaidDirection
+  phase: BuddyRaidPhase
+  rivalId: string
+  buddyInstanceId?: string
+  buddyDefinitionId: string
+  startedAt: number
+  phaseEndsAt: number
+  routeIndex: number
+}
+
+export type BuddyRushVisitor = {
+  id: string
+  definitionId: string
+  sourceRivalId: string
+  startedAt: number
+  endsAt: number
+}
+
+export type BuddyRecruitmentFeedback = {
+  kind: 'success' | 'wrong'
+  message: string
+}
+
+export type BuddyBusState = {
+  cycle: number
+  arrivedAt: number
+  departsAt: number
+  nextArrivalAt: number
+  offerDefinitionIds: string[]
+  selectedDefinitionId?: string
+  feedback?: BuddyRecruitmentFeedback
+}
+
+export type BuddyGadgetId = 'bubble-blaster' | 'buddy-whistle' | 'roller-skates'
+
+export type BuddyPetId = 'guard-bot' | 'tracker-pup'
+
+export type BuddyPetLoadout = {
+  adventurePetId: BuddyPetId
+  guardPetId: BuddyPetId
+}
+
+export type BuddyRivalMemory = {
+  rivalId: string
+  targetCount: number
+  lastTargetedAt: number
+  lastOutcome: 'none' | 'defended' | 'escaped' | 'rescued'
+}
+
+export type BuddyRescueQuest = {
+  buddyInstanceId: string
+  rivalId: string
+  startedAt: number
+}
+
+export type BuddyRushNotice = {
+  sequence: number
+  kind: 'info' | 'warning' | 'success'
+  text: string
+}
+
+export type BuddyRushRuntime = {
+  ownedBuddies: CollectableBuddyInstance[]
+  discoveredDefinitionIds: string[]
+  discoveredStyleIds: BuddyStyleId[]
+  stations: BuddyActivityStationState[]
+  unclaimedCoins: number
+  passiveCoinRemainder: number
+  lastPassiveAt: number
+  shield: ClubhouseShieldState
+  bus: BuddyBusState
+  activeRaid?: BuddyRushRaid
+  visitors: BuddyRushVisitor[]
+  rescueQuest?: BuddyRescueQuest
+  gadgetLoadout: BuddyGadgetId[]
+  gadgetCooldownEndsAt: Partial<Record<BuddyGadgetId, number>>
+  boostEndsAt: number
+  rivalPauseStartedAt: number
+  rivalPausedUntil: number
+  routeHintEndsAt: number
+  whistlePullEndsAt: number
+  petLoadout: BuddyPetLoadout
+  rivalMemories: Record<string, BuddyRivalMemory>
+  raidSequence: number
+  recentRescueStreak: number
+  neighbourhoodRank: number
+  eventSequence: number
+  notice?: BuddyRushNotice
 }
 
 export type ShopItemId =
@@ -417,6 +583,8 @@ export type GameSettings = {
   worldViewDistance: 1 | 2 | 3
   nightMode: boolean
   interiorCameraZoom: number
+  buddyRushEnabled: boolean
+  buddyRushMode: BuddyRushMode
 }
 
 export type ObbyState = {
@@ -472,6 +640,8 @@ export type BadgeId =
   | 'mini-game-star'
   | 'first-paycheck'
   | 'job-specialist'
+  | 'buddy-recruiter'
+  | 'rush-rescuer'
 
 export type BadgeDefinition = {
   id: BadgeId

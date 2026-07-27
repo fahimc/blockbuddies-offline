@@ -1,4 +1,13 @@
-import { Gamepad2, Map, Monitor, Moon, Music, RotateCcw, Shield, Shuffle } from 'lucide-react'
+import {
+  Gamepad2,
+  Map,
+  Monitor,
+  Moon,
+  Music,
+  RotateCcw,
+  Shield,
+  Shuffle,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { clearGameSave } from '../save/storage'
 import { useGameStore } from '../state/gameStore'
@@ -23,7 +32,11 @@ export function SettingsPanel() {
             <span>Graphics Quality</span>
             <select
               value={settings.quality}
-              onChange={(event) => updateSettings({ quality: event.target.value as typeof settings.quality })}
+              onChange={(event) =>
+                updateSettings({
+                  quality: event.target.value as typeof settings.quality,
+                })
+              }
               className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 font-black"
             >
               <option value="low">Low</option>
@@ -31,9 +44,52 @@ export function SettingsPanel() {
               <option value="high">High</option>
             </select>
           </label>
-          <Toggle label="Sound Effects" checked={settings.audio} onChange={(audio) => updateSettings({ audio })} />
-          <Toggle label="Music Volume" checked={settings.music} onChange={(music) => updateSettings({ music })} />
-          <Toggle label="Reduced Motion" checked={settings.reducedMotion} onChange={(reducedMotion) => updateSettings({ reducedMotion })} />
+          <Toggle
+            label="Sound Effects"
+            checked={settings.audio}
+            onChange={(audio) => updateSettings({ audio })}
+          />
+          <Toggle
+            label="Music Volume"
+            checked={settings.music}
+            onChange={(music) => updateSettings({ music })}
+          />
+          <Toggle
+            label="Reduced Motion"
+            checked={settings.reducedMotion}
+            onChange={(reducedMotion) => updateSettings({ reducedMotion })}
+          />
+          <Toggle
+            label={
+              <span className="inline-flex items-center gap-2">
+                <Shield size={18} aria-hidden />
+                Buddy Rush
+              </span>
+            }
+            checked={settings.buddyRushEnabled}
+            onChange={(buddyRushEnabled) =>
+              updateSettings({ buddyRushEnabled })
+            }
+          />
+          <label className="bb-setting-row">
+            <span>Buddy Rush Mode</span>
+            <select
+              value={settings.buddyRushMode}
+              disabled={!settings.buddyRushEnabled}
+              onChange={(event) =>
+                updateSettings({
+                  buddyRushMode: event.target
+                    .value as typeof settings.buddyRushMode,
+                })
+              }
+              className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 font-black disabled:opacity-50"
+              aria-label="Buddy Rush Mode"
+            >
+              <option value="friendly">Friendly Tag</option>
+              <option value="standard">Standard</option>
+              <option value="reduced-tension">Reduced Tension</option>
+            </select>
+          </label>
           <label className="bb-setting-row">
             <span className="inline-flex items-center gap-2">
               <Map size={18} aria-hidden />
@@ -42,13 +98,21 @@ export function SettingsPanel() {
             <span className="flex min-w-0 items-center gap-2">
               <input
                 value={settings.worldSeed}
-                onChange={(event) => updateSettings({ worldSeed: event.target.value || 'LONDON-2026' })}
+                onChange={(event) =>
+                  updateSettings({
+                    worldSeed: event.target.value || 'LONDON-2026',
+                  })
+                }
                 className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-black"
                 aria-label="World Seed"
               />
               <button
                 type="button"
-                onClick={() => updateSettings({ worldSeed: `BLOCK-${Date.now().toString(36).slice(-5).toUpperCase()}` })}
+                onClick={() =>
+                  updateSettings({
+                    worldSeed: `BLOCK-${Date.now().toString(36).slice(-5).toUpperCase()}`,
+                  })
+                }
                 className="grid min-h-10 min-w-10 place-items-center rounded-lg bg-sky-600 text-white"
                 aria-label="Random world seed"
               >
@@ -60,7 +124,13 @@ export function SettingsPanel() {
             <span>World View Distance</span>
             <select
               value={settings.worldViewDistance}
-              onChange={(event) => updateSettings({ worldViewDistance: Number(event.target.value) as typeof settings.worldViewDistance })}
+              onChange={(event) =>
+                updateSettings({
+                  worldViewDistance: Number(
+                    event.target.value,
+                  ) as typeof settings.worldViewDistance,
+                })
+              }
               className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 font-black"
             >
               <option value={1}>Low</option>
@@ -68,7 +138,11 @@ export function SettingsPanel() {
               <option value={3}>High</option>
             </select>
           </label>
-          <Toggle label="Procedural Borough" checked={settings.proceduralWorld} onChange={(proceduralWorld) => updateSettings({ proceduralWorld })} />
+          <Toggle
+            label="Procedural Borough"
+            checked={settings.proceduralWorld}
+            onChange={(proceduralWorld) => updateSettings({ proceduralWorld })}
+          />
           <Toggle
             label={
               <span className="inline-flex items-center gap-2">
@@ -99,21 +173,43 @@ export function SettingsPanel() {
   )
 }
 
-function SettingsTab({ icon, label, active = false }: { icon: ReactNode; label: string; active?: boolean }) {
+function SettingsTab({
+  icon,
+  label,
+  active = false,
+}: {
+  icon: ReactNode
+  label: string
+  active?: boolean
+}) {
   return (
-    <span className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-black ${active ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+    <span
+      className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-black ${active ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+    >
       {icon}
       {label}
     </span>
   )
 }
 
-function Toggle({ label, checked, onChange }: { label: ReactNode; checked: boolean; onChange: (checked: boolean) => void }) {
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: ReactNode
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
   return (
     <label className="bb-setting-row">
       <span>{label}</span>
       <span className={`bb-toggle ${checked ? 'on' : ''}`}>
-        <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+        />
         <span />
       </span>
     </label>

@@ -6,6 +6,8 @@ import {
   defaultPlayerName,
   useGameStore,
 } from '../state/gameStore'
+import { createInitialBuddyRush } from '../ai/buddyRush'
+import { buddyRushConfig } from '../data/buddyRush'
 import { NameSetupScreen } from './NameSetupScreen'
 
 vi.mock('./GameAvatarPreview', () => ({
@@ -18,6 +20,7 @@ describe('NameSetupScreen', () => {
       profileComplete: false,
       playerName: defaultPlayerName,
       avatar: defaultAvatar,
+      buddyRush: createInitialBuddyRush(Date.now() - 60 * 60 * 1_000),
     })
   })
 
@@ -40,6 +43,9 @@ describe('NameSetupScreen', () => {
 
     expect(useGameStore.getState().playerName).toBe('Pixel Builder')
     expect(useGameStore.getState().profileComplete).toBe(true)
+    expect(
+      useGameStore.getState().buddyRush.bus.departsAt - Date.now(),
+    ).toBeGreaterThanOrEqual(buddyRushConfig.busVisitMs - 1_000)
     expect(onStart).toHaveBeenCalledTimes(1)
   })
 })

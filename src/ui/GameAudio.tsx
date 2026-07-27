@@ -54,6 +54,7 @@ export function GameAudio() {
     (state) => state.footballActionSequence,
   )
   const footballActionKind = useGameStore((state) => state.footballActionKind)
+  const buddyRush = useGameStore((state) => state.buddyRush)
   const snapshot: AudioSnapshot = useMemo(
     () => ({
       audioEnabled,
@@ -88,6 +89,10 @@ export function GameAudio() {
       jobStatus: job.status,
       footballActionSequence,
       footballActionKind,
+      buddyRushEventSequence: buddyRush.notice?.sequence ?? 0,
+      buddyRushNoticeKind: buddyRush.notice?.kind,
+      buddyRushShieldPhase: buddyRush.shield.phase,
+      buddyRushRaidPhase: buddyRush.activeRaid?.phase,
     }),
     [
       activeInteriorId,
@@ -111,6 +116,10 @@ export function GameAudio() {
       job.status,
       footballActionKind,
       footballActionSequence,
+      buddyRush.activeRaid?.phase,
+      buddyRush.notice?.kind,
+      buddyRush.notice?.sequence,
+      buddyRush.shield.phase,
       obby.active,
       obby.finished,
       openPanel,
@@ -268,6 +277,15 @@ function playCue(cue: AudioCue) {
     case 'football-goal':
       playTone([523, 659, 784, 1047, 1319], 0.065, 0.08)
       playNoiseBurst(0.08, 0.02, 1200)
+      break
+    case 'buddy-event':
+      playTone([392, 523, 659], 0.05, 0.05, 'sine')
+      break
+    case 'buddy-warning':
+      playTone([330, 294, 330, 392], 0.07, 0.055, 'square')
+      break
+    case 'buddy-success':
+      playTone([523, 659, 784, 1047], 0.06, 0.075, 'triangle')
       break
   }
 }

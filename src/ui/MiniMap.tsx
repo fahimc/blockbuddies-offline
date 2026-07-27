@@ -23,6 +23,11 @@ import {
   horizontalRoadCentersBetween,
   verticalRoadCentersBetween,
 } from '../data/proceduralTownPlan'
+import {
+  buddyBusStopPosition,
+  findBuddyRival,
+  playerClubhousePosition,
+} from '../data/buddyRush'
 
 const mapRange = 82
 
@@ -34,6 +39,7 @@ export function MiniMap() {
   const bots = useGameStore((state) => state.bots)
   const savedFriends = useGameStore((state) => state.savedFriends)
   const miniGame = useGameStore((state) => state.miniGame)
+  const buddyRush = useGameStore((state) => state.buddyRush)
   const remotePlayers = useLocalPartyStore((state) => state.remotePlayers)
   const lanes = useMemo(() => makeTrafficLanes(), [])
   const laneById = useMemo(
@@ -66,6 +72,7 @@ export function MiniMap() {
     ]
   })
   const activeTarget = activeMiniGameTarget(miniGame)
+  const buddyRushTarget = buddyRushObjective(buddyRush)
   const localFriends = Object.values(remotePlayers).filter(
     (player) => !player.interiorId,
   )
@@ -211,6 +218,39 @@ export function MiniMap() {
               title={activeTarget.mapLabel ?? activeTarget.label}
             />
           ) : null}
+          {buddyRushTarget &&
+          isOnMap(buddyRushTarget.position, playerPosition) ? (
+            <span
+              className="bb-mini-map-objective buddy-rush"
+              data-testid="mini-map-buddy-rush-objective"
+              style={{
+                ...pointStyle(buddyRushTarget.position, playerPosition),
+                backgroundColor: '#f43f5e',
+              }}
+              title={buddyRushTarget.label}
+            />
+          ) : null}
+          {!buddyRushTarget &&
+          isOnMap(playerClubhousePosition, playerPosition) ? (
+            <span
+              className="bb-mini-map-location"
+              style={{
+                ...pointStyle(playerClubhousePosition, playerPosition),
+                backgroundColor: '#8b5cf6',
+              }}
+              title="Your Buddy Clubhouse"
+            />
+          ) : null}
+          {isOnMap(buddyBusStopPosition, playerPosition) ? (
+            <span
+              className="bb-mini-map-location"
+              style={{
+                ...pointStyle(buddyBusStopPosition, playerPosition),
+                backgroundColor: '#facc15',
+              }}
+              title="Buddy Bus Stop"
+            />
+          ) : null}
           <span
             className="bb-mini-map-player"
             style={{
@@ -221,6 +261,38 @@ export function MiniMap() {
       </button>
     </aside>
   )
+}
+
+function buddyRushObjective(
+  runtime: ReturnType<typeof useGameStore.getState>['buddyRush'],
+): { position: Vec3; label: string } | undefined {
+  if (runtime.rescueQuest) {
+    const rival = findBuddyRival(runtime.rescueQuest.rivalId)
+    return rival?.clubhousePosition
+      ? {
+          position: rival.clubhousePosition,
+          label: `Rescue Buddy at ${rival.clubhouseName}`,
+        }
+      : undefined
+  }
+  const raid = runtime.activeRaid
+  if (!raid) return undefined
+  if (raid.direction === 'raid' && raid.phase === 'chase') {
+    return {
+      position: playerClubhousePosition,
+      label: 'Escape to your Buddy Clubhouse',
+    }
+  }
+  const rival = findBuddyRival(raid.rivalId)
+  return rival?.clubhousePosition
+    ? {
+        position: rival.clubhousePosition,
+        label:
+          raid.direction === 'defend'
+            ? 'Rival escape destination'
+            : `Friendship Badge at ${rival.clubhouseName}`,
+      }
+    : undefined
 }
 
 function roadLinesFor(center: Vec3) {

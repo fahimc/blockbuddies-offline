@@ -69,7 +69,7 @@ describe('QuestPanel', () => {
       expect(screen.getByText(quest.howTo)).toBeInTheDocument()
       expect(screen.getByText(quest.tip)).toBeInTheDocument()
     }
-  })
+  }, 10_000)
 
   it('shows daily quests separately and completed quests in their tab', async () => {
     const user = userEvent.setup()

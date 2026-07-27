@@ -1,4 +1,10 @@
-import type { JobStatus, MiniGameStatus } from '../game/types'
+import type {
+  BuddyRaidPhase,
+  BuddyRushNotice,
+  ClubhouseShieldPhase,
+  JobStatus,
+  MiniGameStatus,
+} from '../game/types'
 import type { GamePanel } from '../state/gameStore'
 
 export type AudioCue =
@@ -38,6 +44,9 @@ export type AudioCue =
   | 'football-kick'
   | 'football-skill'
   | 'football-goal'
+  | 'buddy-event'
+  | 'buddy-warning'
+  | 'buddy-success'
 
 export type MusicMode =
   'menu' | 'customizer' | 'town' | 'interior' | 'driving' | 'mini-game'
@@ -76,6 +85,10 @@ export type AudioSnapshot = {
   jobStatus: JobStatus
   footballActionSequence: number
   footballActionKind?: FootballAudioAction
+  buddyRushEventSequence: number
+  buddyRushNoticeKind?: BuddyRushNotice['kind']
+  buddyRushShieldPhase: ClubhouseShieldPhase
+  buddyRushRaidPhase?: BuddyRaidPhase
 }
 
 export function selectAudioCues(
@@ -134,6 +147,20 @@ export function selectAudioCues(
   }
 
   if (current.coins > previous.coins) cues.push('coin')
+  if (current.buddyRushEventSequence !== previous.buddyRushEventSequence) {
+    cues.push(
+      current.buddyRushNoticeKind === 'success'
+        ? 'buddy-success'
+        : current.buddyRushNoticeKind === 'warning'
+          ? 'buddy-warning'
+          : 'buddy-event',
+    )
+  } else if (
+    current.buddyRushShieldPhase === 'warning' &&
+    previous.buddyRushShieldPhase !== 'warning'
+  ) {
+    cues.push('buddy-warning')
+  }
   if (
     current.footballActionSequence !== previous.footballActionSequence &&
     current.footballActionKind
@@ -232,7 +259,8 @@ function isErrorSystemMessage(text: string | undefined) {
 export function selectMusicMode(snapshot: AudioSnapshot): MusicMode {
   if (
     snapshot.miniGameStatus === 'running' ||
-    snapshot.jobStatus === 'running'
+    snapshot.jobStatus === 'running' ||
+    snapshot.buddyRushRaidPhase === 'chase'
   )
     return 'mini-game'
   if (snapshot.activeVehicleId) return 'driving'

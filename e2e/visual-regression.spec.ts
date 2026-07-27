@@ -226,6 +226,168 @@ test.describe('mobile visual regression', () => {
       screenshotOptions,
     )
   })
+
+  test('keeps Buddy Rush recruitment and BuddyBook readable in portrait', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await completeStartFlow(page, 'VisualRush')
+    await page.getByRole('button', { name: 'Start Playing' }).click()
+    await hideGameCanvas(page)
+    await page.getByRole('button', { name: 'Menu', exact: true }).click()
+    await page.getByRole('button', { name: 'Buddy Rush', exact: true }).click()
+
+    const panel = page.locator('.bb-panel')
+    await expect(panel).toBeVisible()
+    await expect(panel.getByText('Buddy Bus Stop')).toBeVisible()
+    await expect(page).toHaveScreenshot('buddy-rush-bus-portrait.png', {
+      ...screenshotOptions,
+      mask: [
+        panel.getByText(/Protected \d/),
+        panel.getByText(/Visitors leave in/),
+      ],
+    })
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('protected'),
+    )
+    await panel.getByRole('button', { name: 'BuddyBook' }).click()
+    await expect(panel.getByText('2/12 discovered')).toBeVisible()
+    await expect(panel.getByText('Undiscovered')).toHaveCount(10)
+    await expect(page).toHaveScreenshot('buddy-rush-book-portrait.png', {
+      ...screenshotOptions,
+      mask: [panel.getByText(/Protected \d/)],
+    })
+  })
+
+  test('covers Buddy Rush shield, warning, capture, chase, rescue, and reduced-motion states', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000)
+    await page.goto('/')
+    await completeStartFlow(page, 'RushStates')
+    await page.getByRole('button', { name: 'Start Playing' }).click()
+    await hideGameCanvas(page)
+
+    for (const phase of ['protected', 'warning', 'recovery'] as const) {
+      await page.evaluate(
+        (nextPhase) =>
+          window.__blockBuddiesE2E!.prepareBuddyRushVisualState(nextPhase),
+        phase,
+      )
+      const shield = page.getByRole('button', {
+        name: new RegExp(`Buddy Rush, shield ${phase}`),
+      })
+      await expect(shield).toBeVisible()
+      await expect(shield).toHaveScreenshot(
+        `buddy-rush-shield-${phase}-portrait.png`,
+        {
+          ...screenshotOptions,
+          mask: [page.getByTestId('buddy-rush-shield-time')],
+        },
+      )
+    }
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('warning'),
+    )
+    await expect(page.getByRole('status')).toContainText(
+      'Clubhouse Shield warning',
+    )
+    await expect(page).toHaveScreenshot('buddy-rush-warning-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('capture'),
+    )
+    await expect(page.getByTestId('buddy-rush-active-hud')).toContainText(
+      'Hold the badge',
+    )
+    await expect(page).toHaveScreenshot('buddy-rush-capture-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('chase'),
+    )
+    await expect(page.getByTestId('buddy-rush-active-hud')).toContainText(
+      'tag the rival',
+    )
+    await expect(page).toHaveScreenshot('buddy-rush-chase-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('rescue'),
+    )
+    await page.getByRole('button', { name: 'Rescue Quest' }).click()
+    await page
+      .locator('.bb-panel')
+      .getByRole('button', { name: 'Rush', exact: true })
+      .click()
+    await expect(page.locator('.bb-panel')).toContainText('Active Rescue Quest')
+    await expect(page).toHaveScreenshot('buddy-rush-rescue-portrait.png', {
+      ...screenshotOptions,
+      mask: buddyRushScreenshotMasks(page),
+    })
+    await page.getByRole('button', { name: 'Close' }).click()
+
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('chase', true),
+    )
+    await expect(page.getByTestId('buddy-rush-active-hud')).toBeVisible()
+    await expect(page).toHaveScreenshot(
+      'buddy-rush-chase-reduced-motion-portrait.png',
+      {
+        ...screenshotOptions,
+        mask: buddyRushScreenshotMasks(page),
+      },
+    )
+  })
+})
+
+test.describe('Buddy Rush desktop visual regression', () => {
+  test.use({ viewport: { width: 1280, height: 800 } })
+
+  test('keeps the chase HUD and management panel readable on desktop', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000)
+    await page.goto('/')
+    await completeStartFlow(page, 'RushDesktop')
+    await page.getByRole('button', { name: 'Start Playing' }).click()
+    await hideGameCanvas(page)
+    await page.addStyleTag({
+      content:
+        '[data-testid="buddy-rush-active-hud"] { background-color: #020617 !important; backdrop-filter: none !important; }',
+    })
+    await page.evaluate(() =>
+      window.__blockBuddiesE2E!.prepareBuddyRushVisualState('chase'),
+    )
+    const activeHud = page.getByTestId('buddy-rush-active-hud')
+    await expect(activeHud).toBeVisible()
+    await expect(activeHud).toHaveScreenshot(
+      'buddy-rush-chase-hud-desktop.png',
+      {
+        ...screenshotOptions,
+        mask: [page.getByTestId('buddy-rush-raid-time')],
+      },
+    )
+    await page.getByRole('button', { name: /Buddy Rush, shield rush/ }).click()
+    const panel = page.locator('.bb-panel')
+    await expect(panel).toBeVisible()
+    await expect(panel).toHaveScreenshot('buddy-rush-panel-desktop.png', {
+      ...screenshotOptions,
+      mask: [
+        page.getByTestId('buddy-rush-panel-shield-time'),
+        page.getByTestId('buddy-rush-panel-rush-time'),
+      ],
+    })
+  })
 })
 
 const screenshotOptions = {
@@ -233,6 +395,25 @@ const screenshotOptions = {
   caret: 'hide' as const,
   scale: 'css' as const,
   maxDiffPixelRatio: 0.004,
+  timeout: 15_000,
+}
+
+function buddyRushScreenshotMasks(page: Page) {
+  return [
+    page.getByTestId('buddy-rush-shield-time'),
+    page.getByTestId('buddy-rush-warning-time'),
+    page.getByTestId('buddy-rush-raid-time'),
+    page.getByTestId('buddy-rush-panel-shield-time'),
+    page.getByTestId('buddy-rush-panel-rush-time'),
+  ]
+}
+
+async function hideGameCanvas(page: Page) {
+  await page.locator('canvas').evaluateAll((canvases) => {
+    canvases.forEach((canvas) => {
+      canvas.style.visibility = 'hidden'
+    })
+  })
 }
 
 async function requiredBox(locator: Locator) {
@@ -268,4 +449,17 @@ async function expectWithinViewport(locator: Locator, page: Page) {
   expect(box.y).toBeGreaterThanOrEqual(0)
   expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
+}
+
+async function completeStartFlow(page: Page, name: string) {
+  await page.getByRole('button', { name: 'Start' }).click()
+  await page.getByRole('button', { name: 'Customize' }).click()
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await page.getByRole('button', { name: 'Next', exact: true }).click()
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await page.getByRole('button', { name: 'Next: Trails' }).click()
+  await page.getByRole('button', { name: 'Finish' }).click()
+  await page.getByLabel('Character name').fill(name)
+  await page.getByRole('button', { name: 'Start Game' }).click()
+  await expect(page.getByTestId('game-canvas')).toBeVisible()
 }

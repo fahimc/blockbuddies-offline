@@ -227,4 +227,38 @@ export const questDefinitions: QuestDefinition[] = [
     target: 1,
     reward: 35,
   },
+  {
+    id: 'recruit-first-buddy',
+    title: 'Recruit your first Buddy',
+    description:
+      'Meet a visitor at the Buddy Bus and complete their challenge.',
+    howTo:
+      'Open Buddy Rush, choose Buddy Bus, select a visitor, and answer their short recruitment challenge.',
+    tip: 'The first bus is waiting when a new game begins.',
+    category: 'starter',
+    target: 1,
+    reward: 30,
+  },
+  {
+    id: 'defend-buddy-rush',
+    title: 'Protect a Friendship Badge',
+    description: 'Catch an AI rival before they reach their clubhouse.',
+    howTo:
+      'Watch the Clubhouse Shield warning, follow the tracker, and tag the rival during the chase.',
+    tip: 'Bubble Blaster and Roller Skates can give you more time.',
+    category: 'adventure',
+    target: 1,
+    reward: 45,
+  },
+  {
+    id: 'rescue-visiting-buddy',
+    title: 'Bring a visiting Buddy home',
+    description: 'Complete a Rescue Quest after an AI rival escapes.',
+    howTo:
+      'Open Buddy Rush, select the Rescue Quest, travel to the rival clubhouse, and bring your Buddy home.',
+    tip: 'Tracker Pup points towards the correct rival clubhouse.',
+    category: 'adventure',
+    target: 1,
+    reward: 50,
+  },
 ]

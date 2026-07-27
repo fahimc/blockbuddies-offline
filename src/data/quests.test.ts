@@ -20,6 +20,7 @@ type QuestCompletionRoute =
   | { kind: 'emote' }
   | { kind: 'miniGame'; miniGameId: MiniGameId }
   | { kind: 'job'; jobId: JobId }
+  | { kind: 'buddyRush'; action: 'recruit' | 'defend' | 'rescue' }
 
 const questCompletionRoutes = {
   'meet-three-buddies': {
@@ -49,6 +50,9 @@ const questCompletionRoutes = {
   'work-restaurant-shift': { kind: 'job', jobId: 'restaurant' },
   'work-delivery-shift': { kind: 'job', jobId: 'delivery' },
   'work-farm-shift': { kind: 'job', jobId: 'farming' },
+  'recruit-first-buddy': { kind: 'buddyRush', action: 'recruit' },
+  'defend-buddy-rush': { kind: 'buddyRush', action: 'defend' },
+  'rescue-visiting-buddy': { kind: 'buddyRush', action: 'rescue' },
 } satisfies Record<QuestId, QuestCompletionRoute>
 
 describe('quest definitions', () => {

@@ -29,6 +29,8 @@ const base: AudioSnapshot = {
   jobMistakes: 0,
   jobStatus: 'idle',
   footballActionSequence: 0,
+  buddyRushEventSequence: 0,
+  buddyRushShieldPhase: 'protected',
 }
 
 describe('audio cue selection', () => {
@@ -207,5 +209,24 @@ describe('audio cue selection', () => {
     expect(selectMusicMode({ ...base, miniGameStatus: 'running' })).toBe(
       'mini-game',
     )
+    expect(selectMusicMode({ ...base, buddyRushRaidPhase: 'chase' })).toBe(
+      'mini-game',
+    )
+  })
+
+  it('plays distinct Buddy Rush warning and success cues', () => {
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        buddyRushShieldPhase: 'warning',
+      }),
+    ).toContain('buddy-warning')
+    expect(
+      selectAudioCues(base, {
+        ...base,
+        buddyRushEventSequence: 1,
+        buddyRushNoticeKind: 'success',
+      }),
+    ).toContain('buddy-success')
   })
 })

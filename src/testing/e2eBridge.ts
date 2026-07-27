@@ -1,6 +1,7 @@
 import { miniGameDefinition, miniGameTargets } from '../ai/miniGames'
 import type {
   BotRuntime,
+  BuddyRushRuntime,
   BuildBlock,
   MessageThread,
   MiniGameId,
@@ -10,6 +11,12 @@ import type {
   SavedFriend,
   Vec3,
 } from '../game/types'
+import { answerBuddyRecruitment, startBuddyRecruitment } from '../ai/buddyRush'
+import {
+  buddyRushRivals,
+  findCollectableBuddy,
+  playerClubhousePosition,
+} from '../data/buddyRush'
 import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
@@ -69,6 +76,16 @@ export type BlockBuddiesE2EBridge = {
   prepareNpcDragInteraction: () => GameplayE2ESnapshot
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
   prepareFootballInteraction: () => GameplayE2ESnapshot
+  prepareBuddyRushDefence: () => GameplayE2ESnapshot
+  prepareBuddyRushVisualState: (
+    visualState:
+      'protected' | 'warning' | 'recovery' | 'capture' | 'chase' | 'rescue',
+    reducedMotion?: boolean,
+  ) => GameplayE2ESnapshot
+  finishBuddyRushDefence: () => GameplayE2ESnapshot
+  letBuddyRushRivalEscape: () => GameplayE2ESnapshot
+  completeBuddyRushRescue: () => GameplayE2ESnapshot
+  completePlayerBuddyRushEscape: () => GameplayE2ESnapshot
   startObbyGame: () => GameplayE2ESnapshot
   completeObbyCourse: () => GameplayE2ESnapshot
   setDriveInput: (
@@ -108,6 +125,7 @@ export type GameplayE2ESnapshot = {
   messageThreads: MessageThread[]
   savedFriends: SavedFriend[]
   bots: BotRuntime[]
+  buddyRush: BuddyRushRuntime
   nearbyFootballBallId?: string
   footballActionSequence: number
   footballActionKind?: string
@@ -155,6 +173,12 @@ export function installE2EBridge() {
     prepareNpcDragInteraction,
     prepareBuildModeInteraction,
     prepareFootballInteraction,
+    prepareBuddyRushDefence,
+    prepareBuddyRushVisualState,
+    finishBuddyRushDefence,
+    letBuddyRushRivalEscape,
+    completeBuddyRushRescue,
+    completePlayerBuddyRushEscape,
     startObbyGame,
     completeObbyCourse,
     setDriveInput,
@@ -239,6 +263,141 @@ function prepareFootballInteraction() {
       run: false,
     },
   })
+  return getGameplaySnapshot()
+}
+
+function ensureBuddyRushTestBuddies() {
+  let runtime = useGameStore.getState().buddyRush
+  while (runtime.ownedBuddies.length < 2) {
+    const definitionId = runtime.bus.offerDefinitionIds[0]
+    const definition = definitionId
+      ? findCollectableBuddy(definitionId)
+      : undefined
+    if (!definition)
+      throw new Error('Buddy Bus has no visitor available for E2E setup')
+    runtime = answerBuddyRecruitment(
+      startBuddyRecruitment(runtime, definition.id),
+      definition.recruitmentAnswer,
+      Date.now(),
+    ).state
+  }
+  useGameStore.setState({ buddyRush: runtime })
+}
+
+function prepareBuddyRushDefence() {
+  ensureBuddyRushTestBuddies()
+  const now = Date.now()
+  useGameStore.setState((state) => ({
+    buddyRush: {
+      ...state.buddyRush,
+      activeRaid: undefined,
+      rescueQuest: undefined,
+      ownedBuddies: state.buddyRush.ownedBuddies.map((buddy) => ({
+        ...buddy,
+        visitState: null,
+      })),
+      shield: {
+        ...state.buddyRush.shield,
+        phase: 'warning',
+        phaseEndsAtGameTime: now,
+      },
+    },
+  }))
+  useGameStore.getState().tickBuddyRush(now)
+  const approachEnd =
+    useGameStore.getState().buddyRush.activeRaid?.phaseEndsAt ?? now
+  useGameStore.getState().tickBuddyRush(approachEnd)
+  const captureEnd =
+    useGameStore.getState().buddyRush.activeRaid?.phaseEndsAt ?? approachEnd
+  useGameStore.getState().tickBuddyRush(captureEnd)
+  return getGameplaySnapshot()
+}
+
+function prepareBuddyRushVisualState(
+  visualState:
+    'protected' | 'warning' | 'recovery' | 'capture' | 'chase' | 'rescue',
+  reducedMotion = false,
+) {
+  ensureBuddyRushTestBuddies()
+  useGameStore.setState((state) => ({
+    settings: { ...state.settings, reducedMotion },
+  }))
+  if (visualState === 'chase' || visualState === 'rescue') {
+    prepareBuddyRushDefence()
+    if (visualState === 'rescue') letBuddyRushRivalEscape()
+    return getGameplaySnapshot()
+  }
+
+  const now = Date.now()
+  if (visualState === 'capture') {
+    const rival = buddyRushRivals.find(
+      (entry) => entry.clubhousePosition && entry.buddyDefinitionIds.length > 0,
+    )
+    if (!rival) throw new Error('No rival clubhouse is available')
+    useGameStore.setState((state) => ({
+      buddyRush: {
+        ...state.buddyRush,
+        activeRaid: {
+          id: 'e2e-visual-player-capture',
+          rivalId: rival.id,
+          direction: 'raid',
+          phase: 'capture',
+          buddyDefinitionId: rival.buddyDefinitionIds[0],
+          routeIndex: 0,
+          startedAt: now,
+          phaseEndsAt: now + 90_000,
+        },
+        shield: {
+          ...state.buddyRush.shield,
+          phase: 'rush',
+          phaseEndsAtGameTime: now + 90_000,
+        },
+      },
+    }))
+    return getGameplaySnapshot()
+  }
+
+  useGameStore.setState((state) => ({
+    buddyRush: {
+      ...state.buddyRush,
+      activeRaid: undefined,
+      rescueQuest: undefined,
+      shield: {
+        ...state.buddyRush.shield,
+        phase: visualState,
+        phaseEndsAtGameTime: now + 90_000,
+      },
+    },
+  }))
+  return getGameplaySnapshot()
+}
+
+function finishBuddyRushDefence() {
+  useGameStore.getState().tagBuddyRushRival(Date.now())
+  return getGameplaySnapshot()
+}
+
+function letBuddyRushRivalEscape() {
+  const raid = useGameStore.getState().buddyRush.activeRaid
+  if (!raid || raid.direction !== 'defend' || raid.phase !== 'chase')
+    throw new Error('No AI Buddy Rush chase is active')
+  useGameStore.getState().tickBuddyRush(raid.phaseEndsAt)
+  return getGameplaySnapshot()
+}
+
+function completeBuddyRushRescue() {
+  const quest = useGameStore.getState().buddyRush.rescueQuest
+  if (!quest) throw new Error('No Buddy Rescue Quest is active')
+  useGameStore.getState().rescueBuddyVisitor(quest.buddyInstanceId, Date.now())
+  return getGameplaySnapshot()
+}
+
+function completePlayerBuddyRushEscape() {
+  const raid = useGameStore.getState().buddyRush.activeRaid
+  if (!raid || raid.direction !== 'raid' || raid.phase !== 'chase')
+    throw new Error('No player Buddy Rush escape is active')
+  useGameStore.setState({ playerPosition: playerClubhousePosition })
+  useGameStore.getState().tickBuddyRush(Date.now())
   return getGameplaySnapshot()
 }
 
@@ -523,6 +682,7 @@ function getGameplaySnapshot(): GameplayE2ESnapshot {
     messageThreads: game.messageThreads,
     savedFriends: game.savedFriends,
     bots: game.bots,
+    buddyRush: game.buddyRush,
     nearbyFootballBallId: game.nearbyFootballBallId,
     footballActionSequence: game.footballActionSequence,
     footballActionKind: game.footballActionKind,

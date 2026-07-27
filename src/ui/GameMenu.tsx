@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Server,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Smile,
   Trophy,
@@ -64,6 +65,11 @@ const menuItems: {
     panel: 'jobs',
     label: 'Jobs & Work',
     icon: <BriefcaseBusiness size={21} aria-hidden />,
+  },
+  {
+    panel: 'buddy-rush',
+    label: 'Buddy Rush',
+    icon: <ShieldCheck size={21} aria-hidden />,
   },
   {
     panel: 'build',
