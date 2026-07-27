@@ -49,6 +49,7 @@ export function GameAudio() {
   const avatar = useGameStore((state) => state.avatar)
   const obby = useGameStore((state) => state.obby)
   const miniGame = useGameStore((state) => state.miniGame)
+  const job = useGameStore((state) => state.job)
   const footballActionSequence = useGameStore(
     (state) => state.footballActionSequence,
   )
@@ -81,6 +82,10 @@ export function GameAudio() {
       miniGameEventSequence: miniGame.eventSequence,
       miniGameScore: miniGame.score,
       miniGameStatus: miniGame.status,
+      jobEventSequence: job.eventSequence,
+      jobScore: job.score,
+      jobMistakes: job.mistakes,
+      jobStatus: job.status,
       footballActionSequence,
       footballActionKind,
     }),
@@ -100,6 +105,10 @@ export function GameAudio() {
       miniGame.eventSequence,
       miniGame.score,
       miniGame.status,
+      job.eventSequence,
+      job.mistakes,
+      job.score,
+      job.status,
       footballActionKind,
       footballActionSequence,
       obby.active,
@@ -236,6 +245,18 @@ function playCue(cue: AudioCue) {
       break
     case 'mini-game-fail':
       playTone([220, 196], 0.11, 0.05, 'square')
+      break
+    case 'job-start':
+      playTone([330, 440, 554], 0.065, 0.06, 'triangle')
+      break
+    case 'job-correct':
+      playTone([659, 784, 988], 0.045, 0.055)
+      break
+    case 'job-wrong':
+      playTone([247, 196], 0.09, 0.04, 'square')
+      break
+    case 'job-complete':
+      playTone([523, 659, 784, 988, 1319], 0.065, 0.075)
       break
     case 'football-kick':
       playTone([147, 196], 0.045, 0.05, 'square')

@@ -48,7 +48,29 @@ describe('world tile map', () => {
 
     expect(workplaceIds.size).toBe(workplaceBuildings.length)
     expect(taskIds.size).toBe(
-      jobDefinitions.reduce((total, job) => total + job.tasks.length, 0),
+      jobDefinitions.reduce(
+        (total, job) =>
+          total +
+          job.tasks.reduce(
+            (taskTotal, task) =>
+              taskTotal +
+              1 +
+              task.variants.filter(
+                (variant) =>
+                  variant.position &&
+                  (variant.position[0] !== task.position[0] ||
+                    variant.position[2] !== task.position[2]),
+              ).length,
+            0,
+          ),
+        0,
+      ),
+    )
+    expect(taskIds).toContain(
+      'authored:job-task:delivery-customer:deliver-fragile-7',
+    )
+    expect(taskIds).toContain(
+      'authored:job-task:delivery-customer:deliver-chilled-18',
     )
     expect(worldTerrainAt(workDistrictCenter[0], workDistrictCenter[2])).toBe(
       'park',

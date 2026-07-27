@@ -323,7 +323,7 @@ function authoredMapObjects(): WorldTileObject[] {
       ),
     ),
     ...jobDefinitions.flatMap((job) =>
-      job.tasks.map((task) =>
+      job.tasks.flatMap((task) => [
         mapObject(
           `authored:job-task:${task.id}`,
           task.label,
@@ -332,7 +332,24 @@ function authoredMapObjects(): WorldTileObject[] {
           task.position,
           [1.2, 1, 1.2],
         ),
-      ),
+        ...task.variants
+          .filter(
+            (variant) =>
+              variant.position &&
+              (variant.position[0] !== task.position[0] ||
+                variant.position[2] !== task.position[2]),
+          )
+          .map((variant) =>
+            mapObject(
+              `authored:job-task:${task.id}:${variant.id}`,
+              `${task.label}: ${variant.orderLabel}`,
+              'activity',
+              'authored',
+              variant.position!,
+              [1.2, 1, 1.2],
+            ),
+          ),
+      ]),
     ),
   ]
 }

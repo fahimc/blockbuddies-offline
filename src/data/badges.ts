@@ -49,6 +49,18 @@ export const badgeDefinitions: BadgeDefinition[] = [
     description: 'Complete any town mini game.',
     icon: '*',
   },
+  {
+    id: 'first-paycheck',
+    title: 'First Paycheck',
+    description: 'Complete your first paid workplace shift.',
+    icon: '$',
+  },
+  {
+    id: 'job-specialist',
+    title: 'Job Specialist',
+    description: 'Reach mastery level 4 in any town job.',
+    icon: 'J',
+  },
 ]
 
 export function findBadge(id: BadgeDefinition['id']) {

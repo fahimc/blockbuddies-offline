@@ -31,11 +31,17 @@ import {
 } from '../ai/miniGames'
 import {
   cancelJobRuntime,
+  closeJobRuntimeTask,
   completeJobRuntimeTask,
   createInitialJobRuntime,
+  openJobRuntimeTask,
   startJobRuntime,
 } from '../ai/jobs'
-import { activeJobTask, getJobDefinition } from '../data/jobs'
+import {
+  activeJobChallenge,
+  activeJobTask,
+  getJobDefinition,
+} from '../data/jobs'
 import {
   sanitizePartyName,
   useLocalPartyStore,
@@ -290,8 +296,10 @@ type GameState = GameSave & {
   startMiniGame: (id: MiniGameId, now: number) => void
   tickMiniGame: (now: number, position: Vec3) => void
   cancelMiniGame: () => void
-  startJobShift: (id: JobId) => void
-  completeJobTask: (taskId: string) => void
+  startJobShift: (id: JobId, now?: number) => void
+  openJobTask: (taskId: string) => void
+  answerJobTask: (taskId: string, optionId: string, now?: number) => void
+  closeJobTask: () => void
   cancelJobShift: () => void
   recordBotMeet: (botId: string) => void
   updateSettings: (settings: Partial<GameSettings>) => void
@@ -1253,7 +1261,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }),
 
-  startJobShift: (id) => {
+  startJobShift: (id, now = Date.now()) => {
     const state = get()
     const definition = getJobDefinition(id)
     if (
@@ -1269,40 +1277,77 @@ export const useGameStore = create<GameState>((set, get) => ({
       })
       return
     }
-    set((current) => ({
-      job: startJobRuntime(current.job, id),
-      openPanel: undefined,
-      chat: [
-        ...current.chat.slice(-60),
-        botMessage(
-          definition.managerName,
-          `Welcome to ${definition.employer}! ${definition.tasks[0].instruction}`,
-        ),
-      ],
-    }))
+    set((current) => {
+      const job = startJobRuntime(current.job, id, now)
+      const challenge = activeJobChallenge(job)
+      return {
+        job,
+        openPanel: undefined,
+        chat: [
+          ...current.chat.slice(-60),
+          botMessage(
+            definition.managerName,
+            `${job.mode === 'rush' ? 'Rush order!' : `Shift ${job.shiftNumber}`} ${challenge?.orderLabel ?? definition.tasks[0].instruction}. Start at the first station.`,
+          ),
+        ],
+      }
+    })
   },
 
-  completeJobTask: (taskId) => {
+  openJobTask: (taskId) =>
+    set((state) => ({
+      job: openJobRuntimeTask(state.job, taskId),
+    })),
+
+  closeJobTask: () =>
+    set((state) => ({
+      job: closeJobRuntimeTask(state.job),
+    })),
+
+  answerJobTask: (taskId, optionId, now = Date.now()) => {
     set((state) => {
       const activeId = state.job.activeId
       if (!activeId) return state
       const definition = getJobDefinition(activeId)
       const currentTask = activeJobTask(state.job)
-      const result = completeJobRuntimeTask(state.job, taskId)
+      const currentChallenge = activeJobChallenge(state.job)
+      const result = completeJobRuntimeTask(
+        state.job,
+        taskId,
+        optionId,
+        now,
+      )
       if (!result.changed || !currentTask) return state
 
-      if (!result.completedNow) {
-        const nextTask = activeJobTask(result.runtime)
+      if (!result.correct) {
         return {
           job: result.runtime,
           chat: [
             ...state.chat.slice(-60),
-            botMessage(definition.managerName, currentTask.npcLine),
+            botMessage(
+              definition.managerName,
+              result.message ?? 'Check the order and try again.',
+            ),
+          ],
+        }
+      }
+
+      if (!result.completedNow) {
+        const nextTask = activeJobTask(result.runtime)
+        const nextChallenge = activeJobChallenge(result.runtime)
+        return {
+          job: result.runtime,
+          chat: [
+            ...state.chat.slice(-60),
+            botMessage(
+              definition.managerName,
+              currentChallenge?.successLine ?? currentTask.npcLine,
+            ),
             ...(nextTask
               ? [
                   botMessage(
                     definition.managerName,
-                    `Next task: ${nextTask.instruction}`,
+                    `Next: ${nextTask.label}. ${nextChallenge?.orderLabel ?? nextTask.instruction}`,
                   ),
                 ]
               : []),
@@ -1319,17 +1364,43 @@ export const useGameStore = create<GameState>((set, get) => ({
         jobQuestIds[activeId],
         1,
       )
+      const earnedFirstPaycheck =
+        !state.earnedBadges.includes('first-paycheck')
+      const earnedJobSpecialist =
+        (result.runtime.summary?.levelAfter ?? 1) >= 4 &&
+        !state.earnedBadges.includes('job-specialist')
       return {
         job: result.runtime,
         coins: questResult.coins,
         questProgress: questResult.questProgress,
+        earnedBadges: [
+          ...state.earnedBadges,
+          ...(earnedFirstPaycheck ? (['first-paycheck'] as const) : []),
+          ...(earnedJobSpecialist ? (['job-specialist'] as const) : []),
+        ],
         chat: [
           ...state.chat.slice(-60),
-          botMessage(definition.managerName, currentTask.npcLine),
           botMessage(
             definition.managerName,
-            `Shift complete! You earned ${definition.reward} coins.`,
+            currentChallenge?.successLine ?? currentTask.npcLine,
           ),
+          botMessage(
+            definition.managerName,
+            `Shift complete: ${result.runtime.summary?.stars ?? 1} stars, ${result.runtime.summary?.score ?? 0} points, +${result.reward} coins.`,
+          ),
+          ...(result.runtime.summary?.levelledUp
+            ? [
+                systemMessage(
+                  `${definition.title} mastery level ${result.runtime.summary.levelAfter} reached!`,
+                ),
+              ]
+            : []),
+          ...(earnedFirstPaycheck
+            ? [systemMessage('Badge earned: First Paycheck')]
+            : []),
+          ...(earnedJobSpecialist
+            ? [systemMessage('Badge earned: Job Specialist')]
+            : []),
           ...earning.messages,
           ...(questResult.message ? [questResult.message] : []),
         ],

@@ -24,8 +24,11 @@ import {
 import * as THREE from 'three'
 import { botProfiles } from '../data/botProfiles'
 import {
+  activeJobChallenge,
   activeJobTask,
+  challengeForJobTask,
   jobDefinitions,
+  jobTaskPosition,
   workplaceBuildings,
   workDistrictCenter,
   workDistrictSize,
@@ -2833,6 +2836,7 @@ function JobManager({ jobId }: { jobId: (typeof jobDefinitions)[number]['id'] })
   const runningHere = activeHere && runtime.status === 'running'
   const completedHere = activeHere && runtime.status === 'completed'
   const currentTask = runningHere ? activeJobTask(runtime) : undefined
+  const currentChallenge = runningHere ? activeJobChallenge(runtime) : undefined
 
   useFrame(() => {
     const next =
@@ -2844,12 +2848,12 @@ function JobManager({ jobId }: { jobId: (typeof jobDefinitions)[number]['id'] })
   })
 
   const managerLine = runningHere
-    ? currentTask?.instruction
+    ? `${currentTask?.instruction} Order: ${currentChallenge?.orderLabel}.`
     : completedHere
-      ? `Great shift! You earned ${job.reward} coins.`
+      ? `Great shift! You earned ${runtime.summary?.totalReward ?? job.reward} coins.`
       : runtime.status === 'running'
         ? 'Finish your current shift, then come and work with me.'
-        : `I have a three-task shift worth ${job.reward} coins.`
+        : `I have a three-task shift with a ${job.reward}-coin base wage.`
 
   return (
     <group
@@ -2917,26 +2921,27 @@ function JobTaskStation({
   const job = jobDefinitions.find((entry) => entry.id === jobId)!
   const task = job.tasks.find((entry) => entry.id === taskId)!
   const runtime = useGameStore((state) => state.job)
-  const completeJobTask = useGameStore((state) => state.completeJobTask)
+  const openJobTask = useGameStore((state) => state.openJobTask)
   const [nearby, setNearby] = useState(false)
   const current = activeJobTask(runtime)?.id === task.id
   const completed = runtime.completedTaskIds.includes(task.id)
+  const position = current ? jobTaskPosition(runtime, task) : task.position
 
   useFrame(() => {
     const next =
       current &&
-      distance2d(useGameStore.getState().playerPosition, task.position) <= 3.8
+      distance2d(useGameStore.getState().playerPosition, position) <= 3.8
     if (next !== nearby) setNearby(next)
   })
 
   return (
-    <group position={task.position}>
+    <group position={position}>
       <mesh
         receiveShadow
         position={[0, 0.08, 0]}
         onClick={(event) => {
           event.stopPropagation()
-          if (current && nearby) completeJobTask(task.id)
+          if (current && nearby) openJobTask(task.id)
         }}
       >
         <cylinderGeometry args={[0.9, 0.9, 0.16, 28]} />
@@ -2957,11 +2962,11 @@ function JobTaskStation({
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation()
-                completeJobTask(task.id)
+                openJobTask(task.id)
               }}
             >
               <CheckCircle2 size={17} aria-hidden />
-              {task.label}
+              Start {task.label}
             </button>
           ) : (
             <span className="pointer-events-none whitespace-nowrap rounded-lg bg-slate-950/90 px-3 py-1 text-xs font-black text-white shadow">
@@ -2982,6 +2987,11 @@ function WorkCustomer({
   const job = jobDefinitions.find((entry) => entry.id === jobId)!
   const finalTask = job.tasks.at(-1)!
   const runtime = useGameStore((state) => state.job)
+  const finalChallenge =
+    runtime.activeId === job.id
+      ? challengeForJobTask(runtime, finalTask)
+      : finalTask.variants[0]
+  const finalPosition = finalChallenge.position ?? finalTask.position
   const waiting =
     runtime.activeId === job.id &&
     runtime.status === 'running' &&
@@ -2989,14 +2999,16 @@ function WorkCustomer({
   const helped =
     runtime.activeId === job.id &&
     runtime.completedTaskIds.includes(finalTask.id)
-  const label = job.id === 'farming' ? 'Garden Helper' : 'Waiting Customer'
+  const label =
+    finalChallenge.customerName ??
+    (job.id === 'farming' ? 'Garden Helper' : 'Waiting Customer')
 
   return (
     <group
       position={[
-        finalTask.position[0] + 1.15,
+        finalPosition[0] + 1.15,
         avatarGroundOffset,
-        finalTask.position[2] - 0.7,
+        finalPosition[2] - 0.7,
       ]}
     >
       <BlockAvatar
@@ -3016,7 +3028,9 @@ function WorkCustomer({
       {waiting || helped ? (
         <Html center position={[0, 3.2, 0]} zIndexRange={worldHtmlZIndexRange}>
           <span className="pointer-events-none block max-w-40 rounded-lg bg-white px-3 py-2 text-center text-xs font-black text-slate-900 shadow">
-            {helped ? finalTask.npcLine : 'Hi! I am waiting for your help.'}
+            {helped
+              ? finalChallenge.successLine
+              : `Hi! I am waiting for ${finalChallenge.orderLabel}.`}
           </span>
         </Html>
       ) : null}

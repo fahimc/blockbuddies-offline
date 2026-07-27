@@ -1,4 +1,4 @@
-import type { MiniGameStatus } from '../game/types'
+import type { JobStatus, MiniGameStatus } from '../game/types'
 import type { GamePanel } from '../state/gameStore'
 
 export type AudioCue =
@@ -31,6 +31,10 @@ export type AudioCue =
   | 'mini-game-collect'
   | 'mini-game-complete'
   | 'mini-game-fail'
+  | 'job-start'
+  | 'job-correct'
+  | 'job-wrong'
+  | 'job-complete'
   | 'football-kick'
   | 'football-skill'
   | 'football-goal'
@@ -66,6 +70,10 @@ export type AudioSnapshot = {
   miniGameEventSequence: number
   miniGameScore: number
   miniGameStatus: MiniGameStatus
+  jobEventSequence: number
+  jobScore: number
+  jobMistakes: number
+  jobStatus: JobStatus
   footballActionSequence: number
   footballActionKind?: FootballAudioAction
 }
@@ -106,6 +114,23 @@ export function selectAudioCues(
     current.miniGameStatus === 'failed'
   ) {
     cues.push('mini-game-fail')
+  }
+
+  if (
+    current.jobEventSequence !== previous.jobEventSequence &&
+    previous.jobStatus !== 'running' &&
+    current.jobStatus === 'running'
+  ) {
+    cues.push('job-start')
+  } else if (
+    previous.jobStatus === 'running' &&
+    current.jobStatus === 'completed'
+  ) {
+    cues.push('job-complete')
+  } else if (current.jobMistakes > previous.jobMistakes) {
+    cues.push('job-wrong')
+  } else if (current.jobScore > previous.jobScore) {
+    cues.push('job-correct')
   }
 
   if (current.coins > previous.coins) cues.push('coin')
@@ -205,7 +230,11 @@ function isErrorSystemMessage(text: string | undefined) {
 }
 
 export function selectMusicMode(snapshot: AudioSnapshot): MusicMode {
-  if (snapshot.miniGameStatus === 'running') return 'mini-game'
+  if (
+    snapshot.miniGameStatus === 'running' ||
+    snapshot.jobStatus === 'running'
+  )
+    return 'mini-game'
   if (snapshot.activeVehicleId) return 'driving'
   if (snapshot.activeInteriorId) return 'interior'
   if (snapshot.screen === 'setup-avatar' || snapshot.screen === 'setup-name')

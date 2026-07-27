@@ -136,9 +136,27 @@ export type JobId = 'shopkeeper' | 'restaurant' | 'delivery' | 'farming'
 export type JobTask = {
   id: string
   label: string
+  mechanic: string
   instruction: string
   position: Vec3
   npcLine: string
+  variants: JobTaskVariant[]
+}
+
+export type JobTaskOption = {
+  id: string
+  label: string
+}
+
+export type JobTaskVariant = {
+  id: string
+  orderLabel: string
+  prompt: string
+  options: JobTaskOption[]
+  correctOptionId: string
+  successLine: string
+  customerName?: string
+  position?: Vec3
 }
 
 export type JobDefinition = {
@@ -148,6 +166,7 @@ export type JobDefinition = {
   description: string
   locationId: LocationId
   reward: number
+  shiftDurationSeconds: number
   color: string
   managerName: string
   managerPosition: Vec3
@@ -157,15 +176,55 @@ export type JobDefinition = {
 export type JobRecord = {
   shiftsCompleted: number
   coinsEarned: number
+  xp: number
+  level: number
+  bestScore: number
+  bestStars: number
+  perfectShifts: number
 }
 
 export type JobStatus = 'idle' | 'running' | 'completed'
+
+export type JobShiftMode = 'standard' | 'rush'
+
+export type JobTaskFeedback = {
+  kind: 'correct' | 'wrong'
+  message: string
+  optionId: string
+}
+
+export type JobShiftSummary = {
+  baseReward: number
+  tip: number
+  masteryBonus: number
+  totalReward: number
+  score: number
+  stars: 1 | 2 | 3
+  xpGained: number
+  levelBefore: number
+  levelAfter: number
+  levelledUp: boolean
+  perfect: boolean
+  overtime: boolean
+}
 
 export type JobRuntime = {
   activeId?: JobId
   status: JobStatus
   taskIndex: number
   completedTaskIds: string[]
+  challengeIds: string[]
+  selectedTaskId?: string
+  startedAt: number
+  endsAt: number
+  shiftNumber: number
+  mode: JobShiftMode
+  score: number
+  combo: number
+  bestCombo: number
+  mistakes: number
+  feedback?: JobTaskFeedback
+  summary?: JobShiftSummary
   eventSequence: number
   records: Partial<Record<JobId, JobRecord>>
 }
@@ -411,6 +470,8 @@ export type BadgeId =
   | 'builder'
   | 'friend-maker'
   | 'mini-game-star'
+  | 'first-paycheck'
+  | 'job-specialist'
 
 export type BadgeDefinition = {
   id: BadgeId

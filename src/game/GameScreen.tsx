@@ -26,6 +26,7 @@ import { MapPanel } from '../ui/MapPanel'
 import { TutorialPanel } from '../ui/TutorialPanel'
 import { KartPanel } from '../ui/KartPanel'
 import { JobsPanel } from '../ui/JobsPanel'
+import { JobTaskChallenge } from '../ui/JobTaskChallenge'
 import { WorkShiftHUD } from '../ui/WorkShiftHUD'
 import { RoomCameraZoom } from '../ui/RoomCameraZoom'
 import { WelcomeOverlay } from '../ui/WelcomeOverlay'
@@ -101,6 +102,7 @@ export function GameScreen() {
         <BuildHudPalette />
         <MiniGameAnnouncement />
         <WorkShiftHUD />
+        <JobTaskChallenge />
         <MiniMap />
         <ChatPanel />
         <TouchControls />

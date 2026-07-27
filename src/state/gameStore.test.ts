@@ -10,7 +10,11 @@ import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { createQuestProgress } from '../ai/quests'
 import { createInitialJobRuntime } from '../ai/jobs'
 import { clothingItems, heroSkinItems } from '../data/avatarCustomization'
-import { jobDefinitions } from '../data/jobs'
+import {
+  activeJobChallenge,
+  activeJobTask,
+  jobDefinitions,
+} from '../data/jobs'
 import { questDefinitions } from '../data/quests'
 import { getLocation } from '../data/world'
 import { buildPlacementClearsPlayer } from '../ai/buildMode'
@@ -29,6 +33,21 @@ import {
   useGameStore,
 } from './gameStore'
 import { useLocalPartyStore } from './localPartyStore'
+
+function answerCurrentJobCorrectly(now: number) {
+  const runtime = useGameStore.getState().job
+  const task = activeJobTask(runtime)!
+  const challenge = activeJobChallenge(runtime)!
+  useGameStore
+    .getState()
+    .answerJobTask(task.id, challenge.correctOptionId, now)
+}
+
+function finishCurrentJob(now: number) {
+  while (useGameStore.getState().job.status === 'running') {
+    answerCurrentJobCorrectly(now)
+  }
+}
 
 describe('avatar save migration', () => {
   it('upgrades the legacy yellow and blue default avatar', () => {
@@ -635,6 +654,7 @@ describe('paid work shifts', () => {
         chat: [],
         job: createInitialJobRuntime(),
         miniGame: createInitialMiniGame(),
+        earnedBadges: [],
         obby: { ...state.obby, active: false },
         questProgress: createQuestProgress(questDefinitions).map((quest) =>
           quest.id === 'collect-10-coins'
@@ -643,36 +663,44 @@ describe('paid work shifts', () => {
         ),
       }))
 
-      useGameStore.getState().startJobShift(job.id)
-      job.tasks.forEach((task) =>
-        useGameStore.getState().completeJobTask(task.id),
-      )
+      useGameStore.getState().startJobShift(job.id, 1_000)
+      finishCurrentJob(5_000)
 
       const quest = questDefinitions.find(
         (definition) => definition.id === questIds[job.id],
       )!
-      expect(useGameStore.getState().coins).toBe(job.reward + quest.reward)
+      const firstSummary = useGameStore.getState().job.summary!
+      expect(firstSummary.totalReward).toBeGreaterThan(job.reward)
+      expect(useGameStore.getState().coins).toBe(
+        firstSummary.totalReward + quest.reward,
+      )
       expect(
         useGameStore
           .getState()
           .questProgress.find((entry) => entry.id === quest.id),
       ).toMatchObject({ completed: true, progress: 1 })
-      expect(useGameStore.getState().job.records[job.id]).toEqual({
+      expect(useGameStore.getState().job.records[job.id]).toMatchObject({
         shiftsCompleted: 1,
-        coinsEarned: job.reward,
+        coinsEarned: firstSummary.totalReward,
+        bestStars: 3,
+        perfectShifts: 1,
       })
-
-      useGameStore.getState().startJobShift(job.id)
-      job.tasks.forEach((task) =>
-        useGameStore.getState().completeJobTask(task.id),
+      expect(useGameStore.getState().earnedBadges).toContain(
+        'first-paycheck',
       )
 
+      useGameStore.getState().startJobShift(job.id, 10_000)
+      finishCurrentJob(15_000)
+
+      const secondSummary = useGameStore.getState().job.summary!
       expect(useGameStore.getState().coins).toBe(
-        job.reward * 2 + quest.reward,
+        firstSummary.totalReward + secondSummary.totalReward + quest.reward,
       )
-      expect(useGameStore.getState().job.records[job.id]).toEqual({
+      expect(useGameStore.getState().job.records[job.id]).toMatchObject({
         shiftsCompleted: 2,
-        coinsEarned: job.reward * 2,
+        coinsEarned:
+          firstSummary.totalReward + secondSummary.totalReward,
+        perfectShifts: 2,
       })
     })
   })
@@ -686,9 +714,10 @@ describe('paid work shifts', () => {
     })
 
     const snapshot = makeSaveSnapshot(useGameStore.getState())
-    expect(snapshot.jobRecords?.shopkeeper).toEqual({
+    expect(snapshot.jobRecords?.shopkeeper).toMatchObject({
       shiftsCompleted: 4,
       coinsEarned: 96,
+      level: 1,
     })
 
     useGameStore.getState().startJobShift(job.id)
@@ -698,7 +727,11 @@ describe('paid work shifts', () => {
       activeId: undefined,
       status: 'idle',
       records: {
-        shopkeeper: { shiftsCompleted: 4, coinsEarned: 96 },
+        shopkeeper: {
+          shiftsCompleted: 4,
+          coinsEarned: 96,
+          level: 1,
+        },
       },
     })
   })

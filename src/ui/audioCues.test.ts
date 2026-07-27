@@ -24,6 +24,10 @@ const base: AudioSnapshot = {
   miniGameEventSequence: 0,
   miniGameScore: 0,
   miniGameStatus: 'idle',
+  jobEventSequence: 0,
+  jobScore: 0,
+  jobMistakes: 0,
+  jobStatus: 'idle',
   footballActionSequence: 0,
 }
 
@@ -80,6 +84,38 @@ describe('audio cue selection', () => {
         footballActionKind: 'goal',
       }),
     ).toEqual(['coin', 'football-goal'])
+  })
+
+  it('plays distinct cues for job starts, correct work, mistakes, and completion', () => {
+    const running = {
+      ...base,
+      jobEventSequence: 1,
+      jobStatus: 'running' as const,
+    }
+    expect(selectAudioCues(base, running)).toContain('job-start')
+    expect(
+      selectAudioCues(running, {
+        ...running,
+        jobEventSequence: 2,
+        jobScore: 100,
+      }),
+    ).toContain('job-correct')
+    expect(
+      selectAudioCues(running, {
+        ...running,
+        jobEventSequence: 2,
+        jobMistakes: 1,
+      }),
+    ).toContain('job-wrong')
+    expect(
+      selectAudioCues(running, {
+        ...running,
+        jobEventSequence: 2,
+        jobScore: 360,
+        jobStatus: 'completed',
+      }),
+    ).toContain('job-complete')
+    expect(selectMusicMode(running)).toBe('mini-game')
   })
 
   it('plays richer cues for avatar, social, quest, and build actions', () => {
