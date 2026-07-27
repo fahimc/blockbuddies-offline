@@ -119,6 +119,8 @@ import {
   savedFriendTravelSeconds,
   snapSavedFriendDestination,
 } from '../game/savedFriendMovement'
+import { actorCollisionBoxes } from '../game/modularCollision'
+import { authoredWorldCollisionBoxes } from '../game/worldCollision'
 import {
   advanceKartRace,
   createInitialKartRace,
@@ -1110,12 +1112,34 @@ export const useGameStore = create<GameState>((set, get) => ({
             return bot
           const profile =
             botProfiles.find((item) => item.id === bot.id) ?? botProfiles[0]
+          const peopleObstacles = actorCollisionBoxes([
+            {
+              id: 'local-player',
+              position: state.playerPosition,
+            },
+            ...state.bots
+              .filter((other) => other.id !== bot.id)
+              .map((other) => ({
+                id: `bot:${other.id}`,
+                position: other.position,
+              })),
+            ...state.savedFriends
+              .filter((friend) => friend.inWorld)
+              .map((friend, index) => ({
+                id: `friend:${friend.id}`,
+                position: savedFriendPositionAt(friend, now, index),
+              })),
+          ])
           return updateBot({
             bot,
             profile,
             playerPosition: state.playerPosition,
             now,
             random,
+            obstacles: [
+              ...authoredWorldCollisionBoxes,
+              ...peopleObstacles,
+            ],
           })
         }),
       }

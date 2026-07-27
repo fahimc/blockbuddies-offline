@@ -100,6 +100,7 @@ test.describe('mini games end-to-end flow', () => {
     expect(started.miniGame.activeId).toBe('coin-rush')
     expect(started.miniGame.score).toBe(0)
     expect(started.miniGame.points).toBe(0)
+    const startingCoins = started.coins
     expect(started.chatTexts).toContain(
       'Mini game started for all players: Coin Rush',
     )
@@ -107,10 +108,13 @@ test.describe('mini games end-to-end flow', () => {
     const firstCoin = await collectNextTarget(page)
     expect(firstCoin.miniGame.score).toBe(1)
     expect(firstCoin.miniGame.points).toBe(10)
-    expect(firstCoin.coins).toBe(1)
+    expect(firstCoin.coins).toBe(startingCoins + 1)
     await expect(page.getByTestId('mini-game-hud')).toContainText('10 pts')
     await expect(
-      page.locator('.desktop-hud').getByText('1').first(),
+      page
+        .locator('.desktop-hud')
+        .getByText(String(startingCoins + 1))
+        .first(),
     ).toBeVisible()
 
     const snapshot = await completeMiniGameRoute(page)
@@ -121,7 +125,7 @@ test.describe('mini games end-to-end flow', () => {
       bestScore: 8,
       bestPoints: 130,
     })
-    expect(snapshot.coins).toBe(118)
+    expect(snapshot.coins).toBe(startingCoins + 118)
     expect(snapshot.miniGame.points).toBe(130)
     expect(snapshot.earnedBadges).toContain('mini-game-star')
     expect(snapshot.chatTexts).toContain(
@@ -129,13 +133,16 @@ test.describe('mini games end-to-end flow', () => {
     )
     expect(snapshot.chatTexts).toContain('Win Coin Rush complete! +45 coins')
     expect(snapshot.chatTexts).toContain(
-      'Coin Rush rewards paid: +111 coins (balance 118)',
+      `Coin Rush rewards paid: +111 coins (balance ${startingCoins + 118})`,
     )
     expect(snapshot.chatTexts).toContain('Badge earned: Mini Game Star')
     expect(snapshot.chatTexts).toContain('Nice run in Coin Rush!')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
     await expect(
-      page.locator('.desktop-hud').getByText('118').first(),
+      page
+        .locator('.desktop-hud')
+        .getByText(String(startingCoins + 118))
+        .first(),
     ).toBeVisible()
   })
 
@@ -263,8 +270,10 @@ test.describe('mini games end-to-end flow', () => {
   }) => {
     await page.goto('/')
     await completeStartFlow(page, 'CancelTester')
-
     await startMiniGame(page, 'Play Coin Rush', /Coin Rush.*0\/8/)
+    const startingCoins = (
+      await page.evaluate(() => window.__blockBuddiesE2E!.getSnapshot())
+    ).coins
     await openMiniGamesPanel(page)
     await page.getByRole('button', { name: 'Cancel Mini Game' }).click()
 
@@ -274,7 +283,7 @@ test.describe('mini games end-to-end flow', () => {
     expect(snapshot.miniGame.status).toBe('idle')
     expect(snapshot.miniGame.records['coin-rush']).toBeUndefined()
     expect(snapshot.miniGame.points).toBe(0)
-    expect(snapshot.coins).toBe(0)
+    expect(snapshot.coins).toBe(startingCoins)
     expect(snapshot.chatTexts).toContain('Mini game cancelled')
     await expect(page.getByTestId('mini-game-hud')).toHaveCount(0)
   })
@@ -294,8 +303,10 @@ test.describe('mobile mini game controls', () => {
   }) => {
     await page.goto('/')
     await completeStartFlow(page, 'PhoneMini')
-
     await startMiniGame(page, 'Play Coin Rush', /0\/8/)
+    const startingCoins = (
+      await page.evaluate(() => window.__blockBuddiesE2E!.getSnapshot())
+    ).coins
     await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0/8')
     await expect(page.getByTestId('mini-game-hud-mobile')).toContainText('0p')
     await expect(page.getByTestId('mini-game-announcement')).toContainText(
@@ -311,7 +322,7 @@ test.describe('mobile mini game controls', () => {
       window.__blockBuddiesE2E!.getSnapshot(),
     )
     expect(snapshot.miniGame.status).toBe('idle')
-    expect(snapshot.coins).toBe(0)
+    expect(snapshot.coins).toBe(startingCoins)
     expect(
       await page.evaluate(
         () => window.__blockBuddiesE2E!.getGameplaySnapshot().chatTexts,

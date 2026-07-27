@@ -7,6 +7,10 @@ import type {
   CollectableBuddyDefinition,
   Vec3,
 } from '../game/types'
+import {
+  buddyRushSiteByRivalId,
+  buddyRushWorldSites,
+} from './buddyRushWorldPlan'
 
 export const buddyRushConfig = {
   protectedMs: 4 * 60_000,
@@ -377,7 +381,7 @@ export const buddyRushRivals: BuddyRushRival[] = [
     name: 'LunaBlocks',
     archetype: 'friendly',
     clubhouseName: 'Moonlight Club',
-    clubhousePosition: [36, 0, -16],
+    clubhousePosition: [...buddyRushSiteByRivalId['luna-club'].position],
     color: '#60a5fa',
     buddyDefinitionIds: ['frost-fox', 'pixel-pete-jr'],
     chatLines: {
@@ -392,7 +396,7 @@ export const buddyRushRivals: BuddyRushRival[] = [
     name: 'NoriBuilds',
     archetype: 'builder',
     clubhouseName: 'Builder Base',
-    clubhousePosition: [40, 0, 0],
+    clubhousePosition: [...buddyRushSiteByRivalId['nori-club'].position],
     color: '#22c55e',
     buddyDefinitionIds: ['bolt-bot', 'garden-pig'],
     chatLines: {
@@ -407,7 +411,7 @@ export const buddyRushRivals: BuddyRushRival[] = [
     name: 'PipPop',
     archetype: 'prankster',
     clubhouseName: 'Pop Party House',
-    clubhousePosition: [36, 0, 16],
+    clubhousePosition: [...buddyRushSiteByRivalId['pip-club'].position],
     color: '#f472b6',
     buddyDefinitionIds: ['disco-duck', 'candy-panda'],
     chatLines: {
@@ -433,64 +437,72 @@ export const buddyRushRivals: BuddyRushRival[] = [
   },
 ]
 
-export const playerClubhousePosition: Vec3 = [-12, 0, -8]
+export const playerClubhousePosition: Vec3 = [
+  ...buddyRushWorldSites.player.position,
+]
 export const playerClubhouseEntrance: Vec3 = [-12, 0, -2.8]
-export const buddyBusStopPosition: Vec3 = [7, 0, 3]
+export const buddyBusStopPosition: Vec3 = [...buddyRushWorldSites.bus.position]
 
 export const buddyRushRoutes: Vec3[][] = [
-  // Moonlight Club: park path.
+  // Moonlight Club: east avenue, then the northern road.
   [
     playerClubhousePosition,
-    [-6, 0, -3],
-    [2, 0, -3],
-    [12, 0, -9],
-    [24, 0, -12],
-    [36, 0, -16],
+    [-7, 0, -4],
+    [0, 0, -4],
+    [0, 0, 9],
+    [54, 0, 9],
+    [54, 0, -41],
+    [60, 0, -41],
+    [...buddyRushWorldSites.luna.position],
   ],
-  // Moonlight Club: north alley shortcut.
+  // Moonlight Club: south loop via Builder Meadows.
   [
     playerClubhousePosition,
-    [-15, 0, -16],
-    [-4, 0, -20],
-    [10, 0, -20],
-    [24, 0, -18],
-    [36, 0, -16],
+    [-12, 0, 9],
+    [20, 0, 9],
+    [54, 0, 9],
+    [54, 0, -24],
+    [60, 0, -41],
+    [...buddyRushWorldSites.luna.position],
   ],
-  // Builder Base: market path.
+  // Builder Base: west avenue route.
   [
     playerClubhousePosition,
-    [-18, 0, 1],
-    [-8, 0, 10],
-    [4, 0, 10],
-    [18, 0, 5],
-    [40, 0, 0],
+    [-12, 0, 2],
+    [-12, 0, 9],
+    [-54, 0, 9],
+    [-54, 0, -18],
+    [-61, 0, -18],
+    [...buddyRushWorldSites.nori.position],
   ],
-  // Builder Base: clocktower shortcut.
+  // Builder Base: northern garden route.
   [
     playerClubhousePosition,
-    [-4, 0, -8],
-    [6, 0, -2],
-    [16, 0, 2],
-    [29, 0, 4],
-    [40, 0, 0],
+    [-18, 0, -18],
+    [-36, 0, -18],
+    [-54, 0, -18],
+    [-61, 0, -18],
+    [...buddyRushWorldSites.nori.position],
   ],
-  // Pop Party House: garden path.
+  // Pop Party House: east avenue route.
   [
     playerClubhousePosition,
-    [-19, 0, -1],
-    [-11, 0, 12],
-    [2, 0, 18],
-    [20, 0, 18],
-    [36, 0, 16],
+    [-12, 0, 9],
+    [18, 0, 9],
+    [54, 0, 9],
+    [54, 0, 42.7],
+    [60, 0, 42.7],
+    [...buddyRushWorldSites.pip.position],
   ],
-  // Pop Party House: east alley shortcut.
+  // Pop Party House: southern meadow route.
   [
     playerClubhousePosition,
-    [-7, 0, 0],
-    [3, 0, 7],
-    [14, 0, 12],
-    [26, 0, 11],
-    [36, 0, 16],
+    [-4, 0, 9],
+    [30, 0, 9],
+    [54, 0, 9],
+    [54, 0, 30],
+    [60, 0, 42.7],
+    [...buddyRushWorldSites.pip.position],
   ],
 ]
 

@@ -1,5 +1,10 @@
 import type { BotProfile, BotRuntime, BotState, LocationId, Vec3 } from '../game/types'
 import { distance2d, getLocation } from '../data/world'
+import {
+  resolveHorizontalCollision,
+  separateCircleFromBoxes,
+  type CollisionBox,
+} from '../game/collision'
 
 export type BotTickInput = {
   bot: BotRuntime
@@ -7,6 +12,7 @@ export type BotTickInput = {
   playerPosition: Vec3
   now: number
   random: () => number
+  obstacles?: CollisionBox[]
 }
 
 const stateOrder: BotState[] = [
@@ -63,7 +69,7 @@ function moveToward(position: Vec3, target: Vec3, speed: number): Vec3 {
 }
 
 export function updateBot(input: BotTickInput): BotRuntime {
-  const { bot, profile, playerPosition, now, random } = input
+  const { bot, profile, playerPosition, now, random, obstacles = [] } = input
   const nearPlayer = distance2d(bot.position, playerPosition) < 3.2
   let next = { ...bot }
   const scheduledLocationId = scheduleLocation(profile, now)
@@ -121,7 +127,18 @@ export function updateBot(input: BotTickInput): BotRuntime {
 
   const speed = next.action === 'run' ? 0.055 : next.action === 'walk' ? 0.032 : 0.014
   if (['wander', 'go_to_location', 'leave_area'].includes(next.state)) {
-    next.position = moveToward(next.position, next.target, speed)
+    const collisionRadius = 0.38
+    const separated = separateCircleFromBoxes(
+      next.position,
+      obstacles,
+      collisionRadius,
+    )
+    next.position = resolveHorizontalCollision(
+      separated,
+      moveToward(separated, next.target, speed),
+      obstacles,
+      collisionRadius,
+    )
   }
 
   return next

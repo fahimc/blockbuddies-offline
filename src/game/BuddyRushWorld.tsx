@@ -12,6 +12,10 @@ import {
   findCollectableBuddy,
   playerClubhousePosition,
 } from '../data/buddyRush'
+import {
+  buddyRushSiteByRivalId,
+  buddyRushWorldSites,
+} from '../data/buddyRushWorldPlan'
 import type {
   BuddyRushRaid,
   CollectableBuddyDefinition,
@@ -116,20 +120,44 @@ function PlayerClubhouse({
   return (
     <group position={playerClubhousePosition}>
       <mesh receiveShadow position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[6, 6, 0.16, 24]} />
-        <meshStandardMaterial color="#8b5cf6" />
+        <boxGeometry args={[6.6, 0.16, 7.2]} />
+        <meshStandardMaterial color="#a78bfa" />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 1.1, 0]}>
-        <boxGeometry args={[5.5, 2.2, 4.5]} />
-        <meshStandardMaterial color="#fef3c7" />
+      <mesh receiveShadow position={[0, 0.18, 2.55]}>
+        <boxGeometry args={[1.45, 0.08, 2.1]} />
+        <meshStandardMaterial color="#f5f3ff" />
       </mesh>
-      <mesh castShadow position={[0, 2.55, 0]}>
-        <coneGeometry args={[4.2, 1.8, 4]} />
-        <meshStandardMaterial color="#7c3aed" />
+      <mesh castShadow receiveShadow position={[0, 1.35, -0.35]}>
+        <boxGeometry args={[5.5, 2.7, 4.5]} />
+        <meshStandardMaterial color="#fef3c7" roughness={0.76} />
       </mesh>
-      <mesh position={[0, 1, 2.28]}>
-        <boxGeometry args={[1.25, 2, 0.12]} />
+      <mesh castShadow position={[0, 3.05, -0.35]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[3.85, 1.65, 4]} />
+        <meshStandardMaterial color="#6d28d9" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 1.15, 1.93]}>
+        <boxGeometry args={[1.25, 2.25, 0.12]} />
         <meshStandardMaterial color="#4c1d95" />
+      </mesh>
+      {[-1.75, 1.75].map((x) => (
+        <group key={x}>
+          <mesh position={[x, 1.55, 1.94]}>
+            <boxGeometry args={[1.15, 0.92, 0.1]} />
+            <meshStandardMaterial color="#67e8f9" metalness={0.08} />
+          </mesh>
+          <mesh position={[x, 1.55, 2]}>
+            <boxGeometry args={[0.08, 1.05, 0.08]} />
+            <meshStandardMaterial color="#ede9fe" />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, 2.65, 1.96]}>
+        <boxGeometry args={[2.55, 0.42, 0.16]} />
+        <meshStandardMaterial
+          color="#fbbf24"
+          emissive="#f59e0b"
+          emissiveIntensity={0.18}
+        />
       </mesh>
       <Html center position={[0, 4.05, 0]} zIndexRange={actionZIndex}>
         <div className="whitespace-nowrap rounded-2xl bg-indigo-950/95 px-3 py-2 text-center text-xs font-black text-white shadow-xl">
@@ -270,26 +298,68 @@ function BuddyBusStop({
   reducedMotion: boolean
 }) {
   return (
-    <group position={buddyBusStopPosition}>
+    <group
+      position={buddyBusStopPosition}
+      rotation={[0, buddyRushWorldSites.bus.facingYaw, 0]}
+    >
       <mesh receiveShadow position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[2.8, 2.8, 0.16, 24]} />
-        <meshStandardMaterial color="#0ea5e9" />
+        <boxGeometry args={[4, 0.16, 5.4]} />
+        <meshStandardMaterial color="#dbeafe" />
       </mesh>
-      <mesh castShadow position={[0, 1.2, -1]}>
-        <boxGeometry args={[4.5, 2.2, 1.8]} />
-        <meshStandardMaterial color="#facc15" />
-      </mesh>
-      <mesh position={[-1.35, 0.35, -1]}>
-        <cylinderGeometry args={[0.48, 0.48, 0.32, 16]} />
-        <meshStandardMaterial color="#111827" />
-      </mesh>
-      <mesh position={[1.35, 0.35, -1]}>
-        <cylinderGeometry args={[0.48, 0.48, 0.32, 16]} />
-        <meshStandardMaterial color="#111827" />
-      </mesh>
-      <mesh position={[0, 1.45, -0.08]}>
-        <boxGeometry args={[2.5, 0.7, 0.08]} />
+      <mesh receiveShadow position={[0, 0.17, 0.78]}>
+        <boxGeometry args={[3.7, 0.05, 0.35]} />
         <meshStandardMaterial color="#38bdf8" />
+      </mesh>
+      <mesh castShadow position={[0, 1.35, -2.55]}>
+        <boxGeometry args={[3.3, 2.7, 0.16]} />
+        <meshStandardMaterial
+          color="#bae6fd"
+          transparent
+          opacity={0.72}
+          metalness={0.18}
+        />
+      </mesh>
+      {[-1.58, 1.58].map((x) => (
+        <mesh key={x} castShadow position={[x, 1.35, -1.55]}>
+          <boxGeometry args={[0.16, 2.7, 2.15]} />
+          <meshStandardMaterial color="#075985" metalness={0.35} />
+        </mesh>
+      ))}
+      <mesh castShadow position={[0, 2.78, -1.55]}>
+        <boxGeometry args={[3.75, 0.2, 2.35]} />
+        <meshStandardMaterial color="#0284c7" metalness={0.22} />
+      </mesh>
+      <mesh castShadow position={[0, 0.55, -1.85]}>
+        <boxGeometry args={[2.35, 0.65, 0.58]} />
+        <meshStandardMaterial color="#facc15" roughness={0.72} />
+      </mesh>
+      <mesh castShadow position={[1.72, 1.4, 1.4]}>
+        <cylinderGeometry args={[0.09, 0.09, 2.8, 10]} />
+        <meshStandardMaterial color="#0f172a" />
+      </mesh>
+      <mesh castShadow position={[1.72, 2.72, 1.4]}>
+        <cylinderGeometry args={[0.42, 0.42, 0.13, 20]} />
+        <meshStandardMaterial
+          color="#38bdf8"
+          emissive="#0ea5e9"
+          emissiveIntensity={0.25}
+        />
+      </mesh>
+      <mesh position={[1.72, 2.72, 1.47]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.17, 0.25, 16]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh castShadow position={[-0.5, 2.32, -2.43]}>
+        <boxGeometry args={[1.75, 0.52, 0.08]} />
+        <meshStandardMaterial
+          color="#f8fafc"
+          emissive="#ffffff"
+          emissiveIntensity={0.16}
+        />
+      </mesh>
+      <mesh position={[-0.5, 2.32, -2.37]}>
+        <boxGeometry args={[1.25, 0.1, 0.03]} />
+        <meshStandardMaterial color="#0369a1" />
       </mesh>
       {offerIds.map((id, index) => {
         const definition = findCollectableBuddy(id)
@@ -297,12 +367,16 @@ function BuddyBusStop({
           <BuddyModel
             key={id}
             definition={definition}
-            position={[(index - (offerIds.length - 1) / 2) * 1.25, 0.35, 1.25]}
+            position={[
+              (index - (offerIds.length - 1) / 2) * 1.15 - 0.35,
+              0.35,
+              1.55,
+            ]}
             reducedMotion={reducedMotion}
           />
         ) : null
       })}
-      <Html center position={[0, 3.15, 0]} zIndexRange={actionZIndex}>
+      <Html center position={[0, 3.45, -1.3]} zIndexRange={actionZIndex}>
         <button
           type="button"
           className="whitespace-nowrap rounded-xl bg-sky-600 px-4 py-2 text-xs font-black text-white shadow-xl"
@@ -327,20 +401,36 @@ function RivalClubhouse({
   const activeRaid = useGameStore((state) => state.buddyRush.activeRaid)
   const visitors = useGameStore((state) => state.buddyRush.visitors)
   if (!rival.clubhousePosition) return null
+  const site =
+    buddyRushSiteByRivalId[
+      rival.id as keyof typeof buddyRushSiteByRivalId
+    ]
+  if (!site) return null
   return (
-    <group position={rival.clubhousePosition}>
+    <group position={site.position} rotation={[0, site.facingYaw, 0]}>
       <mesh receiveShadow position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[5, 5, 0.16, 24]} />
-        <meshStandardMaterial color={rival.color} />
+        <boxGeometry args={[6.6, 0.16, 7]} />
+        <meshStandardMaterial
+          color={
+            site.style === 'moonlight'
+              ? '#c7d2fe'
+              : site.style === 'builder'
+                ? '#bbf7d0'
+                : '#fbcfe8'
+          }
+          roughness={0.86}
+        />
       </mesh>
-      <mesh castShadow receiveShadow position={[0, 1.3, 0]}>
-        <boxGeometry args={[5.8, 2.6, 4.8]} />
-        <meshStandardMaterial color={rival.color} />
+      <mesh receiveShadow position={[0, 0.17, 2.48]}>
+        <boxGeometry args={[1.35, 0.06, 2]} />
+        <meshStandardMaterial color="#f8fafc" />
       </mesh>
-      <mesh castShadow position={[0, 3, 0]}>
-        <coneGeometry args={[4.1, 1.6, 4]} />
-        <meshStandardMaterial color="#1e1b4b" />
+      <mesh castShadow receiveShadow position={[0, 1.55, -0.45]}>
+        <boxGeometry args={[5.4, 3.1, 4.4]} />
+        <meshStandardMaterial color={rival.color} roughness={0.75} />
       </mesh>
+      <ClubhouseRoof style={site.style} />
+      <ClubhouseFront style={site.style} color={rival.color} />
       {rival.buddyDefinitionIds.map((id, index) => {
         const definition = findCollectableBuddy(id)
         const isEscorted =
@@ -358,13 +448,13 @@ function RivalClubhouse({
             <BuddyModel
               key={id}
               definition={definition}
-              position={[-1 + index * 2, 0.35, 3]}
+              position={[-1 + index * 2, 0.35, 2.95]}
               reducedMotion={reducedMotion}
             />
           )
         ) : null
       })}
-      <Html center position={[0, 4.2, 0]} zIndexRange={actionZIndex}>
+      <Html center position={[0, 5.15, -0.4]} zIndexRange={actionZIndex}>
         <div className="whitespace-nowrap rounded-xl bg-slate-950/95 px-3 py-2 text-center text-xs font-black text-white shadow-xl">
           <span className="block">{rival.clubhouseName}</span>
           <span style={{ color: rival.color }}>{rival.name}</span>
@@ -378,6 +468,150 @@ function RivalClubhouse({
         </div>
       </Html>
     </group>
+  )
+}
+
+function ClubhouseRoof({
+  style,
+}: {
+  style: 'moonlight' | 'builder' | 'party'
+}) {
+  if (style === 'moonlight') {
+    return (
+      <>
+        <mesh castShadow position={[0, 3.7, -0.45]}>
+          <coneGeometry args={[3.55, 1.65, 6]} />
+          <meshStandardMaterial color="#312e81" metalness={0.18} />
+        </mesh>
+        <mesh castShadow position={[1.65, 4.45, -0.45]}>
+          <sphereGeometry args={[0.46, 14, 10]} />
+          <meshStandardMaterial
+            color="#fef08a"
+            emissive="#fde047"
+            emissiveIntensity={0.34}
+          />
+        </mesh>
+        {[-1.45, -0.65, 0.2].map((x, index) => (
+          <mesh key={x} position={[x, 3.65 + index * 0.28, 1.56]}>
+            <octahedronGeometry args={[0.14]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#bfdbfe"
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+        ))}
+      </>
+    )
+  }
+  if (style === 'builder') {
+    return (
+      <>
+        <mesh
+          castShadow
+          position={[0, 3.68, -0.45]}
+          rotation={[0, Math.PI / 4, 0]}
+        >
+          <coneGeometry args={[3.75, 1.55, 4]} />
+          <meshStandardMaterial color="#78350f" roughness={0.88} />
+        </mesh>
+        <mesh castShadow position={[1.65, 4.15, -1.25]}>
+          <boxGeometry args={[0.65, 1.45, 0.65]} />
+          <meshStandardMaterial color="#92400e" />
+        </mesh>
+        {[-1.75, 0, 1.75].map((x) => (
+          <mesh key={x} position={[x, 2.8, 1.79]}>
+            <boxGeometry args={[0.18, 0.52, 0.18]} />
+            <meshStandardMaterial color="#facc15" />
+          </mesh>
+        ))}
+      </>
+    )
+  }
+  return (
+    <>
+      <mesh castShadow position={[0, 3.32, -0.45]}>
+        <cylinderGeometry args={[3.25, 3.25, 0.52, 8]} />
+        <meshStandardMaterial
+          color="#701a75"
+          metalness={0.24}
+          roughness={0.55}
+        />
+      </mesh>
+      {[-2.05, -1.02, 0, 1.02, 2.05].map((x, index) => (
+        <mesh key={x} position={[x, 3.55, 1.36]}>
+          <sphereGeometry args={[0.15, 10, 8]} />
+          <meshStandardMaterial
+            color={index % 2 === 0 ? '#22d3ee' : '#fde047'}
+            emissive={index % 2 === 0 ? '#06b6d4' : '#facc15'}
+            emissiveIntensity={0.72}
+          />
+        </mesh>
+      ))}
+      {[-2.35, 2.35].map((x) => (
+        <mesh key={x} castShadow position={[x, 3.85, -0.5]}>
+          <boxGeometry args={[0.7, 1.15, 0.7]} />
+          <meshStandardMaterial color="#1e1b4b" />
+        </mesh>
+      ))}
+    </>
+  )
+}
+
+function ClubhouseFront({
+  style,
+  color,
+}: {
+  style: 'moonlight' | 'builder' | 'party'
+  color: string
+}) {
+  return (
+    <>
+      <mesh castShadow position={[0, 1.18, 1.78]}>
+        <boxGeometry args={[1.2, 2.35, 0.12]} />
+        <meshStandardMaterial
+          color={
+            style === 'moonlight'
+              ? '#1e1b4b'
+              : style === 'builder'
+                ? '#713f12'
+                : '#4a044e'
+          }
+        />
+      </mesh>
+      {[-1.75, 1.75].map((x) => (
+        <group key={x}>
+          <mesh position={[x, 1.62, 1.79]}>
+            <boxGeometry args={[1.15, 0.95, 0.1]} />
+            <meshStandardMaterial
+              color={style === 'party' ? '#fef08a' : '#bae6fd'}
+              emissive={style === 'party' ? '#fde047' : '#38bdf8'}
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          <mesh position={[x, 1.62, 1.86]}>
+            <boxGeometry args={[0.08, 1.05, 0.06]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+        </group>
+      ))}
+      <mesh castShadow position={[0, 2.72, 1.92]}>
+        <boxGeometry args={[2.85, 0.48, 0.28]} />
+        <meshStandardMaterial
+          color={style === 'builder' ? '#facc15' : color}
+          emissive={style === 'party' ? color : '#000000'}
+          emissiveIntensity={style === 'party' ? 0.38 : 0}
+        />
+      </mesh>
+      {[-2.15, 2.15].map((x) => (
+        <mesh key={x} castShadow position={[x, 1.25, 2]}>
+          <boxGeometry args={[0.3, 2.5, 0.3]} />
+          <meshStandardMaterial
+            color={style === 'builder' ? '#92400e' : '#f8fafc'}
+          />
+        </mesh>
+      ))}
+    </>
   )
 }
 

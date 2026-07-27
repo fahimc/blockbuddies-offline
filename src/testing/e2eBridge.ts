@@ -17,6 +17,10 @@ import {
   findCollectableBuddy,
   playerClubhousePosition,
 } from '../data/buddyRush'
+import {
+  buddyRushSiteByRivalId,
+  buddyRushWorldSites,
+} from '../data/buddyRushWorldPlan'
 import { obbyCheckpoints, obbyFinish } from '../ai/obby'
 import { houseBedWakePosition } from '../game/interiors'
 import { seatsForContext } from '../game/seating'
@@ -77,6 +81,9 @@ export type BlockBuddiesE2EBridge = {
   prepareBuildModeInteraction: () => GameplayE2ESnapshot
   prepareFootballInteraction: () => GameplayE2ESnapshot
   prepareBuddyRushDefence: () => GameplayE2ESnapshot
+  prepareBuddyRushWorldView: (
+    target: 'luna-club' | 'nori-club' | 'pip-club' | 'bus-stop',
+  ) => GameplayE2ESnapshot
   prepareBuddyRushVisualState: (
     visualState:
       'protected' | 'warning' | 'recovery' | 'capture' | 'chase' | 'rescue',
@@ -174,6 +181,7 @@ export function installE2EBridge() {
     prepareBuildModeInteraction,
     prepareFootballInteraction,
     prepareBuddyRushDefence,
+    prepareBuddyRushWorldView,
     prepareBuddyRushVisualState,
     finishBuddyRushDefence,
     letBuddyRushRivalEscape,
@@ -184,6 +192,60 @@ export function installE2EBridge() {
     setDriveInput,
     setMovementInput,
   }
+}
+
+function prepareBuddyRushWorldView(
+  target: 'luna-club' | 'nori-club' | 'pip-club' | 'bus-stop',
+) {
+  const game = useGameStore.getState()
+  const site =
+    target === 'bus-stop'
+      ? buddyRushWorldSites.bus
+      : buddyRushSiteByRivalId[target]
+  const frontX = Math.sin(site.facingYaw)
+  const frontZ = Math.cos(site.facingYaw)
+  const arrival: Vec3 = [
+    site.position[0] + frontX * 7.2,
+    0,
+    site.position[2] + frontZ * 7.2,
+  ]
+  const yaw = site.facingYaw + Math.PI
+  const teleportSequence = game.teleportSequence + 1
+  useGameStore.setState({
+    activeInterior: undefined,
+    openPanel: undefined,
+    playerPosition: arrival,
+    playerYaw: yaw,
+    teleportSequence,
+    teleportTarget: {
+      sequence: teleportSequence,
+      position: arrival,
+      yaw,
+      resetView: true,
+    },
+    sleeping: false,
+    seatedSeatId: undefined,
+    activeVehicleId: undefined,
+    interactionPrompt: undefined,
+    worldActionRequest: undefined,
+    settings: {
+      ...game.settings,
+      reducedMotion: true,
+      proceduralWorld: true,
+      worldViewDistance: 2,
+    },
+    touch: {
+      ...game.touch,
+      x: 0,
+      y: 0,
+      lookX: 0,
+      lookY: 0,
+      jump: false,
+      interact: false,
+      run: false,
+    },
+  })
+  return getGameplaySnapshot()
 }
 
 function prepareBuildModeInteraction() {

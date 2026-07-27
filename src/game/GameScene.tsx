@@ -86,6 +86,10 @@ import {
   separateCircleFromBoxes,
   type CollisionBox,
 } from './collision'
+import { actorCollisionBoxes } from './modularCollision'
+import {
+  authoredWorldCollisionBoxes as staticCollisionObstacles,
+} from './worldCollision'
 import { activeObbyCollisionBoxes } from './obbyPhysics'
 import {
   buildBlockInteriorEntrance,
@@ -149,7 +153,6 @@ import {
   footballBallInteractionRadius,
   footballBallRadius,
   footballGoalForBall,
-  footballGoalPostCollisionBoxes,
   footballGoalReward,
   footballGoals,
   footballKickVelocity,
@@ -166,7 +169,6 @@ import {
   goKartBoostPads,
   goKartStartLine,
   goKartTrack,
-  goKartTrackCollisionBoxes,
   isGoKartId,
 } from './goKart'
 import {
@@ -263,65 +265,6 @@ const NpcDragContext = createContext<NpcDragControls | null>(null)
 function useNpcDrag() {
   return useContext(NpcDragContext)
 }
-
-const staticCollisionObstacles: CollisionBox[] = [
-  ...footballGoalPostCollisionBoxes(),
-  ...goKartTrackCollisionBoxes(),
-  ...staticTownBuildings.map(({ position, scale }, index) => ({
-    id: `static-building:${index}`,
-    center: position,
-    half: [scale[0] / 2 + 0.18, scale[1] / 2, scale[2] / 2 + 0.18] as Vec3,
-  })),
-  ...workplaceBuildings.map(({ id, position, size }) => ({
-    id: `workplace-building:${id}`,
-    center: position,
-    half: [size[0] / 2 + 0.18, size[1] / 2, size[2] / 2 + 0.18] as Vec3,
-  })),
-  ...staticTreePositions
-    .filter(
-      (position) =>
-        !staticTreeBlocksParking(position) &&
-        !staticTreeBlocksFootballPitch(position),
-    )
-    .map((position, index) => ({
-      id: `static-tree:${index}`,
-      center: [
-        position[0],
-        buildPieceDimensions.tree.height / 2,
-        position[2],
-      ] as Vec3,
-      half: [
-        buildPieceDimensions.tree.footprint / 2,
-        buildPieceDimensions.tree.height / 2,
-        buildPieceDimensions.tree.footprint / 2,
-      ] as Vec3,
-    })),
-  ...outdoorBenchFixtures.map(({ position }, index) => ({
-    id: `static-bench:${index}`,
-    center: position,
-    half: [1.2, 0.55, 0.45] as Vec3,
-  })),
-  ...staticLampPositions
-    .filter(
-      (position) =>
-        !staticLampBlocksParking(position) &&
-        !staticLampBlocksFootballPitch(position),
-    )
-    .map((position, index) => ({
-      id: `static-lamp:${index}`,
-      center: [
-        position[0],
-        buildPieceDimensions.lamp.height / 2,
-        position[2],
-      ] as Vec3,
-      half: [
-        buildPieceDimensions.lamp.footprint / 2,
-        buildPieceDimensions.lamp.height / 2,
-        buildPieceDimensions.lamp.footprint / 2,
-      ] as Vec3,
-    })),
-  { id: 'static-billboard', center: [-11, 1.1, 2], half: [2, 1.3, 0.35] },
-]
 
 const staticInteriorEntrances: InteriorEntrance[] = staticTownBuildings.map(
   (building) =>
@@ -3594,10 +3537,45 @@ function PlayerController({
             localDrivableVehicles,
             activeVehicleThisFrame,
           )
+    const remotePeople = Object.values(
+      useLocalPartyStore.getState().remotePlayers,
+    ).filter((player) => !player.interiorId && !player.kart)
+    const now = Date.now()
+    const peopleObstacles = activeInterior
+      ? []
+      : actorCollisionBoxes([
+          ...bots.map((bot) => ({
+            id: `bot:${bot.id}`,
+            position: bot.position,
+          })),
+          ...savedFriends
+            .filter((friend) => friend.inWorld)
+            .map((friend, index) => ({
+              id: `friend:${friend.id}`,
+              position: savedFriendPositionAt(friend, now, index),
+            })),
+          ...remotePeople.map((player) => ({
+            id: `party:${player.id}`,
+            position: player.position,
+          })),
+          ...remotePeople.flatMap((owner, ownerIndex) =>
+            (owner.savedFriends ?? [])
+              .filter((friend) => friend.inWorld)
+              .map((friend, friendIndex) => ({
+                id: `party-friend:${owner.id}:${friend.id}`,
+                position: savedFriendPositionAt(
+                  friend,
+                  now,
+                  ownerIndex * 12 + friendIndex + 4,
+                ),
+              })),
+          ),
+        ])
     const solidObstacles = [
       ...collisionObstacles,
       ...trafficObstacles,
       ...parkedVehicleObstacles,
+      ...peopleObstacles,
     ]
     const request = useGameStore.getState().worldActionRequest
     const hasWorldRequest = Boolean(

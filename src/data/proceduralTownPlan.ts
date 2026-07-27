@@ -1,5 +1,10 @@
 import { realScale } from '../game/scale'
 import type { Vec3 } from '../game/types'
+import {
+  buddyRushReservedSites,
+  footprintsOverlap,
+  orientedBuddyRushFootprint,
+} from './buddyRushWorldPlan'
 
 export const proceduralChunkSize = 36
 export const proceduralHorizontalRoadRepeat = proceduralChunkSize * 2
@@ -83,8 +88,18 @@ export function createProceduralChunkPlan(seed: string, cx: number, cz: number):
     : 0
   let developed = 0
   const parcels: PlannedParcel[] = candidates.map((candidate, index) => {
+    const reservedForClubhouse = buddyRushReservedSites.some((site) =>
+      footprintsOverlap(
+        candidate.center,
+        candidate.size,
+        site.position,
+        orientedBuddyRushFootprint(site),
+        0.2,
+      ),
+    )
     let use: PlannedParcelUse = 'buildable'
-    if (index === parkIndex) use = 'park'
+    if (reservedForClubhouse) use = 'buildable'
+    else if (index === parkIndex) use = 'park'
     else if (developed < buildingBudget) {
       use = chunkHash % 5 === 0 && developed === 0 ? 'commercial' : 'residential'
       developed += 1

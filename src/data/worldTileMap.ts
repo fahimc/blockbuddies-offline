@@ -27,6 +27,10 @@ import {
   terrainOverrideForWorldFeature,
 } from './worldFeatures'
 import { jobDefinitions, workplaceBuildings } from './jobs'
+import {
+  buddyRushReservedSites,
+  orientedBuddyRushFootprint,
+} from './buddyRushWorldPlan'
 
 export type WorldTileTerrain = WorldTerrain | 'parking'
 export type WorldTileObjectKind =
@@ -350,6 +354,16 @@ function authoredMapObjects(): WorldTileObject[] {
             ),
           ),
       ]),
+    ),
+    ...buddyRushReservedSites.map((site) =>
+      mapObject(
+        `authored:buddy-rush:${site.id}`,
+        site.label,
+        site.kind === 'clubhouse' ? 'building' : 'fixture',
+        'authored',
+        [...site.position],
+        orientedBuddyRushFootprint(site),
+      ),
     ),
   ]
 }

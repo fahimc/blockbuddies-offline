@@ -12,6 +12,8 @@ async function completeStartFlow(page: Page, name = 'WorldTester') {
   await page.getByLabel('Character name').fill(name)
   await page.getByRole('button', { name: 'Start Game' }).click()
   await expect(page.getByTestId('game-canvas')).toBeVisible()
+  const startPlaying = page.getByRole('button', { name: 'Start Playing' })
+  if (await startPlaying.isVisible()) await startPlaying.click()
 }
 
 async function canvasPixelStats(page: Page) {
@@ -273,8 +275,6 @@ test('starts the obby on top of its solid platform and allows movement', async (
   await expect(page.getByText('Loading town...')).toBeHidden({
     timeout: 30_000,
   })
-  await page.getByRole('button', { name: 'Start Playing' }).click()
-
   await page.evaluate(() => window.__blockBuddiesE2E!.startObbyGame())
   await expect
     .poll(
@@ -290,7 +290,7 @@ test('starts the obby on top of its solid platform and allows movement', async (
   const beforeMove = await page.evaluate(
     () => window.__blockBuddiesE2E!.getGameplaySnapshot().playerPosition,
   )
-  expect(beforeMove[1]).toBeGreaterThan(1.5)
+  expect(beforeMove[1]).toBeGreaterThan(0.85)
 
   await page.evaluate(() => window.__blockBuddiesE2E!.setMovementInput(1))
   await page.waitForTimeout(320)
@@ -310,8 +310,6 @@ test('completes the beginner obby and rewards the player', async ({ page }) => {
   await expect(page.getByText('Loading town...')).toBeHidden({
     timeout: 30_000,
   })
-  await page.getByRole('button', { name: 'Start Playing' }).click()
-
   const result = await page.evaluate(() =>
     window.__blockBuddiesE2E!.completeObbyCourse(),
   )

@@ -3,6 +3,10 @@ import { goKartTrack } from '../game/goKart'
 import { authoredCoreBounds } from '../game/townPlacement'
 import { workDistrictCenter, workDistrictSize } from './jobs'
 import {
+  buddyRushReservedSites,
+  orientedBuddyRushFootprint,
+} from './buddyRushWorldPlan'
+import {
   boundsFromCenter,
   boundsIntersect,
   boundsToChunks,
@@ -13,10 +17,14 @@ import {
   type WorldBounds,
 } from './worldCoordinates'
 
-export const worldGeneratorVersion = 2
+export const worldGeneratorVersion = 3
 
 export type WorldFeatureKind =
-  'authored-region' | 'landmark' | 'activity-district'
+  | 'authored-region'
+  | 'landmark'
+  | 'activity-district'
+  | 'clubhouse'
+  | 'transit-stop'
 
 export type WorldFeature = {
   id: string
@@ -119,6 +127,34 @@ export const worldFeatures: WorldFeature[] = [
     blocksProceduralObjects: true,
     color: '#facc15',
   },
+  ...buddyRushReservedSites.map((site): WorldFeature => {
+    const footprint = orientedBuddyRushFootprint(site)
+    return {
+      id: `buddy-rush:${site.id}`,
+      label: site.label,
+      kind: site.kind === 'clubhouse' ? 'clubhouse' : 'transit-stop',
+      center: [...site.position],
+      bounds: boundsFromCenter(
+        site.position[0],
+        site.position[2],
+        footprint[0],
+        footprint[2],
+      ),
+      ownerChunk: {
+        cx: Math.floor(site.position[0] / worldChunkSize),
+        cz: Math.floor(site.position[2] / worldChunkSize),
+      },
+      blocksProceduralObjects: true,
+      color:
+        site.kind === 'bus-stop'
+          ? '#0ea5e9'
+          : site.style === 'moonlight'
+          ? '#60a5fa'
+          : site.style === 'builder'
+            ? '#22c55e'
+            : '#f472b6',
+    }
+  }),
 ]
 
 const featureById = new Map(
